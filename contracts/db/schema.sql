@@ -1,0 +1,190 @@
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE chapters (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	parent_id UUID, 
+	order_index INTEGER NOT NULL, 
+	title TEXT NOT NULL, 
+	status VARCHAR(16) NOT NULL, 
+	content_md TEXT, 
+	summary TEXT, 
+	word_count INTEGER NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(parent_id) REFERENCES chapters (id)
+);
+
+CREATE TABLE conversations (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	title TEXT, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE documents (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	title TEXT NOT NULL, 
+	author TEXT, 
+	source_type VARCHAR(16) NOT NULL, 
+	original_filename TEXT, 
+	gcs_uri TEXT, 
+	status VARCHAR(16) NOT NULL, 
+	page_count INTEGER, 
+	language VARCHAR(16), 
+	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE embeddings (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	owner_type VARCHAR(16) NOT NULL, 
+	owner_id UUID NOT NULL, 
+	model VARCHAR(128) NOT NULL, 
+	dimension INTEGER NOT NULL, 
+	embedding VECTOR(768) NOT NULL, 
+	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	content_hash VARCHAR(64) NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE events (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	type VARCHAR(64) NOT NULL, 
+	payload JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	source VARCHAR(64), 
+	correlation_id VARCHAR(64), 
+	occurred_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE memories (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	kind VARCHAR(16) NOT NULL, 
+	key TEXT, 
+	content TEXT NOT NULL, 
+	pinned BOOLEAN NOT NULL, 
+	source VARCHAR(16) NOT NULL, 
+	version INTEGER NOT NULL, 
+	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE tasks (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	parent_task_id UUID, 
+	title TEXT NOT NULL, 
+	description TEXT, 
+	status VARCHAR(16) NOT NULL, 
+	owner_agent VARCHAR(64), 
+	priority INTEGER NOT NULL, 
+	payload JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(parent_task_id) REFERENCES tasks (id)
+);
+
+CREATE TABLE agent_runs (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	conversation_id UUID, 
+	graph VARCHAR(64), 
+	trigger VARCHAR(64), 
+	input JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	output JSONB, 
+	status VARCHAR(16) NOT NULL, 
+	error TEXT, 
+	started_at TIMESTAMP WITH TIME ZONE, 
+	finished_at TIMESTAMP WITH TIME ZONE, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(conversation_id) REFERENCES conversations (id)
+);
+
+CREATE TABLE chunks (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	document_id UUID NOT NULL, 
+	chunk_index INTEGER NOT NULL, 
+	content TEXT NOT NULL, 
+	token_count INTEGER, 
+	page_from INTEGER, 
+	page_to INTEGER, 
+	section_path TEXT, 
+	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(document_id) REFERENCES documents (id)
+);
+
+CREATE TABLE messages (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	conversation_id UUID NOT NULL, 
+	role VARCHAR(16) NOT NULL, 
+	content TEXT NOT NULL, 
+	tool_calls JSONB DEFAULT '[]'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(conversation_id) REFERENCES conversations (id)
+);
+
+CREATE TABLE notes (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	document_id UUID, 
+	chapter_id UUID, 
+	kind VARCHAR(16) NOT NULL, 
+	content TEXT NOT NULL, 
+	anchor JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(document_id) REFERENCES documents (id), 
+	FOREIGN KEY(chapter_id) REFERENCES chapters (id)
+);
+
+CREATE TABLE sources (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	document_id UUID, 
+	type VARCHAR(32) NOT NULL, 
+	csl_json JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	title TEXT, 
+	authors JSONB DEFAULT '[]'::jsonb NOT NULL, 
+	year INTEGER, 
+	doi TEXT, 
+	url TEXT, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(document_id) REFERENCES documents (id)
+);
+
+CREATE TABLE agent_steps (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	agent_run_id UUID NOT NULL, 
+	agent VARCHAR(64), 
+	phase VARCHAR(16), 
+	input JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	output JSONB, 
+	status VARCHAR(16) NOT NULL, 
+	started_at TIMESTAMP WITH TIME ZONE, 
+	finished_at TIMESTAMP WITH TIME ZONE, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(agent_run_id) REFERENCES agent_runs (id)
+);
+
+CREATE TABLE citations (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	source_id UUID NOT NULL, 
+	chapter_id UUID, 
+	locator TEXT, 
+	prefix TEXT, 
+	suffix TEXT, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(source_id) REFERENCES sources (id), 
+	FOREIGN KEY(chapter_id) REFERENCES chapters (id)
+);
