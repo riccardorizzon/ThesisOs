@@ -5,7 +5,7 @@ credentials, which the build agent cannot perform for you (it cannot install a l
 daemon, authenticate as you, or create/pay for a GCP project).
 
 Everything else in M0 (T0–T10 + hardening) is already authored, reviewed, and committed on
-branch `m0-foundations`, with backend tests green (`7/7`), `terraform validate` passing, and
+branch `m0-foundations`, with backend tests green (`8/8`), `terraform validate` passing, and
 the frontend build passing.
 
 ---
@@ -68,15 +68,27 @@ This creates: Artifact Registry repo `thesisos`, Cloud SQL `db-f1-micro` (POSTGR
 user, 4 buckets (documents/exports/temp/logs), Secret Manager secrets (`database-url`,
 `vertex-config`), the `thesisos-run` service account + IAM, and the two Cloud Run services.
 
+> ℹ️ **Reproducible apply.** `terraform apply` now succeeds **standalone** before any image is
+> built: the Cloud Run services boot from the public placeholder image
+> `us-docker.pkg.dev/cloudrun/container/hello`, and a placeholder `database-url` secret version is
+> seeded so `secret_key_ref database-url:latest` resolves. Terraform owns the service template but
+> **ignores image drift** (`lifecycle.ignore_changes` on the container image), so Cloud Build's
+> `gcloud run deploy --image <real>` won't be reverted on the next `apply`. Real rollout order:
+> 1. `terraform apply` — infra + placeholder Cloud Run revisions.
+> 2. Cloud Build builds/pushes/deploys the **real** images (step 4; Terraform ignores the drift).
+> 3. Seed the **real** `DATABASE_URL` secret version (step 4a) so `latest` is the production DSN.
+> 4. Run `alembic upgrade head` via the Cloud SQL proxy (step 5).
+> 5. Verify `/health` + `/ready` (step 6).
+
 **Gate item satisfied when:** `terraform_apply: success`.
 
-> ⚠️ **Security decision (do before M1).** The Terraform currently grants
-> `roles/run.invoker` to `allUsers`, i.e. the Cloud Run services are **publicly invokable**.
-> For M0 (only `/health` exists) this is harmless, but since ThesisOS has **no application
-> auth** (ADR-0001, single-user), a public backend at M1+ means anyone with the URL can use
-> your assistant and burn Vertex credits. Before M1, lock it down: remove the
-> `allUsers` `google_cloud_run_v2_service_iam_member` blocks in `cloudrun.tf` and front the
-> app with **IAP** or authenticated-invoker + an identity token. Re-`apply` after.
+> ✅ **Security posture (locked down by default).** Public access is **OFF by default**
+> (`allow_public_invoker = false`): the Cloud Run services are deployed **private /
+> authenticated-invoker only**, so no `allUsers` `roles/run.invoker` binding is created. This
+> matters because ThesisOS has **no application auth** (ADR-0001, single-user), so a public
+> backend at M1+ would let anyone with the URL use your assistant and burn Vertex credits. To
+> expose the services publicly (**discouraged — prefer IAP**), set `allow_public_invoker = true`
+> in `terraform.tfvars` and re-`apply`. No manual edit of `cloudrun.tf` is needed.
 
 ---
 
@@ -99,19 +111,22 @@ gcloud builds submit --config infra/ci/cloudbuild.yaml --substitutions=_REGION=e
 
 **Gate item satisfied when:** `cloud_run: deployed`.
 
-### 4a. Wire the backend to Cloud SQL + secrets (deferred from M0 scaffolding)
-The committed Cloud Build deploy steps are intentionally minimal. For a working backend, redeploy with the DB + Vertex wiring:
+### 4a. Seed the real `DATABASE_URL` secret version
+The Cloud SQL volume mount, the `DATABASE_URL` secret env (`database-url:latest`), and the Vertex
+env (`GOOGLE_CLOUD_PROJECT`, `VERTEX_LOCATION`) are **now wired in Terraform** on the backend
+service — no manual `gcloud run services update` is needed. Terraform only seeds a *placeholder*
+secret version, so the one remaining step is to add the **real** DSN as a new version (which
+becomes `latest`) and re-run the build/deploy so the next revision picks it up:
 ```bash
 SQL_CONN=$(terraform -chdir=infra/terraform output -raw sql_connection_name)
-# store the runtime DSN (Cloud SQL unix socket form) in the secret, then mount it:
+# store the runtime DSN (Cloud SQL unix socket form) as the new `latest` version:
 printf 'postgresql+psycopg://thesisos:<DB_PASSWORD>@/thesisos?host=/cloudsql/%s' "$SQL_CONN" \
   | gcloud secrets versions add database-url --data-file=-
 
-gcloud run services update thesisos-backend --region europe-west1 \
-  --add-cloudsql-instances "$SQL_CONN" \
-  --set-secrets "DATABASE_URL=database-url:latest" \
-  --set-env-vars "GOOGLE_CLOUD_PROJECT=<YOUR_PROJECT_ID>,VERTEX_LOCATION=europe-west1"
+# re-run the pipeline (step 4) so the new revision reads the real secret version:
+gcloud builds submit --config infra/ci/cloudbuild.yaml --substitutions=_REGION=europe-west1 .
 ```
+Then apply migrations against Cloud SQL (step 5).
 
 ### 4b. Frontend API URL (build-time caveat)
 `NEXT_PUBLIC_API_BASE_URL` is inlined at **build time**, but `docker/frontend.Dockerfile` does
@@ -164,6 +179,9 @@ health: green                 # step 6
 db_migrations: green          # step 5 (alembic current == 0001_initial)
 zero_feature_debt: true       # only NotImplementedError stubs; no half-built feature  ✅ verified
 ```
+> **Telemetry note.** The backend now uses real OpenTelemetry (a `TracerProvider` + exporter is
+> configured in code), so the `telemetry: green` gate item is satisfied by the code itself.
+
 Zero-feature-debt check:
 ```bash
 rg -n "NotImplementedError|wired post-M0|wired in M1" backend/app   # only intentional stubs
@@ -177,5 +195,5 @@ git tag m0-complete
 ---
 
 ## Status legend at handoff
-- ✅ Authored + verified locally by the agent: T0–T10, hardening (backend 7/7 tests, terraform validate, frontend build).
+- ✅ Authored + verified locally by the agent: T0–T10, hardening (backend 8/8 tests, terraform validate, frontend build).
 - ⏳ Needs you (this runbook): T8 live `compose up`, T11 GCP apply+deploy+migrate, T12 gate.

@@ -15,7 +15,9 @@ resource "google_cloud_run_v2_service" "backend" {
     }
 
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/thesisos/backend:latest"
+      # Terraform owns the service template; CI owns the image (ignore_changes).
+      # Real image deployed by Cloud Build.
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
 
       volume_mounts {
         name       = "cloudsql"
@@ -46,9 +48,14 @@ resource "google_cloud_run_v2_service" "backend" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image]
+  }
+
   depends_on = [
     google_project_service.services,
     google_secret_manager_secret.database_url,
+    google_secret_manager_secret_version.database_url_placeholder,
     google_sql_database_instance.pg,
   ]
 }
@@ -61,8 +68,14 @@ resource "google_cloud_run_v2_service" "frontend" {
     service_account = google_service_account.run.email
 
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/thesisos/frontend:latest"
+      # Terraform owns the service template; CI owns the image (ignore_changes).
+      # Real image deployed by Cloud Build.
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
     }
+  }
+
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image]
   }
 
   depends_on = [google_project_service.services]
