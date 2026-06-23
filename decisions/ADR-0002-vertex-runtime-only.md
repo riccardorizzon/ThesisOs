@@ -1,0 +1,7 @@
+# ADR-0002: Vertex Runtime Only
+
+- Status: Accepted (frozen 2026-06-23)
+- Context: ThesisOS needs a runtime LLM for generation and vision plus an embedding model with strong Italian support for retrieval over academic prose. The build is driven by Cursor agents, but the builder must not become a runtime dependency. We want a single credential and a single vendor to keep operations simple while preserving the freedom to swap providers later.
+- Decision: The runtime LLM is Vertex AI — Gemini for generation and vision, and `text-multilingual-embedding-002` for embeddings — accessed behind a LiteLLM abstraction so callers never know the provider. The Cursor API is build-time only and never a runtime dependency. Embeddings are stored model- and dimension-tagged per row so the embedding provider can be swapped without a destructive migration.
+- Consequences: This gives us a single GCP service account (Vertex AI User) instead of multiple API keys, multimodal coverage from one vendor, and provider-swappable callers. The trade-off is a single-vendor runtime dependency for now, accepted because the LiteLLM seam and model/dimension tagging keep the door open for change.
+- Alternatives considered: Cursor-API-as-runtime was rejected because it is coding-agent-oriented and exposes no embeddings endpoint. Multi-provider LiteLLM from day one was deferred because that flexibility is not needed yet; the abstraction is in place so it can be enabled when warranted.
