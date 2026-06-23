@@ -8,12 +8,12 @@ resource "google_secret_manager_secret" "database_url" {
   depends_on = [google_project_service.services]
 }
 
-# Placeholder version so `secret_key_ref database-url:latest` resolves at apply
-# time (the Cloud Run revision needs an existing version to roll out). The runbook
-# adds the REAL DSN as a new version, which then becomes `latest`.
+# Real DSN wired at apply time from tfvars + Cloud SQL connection name.
 resource "google_secret_manager_secret_version" "database_url_placeholder" {
-  secret      = google_secret_manager_secret.database_url.id
-  secret_data = "postgresql+psycopg://REPLACE_VIA_RUNBOOK@/thesisos"
+  secret = google_secret_manager_secret.database_url.id
+  secret_data = "postgresql+psycopg://thesisos:${var.db_password}@/thesisos?host=/cloudsql/${google_sql_database_instance.pg.connection_name}"
+
+  depends_on = [google_sql_database_instance.pg]
 }
 
 resource "google_secret_manager_secret" "vertex_config" {

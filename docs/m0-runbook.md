@@ -70,15 +70,16 @@ user, 4 buckets (documents/exports/temp/logs), Secret Manager secrets (`database
 
 > ℹ️ **Reproducible apply.** `terraform apply` now succeeds **standalone** before any image is
 > built: the Cloud Run services boot from the public placeholder image
-> `us-docker.pkg.dev/cloudrun/container/hello`, and a placeholder `database-url` secret version is
-> seeded so `secret_key_ref database-url:latest` resolves. Terraform owns the service template but
-> **ignores image drift** (`lifecycle.ignore_changes` on the container image), so Cloud Build's
-> `gcloud run deploy --image <real>` won't be reverted on the next `apply`. Real rollout order:
-> 1. `terraform apply` — infra + placeholder Cloud Run revisions.
+> `us-docker.pkg.dev/cloudrun/container/hello`, and Terraform renders the **real** `database-url`
+> secret version from `var.db_password` + the Cloud SQL connection name (`secrets.tf`), so
+> `secret_key_ref database-url:latest` resolves to the production DSN immediately. Terraform owns
+> the service template but **ignores image drift** (`lifecycle.ignore_changes` on the container
+> image), so Cloud Build's `gcloud run deploy --image <real>` won't be reverted on the next
+> `apply`. Real rollout order:
+> 1. `terraform apply` — infra + real `database-url` DSN + placeholder Cloud Run revisions.
 > 2. Cloud Build builds/pushes/deploys the **real** images (step 4; Terraform ignores the drift).
-> 3. Seed the **real** `DATABASE_URL` secret version (step 4a) so `latest` is the production DSN.
-> 4. Run `alembic upgrade head` via the Cloud SQL proxy (step 5).
-> 5. Verify `/health` + `/ready` (step 6).
+> 3. Run `alembic upgrade head` via the Cloud SQL proxy (step 5).
+> 4. Verify `/health` + `/ready` (step 6).
 
 **Gate item satisfied when:** `terraform_apply: success`.
 
@@ -111,21 +112,14 @@ gcloud builds submit --config infra/ci/cloudbuild.yaml --substitutions=_REGION=e
 
 **Gate item satisfied when:** `cloud_run: deployed`.
 
-### 4a. Seed the real `DATABASE_URL` secret version
+### 4a. `DATABASE_URL` secret — already wired by Terraform
 The Cloud SQL volume mount, the `DATABASE_URL` secret env (`database-url:latest`), and the Vertex
-env (`GOOGLE_CLOUD_PROJECT`, `VERTEX_LOCATION`) are **now wired in Terraform** on the backend
-service — no manual `gcloud run services update` is needed. Terraform only seeds a *placeholder*
-secret version, so the one remaining step is to add the **real** DSN as a new version (which
-becomes `latest`) and re-run the build/deploy so the next revision picks it up:
-```bash
-SQL_CONN=$(terraform -chdir=infra/terraform output -raw sql_connection_name)
-# store the runtime DSN (Cloud SQL unix socket form) as the new `latest` version:
-printf 'postgresql+psycopg://thesisos:<DB_PASSWORD>@/thesisos?host=/cloudsql/%s' "$SQL_CONN" \
-  | gcloud secrets versions add database-url --data-file=-
-
-# re-run the pipeline (step 4) so the new revision reads the real secret version:
-gcloud builds submit --config infra/ci/cloudbuild.yaml --substitutions=_REGION=europe-west1 .
-```
+env (`GOOGLE_CLOUD_PROJECT`, `VERTEX_LOCATION`) are **wired in Terraform** on the backend service —
+no manual `gcloud run services update` is needed. As of the `secrets.tf` DSN edition, Terraform
+also renders the **real** DSN (from `var.db_password` + the Cloud SQL connection name) as the
+secret version, so `database-url:latest` is already the production DSN after `terraform apply`. No
+manual `gcloud secrets versions add` is required. (If you ever rotate the password, change
+`db_password` in `terraform.tfvars` and re-`apply`; Terraform creates the new `latest` version.)
 Then apply migrations against Cloud SQL (step 5).
 
 ### 4b. Frontend API URL (build-time caveat)

@@ -1,6 +1,7 @@
 resource "google_cloud_run_v2_service" "backend" {
-  name     = "thesisos-backend"
-  location = var.region
+  name                = "thesisos-backend"
+  location            = var.region
+  deletion_protection = false
 
   template {
     service_account = google_service_account.run.email
@@ -61,8 +62,9 @@ resource "google_cloud_run_v2_service" "backend" {
 }
 
 resource "google_cloud_run_v2_service" "frontend" {
-  name     = "thesisos-frontend"
-  location = var.region
+  name                = "thesisos-frontend"
+  location            = var.region
+  deletion_protection = false
 
   template {
     service_account = google_service_account.run.email
