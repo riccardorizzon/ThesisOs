@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "events": [
+    { "name": "DocumentUploaded", "milestone": "M3", "payload": { "document_id": "string" } },
+    { "name": "ChunkCreated", "milestone": "M3", "payload": { "chunk_id": "string", "document_id": "string" } },
+    { "name": "MemoryUpdated", "milestone": "M2", "payload": { "memory_id": "string", "kind": "string" } },
+    { "name": "ChapterCreated", "milestone": "M8", "payload": { "chapter_id": "string" } },
+    { "name": "CritiqueCompleted", "milestone": "M9", "payload": { "agent_run_id": "string", "passed": "boolean" } }
+  ]
+}

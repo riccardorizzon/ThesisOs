@@ -1,0 +1,8 @@
+{
+  "agent": "document",
+  "milestone": "M3",
+  "input": { "reads_state": ["task"] },
+  "output": { "writes_state": ["errors"] },
+  "errors": ["parse_failed", "unsupported_format"],
+  "state_mutations": { "errors": "append" }
+}

@@ -1,0 +1,8 @@
+{
+  "agent": "citation",
+  "milestone": "M7",
+  "input": { "reads_state": ["draft", "citations"] },
+  "output": { "writes_state": ["citations"] },
+  "errors": ["unresolved_source"],
+  "state_mutations": { "citations": "set" }
+}

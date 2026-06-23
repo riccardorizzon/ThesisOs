@@ -1,0 +1,8 @@
+{
+  "agent": "planner",
+  "milestone": "M5",
+  "input": { "reads_state": ["messages", "plan"] },
+  "output": { "writes_state": ["plan", "task"] },
+  "errors": ["unplannable"],
+  "state_mutations": { "plan": "set", "task": "set" }
+}

@@ -1,0 +1,8 @@
+{
+  "agent": "router",
+  "milestone": "M5",
+  "input": { "reads_state": ["plan", "messages"] },
+  "output": { "writes_state": ["route"] },
+  "errors": ["no_route"],
+  "state_mutations": { "route": "set" }
+}

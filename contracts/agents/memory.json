@@ -1,0 +1,8 @@
+{
+  "agent": "memory",
+  "milestone": "M2",
+  "input": { "reads_state": ["messages", "memory_ops"] },
+  "output": { "writes_state": ["memory_ops"] },
+  "errors": ["write_conflict"],
+  "state_mutations": { "memory_ops": "append" }
+}
