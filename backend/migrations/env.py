@@ -5,19 +5,17 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 import app.db.models  # noqa: F401  (registers all models on the metadata)
+from app.core.config import settings
 from app.db.base import Base
 
 # Alembic Config object, provides access to values within alembic.ini.
 config = context.config
 
-# Read the database URL from the environment to keep this task self-contained
-# (no dependency on app.core.config). Falls back to the local dev DSN.
+# Unified DB URL source: prefer the app settings (app.core.config), allowing an
+# explicit DATABASE_URL env override for migration tooling.
 config.set_main_option(
     "sqlalchemy.url",
-    os.environ.get(
-        "DATABASE_URL",
-        "postgresql+psycopg://thesisos:thesisos@localhost:5432/thesisos",
-    ),
+    os.environ.get("DATABASE_URL", settings.database_url),
 )
 
 if config.config_file_name is not None:
