@@ -19,7 +19,15 @@ SERVICE_NAME = "thesisos-backend"
 
 
 def _build_exporter():
-    """Pick a span exporter: OTLP/HTTP if configured, else console."""
+    """Pick a span exporter: in-memory under tests, OTLP/HTTP if configured, else console."""
+    if os.getenv("THESISOS_DISABLE_CONSOLE_TRACE"):
+        # Keeps the provider real (spans recorded) without writing to a captured
+        # stdout that pytest closes at teardown. Used by tests/conftest.py.
+        from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+            InMemorySpanExporter,
+        )
+
+        return InMemorySpanExporter()
     if os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"):
         try:
             from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
