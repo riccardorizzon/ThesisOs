@@ -1,0 +1,130 @@
+openapi: 3.1.0
+info: { title: ThesisOS API, version: 0.0.0 }
+paths:
+  # ---------------------------------------------------------------------------
+  # Implemented in M0
+  # ---------------------------------------------------------------------------
+  /health:
+    get:
+      summary: Liveness
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Health" } } } } }
+  /ready:
+    get:
+      summary: Readiness (db + config)
+      responses:
+        "200": { description: ready, content: { application/json: { schema: { $ref: "#/components/schemas/Ready" } } } }
+        "503": { description: not ready }
+  /metrics:
+    get: { summary: Prometheus metrics, responses: { "200": { description: OK } } }
+  /jobs:
+    post:
+      summary: Enqueue a background job (contract only in M0)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/JobCreate" } } } }
+      responses: { "202": { description: accepted, content: { application/json: { schema: { $ref: "#/components/schemas/Job" } } } } }
+  /jobs/{id}:
+    get:
+      summary: Job status
+      parameters: [ { name: id, in: path, required: true, schema: { type: string } } ]
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Job" } } } } }
+
+  # ---------------------------------------------------------------------------
+  # Deferred (contract-only stubs declared now, implemented in later milestones)
+  # ---------------------------------------------------------------------------
+  /chat:
+    post:
+      summary: Chat with the assistant
+      x-milestone: M1
+      responses:
+        "501": { description: not implemented yet }
+  /upload:
+    post:
+      summary: Upload a document
+      x-milestone: M3
+      responses:
+        "501": { description: not implemented yet }
+  /documents:
+    get:
+      summary: List documents
+      x-milestone: M3
+      responses:
+        "501": { description: not implemented yet }
+  /documents/{id}:
+    get:
+      summary: Get a document
+      x-milestone: M3
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "501": { description: not implemented yet }
+  /search:
+    post:
+      summary: Search the corpus
+      x-milestone: M4
+      responses:
+        "501": { description: not implemented yet }
+  /summarize:
+    post:
+      summary: Summarize a document
+      x-milestone: M3
+      responses:
+        "501": { description: not implemented yet }
+  /outline:
+    get:
+      summary: Get the thesis outline
+      x-milestone: M8
+      responses:
+        "501": { description: not implemented yet }
+  /chapters:
+    post:
+      summary: Create a chapter
+      x-milestone: M6
+      responses:
+        "501": { description: not implemented yet }
+  /memory:
+    get:
+      summary: Retrieve memory
+      x-milestone: M2
+      responses:
+        "501": { description: not implemented yet }
+    post:
+      summary: Store memory
+      x-milestone: M2
+      responses:
+        "501": { description: not implemented yet }
+  /citations:
+    post:
+      summary: Create citations
+      x-milestone: M7
+      responses:
+        "501": { description: not implemented yet }
+  /bibliography:
+    get:
+      summary: Get the bibliography
+      x-milestone: M7
+      parameters:
+        - { name: style, in: query, required: false, schema: { type: string }, description: "Citation style, e.g. apa7" }
+      responses:
+        "501": { description: not implemented yet }
+
+components:
+  schemas:
+    Health: { type: object, properties: { status: { type: string, enum: [ok] } }, required: [status] }
+    Ready:
+      type: object
+      properties: { status: { type: string }, db: { type: boolean }, config: { type: boolean } }
+      required: [status, db, config]
+    JobCreate:
+      type: object
+      properties: { type: { type: string }, payload: { type: object } }
+      required: [type]
+    Job:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string }
+        status: { type: string, enum: [pending, in_progress, done, error] }
+      required: [id, type, status]
+    Error:
+      type: object
+      properties: { code: { type: string }, message: { type: string } }
+      required: [code, message]

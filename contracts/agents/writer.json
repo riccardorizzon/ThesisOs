@@ -1,0 +1,8 @@
+{
+  "agent": "writer",
+  "milestone": "M6",
+  "input": { "reads_state": ["plan", "retrieved_context", "messages"] },
+  "output": { "writes_state": ["draft", "citations"] },
+  "errors": ["empty_context", "generation_failed"],
+  "state_mutations": { "draft": "set", "citations": "set" }
+}

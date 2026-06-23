@@ -1,0 +1,8 @@
+{
+  "agent": "critic",
+  "milestone": "M9",
+  "input": { "reads_state": ["draft", "retrieved_context"] },
+  "output": { "writes_state": ["critique"] },
+  "errors": ["hallucination", "redundancy"],
+  "state_mutations": { "critique": "set" }
+}

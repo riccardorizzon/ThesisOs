@@ -1,0 +1,8 @@
+{
+  "agent": "retriever",
+  "milestone": "M4",
+  "input": { "reads_state": ["messages", "route"] },
+  "output": { "writes_state": ["retrieved_context"] },
+  "errors": ["embed_failed", "no_results"],
+  "state_mutations": { "retrieved_context": "set" }
+}

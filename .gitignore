@@ -40,3 +40,8 @@ Thumbs.db
 *.log
 .idea/
 .vscode/
+.claude/
+
+# Terraform plan output
+tfplan
+*.tfplan

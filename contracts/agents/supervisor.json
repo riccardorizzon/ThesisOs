@@ -1,0 +1,8 @@
+{
+  "agent": "supervisor",
+  "milestone": "M5",
+  "input": { "reads_state": ["messages", "task"] },
+  "output": { "writes_state": ["plan", "route"] },
+  "errors": ["no_objective"],
+  "state_mutations": { "plan": "set", "route": "set" }
+}

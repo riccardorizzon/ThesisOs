@@ -1,0 +1,123 @@
+# ThesisOS CI/CD pipeline (Google Cloud Build)
+# =============================================================================
+# Flow: build backend + frontend images -> push to Artifact Registry ->
+#       deploy both services to Cloud Run.
+#
+# Trigger context (provided automatically by Cloud Build):
+#   $PROJECT_ID  - GCP project id
+#   $SHORT_SHA   - short git commit SHA (used as the immutable image tag)
+# Substitutions (see bottom of file):
+#   _REGION      - GCP region; must match the Terraform `region` var (europe-west1)
+#
+# Required setup before this pipeline can run
+# -----------------------------------------------------------------------------
+# The Cloud Build service account (PROJECT_NUMBER@cloudbuild.gserviceaccount.com,
+# or a dedicated SA if configured on the trigger) needs these roles:
+#   - roles/run.admin                -> deploy/update Cloud Run services
+#   - roles/artifactregistry.writer  -> push images to the `thesisos` repo
+#   - roles/iam.serviceAccountUser   -> act as the Cloud Run runtime SA
+# The Artifact Registry repo `thesisos` and the Cloud Run services
+# (thesisos-backend / thesisos-frontend) are provisioned via infra/terraform.
+#
+# Follow-up: frontend NEXT_PUBLIC_API_BASE_URL build arg
+# -----------------------------------------------------------------------------
+# NEXT_PUBLIC_API_BASE_URL is inlined into the frontend bundle at BUILD time
+# (Next.js), so in a real deploy the frontend image must be built with the
+# backend's public Cloud Run URL passed as a Docker build arg, e.g.:
+#     --build-arg NEXT_PUBLIC_API_BASE_URL=https://thesisos-backend-....run.app
+# docker/frontend.Dockerfile does NOT yet declare this ARG. TODO(follow-up):
+# add `ARG NEXT_PUBLIC_API_BASE_URL` + `ENV ...` to the frontend Dockerfile and
+# wire the resolved backend URL here (this is intentionally out of scope for M0).
+# =============================================================================
+
+steps:
+  # 1. Build the backend image (build context = repo root).
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend'
+    args:
+      - 'build'
+      - '-f'
+      - 'docker/backend.Dockerfile'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/backend:$SHORT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/backend:latest'
+      - '.'
+
+  # 2. Build the frontend image (build context = repo root).
+  # TODO(follow-up): pass --build-arg NEXT_PUBLIC_API_BASE_URL=<backend url>
+  # once docker/frontend.Dockerfile declares the ARG (see header note).
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    args:
+      - 'build'
+      - '-f'
+      - 'docker/frontend.Dockerfile'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/frontend:$SHORT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/frontend:latest'
+      - '.'
+
+  # 3a. Push the backend image (all tags for the repo path).
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/backend'
+
+  # 3b. Push the frontend image (all tags for the repo path).
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-frontend'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/frontend'
+
+  # 4. Deploy the backend to Cloud Run.
+  # NOTE: the real deploy/runbook also passes --add-cloudsql-instances=<conn name>
+  # and wires secrets/env (e.g. --set-secrets=DATABASE_URL=database-url:latest).
+  # Those are intentionally omitted here for M0 (author + validate only).
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-backend'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'thesisos-backend'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/backend:$SHORT_SHA'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+
+  # 5. Deploy the frontend to Cloud Run.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-frontend'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'thesisos-frontend'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/frontend:$SHORT_SHA'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+
+# Images Cloud Build should ensure are pushed to Artifact Registry on success.
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/backend:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/backend:latest'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/frontend:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/thesisos/frontend:latest'
+
+# Required when no explicit logs bucket is configured for the build.
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: europe-west1
