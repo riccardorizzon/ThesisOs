@@ -7,7 +7,8 @@ resource "google_sql_database_instance" "pg" {
   deletion_protection = false
 
   settings {
-    tier = var.db_tier
+    tier    = var.db_tier
+    edition = "ENTERPRISE"
   }
 
   depends_on = [google_project_service.services]
