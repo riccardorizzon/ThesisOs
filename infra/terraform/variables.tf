@@ -23,3 +23,11 @@ variable "db_password" {
   sensitive   = true
   default     = ""
 }
+
+# Public (allUsers) invoker access is OPT-IN and OFF by default. Enabling it is a
+# deliberate choice; IAP or authenticated-invoker access is strongly preferred.
+variable "allow_public_invoker" {
+  type        = bool
+  description = "When true, grant roles/run.invoker to allUsers (public access). Off by default."
+  default     = false
+}
