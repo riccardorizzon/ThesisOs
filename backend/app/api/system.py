@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Response
+from fastapi.responses import JSONResponse
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy import text
 
@@ -20,9 +21,10 @@ def ready():
             c.execute(text("SELECT 1"))
     except Exception:
         db_ok = False
-    status_code = 200 if db_ok else 503
-    body = f'{{"status":"{"ready" if db_ok else "degraded"}","db":{str(db_ok).lower()},"config":true}}'
-    return Response(content=body, media_type="application/json", status_code=status_code)
+    return JSONResponse(
+        status_code=200 if db_ok else 503,
+        content={"status": "ready" if db_ok else "degraded", "db": db_ok, "config": True},
+    )
 
 
 @router.get("/metrics")

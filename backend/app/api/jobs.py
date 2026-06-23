@@ -1,19 +1,19 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/jobs")
 
 
 class JobCreate(BaseModel):
     type: str
-    payload: dict = {}
+    payload: dict = Field(default_factory=dict)
 
 
-@router.post("", status_code=501)
+@router.post("")
 def create_job(_: JobCreate):
     raise HTTPException(status_code=501, detail="job execution wired post-M0 (ADR-0009)")
 
 
-@router.get("/{job_id}", status_code=501)
+@router.get("/{job_id}")
 def get_job(job_id: str):
     raise HTTPException(status_code=501, detail="job execution wired post-M0 (ADR-0009)")
