@@ -334,6 +334,10 @@ from day one, exporting to Cloud Logging/Trace in prod and console locally, and 
 agents arrive, every run/step is traced. (Operational standard; supports the M0→M1
 promotion gates in ADR-0010.)
 
+> **M0 reality:** M0 ships the FastAPI instrumentation hook + structured JSON logging +
+> a `prometheus_client`-backed `/metrics`. The `TracerProvider` + Cloud Trace/Logging
+> exporter (and tracing of the LLM abstraction) land in M1/M11.
+
 ---
 
 ## 14. Infrastructure (ADR-0004 Cloud Day One, ADR-0008 Dev = Prod) — Terraform

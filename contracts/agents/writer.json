@@ -4,5 +4,5 @@
   "input": { "reads_state": ["plan", "retrieved_context", "messages"] },
   "output": { "writes_state": ["draft", "citations"] },
   "errors": ["empty_context", "generation_failed"],
-  "state_mutations": { "draft": "set", "citations": "append" }
+  "state_mutations": { "draft": "set", "citations": "set" }
 }

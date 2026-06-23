@@ -229,10 +229,11 @@ FastAPI request path. M0 ships the interface, the `POST /jobs` + `GET /jobs/{id}
 contracts, and a no-op worker stub. Production target: Cloud Run Jobs / Cloud
 Tasks; locally the same interface is backed by an in-process worker.
 
-**Observability (spec §13).** `services/telemetry/` bootstraps OpenTelemetry
-(traces + metrics) and structured JSON logging from day one — exporting to Cloud
-Logging/Trace in prod and the console locally — and backs `GET /metrics`. It is
-wired into the FastAPI app and the LLM abstraction so that, once agents arrive,
+**Observability (spec §13).** In M0, `services/telemetry/` installs the
+OpenTelemetry FastAPI **instrumentation hook** (`FastAPIInstrumentor.instrument_app`)
+and `core/logging.py` configures structured JSON logging; `GET /metrics` is served
+by `prometheus_client`. A full `TracerProvider` + exporter to Cloud Trace/Logging
+(and tracing of the LLM abstraction) is wired in **M1/M11**, not M0 — so that, once agents arrive,
 every run/step is traced.
 
 ---
