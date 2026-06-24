@@ -47,6 +47,9 @@ references/design-skills/
 .cursor/settings.json
 .impeccable/
 
+# Local-only compose overrides (ADC mount, project wiring)
+docker-compose.override.yml
+
 # OS / editor
 .DS_Store
 Thumbs.db
