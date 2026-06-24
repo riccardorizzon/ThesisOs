@@ -66,6 +66,7 @@ CREATE TABLE memories (
 	id UUID DEFAULT gen_random_uuid() NOT NULL, 
 	kind VARCHAR(16) NOT NULL, 
 	key TEXT, 
+	title TEXT, 
 	content TEXT NOT NULL, 
 	pinned BOOLEAN NOT NULL, 
 	source VARCHAR(16) NOT NULL, 
@@ -120,6 +121,19 @@ CREATE TABLE chunks (
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(document_id) REFERENCES documents (id)
+);
+
+CREATE TABLE memory_versions (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	memory_id UUID NOT NULL, 
+	version INTEGER NOT NULL, 
+	title TEXT, 
+	content TEXT NOT NULL, 
+	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	source VARCHAR(16) NOT NULL, 
+	changed_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(memory_id) REFERENCES memories (id) ON DELETE CASCADE
 );
 
 CREATE TABLE messages (

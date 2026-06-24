@@ -2,6 +2,7 @@ import pytest
 from app.llm.base import TokenChunk
 from app.graph.conversation import build_graph
 from app.schemas.graph_state import GraphState, Message
+from app.schemas.memory import PromptContext
 
 
 class FakeLLM:
@@ -14,11 +15,16 @@ class FakeLLM:
     async def vision(self, *a, **k): raise NotImplementedError
 
 
+class StubMemoryService:
+    async def load_prompt_context(self, **kwargs):
+        return PromptContext()
+
+
 @pytest.fixture
 def app_graph():
     # InMemorySaver keeps this test free of Postgres
     from langgraph.checkpoint.memory import InMemorySaver
-    return build_graph(FakeLLM(), checkpointer=InMemorySaver())
+    return build_graph(FakeLLM(), checkpointer=InMemorySaver(), memory_service=StubMemoryService())
 
 
 async def test_graph_streams_tokens_and_persists_assistant(app_graph):
