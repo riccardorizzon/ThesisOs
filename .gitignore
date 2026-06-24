@@ -45,6 +45,7 @@ references/design-skills/
 # Local agent config (skills under .cursor/skills/ ARE tracked)
 .cursor/hooks.json
 .cursor/settings.json
+.impeccable/
 
 # OS / editor
 .DS_Store
