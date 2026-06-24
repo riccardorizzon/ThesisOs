@@ -1,8 +1,10 @@
 from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 
+from app.graph.memory_context import make_memory_context_node
 from app.llm.base import LLMClient
 from app.schemas.graph_state import GraphState, Message
+from app.services.memory.service import MemoryService
 
 
 def make_conversation_node(llm: LLMClient):
@@ -35,9 +37,16 @@ def make_conversation_node(llm: LLMClient):
     return conversation_node
 
 
-def build_graph(llm: LLMClient, *, checkpointer):
+def build_graph(
+    llm: LLMClient,
+    *,
+    checkpointer,
+    memory_service: MemoryService | None = None,
+):
     g = StateGraph(GraphState)
+    g.add_node("memory_context_node", make_memory_context_node(memory_service))
     g.add_node("conversation_node", make_conversation_node(llm))
-    g.add_edge(START, "conversation_node")
+    g.add_edge(START, "memory_context_node")
+    g.add_edge("memory_context_node", "conversation_node")
     g.add_edge("conversation_node", END)
     return g.compile(checkpointer=checkpointer)

@@ -97,15 +97,82 @@ paths:
         "501": { description: not implemented yet }
   /memory:
     get:
-      summary: Retrieve memory
+      summary: List memories
       x-milestone: M2
+      parameters:
+        - { name: kind, in: query, required: false, schema: { type: string, enum: [user, thesis, concept, citation, decision, editable] } }
+        - { name: key, in: query, required: false, schema: { type: string } }
+        - { name: pinned, in: query, required: false, schema: { type: boolean } }
+        - { name: q, in: query, required: false, schema: { type: string }, description: "Case-insensitive substring filter (not semantic search)" }
+        - { name: limit, in: query, required: false, schema: { type: integer, default: 50, minimum: 1, maximum: 200 } }
+        - { name: offset, in: query, required: false, schema: { type: integer, default: 0, minimum: 0 } }
       responses:
-        "501": { description: not implemented yet }
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Memory" } }
     post:
-      summary: Store memory
+      summary: Create memory
       x-milestone: M2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MemoryCreate" }
       responses:
-        "501": { description: not implemented yet }
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Memory" }
+        "409": { description: Singleton already exists, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "422": { description: Invalid kind, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /memory/{id}:
+    get:
+      summary: Get memory by id
+      x-milestone: M2
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Memory" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    patch:
+      summary: Update memory (optimistic lock)
+      x-milestone: M2
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MemoryUpdate" }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Memory" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "409": { description: write_conflict, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    delete:
+      summary: Delete memory
+      x-milestone: M2
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Deleted }
+        "400": { description: Cannot delete singleton, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /memory/{id}/versions:
+    get:
+      summary: List memory version history (read-only)
+      x-milestone: M2
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/MemoryVersion" } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
   /citations:
     post:
       summary: Create citations
@@ -143,3 +210,49 @@ components:
       type: object
       properties: { code: { type: string }, message: { type: string } }
       required: [code, message]
+    Memory:
+      type: object
+      required: [id, kind, content, metadata, pinned, source, version, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [user, thesis, concept, citation, decision, editable] }
+        title: { type: string, nullable: true }
+        content: { type: string }
+        metadata: { type: object }
+        key: { type: string, nullable: true }
+        pinned: { type: boolean }
+        source: { type: string, enum: [user, system, agent] }
+        version: { type: integer, minimum: 1 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    MemoryCreate:
+      type: object
+      required: [kind, content]
+      properties:
+        kind: { type: string, enum: [user, thesis, concept, citation, decision, editable] }
+        title: { type: string, nullable: true }
+        content: { type: string }
+        metadata: { type: object }
+        key: { type: string, nullable: true }
+        pinned: { type: boolean, default: false }
+        source: { type: string, enum: [user, system, agent], default: user }
+    MemoryUpdate:
+      type: object
+      required: [expected_version]
+      properties:
+        title: { type: string, nullable: true }
+        content: { type: string, nullable: true }
+        metadata: { type: object, nullable: true }
+        pinned: { type: boolean, nullable: true }
+        expected_version: { type: integer, minimum: 1 }
+    MemoryVersion:
+      type: object
+      required: [memory_id, version, content, source, changed_at]
+      properties:
+        memory_id: { type: string, format: uuid }
+        version: { type: integer }
+        title: { type: string, nullable: true }
+        content: { type: string }
+        metadata: { type: object }
+        source: { type: string }
+        changed_at: { type: string, format: date-time }
