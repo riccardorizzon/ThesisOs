@@ -34,6 +34,17 @@ crash.log
 *.tfvars
 !*.tfvars.example
 
+# UI reference clones (large external repos)
+references/ui-libraries/
+references/design-skills/
+
+# Builder agent worktrees (orchestrate-builders skill)
+.worktrees/
+
+# Local agent config (skills under .cursor/skills/ ARE tracked)
+.cursor/hooks.json
+.cursor/settings.json
+
 # OS / editor
 .DS_Store
 Thumbs.db

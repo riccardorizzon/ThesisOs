@@ -1,0 +1,50 @@
+# Example packet — copy to plans/builder/packets/<id>.yaml
+
+id: P4
+wave: 2
+agent_type: implementer
+
+objective: >-
+  Implement LiteLLMClient and factory per M1 spec §4.1:
+  astream via litellm.acompletion(stream=True), TokenChunk envelope,
+  get_llm_client() factory with NotConfiguredLLM fallback.
+
+depends_on:
+  - P1
+
+owned_files:
+  - backend/app/llm/litellm_client.py
+  - backend/app/llm/factory.py
+
+reads:
+  - docs/superpowers/specs/2026-06-24-thesisos-m1-conversation-system-design.md
+  - decisions/ADR-0011-streaming-first-llm.md
+  - plans/builder/STATE.yaml
+
+writes_state:
+  - packets.P4.output
+  - packets.P4.checks
+
+do_not_touch:
+  - backend/app/graph/
+  - frontend/
+  - infra/
+
+invariants:
+  - "LLMClient Protocol additive only — generate/embed unchanged"
+  - "TokenChunk: text (required), finish_reason | None, metadata dict"
+
+out_of_scope:
+  - ConversationService
+  - LangGraph nodes
+
+required_checks:
+  - cmd: cd backend && pytest tests/ -k llm -q
+    expect: pass
+
+done_criteria:
+  - "LiteLLMClient.astream yields TokenChunk from litellm stream"
+  - "factory returns LiteLLMClient when google_cloud_project set"
+  - "NotConfiguredLLM.astream raises not-configured"
+
+integration_notes: ""

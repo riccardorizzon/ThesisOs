@@ -1,0 +1,41 @@
+# Work packet template — copy to plans/builder/packets/<id>.yaml
+
+id: P1
+wave: 1
+agent_type: explorer  # explorer | implementer | reviewer | integrator
+
+objective: "Analyze backend LLM layer for M1 streaming requirements"
+
+depends_on: []  # packet IDs that must be done first
+
+owned_files:
+  - backend/app/llm/
+
+reads:
+  - docs/superpowers/specs/2026-06-24-thesisos-m1-conversation-system-design.md
+  - decisions/ADR-0011-streaming-first-llm.md
+
+writes_state:
+  - packets.P1.output
+  - packets.P1.checks
+
+do_not_touch:
+  - frontend/
+  - infra/
+
+invariants:
+  - "LLMClient Protocol is additive only — astream + TokenChunk"
+  - "TokenChunk frozen: text, finish_reason, metadata"
+
+out_of_scope:
+  - LangGraph graph wiring
+  - Frontend SSE client
+
+required_checks: []  # explorers: empty or read-only checks
+
+done_criteria:
+  - "Intent map of llm/ module delivered"
+  - "Candidate owned_files for implementer packet P4 identified"
+  - "Risks and coupling notes for Sync node"
+
+integration_notes: ""

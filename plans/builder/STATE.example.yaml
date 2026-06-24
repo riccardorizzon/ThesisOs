@@ -1,0 +1,107 @@
+# Builder orchestration STATE — copy to STATE.yaml and customize per epic.
+# Validate: .cursor/skills/orchestrate-builders/scripts/validate-state.sh
+
+epic: m1-conversation-system
+chain: m1-conv-001
+status: active  # active | closed
+wave: 1
+
+# Frozen constraints — every agent MUST respect (from plan anti-goals + ADRs)
+decisions:
+  - "GraphState frozen (ADR-0007) — no new fields without ADR"
+  - "RunContext separate from GraphState (ADR-0014)"
+  - "TokenChunk frozen: text, finish_reason, metadata (ADR-0011)"
+  - "M1 scope: chat loop only — no agents, RAG, tools, ingestion"
+
+# Active file ownership during a wave (path prefix → packet id)
+file_locks: {}
+
+# Open blockers (packet id → description)
+blockers: {}
+
+packets:
+  P1:
+    wave: 1
+    agent_type: explorer
+    status: ready  # ready | in_progress | done | blocked | cancelled
+    depends_on: []
+    owned_files:
+      - backend/app/llm/
+    output: null
+    checks: []
+    integration_notes: null
+
+  P2:
+    wave: 1
+    agent_type: explorer
+    status: ready
+    depends_on: []
+    owned_files:
+      - backend/app/graph/
+      - backend/app/services/
+    output: null
+    checks: []
+    integration_notes: null
+
+  P3:
+    wave: 1
+    agent_type: explorer
+    status: ready
+    depends_on: []
+    owned_files:
+      - frontend/lib/
+      - frontend/components/
+    output: null
+    checks: []
+    integration_notes: null
+
+  P4:
+    wave: 2
+    agent_type: implementer
+    status: ready
+    depends_on: [P1]
+    owned_files:
+      - backend/app/llm/litellm_client.py
+      - backend/app/llm/factory.py
+    output: null
+    checks: []
+    integration_notes: null
+
+  P5:
+    wave: 2
+    agent_type: implementer
+    status: ready
+    depends_on: [P2]
+    owned_files:
+      - backend/app/graph/
+      - backend/app/services/conversation.py
+      - backend/app/api/chat.py
+    output: null
+    checks: []
+    integration_notes: null
+
+  P6:
+    wave: 2
+    agent_type: implementer
+    status: ready
+    depends_on: [P3]
+    owned_files:
+      - frontend/lib/api.ts
+      - frontend/lib/store.ts
+      - frontend/app/chat/
+      - frontend/components/
+    output: null
+    checks: []
+    integration_notes: null
+
+  P7:
+    wave: 3
+    agent_type: integrator
+    status: ready
+    depends_on: [P4, P5, P6]
+    owned_files:
+      - backend/tests/
+      - contracts/
+    output: null
+    checks: []
+    integration_notes: null

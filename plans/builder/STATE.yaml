@@ -1,0 +1,77 @@
+# Builder orchestration STATE — M1 Conversation System.
+# Validate: .cursor/skills/orchestrate-builders/scripts/validate-state.sh
+#
+# NOTE: The generic explorer layout (P1–P7) was replaced by the plan-driven
+# packets below. The written plan IS the analysis, so wave-1 explorers are
+# dropped (see docs/superpowers/plans/2026-06-24-m1-conversation-system.md).
+# Source of truth per packet = the task ranges in that plan + the design spec.
+
+epic: m1-conversation-system
+chain: m1-conv-001
+status: active  # active | closed
+wave: 1
+
+# Frozen constraints — every agent MUST respect (from plan anti-goals + ADRs + Architect review 2787400)
+decisions:
+  - "GraphState frozen (ADR-0007) — no new fields without ADR"
+  - "RunContext separate from GraphState, runtime-only (ADR-0014)"
+  - "TokenChunk frozen: text, finish_reason, metadata (ADR-0011)"
+  - "M1 scope: chat loop only — no agents, RAG, tools, ingestion"
+  - "Seam-first: NO add_messages reducer on GraphState — caller builds messages from DB"
+  - "Token usage recorded on agent_runs, NOT on messages (spec §5)"
+  - "Architect 2787400: per-conversation locking, SSE heartbeat (ping=15), langgraph-owned schema (ADR-0012)"
+
+# Active file ownership during a wave (path prefix → packet id). Empty until a wave starts.
+file_locks: {}
+
+# Open blockers (packet id → description)
+blockers: {}
+
+# Plan ↔ builder packet map:
+#   P-B = plan Tasks 1–12 (backend)   — executed SEQUENTIALLY via subagent-driven-development
+#   P-F = plan Tasks 13–16 (frontend) — builder wave, 1 worktree
+#   P-G = plan Task 17 (gate)         — integrator, main repo
+packets:
+  P-B:
+    wave: 1
+    agent_type: implementer
+    status: ready  # ready | in_progress | done | blocked | cancelled
+    depends_on: []
+    owned_files:
+      - backend/pyproject.toml
+      - backend/app/llm/
+      - backend/app/schemas/run_context.py
+      - backend/app/db/session_async.py
+      - backend/app/graph/
+      - backend/app/services/conversation/
+      - backend/app/api/chat.py
+      - backend/app/main.py
+      - contracts/
+    output: null
+    checks: []
+    integration_notes: "Plan Tasks 1–12. Execute sequentially (subagent-driven, NOT a parallel builder wave): deps → LLM → graph → service → /chat → lifespan → contracts. TDD red→green→commit per task. Worktree: main."
+
+  P-F:
+    wave: 2
+    agent_type: implementer
+    status: ready
+    depends_on: [P-B]
+    owned_files:
+      - frontend/lib/api.ts
+      - frontend/lib/store.ts
+      - frontend/components/
+      - frontend/app/chat/
+    output: null
+    checks: []
+    integration_notes: "Plan Tasks 13–16. Builder wave once P-B Task 10 (POST /chat SSE) is green. Worktree: .worktrees/packet-P-F/. Type-check + build before done."
+
+  P-G:
+    wave: 3
+    agent_type: integrator
+    status: ready
+    depends_on: [P-F]
+    owned_files:
+      - docs/
+    output: null
+    checks: []
+    integration_notes: "Plan Task 17. Cross-stack gate: full pytest + ruff, live smoke, verify langgraph schema tables, record M1 promotion. Worktree: main."
