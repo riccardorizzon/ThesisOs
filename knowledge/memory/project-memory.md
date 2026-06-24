@@ -67,11 +67,9 @@ Technical: 0002 Vertex-Runtime-Only · 0003 Custom-Memory · 0011 Streaming-Firs
 - **M0 Foundations — ✅ complete & promoted** (`m0-complete`). Deployed on
   `thesisos-prod`; gate fully green.
 - **M1 Conversation System — ✅ promoted** (`m1-complete` on `main`).
-- **M2 Memory — 🟡 Phases 1–6 complete** (branch `m2-memory-system`): DB, Service,
-  API, Admin UI, graph injection. **Open:** events (optional), promotion tag.
-- **M3–M18 ⬜** — M3+ require frozen specs before implementation.
-
-Detail: `project/milestones.md`, `project/roadmap.md`.
+- **M2 Memory — ✅ promoted** (`m2-complete` on `main`).
+- **M3 Documents — 🟡 spec draft** (branch `m3-document-system`): ADR-0020/0021/0022 + design spec. **No code until freeze.**
+- **M4–M18 ⬜** — require frozen specs before implementation.
 
 ---
 
@@ -108,7 +106,7 @@ Detail: `project/milestones.md`, `project/roadmap.md`.
 
 ## 7. Future planned work
 
-- **Next:** **M2 promotion** (merge + tag) → **M3 Document System** (spec first).
+- **Next:** **M3 spec freeze** (Critic) → Planner → M3 implementation. **No M3 code yet.**
 - **M4–M6** (usable-product line): retrieval → tool router → writing.
 - **M7–M11:** citations → outline → critic → QA → GCP hardening (tracing, durable
   jobs, instance sizing, cold starts).

@@ -1,18 +1,17 @@
 # Current State
 
-> Snapshot as of **2026-06-24** (M2 Phase 6 complete). Branch: `m2-memory-system` (from `main` @ `m1-complete`). Sources: code, tests, `docs/m2-promotion.md`, gates M0/M1, M2 spec.
+> Snapshot as of **2026-06-24** (M2 promoted; M3 spec draft). Branch: `m3-document-system` (from `main` @ `m2-complete`).
 
 ## Where are we?
 
-**M2 Memory System — Phases 1–6 complete; promotion gate pending.**
-
-M0 and M1 are **promoted and tagged** on `main` (`m0-complete`, `m1-complete`). Active development is on branch `m2-memory-system` for the memory foundation.
+**M2 promoted and tagged. M3 Document System — spec draft only; no implementation.**
 
 ```text
 M0 Foundations     ✅ promoted (m0-complete)
 M1 Conversation    ✅ promoted (m1-complete)
-M2 Memory          🟡 Phases 1–6 done; promotion + tag pending
-M3+                ⬜ not started
+M2 Memory          ✅ promoted (m2-complete)
+M3 Documents       🟡 spec draft — pending Critic freeze
+M4+                ⬜ not started
 ```
 
 ## What is completed?
@@ -57,8 +56,9 @@ See `context/completed-work.md`. Chat seam frozen: `POST /chat` → `Conversatio
 
 ## What is next?
 
-1. **M2 promotion** — flip remaining gate items in `docs/m2-promotion.md` → merge `m2-memory-system` → `main` → tag `m2-complete`.
-2. **M3 Document System** — Architect frozen spec first (Docling, chunks, storage; no embeddings/retrieval).
+1. **M3 Critic review** — approve spec (`Could this design accidentally become retrieval?` → must stay NO).
+2. **M3 spec freeze** — Architect approval → Planner TDD plan.
+3. **M3 implementation** — forbidden until spec frozen.
 
 See `context/next-actions.md`.
 
@@ -70,7 +70,9 @@ See `context/next-actions.md`.
 | M1 | ✅ tagged on main |
 | M2 DB/Service/API/UI | ✅ Phases 1–4 |
 | M2 graph injection | ✅ Phase 6 |
-| M2 tag | ⬜ pending promotion |
+| M2 tag | ✅ `m2-complete` on `main` |
+| M3 spec | 🟡 draft on `m3-document-system` |
+| M3 code | ⬜ forbidden until freeze |
 | M3+ | ⬜ not started |
 | GraphState / RunContext / LLMClient / ConversationService | frozen, unchanged |
 | Tests | backend 39/14 skip; frontend 15 |

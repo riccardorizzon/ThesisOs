@@ -6,25 +6,25 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 
 ---
 
-## IMMEDIATE — M2 Promotion (P0)
+## IMMEDIATE — M3 Spec Freeze (P0)
 
-- **T029f** [P0] 🔴 Merge `m2-memory-system` → `main`; tag `m2-complete`. dep: Phases 1–6 ✅, Critic/QA ✅
-- **T029e** [P1] 🟢 Wire `MemoryUpdated` event (optional M2 close-out). dep: event bus
+- **T030** [P0] 🔴 Critic: review M3 spec — retrieval accident check (ADR-0022). dep: spec draft ✅
+- **T031** [P0] 🔴 Architect: freeze spec → status Approved. dep: T030
+- **T032** [P1] Planner: M3 TDD plan + builder packets. dep: T031
+- **T033** [P0] 🔴 **No M3 code** until T031 complete.
 
-## M2 Phases 1–6 ✅ (completed on `m2-memory-system`)
+## M2 ✅ (promoted on `main`, tag `m2-complete`)
 
-- **T017** ✅ M2 spec frozen + ADR-0015/0017/0018
-- **T019** ✅ MemoryService
-- **T020** ✅ `/memory` API
-- **T025** ✅ Memory Administration UI (+ Vitest T016 partial)
-- **T027** ✅ Memory tests (service + API)
-- **T029a–d** ✅ Phase 6 graph + Critic + QA
+Merged 2026-06-24. Phases 1–6 complete.
 
 ---
 
-## M3 — Document System (P0 next milestone)
+## M3 — Document System (P0 — spec only)
 
-Requires Architect-frozen M3 spec before implementation. No embeddings, retrieval, or writer agents.
+Frozen spec target: `docs/superpowers/specs/2026-06-24-thesisos-m3-document-system-design.md`  
+ADRs: 0020, 0021, 0022. Architecture mirror: `knowledge/architecture/documents.md`.
+
+**Forbidden until freeze:** any M3 implementation (DocumentService, migrations, UI, parsers).
 
 ---
 
