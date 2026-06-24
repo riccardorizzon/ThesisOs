@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
@@ -13,6 +14,8 @@ from app.graph.conversation import build_graph
 from app.llm.factory import get_llm_client
 from app.schemas.graph_state import GraphState, Message
 from app.schemas.run_context import RunContext
+
+logger = logging.getLogger("app.services.conversation")
 
 
 class ConversationService:
@@ -84,7 +87,9 @@ class ConversationService:
             await self._finalize(run_id, conv_id, status="error", usage=usage, error="llm_not_configured")
             return
         except Exception as e:  # mid-stream failure
-            yield {"event": "error", "data": {"code": "stream_error", "message": str(e)}}
+            logger.exception("chat stream failed for conversation %s", conv_id)
+            yield {"event": "error", "data": {"code": "stream_error",
+                                              "message": "An error occurred while streaming the response"}}
             await self._finalize(run_id, conv_id, status="error", usage=usage, error=str(e))
             return
 

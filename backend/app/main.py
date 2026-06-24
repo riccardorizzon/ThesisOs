@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -15,7 +16,9 @@ async def lifespan(app: FastAPI):
     try:
         await ensure_langgraph_schema()
     except Exception:  # DB may be unavailable at boot in some envs; checkpointer setup is idempotent
-        pass
+        logging.getLogger("app.main").warning(
+            "ensure_langgraph_schema failed at startup; checkpointer setup will retry lazily", exc_info=True
+        )
     yield
 
 

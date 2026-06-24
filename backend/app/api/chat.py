@@ -2,7 +2,7 @@ import json
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 from app.services.conversation import ConversationService
@@ -13,7 +13,7 @@ _service = ConversationService()
 
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(min_length=1, max_length=32000)
     conversation_id: str | None = None
 
 
@@ -39,5 +39,5 @@ async def chat(req: ChatRequest):
             if locked_id:
                 conversation_locks.release(locked_id)
 
-    # ping= sends `event: ping` heartbeats every 15s (spec §7)
+    # ping=15 sends an SSE comment heartbeat every 15s to keep the connection alive (spec §7)
     return EventSourceResponse(event_gen(), ping=15)
