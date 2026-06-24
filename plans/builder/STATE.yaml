@@ -74,4 +74,4 @@ packets:
       - docs/
     output: null
     checks: []
-    integration_notes: "Plan Task 17 — PENDING. Cross-stack gate: full pytest + ruff (green), live smoke (Docker+DB+Vertex ADC — deferred), verify langgraph schema tables, record M1 promotion, finish branch. Worktree: main."
+    integration_notes: "Plan Task 17 — PENDING. Gate: pytest+ruff (green), live smoke (Docker+DB+Vertex ADC — deferred), verify langgraph schema tables, record M1 promotion, finish branch. Review fixes f26885c applied (C1 SSE CRLF blocker, msg validation, error hygiene). DEFERRED review items to address at/with the live gate: I1 finalize AgentRun on client-disconnect/cancel + guard pre/post-stream DB work (orphaned 'running' rows); I2 synchronous 503 llm_not_configured before opening stream (+ frontend 503 branch); M4 lazy-lock for new conversations is a no-op; M7 wire AbortController for cancel. Add an end-to-end SSE test exercising real CRLF bytes through postChatStream."
