@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useRef } from "react";
 import { postChatStream } from "@/lib/api";
 import { ConversationList } from "@/components/ConversationList";
 import { InputBox } from "@/components/InputBox";
@@ -8,21 +9,34 @@ import { useChatStore } from "@/lib/store";
 export default function ChatPage() {
   const { conversationId, messages, streaming, error,
     setConversationId, addMessage, appendToLastAssistant, setStreaming, setError } = useChatStore();
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Abort any in-flight stream if the page unmounts.
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   async function send(text: string) {
+    abortRef.current?.abort(); // cancel a previous stream before starting a new one
+    const ac = new AbortController();
+    abortRef.current = ac;
     setError(null);
     addMessage({ role: "user", content: text });
     addMessage({ role: "assistant", content: "" });
     setStreaming(true);
-    await postChatStream(
-      { message: text, conversation_id: conversationId ?? undefined },
-      (e) => {
-        if (e.event === "token") appendToLastAssistant(e.data.text);
-        else if (e.event === "done") setConversationId(e.data.conversation_id);
-        else if (e.event === "error") setError(e.data.message);
-      },
-    ).catch((err) => setError(String(err)));
-    setStreaming(false);
+    try {
+      await postChatStream(
+        { message: text, conversation_id: conversationId ?? undefined },
+        (e) => {
+          if (e.event === "token") appendToLastAssistant(e.data.text);
+          else if (e.event === "done") setConversationId(e.data.conversation_id);
+          else if (e.event === "error") setError(e.data.message);
+        },
+        ac.signal,
+      );
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === "AbortError")) setError(String(err));
+    } finally {
+      setStreaming(false);
+    }
   }
 
   return (

@@ -24,6 +24,7 @@ export async function postChatStream(
     signal,
   });
   if (r.status === 409) { onEvent({ event: "error", data: { code: "conversation_busy", message: "Busy" } }); return; }
+  if (r.status === 503) { onEvent({ event: "error", data: { code: "llm_not_configured", message: "LLM runtime not configured" } }); return; }
   if (!r.body) throw new Error(`chat ${r.status}`);
 
   const reader = r.body.getReader();
