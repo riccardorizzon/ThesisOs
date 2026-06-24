@@ -90,8 +90,9 @@ Each unit has one purpose, a well-defined interface, and is testable in isolatio
 
 - **`app/llm/base.py`** (extend, additive) — `LLMClient` Protocol gains
   `astream(messages, *, model=None, params=None) -> AsyncIterator[TokenChunk]`; add
-  `TokenChunk(text, finish_reason, metadata)`. `generate/embed/vision` unchanged.
-  `NotConfiguredLLM` implements `astream` (raises not-configured).
+  `TokenChunk` **frozen to exactly three fields**: `text: str` (required), `finish_reason: str |
+  None = None`, `metadata: dict = {}`. No other fields may be added in M1. `generate/embed/vision`
+  unchanged. `NotConfiguredLLM` implements `astream` (raises not-configured).
 - **`app/llm/litellm_client.py`** (new) — `LiteLLMClient` implementing the Protocol via LiteLLM
   → Vertex (ADC). `astream` wraps `litellm.acompletion(..., stream=True)` and yields
   `TokenChunk`. `generate` provided for non-streaming callers/tests.
@@ -134,6 +135,13 @@ Each unit has one purpose, a well-defined interface, and is testable in isolatio
   turn resume thread state, but it is not a second source of truth for the conversation.
 - **Token accounting:** recorded on `agent_runs` (via `RunContext`), **not** on `messages`, so
   future per-agent token consumption attaches without touching domain rows.
+- **RunContext is runtime-only (ADR-0014):** passed via the graph invocation config, it MUST NOT
+  be persisted into the LangGraph checkpoint or embedded in `GraphState`. Checkpoints carry domain
+  working state only; execution metadata (trace/request/run ids) lives for the duration of the run.
+- **Conversation title:** created as the literal `"New Conversation"`; automatic titling is
+  deferred to M2 (YAGNI — no LLM title generation in M1).
+- **Single active run per conversation:** M1 assumes `per_conversation_single_active_run = true`
+  (one open stream per conversation at a time); see §8 for how a second concurrent run is rejected.
 
 A turn: persist user `message` → invoke graph (stream) → accumulate assistant tokens → on
 `done`, persist assistant `message` and finalize `agent_run`.
@@ -156,12 +164,17 @@ Named events so future signals slot in without breaking the client:
 
 ```text
 event: token   data: {"text": "<delta>"}
+event: ping    data: {}                                  # heartbeat every 15-20s
 event: done    data: {"conversation_id": "...", "message_id": "...", "usage": {...}}
 event: error   data: {"code": "...", "message": "..."}
 ```
 
+A **heartbeat** `event: ping` is emitted every 15–20s while a stream is open. Cloud Run is
+generally stable, but the heartbeat guards against intermediate idle timeouts and lets the
+client detect a dead connection. The frontend ignores `ping`, appends on `token`, finalizes on
+`done`, surfaces a banner on `error`.
+
 Future (not M1, but the channel is ready): `event: tool`, `event: retrieval`, `event: critic`.
-The frontend appends on `token`, finalizes on `done`, surfaces a banner on `error`.
 
 ---
 
@@ -173,6 +186,10 @@ The frontend appends on `token`, finalizes on `done`, surfaces a banner on `erro
 - **Mid-stream failure:** emit `event: error`, set `agent_run.status = "error"` with the message;
   the UI keeps the partial text and shows the banner.
 - **Client disconnect:** cancel the streaming task; the checkpoint remains consistent.
+- **Concurrent run on same conversation:** M1 enforces one active stream per conversation. A
+  second `POST /chat` for a conversation that already has an in-flight run is rejected with HTTP
+  `409 Conflict` + `{"code": "conversation_busy", "message": "A response is already streaming"}`.
+  The mechanism (in-process lock vs `agent_runs` status guard) is decided in the plan.
 - **Validation:** empty/oversized `message` → `422`/`400` with the `Error{code,message}` schema.
 
 ---
@@ -221,15 +238,22 @@ M2 (memory) will **extend** the graph — add nodes/state usage — not rewrite 
 
 ## 11. Open Questions / Risks
 
-- **PostgresSaver custom schema support:** preference is a dedicated `langgraph` schema; if the
-  pinned `langgraph-checkpoint-postgres` version cannot target a non-public schema, fall back to
-  documented `public` checkpoint tables (still excluded from Alembic/drift) and revisit. Resolve
-  during planning by pinning the version and verifying `.setup()` behavior.
-- **LiteLLM ↔ Vertex streaming shape:** confirm `litellm.acompletion(stream=True)` chunk fields
-  map cleanly to `TokenChunk` (delta text + final `finish_reason`/usage) for `vertex_ai/gemini-2.5-pro`.
-- **SSE through Cloud Run:** confirm streaming responses pass Cloud Run buffering acceptably for
-  single-user latency; acceptable to verify locally first (services are private; M1 dev is local).
-- **Conversation title:** auto-title from first message vs left null in M1 — default to null,
-  decide UX later (no scope creep).
-- **Async DB driver:** `ConversationService` streaming favors async DB access; confirm the
-  session/driver choice (psycopg async) during planning to avoid blocking the event loop.
+Ranked by risk; each is resolved during planning.
+
+- **[HIGH] Concurrent streams on one conversation:** two simultaneous runs writing the same
+  conversation corrupt order and checkpoint state. M1 assumes `per_conversation_single_active_run
+  = true` and rejects a second run with `409` (§8). The plan picks the guard (in-process asyncio
+  lock keyed by `conversation_id`, and/or an `agent_runs` "active" status check) and how stale
+  locks are released after a crash.
+- **[MEDIUM] LiteLLM ↔ Vertex streaming shape:** confirm `litellm.acompletion(stream=True)` chunk
+  fields map cleanly to `TokenChunk` (delta text + final `finish_reason`/usage) for
+  `vertex_ai/gemini-2.5-pro`.
+- **[MEDIUM] Async DB driver:** `ConversationService` streaming favors async DB access; confirm
+  the session/driver choice (psycopg async) during planning to avoid blocking the event loop.
+- **[LOW] PostgresSaver custom schema support:** preference is a dedicated `langgraph` schema; if
+  the pinned `langgraph-checkpoint-postgres` version cannot target a non-public schema, fall back
+  to documented `public` checkpoint tables (still excluded from Alembic/drift) and revisit.
+  Resolve by pinning the version and verifying `.setup()` behavior.
+- **[LOW] SSE through Cloud Run:** confirm streaming responses (with the §7 heartbeat) pass Cloud
+  Run buffering acceptably for single-user latency; verify locally first (services are private; M1
+  dev is local).
