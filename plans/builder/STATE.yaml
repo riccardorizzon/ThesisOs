@@ -35,7 +35,7 @@ packets:
   P-B:
     wave: 1
     agent_type: implementer
-    status: ready  # ready | in_progress | done | blocked | cancelled
+    status: done  # ready | in_progress | done | blocked | cancelled
     depends_on: []
     owned_files:
       - backend/pyproject.toml
@@ -47,23 +47,23 @@ packets:
       - backend/app/api/chat.py
       - backend/app/main.py
       - contracts/
-    output: null
+    output: "Tasks 1-12 done. Backend suite 19 passed / 1 skipped (live-DB integration), ruff clean. Decisions: langgraph pinned to 1.x (APIs verified), sqlalchemy[asyncio]+greenlet added, usage via custom stream writer (GraphState frozen)."
     checks: []
-    integration_notes: "Plan Tasks 1–12. Execute sequentially (subagent-driven, NOT a parallel builder wave): deps → LLM → graph → service → /chat → lifespan → contracts. TDD red→green→commit per task. Worktree: main."
+    integration_notes: "ConversationService.stream_turn NOT unit-tested (only lock guard) — validated at T17 live smoke (Docker+DB+Vertex ADC, deferred)."
 
   P-F:
     wave: 2
     agent_type: implementer
-    status: ready
+    status: done
     depends_on: [P-B]
     owned_files:
       - frontend/lib/api.ts
       - frontend/lib/store.ts
       - frontend/components/
       - frontend/app/chat/
-    output: null
+    output: "Tasks 13–16 done (subagent-driven in main session, not a separate worktree). npx tsc --noEmit clean; next build compiled, /chat route present."
     checks: []
-    integration_notes: "Plan Tasks 13–16. Builder wave once P-B Task 10 (POST /chat SSE) is green. Worktree: .worktrees/packet-P-F/. Type-check + build before done."
+    integration_notes: "postChatStream/store/components/page wired to backend SSE contract. End-to-end UI↔backend streaming unverified until T17 live smoke."
 
   P-G:
     wave: 3
@@ -74,4 +74,4 @@ packets:
       - docs/
     output: null
     checks: []
-    integration_notes: "Plan Task 17. Cross-stack gate: full pytest + ruff, live smoke, verify langgraph schema tables, record M1 promotion. Worktree: main."
+    integration_notes: "Plan Task 17 — PENDING. Cross-stack gate: full pytest + ruff (green), live smoke (Docker+DB+Vertex ADC — deferred), verify langgraph schema tables, record M1 promotion, finish branch. Worktree: main."
