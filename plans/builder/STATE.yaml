@@ -8,7 +8,7 @@
 
 epic: m1-conversation-system
 chain: m1-conv-001
-status: active  # active | closed
+status: closed  # active | closed — Architect approved merge 2026-06-24; tag m1-complete
 wave: 1
 
 # Frozen constraints — every agent MUST respect (from plan anti-goals + ADRs + Architect review 2787400)
@@ -68,10 +68,10 @@ packets:
   P-G:
     wave: 3
     agent_type: integrator
-    status: ready
+    status: done
     depends_on: [P-F]
     owned_files:
       - docs/
-    output: null
+    output: "Task 17 gate green: live docker compose vs real Gemini (thesisos-prod), langgraph checkpoint tables, persistence, docs/m1-promotion.md. Merged main + tag m1-complete (96fd2d9)."
     checks: []
-    integration_notes: "Plan Task 17 — PENDING (only the live smoke remains). Review fixes applied: f26885c (C1 SSE CRLF blocker, msg validation, error hygiene) and 7fa7ba1 (I1 finalize AgentRun on every path incl. disconnect; I2 sync 503 llm_not_configured; M4 full-turn lock incl. new conversations; M7 frontend AbortController; +CRLF SSE regression test). Backend 23 passed/1 skipped, ruff clean; frontend tsc+build green. REMAINING for the gate: docker compose up (db/backend/frontend), apply domain migration in DB, live smoke curl /chat (Gemini via Vertex ADC + GOOGLE_CLOUD_PROJECT) or graceful 503, verify checkpoint* tables in schema 'langgraph', record docs/m1-promotion.md, finish branch (merge→main + tag). Env blockers: 'docker compose' v2 plugin not installed; GOOGLE_CLOUD_PROJECT unset (ADC present)."
+    integration_notes: "Epic closed. Cloud Run deploy (Fase 4) optional follow-up. Usage accounting on agent_runs deferred to M2 (low priority)."
