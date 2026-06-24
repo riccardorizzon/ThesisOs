@@ -17,6 +17,7 @@ out/
 dist/
 build/
 .turbo/
+*.tsbuildinfo
 
 # Env & secrets
 .env
@@ -33,6 +34,21 @@ gcp-credentials*.json
 crash.log
 *.tfvars
 !*.tfvars.example
+
+# UI reference clones (large external repos)
+references/ui-libraries/
+references/design-skills/
+
+# Builder agent worktrees (orchestrate-builders skill)
+.worktrees/
+
+# Local agent config (skills under .cursor/skills/ ARE tracked)
+.cursor/hooks.json
+.cursor/settings.json
+.impeccable/
+
+# Local-only compose overrides (ADC mount, project wiring)
+docker-compose.override.yml
 
 # OS / editor
 .DS_Store

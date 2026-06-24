@@ -1,0 +1,77 @@
+# Builder orchestration STATE — M1 Conversation System.
+# Validate: .cursor/skills/orchestrate-builders/scripts/validate-state.sh
+#
+# NOTE: The generic explorer layout (P1–P7) was replaced by the plan-driven
+# packets below. The written plan IS the analysis, so wave-1 explorers are
+# dropped (see docs/superpowers/plans/2026-06-24-m1-conversation-system.md).
+# Source of truth per packet = the task ranges in that plan + the design spec.
+
+epic: m1-conversation-system
+chain: m1-conv-001
+status: active  # active | closed
+wave: 1
+
+# Frozen constraints — every agent MUST respect (from plan anti-goals + ADRs + Architect review 2787400)
+decisions:
+  - "GraphState frozen (ADR-0007) — no new fields without ADR"
+  - "RunContext separate from GraphState, runtime-only (ADR-0014)"
+  - "TokenChunk frozen: text, finish_reason, metadata (ADR-0011)"
+  - "M1 scope: chat loop only — no agents, RAG, tools, ingestion"
+  - "Seam-first: NO add_messages reducer on GraphState — caller builds messages from DB"
+  - "Token usage recorded on agent_runs, NOT on messages (spec §5)"
+  - "Architect 2787400: per-conversation locking, SSE heartbeat (ping=15), langgraph-owned schema (ADR-0012)"
+
+# Active file ownership during a wave (path prefix → packet id). Empty until a wave starts.
+file_locks: {}
+
+# Open blockers (packet id → description)
+blockers: {}
+
+# Plan ↔ builder packet map:
+#   P-B = plan Tasks 1–12 (backend)   — executed SEQUENTIALLY via subagent-driven-development
+#   P-F = plan Tasks 13–16 (frontend) — builder wave, 1 worktree
+#   P-G = plan Task 17 (gate)         — integrator, main repo
+packets:
+  P-B:
+    wave: 1
+    agent_type: implementer
+    status: done  # ready | in_progress | done | blocked | cancelled
+    depends_on: []
+    owned_files:
+      - backend/pyproject.toml
+      - backend/app/llm/
+      - backend/app/schemas/run_context.py
+      - backend/app/db/session_async.py
+      - backend/app/graph/
+      - backend/app/services/conversation/
+      - backend/app/api/chat.py
+      - backend/app/main.py
+      - contracts/
+    output: "Tasks 1-12 done. Backend suite 19 passed / 1 skipped (live-DB integration), ruff clean. Decisions: langgraph pinned to 1.x (APIs verified), sqlalchemy[asyncio]+greenlet added, usage via custom stream writer (GraphState frozen)."
+    checks: []
+    integration_notes: "ConversationService.stream_turn NOT unit-tested (only lock guard) — validated at T17 live smoke (Docker+DB+Vertex ADC, deferred)."
+
+  P-F:
+    wave: 2
+    agent_type: implementer
+    status: done
+    depends_on: [P-B]
+    owned_files:
+      - frontend/lib/api.ts
+      - frontend/lib/store.ts
+      - frontend/components/
+      - frontend/app/chat/
+    output: "Tasks 13–16 done (subagent-driven in main session, not a separate worktree). npx tsc --noEmit clean; next build compiled, /chat route present."
+    checks: []
+    integration_notes: "postChatStream/store/components/page wired to backend SSE contract. End-to-end UI↔backend streaming unverified until T17 live smoke."
+
+  P-G:
+    wave: 3
+    agent_type: integrator
+    status: ready
+    depends_on: [P-F]
+    owned_files:
+      - docs/
+    output: null
+    checks: []
+    integration_notes: "Plan Task 17 — PENDING (only the live smoke remains). Review fixes applied: f26885c (C1 SSE CRLF blocker, msg validation, error hygiene) and 7fa7ba1 (I1 finalize AgentRun on every path incl. disconnect; I2 sync 503 llm_not_configured; M4 full-turn lock incl. new conversations; M7 frontend AbortController; +CRLF SSE regression test). Backend 23 passed/1 skipped, ruff clean; frontend tsc+build green. REMAINING for the gate: docker compose up (db/backend/frontend), apply domain migration in DB, live smoke curl /chat (Gemini via Vertex ADC + GOOGLE_CLOUD_PROJECT) or graceful 503, verify checkpoint* tables in schema 'langgraph', record docs/m1-promotion.md, finish branch (merge→main + tag). Env blockers: 'docker compose' v2 plugin not installed; GOOGLE_CLOUD_PROJECT unset (ADC present)."

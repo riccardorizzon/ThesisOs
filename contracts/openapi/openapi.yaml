@@ -32,10 +32,25 @@ paths:
   # ---------------------------------------------------------------------------
   /chat:
     post:
-      summary: Chat with the assistant
+      summary: Chat with the assistant (SSE token stream)
       x-milestone: M1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+                conversation_id: { type: string }
+              required: [message]
       responses:
-        "501": { description: not implemented yet }
+        "200":
+          description: Server-Sent Events stream (events token, ping, done, error)
+          content:
+            text/event-stream: {}
+        "409": { description: A response is already streaming for this conversation }
+        "503": { description: LLM runtime not configured }
   /upload:
     post:
       summary: Upload a document
