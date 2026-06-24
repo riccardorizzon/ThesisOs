@@ -1,6 +1,6 @@
 # ADR-0020: Document Ownership Model
 
-- Status: Proposed (2026-06-24) — pending M3 spec freeze
+- Status: Accepted (2026-06-24)
 - Context: M0 defines `documents` and `chunks` tables but no write path. M3 introduces ingestion. Without explicit ownership, original files could be orphaned in GCS, chunks could be written from API handlers or graph nodes directly, and M4 retrieval could fork a parallel document store.
 - Decision:
   1. **`documents` + `document_versions` + `chunks` are the sole system of record** for ingested thesis sources. GCS holds **original bytes only**; Postgres holds metadata and structured chunks.

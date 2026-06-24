@@ -1,17 +1,32 @@
 # Document Architecture
 
-> Sources: M3 spec (`docs/superpowers/specs/2026-06-24-thesisos-m3-document-system-design.md`), ADR-0020/0021/0022. **Status: spec draft — not implemented.**
+> Sources: M3 spec (Frozen 2026-06-24), ADR-0020/0021/0022. **Status: spec frozen — implementation not started.**
 
 ## Design principle
 
-Documents are **ingested sources**; chunks are **derived parse artifacts**. GCS holds originals; Postgres holds metadata and structured chunks. **No embeddings in M3.**
+Documents are **ingested sources**; chunks are **derived parse artifacts**. GCS holds originals; Postgres holds metadata and structured chunks. **`chunk_hash`** provides stable M4 reference. **No embeddings in M3.**
 
 ## Document vs Chunk
 
 | Entity | Table | Role |
 |--------|-------|------|
-| **Document** | `documents` | Identity, metadata, GCS URI, parse status, version |
-| **Chunk** | `chunks` (DTO: `DocumentChunk`) | Ordered text segments from parsing |
+| **Document** | `documents` | Identity, metadata, GCS URI, status, version |
+| **Chunk** | `chunks` (DTO: `DocumentChunk`) | Ordered text segments; `chunk_hash` stable across re-parse |
+
+## Status lifecycle (M3)
+
+```text
+uploaded → processing → parsed | failed
+indexed  → M4 only (forbidden in M3)
+```
+
+## Parser boundary
+
+```yaml
+primary_parser: docling      # pdf, docx, epub
+fallback_parser: pymupdf     # pdf only
+both_equal: false
+```
 
 ## Storage
 

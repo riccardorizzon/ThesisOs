@@ -1,7 +1,7 @@
 # ThesisOS — M3 "Document System" Design Spec
 
 - **Date:** 2026-06-24
-- **Status:** Draft — Architect submitted; **pending Critic approval** before freeze and implementation
+- **Status:** **Frozen** — Approved (Architect 2026-06-24; Critic 2026-06-24 with conditions applied)
 - **Scope:** Milestone M3 only — document ingestion foundation (upload, parse, chunk, metadata, versioning, storage, admin UI). **NOT** embeddings, retrieval, RAG, chat injection, writer agents, or citation generation.
 - **Authors:** ThesisOS Architect Agent
 - **Builds on:** M2 Memory System (tag `m2-complete` on `main`; frozen: `/chat`, `ConversationService`, `GraphState`, `RunContext`, `LLMClient`, `memory_context_node`)
@@ -49,8 +49,42 @@ semantic_search: false
 hybrid_search: false
 POST /search: forbidden
 GET /documents/search: forbidden
-status_indexed: forbidden  # reserved for M4; M3 terminal status is parsed
+status_indexed: forbidden  # reserved for M4; M3 terminal success status is parsed
+status_processing: m3_only # see §6.1 lifecycle
 ```
+
+### 2.1 Document status lifecycle (normative)
+
+M3 uses a **closed set** of status values. No other strings are valid on `documents.status`.
+
+```yaml
+# M3 statuses (allowed writes in M3)
+uploaded:     # row + GCS object created; parse not started
+processing:   # parse job running (DocumentService.parse in flight)
+parsed:       # parse succeeded; chunks persisted — M3 terminal success
+failed:       # parse failed; error_message set; no partial chunks retained
+
+# M4-only (forbidden in M3 code paths)
+indexed:      # embeddings written; search-ready — RESERVED FOR M4
+```
+
+```text
+uploaded ──► processing ──► parsed
+                │
+                └──► failed
+```
+
+| Transition | Trigger | M3 allowed |
+|------------|---------|------------|
+| → `uploaded` | POST /upload completes GCS write | ✅ |
+| `uploaded` → `processing` | parse/reparse starts | ✅ |
+| `processing` → `parsed` | parse succeeds | ✅ |
+| `processing` → `failed` | parse error | ✅ |
+| `parsed` → `processing` | POST /reparse | ✅ |
+| `failed` → `processing` | POST /reparse | ✅ |
+| → `indexed` | embedding job | ❌ M4 only |
+
+M0 enum included `parsing` and `error` — **M3 migration renames/maps:** `parsing`→`processing`, `error`→`failed`. `indexed` remains in enum for forward compatibility but **must not be set by M3**.
 
 | Forbidden | Deferred to |
 |-----------|-------------|
@@ -164,7 +198,17 @@ Existing M0 columns retained: `title`, `author`, `source_type`, `original_filena
 
 ### 4.3 Chunks (structured content)
 
-M0 `chunks` table **unchanged in shape** — already matches the chunk contract (§5). No rename to `document_chunks` (avoid breaking M0 contract); domain DTO is `DocumentChunk`.
+M0 `chunks` table extended additively:
+
+| Column | Change | Notes |
+|--------|--------|-------|
+| `chunk_hash` | **ADD** VARCHAR(64) NOT NULL | Stable content identity for M4 (§5.2) |
+
+Existing M0 columns retained: `document_id`, `chunk_index`, `content`, `token_count`, `page_from`, `page_to`, `section_path`, `metadata`, `created_at`.
+
+No rename to `document_chunks` (avoid breaking M0 contract); domain DTO is `DocumentChunk`.
+
+Unique index: `(document_id, chunk_index)` and `(document_id, chunk_hash)` — hash unique per document at a given parse generation.
 
 ### 4.4 document_versions (new table)
 
@@ -200,6 +244,7 @@ class DocumentChunk(BaseModel):
     id: str                          # UUID; NOT stable across re-parse
     document_id: str                 # FK — parent document
     chunk_index: int                 # 0-based order within document
+    chunk_hash: str                  # SHA-256 hex; stable across re-parse if content unchanged (§5.2)
     content: str                     # Plain/markdown text segment
     page_from: int | None = None     # Source page start (PDF/EPUB)
     page_to: int | None = None       # Source page end
@@ -223,10 +268,19 @@ class DocumentChunk(BaseModel):
 
 ```yaml
 chunk_uuid_stable_across_reparse: false
-m4_embedding_key: content_hash + document_id + chunk_index  # M4 spec will define
+chunk_hash_stable_across_reparse: true   # when content + index unchanged
 ```
 
-M3 documents this so M4 does not assume immortal chunk UUIDs.
+**`chunk_hash` algorithm (normative):**
+
+```text
+normalized = content.strip().replace("\r\n", "\n")
+chunk_hash = sha256(f"{document_id}:{chunk_index}:{normalized}").hexdigest()
+```
+
+M4 embeddings, citations, and retrieval caches **should key on `chunk_hash`**, not `chunks.id`. Re-parse generates new UUIDs but preserves hashes for unchanged segments — avoiding unnecessary re-embedding.
+
+`ChunkCreated` event payload may include `chunk_hash` (additive events.json update in implementation).
 
 ---
 
@@ -273,24 +327,24 @@ Graph (M5+)           ──┘              (future; not wired in M3)
 
 ### 7.2 Parse pipeline
 
-```text
-status: uploaded → parsing → parsed | error
+Uses status lifecycle from §2.1.
 
-1. SET status=parsing
+```text
+status: uploaded → processing → parsed | failed
+
+1. SET status=processing
 2. Download bytes from gcs_uri
-3. Dispatch by source_type:
-     pdf  → Docling; on failure → PyMuPDF
-     docx → Docling
-     epub → Docling
+3. Parse via Parser Boundary (§12) — primary Docling; PDF fallback PyMuPDF only
 4. Extract: title (if missing), author, page_count, language (best-effort)
-5. Chunk structured text → DocumentChunk[]
+5. Chunk structured text → DocumentChunk[] with chunk_hash computed per §5.2
 6. TX: DELETE chunks WHERE document_id; INSERT new chunks;
         UPDATE documents SET status=parsed, version++, chunk_count, ...
         INSERT document_versions (change_reason=parse)
+   ON ERROR: SET status=failed, error_message=...; ensure zero chunks remain
 7. Emit ChunkCreated per chunk (or batch event — see §8)
 ```
 
-Parse runs **asynchronously** after upload returns (FastAPI `BackgroundTasks` or jobs stub — must not block `/upload` for large PDFs). Upload response: `{ document_id, status: "parsing" }`.
+Parse runs **asynchronously** after upload returns (FastAPI `BackgroundTasks` or jobs stub — must not block `/upload` for large PDFs). Upload response: `{ document_id, status: "uploaded" }` then background transitions to `processing`.
 
 ---
 
@@ -313,7 +367,7 @@ Additive realization of M0 OpenAPI stubs. Handlers **delegate to DocumentService
 
 | Method | Path | M3 behavior |
 |--------|------|-------------|
-| POST | `/upload` | Multipart file + optional title/author; returns document_id, status=parsing |
+| POST | `/upload` | Multipart file + optional title/author; returns document_id, status=uploaded (→ processing async) |
 | GET | `/documents` | List; filter `source_type`, `status`; `q=` ILIKE on title/filename only (ADR-0022) |
 | GET | `/documents/{id}` | Metadata + chunk_count; no ranked chunks |
 | PATCH | `/documents/{id}` | Metadata only; `expected_version` required |
@@ -362,23 +416,69 @@ No in-browser PDF renderer, no full-text highlight search, no chat sidebar, no A
 
 ---
 
-## 12. Parsing libraries
+## 12. Parser boundary (normative)
 
-| Format | Primary | Fallback |
-|--------|---------|----------|
-| PDF | Docling | PyMuPDF (`fitz`) |
-| DOCX | Docling | — |
-| EPUB | Docling | — |
+**There is one authoritative parser and one subordinate fallback. They are not equal.**
 
-Dependencies added in M3 implementation phase only (`docling`, `pymupdf`). Pin versions in `pyproject.toml`. Parser choice recorded in `documents.parser`.
+```yaml
+primary_parser:
+  name: docling
+  formats: [pdf, docx, epub]
+  authority: normative
+  responsibilities:
+    - structure detection (headings, sections)
+    - metadata extraction (title, author where available)
+    - chunk boundary selection
+    - page mapping where supported
+
+fallback_parser:
+  name: pymupdf
+  formats: [pdf]
+  authority: subordinate
+  invoked_when:
+    - source_type is pdf AND docling raises ParseError
+    - OR source_type is pdf AND docling returns zero extractable text
+  responsibilities:
+    - plain text extraction only
+    - fixed-size chunking with overlap (§5.1 sliding window)
+  forbidden_for: [docx, epub]   # no fallback; failure → status=failed
+
+both_equal: false
+```
+
+| Format | Path | `documents.parser` value |
+|--------|------|--------------------------|
+| PDF | Docling → (on failure) PyMuPDF | `docling` or `pymupdf` |
+| DOCX | Docling only | `docling` |
+| EPUB | Docling only | `docling` |
+
+Parser module layout (implementation): `app/services/document/parsers/docling_parser.py`, `pymupdf_parser.py`; orchestrated only from `DocumentService.parse()` — never from API handlers.
+
+Dependencies added in M3 implementation phase only (`docling`, `pymupdf`). Pin versions in `pyproject.toml`.
 
 ---
 
-## 13. Critic review (mandatory gate)
+## 13. Critic review (gate — closed)
 
 > **Question:** Could this design accidentally become retrieval?
 
-### Verdict: **NO — if implementation honors ADR-0022 and §2.**
+### Verdict: **NO** — approved (Critic 2026-06-24).
+
+Conditions applied before freeze:
+1. Parser boundary explicit (§12) — Docling primary, PyMuPDF PDF-only fallback; `both_equal: false`.
+2. `chunk_hash` on `DocumentChunk` (§5) — stable M4 reference key.
+3. Status lifecycle closed set (§2.1) — `indexed` reserved for M4.
+
+**Retrieval accident guardrails (must remain in implementation):**
+
+```yaml
+embeddings: forbidden
+vector_columns: forbidden      # no new vector cols on chunks/documents in M3
+retrieval_routes: forbidden
+graph_integration: forbidden
+chat_integration: forbidden
+status_indexed: forbidden      # M4 only
+```
 
 | Risk vector | Mitigation in spec | Accidental retrieval if violated? |
 |-------------|-------------------|-----------------------------------|
@@ -389,9 +489,18 @@ Dependencies added in M3 implementation phase only (`docling`, `pymupdf`). Pin v
 | `POST /summarize` M0 stub | Explicitly non-goal | **Yes** — must not implement |
 | Embeddings table exists (M0) | No writes in M3 | **Yes** — if M3 populates embeddings |
 | `GraphState.retrieved_context` | No graph changes | **Yes** — if M3 adds retriever node |
-| Status `indexed` | Forbidden in M3 | **Yes** — implies search-ready index |
+| Status `indexed` | Forbidden in M3 (§2.1) | **Yes** — implies search-ready index |
 
-### Critic conditions for approval
+### Critic sign-off
+
+```yaml
+critic: approved
+date: 2026-06-24
+risk: low
+implementation: forbidden_until_planner_gate
+```
+
+Implementation PR must still satisfy conditions 1–4 below. QA verifies guardrails on every phase.
 
 1. Implementation PR must not add `/search`, embedding jobs, or graph nodes.
 2. QA must assert no chunk content in `/chat` responses or `memory_context_node` wire.
@@ -426,22 +535,9 @@ events: green                # DocumentUploaded, ChunkCreated
 
 ---
 
-## 15. Implementation sequencing (Planner — after freeze)
+## 15. Implementation sequencing (Planner)
 
-**Do not start until this spec is Approved.**
-
-Mirror M2 sequencing:
-
-```text
-Phase 1  DB migration (documents.version, document_versions, indexes)
-Phase 2  DocumentService + GCS adapter + parser
-Phase 3  REST API (thin adapter)
-Phase 4  Document Administration UI
-Phase 5  Knowledge freeze
-Phase 6  Events wiring (if not in Phase 2)
-```
-
-No parallel implementation on overlapping files. Critic + QA at each phase.
+**Spec frozen 2026-06-24.** See `plans/m3-document-system-plan.md`.
 
 ---
 
@@ -451,7 +547,9 @@ No parallel implementation on overlapping files. Critic + QA at each phase.
 |----|----------|------------|
 | Q-D1 | Table name `chunks` vs `document_chunks` | Keep M0 `chunks`; DTO `DocumentChunk` |
 | Q-D2 | Sync vs async parse | Async after upload returns |
-| Q-D3 | Chunk UUID stability | Not stable across re-parse; document for M4 |
+| Q-D3 | Chunk UUID stability | Not stable; use `chunk_hash` for M4 keys |
+| Q-D6 | Parser authority | Docling primary; PyMuPDF PDF fallback only (§12) |
+| Q-D7 | Status values | §2.1 lifecycle; `indexed` M4-only |
 | Q-D4 | OCR for scanned PDF | Out of M3 core; Docling may partially help |
 | Q-D5 | Local dev without GCS | `DOCUMENT_STORAGE_BACKEND=local` adapter |
 

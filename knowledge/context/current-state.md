@@ -1,16 +1,16 @@
 # Current State
 
-> Snapshot as of **2026-06-24** (M2 promoted; M3 spec draft). Branch: `m3-document-system` (from `main` @ `m2-complete`).
+> Snapshot as of **2026-06-24** (M3 spec frozen). Branch: `m3-document-system` (from `main` @ `m2-complete`).
 
 ## Where are we?
 
-**M2 promoted and tagged. M3 Document System — spec draft only; no implementation.**
+**M2 promoted. M3 Document System — spec frozen; plan ready; implementation forbidden until plan review.**
 
 ```text
 M0 Foundations     ✅ promoted (m0-complete)
 M1 Conversation    ✅ promoted (m1-complete)
 M2 Memory          ✅ promoted (m2-complete)
-M3 Documents       🟡 spec draft — pending Critic freeze
+M3 Documents       🟡 spec frozen + plan — implementation not started
 M4+                ⬜ not started
 ```
 
@@ -56,9 +56,9 @@ See `context/completed-work.md`. Chat seam frozen: `POST /chat` → `Conversatio
 
 ## What is next?
 
-1. **M3 Critic review** — approve spec (`Could this design accidentally become retrieval?` → must stay NO).
-2. **M3 spec freeze** — Architect approval → Planner TDD plan.
-3. **M3 implementation** — forbidden until spec frozen.
+1. **Plan review** — `plans/m3-document-system-plan.md` (Planner delivered).
+2. **M3 Phase 1** — DB migration (after plan approval).
+3. **Forbidden until Phase 1 starts:** embeddings, retrieval, graph, `/search`.
 
 See `context/next-actions.md`.
 
@@ -71,8 +71,9 @@ See `context/next-actions.md`.
 | M2 DB/Service/API/UI | ✅ Phases 1–4 |
 | M2 graph injection | ✅ Phase 6 |
 | M2 tag | ✅ `m2-complete` on `main` |
-| M3 spec | 🟡 draft on `m3-document-system` |
-| M3 code | ⬜ forbidden until freeze |
+| M3 spec | ✅ frozen (Critic approved 2026-06-24) |
+| M3 plan | ✅ `plans/m3-document-system-plan.md` |
+| M3 code | ⬜ forbidden until plan review → Phase 1 |
 | M3+ | ⬜ not started |
 | GraphState / RunContext / LLMClient / ConversationService | frozen, unchanged |
 | Tests | backend 39/14 skip; frontend 15 |

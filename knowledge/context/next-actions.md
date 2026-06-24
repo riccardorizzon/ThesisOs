@@ -1,17 +1,24 @@
 # Next Actions — 100-task backlog
 
-> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-24 after M2 Phase 6.**
+> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-24 — M3 spec frozen, plan delivered.**
 
 Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 debt · 🟢 net-new · ✅ done.
 
 ---
 
-## IMMEDIATE — M3 Spec Freeze (P0)
+## IMMEDIATE — M3 Implementation (P0 — after plan review)
 
-- **T030** [P0] 🔴 Critic: review M3 spec — retrieval accident check (ADR-0022). dep: spec draft ✅
-- **T031** [P0] 🔴 Architect: freeze spec → status Approved. dep: T030
-- **T032** [P1] Planner: M3 TDD plan + builder packets. dep: T031
-- **T033** [P0] 🔴 **No M3 code** until T031 complete.
+- **T034** [P0] 🔴 Review `plans/m3-document-system-plan.md` → authorize Phase 1. dep: spec frozen ✅, plan ✅
+- **T035** [P0] 🔴 Phase 1: DB migration `0003_document_system`. dep: T034
+- **T036–T039** [P0] Phases 2–6 per plan. dep: sequential gates
+
+## M3 Spec + Plan ✅
+
+- **T030** ✅ Critic review — approved (3 conditions applied)
+- **T031** ✅ Spec frozen
+- **T032** ✅ Planner: `plans/m3-document-system-plan.md`
+
+**Still forbidden:** embeddings, retrieval, `/search`, graph integration, `status=indexed`.
 
 ## M2 ✅ (promoted on `main`, tag `m2-complete`)
 
@@ -19,12 +26,11 @@ Merged 2026-06-24. Phases 1–6 complete.
 
 ---
 
-## M3 — Document System (P0 — spec only)
+## M3 — Document System (reference)
 
-Frozen spec target: `docs/superpowers/specs/2026-06-24-thesisos-m3-document-system-design.md`  
-ADRs: 0020, 0021, 0022. Architecture mirror: `knowledge/architecture/documents.md`.
-
-**Forbidden until freeze:** any M3 implementation (DocumentService, migrations, UI, parsers).
+Frozen spec: `docs/superpowers/specs/2026-06-24-thesisos-m3-document-system-design.md`  
+Plan: `plans/m3-document-system-plan.md`  
+ADRs: 0020, 0021, 0022.
 
 ---
 

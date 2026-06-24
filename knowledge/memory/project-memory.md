@@ -68,7 +68,7 @@ Technical: 0002 Vertex-Runtime-Only · 0003 Custom-Memory · 0011 Streaming-Firs
   `thesisos-prod`; gate fully green.
 - **M1 Conversation System — ✅ promoted** (`m1-complete` on `main`).
 - **M2 Memory — ✅ promoted** (`m2-complete` on `main`).
-- **M3 Documents — 🟡 spec draft** (branch `m3-document-system`): ADR-0020/0021/0022 + design spec. **No code until freeze.**
+- **M3 Documents — 🟡 spec frozen + plan** (branch `m3-document-system`): ADR-0020/0021/0022. Implementation not started.
 - **M4–M18 ⬜** — require frozen specs before implementation.
 
 ---
@@ -106,7 +106,7 @@ Technical: 0002 Vertex-Runtime-Only · 0003 Custom-Memory · 0011 Streaming-Firs
 
 ## 7. Future planned work
 
-- **Next:** **M3 spec freeze** (Critic) → Planner → M3 implementation. **No M3 code yet.**
+- **Next:** **M3 Phase 1** (DB) after plan review → full M3 implementation per plan. **No embeddings/retrieval.**
 - **M4–M6** (usable-product line): retrieval → tool router → writing.
 - **M7–M11:** citations → outline → critic → QA → GCP hardening (tracing, durable
   jobs, instance sizing, cold starts).
