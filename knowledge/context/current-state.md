@@ -1,20 +1,20 @@
 # Current State
 
-> Snapshot as of **2026-06-25**. Branch: `main` @ `m3-complete`.
+> Snapshot as of **2026-06-25**. Branch: `main` @ `52f5df5`.
 
 ## Where are we?
 
-**M3 promoted (`m3-complete`). M4 retrieval spec frozen (Architect 2026-06-25). MB1 Phase 1 shipped; Phase 2 blocked until M4 Planner plan + runtime implementation per ADR-0025.**
+**M3 promoted. M4 spec frozen + plan delivered. MB1 Phase 2 runtime shipped (ADR-0025). M4 implementation is next.**
 
 ```text
 M0–M2           ✅ promoted
-M3 Documents    ✅ m3-complete (merge e0a1620)
-M4 Retrieval    🟡 spec frozen — implementation NOT started
-MB1 Engine      🟢 Phase 1 done · Phase 2 next (runtime model in ADR-0025)
+M3 Documents    ✅ m3-complete
+M4 Retrieval    🟡 spec + plan ready — Phase 1 DB NOT started
+MB1 Engine      ✅ Phase 2 done (runtime + schedule/sync/check)
 ```
 
-> `make ci` green. ⚠️ M3 DB integration tests **waived** — Docker containerd I/O error
-> (2026-06-25). Re-run when Docker is repaired.
+> `make ci` green (77 backend / 31 skip, 33 frontend, 20 builder_engine). ⚠️ M3 DB
+> integration tests **waived** — Docker containerd I/O error (2026-06-25).
 
 ## Pipeline discipline (2026-06-25)
 
@@ -22,13 +22,12 @@ MB1 Engine      🟢 Phase 1 done · Phase 2 next (runtime model in ADR-0025)
 Vision → Spec Freeze → Engine → Implementation → Validation
 ```
 
-Not implementation-before-spec. M4 spec frozen before MB1 Phase 2 schedule/sync.
+Engine foundation complete; M4 implementation authorized per spec §13.
 
 ## What is next?
 
-1. **Critic + Planner for M4** — sign-off on frozen spec → `plans/m4-retrieval-system-plan.md`
-2. **MB1 Phase 2** — execution state machine + runtime loop (ADR-0025); CLI as views
-3. **M4 implementation** — only after plan + Phase 2 engine foundation
-4. **Docker fix** — optional: run waived M3 DB integration tests for full evidence
+1. **M4 Phase 1** — `0004_retrieval_system` migration (partitions, HNSW, hybrid indexes)
+2. **M4 Phases 2–6** — per `plans/m4-retrieval-system-plan.md`
+3. **Docker fix** — optional: re-run waived M3 DB integration tests
 
 See `context/next-actions.md`.

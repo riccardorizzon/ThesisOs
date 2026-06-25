@@ -10,9 +10,9 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 
 1. **M3 close-out** ✅ — merged `main`, tag `m3-complete` (DB integration waived: Docker I/O)
 2. **M4 spec freeze** ✅ — `docs/superpowers/specs/2026-06-25-thesisos-m4-retrieval-system-design.md` + ADR-0024
-3. **M4 Planner** 🔴 — Critic sign-off + `plans/m4-retrieval-system-plan.md`
-4. **MB1 Phase 2** ⬜ — runtime + execution state machine (ADR-0025); after M4 spec freeze
-5. **M4 implementation** ⬜ — after plan + MB1 Phase 2 foundation
+3. **M4 Planner** ✅ — Critic sign-off + `plans/m4-retrieval-system-plan.md`
+4. **MB1 Phase 2** ✅ — runtime + execution state machine (ADR-0025); `docs/mb1-phase2-gate.md`
+5. **M4 implementation** 🔴 — Phase 1 DB (`m4-retrieval-system` branch)
 
 ---
 
