@@ -1,6 +1,8 @@
 # Builder Memory (ADR-0019)
 
-Retrieval-only sidecar for **BuilderOS** Cursor agents. Not part of ThesisOS runtime.
+> **Terminology (ADR-0026):** Legacy *BuilderOS* → **ASEP Build Control Plane** (operator surface + policy) with **execution workers** (Cursor agents). Builder Memory serves build-time retrieval only — not the Product Plane or Engineering Runtime.
+
+Retrieval-only sidecar for ASEP **execution workers** (Cursor builder agents). Not part of ThesisOS runtime (Product Plane).
 
 ## Principles
 

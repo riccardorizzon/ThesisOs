@@ -10,7 +10,8 @@ decisions:
   - "Pipeline order: Vision → Spec Freeze → Engine → Implementation → Validation"
   - "Era I complete (m4-complete, MB1 Ph 1–2); Era II constitution frozen (ADR-0026)"
   - "ASEP = platform; Engineering Runtime = cycle executor; Build Control Plane = govern/plan/observe"
-  - "MB2 = implement frozen runtime-model — not ad-hoc FSM"
+  - "MB2 spec frozen — implement runtime-model translation on mb2-adaptive-runtime"
+  - "M5 product spec frozen (ADR-0027) — impl after Critic sign-off"
 
 file_locks: {}
 blockers: {}

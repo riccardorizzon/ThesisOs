@@ -1,6 +1,6 @@
 # Next Actions — 100-task backlog
 
-> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-25 — M3 Phases 1–6 complete; tag pending.**
+> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-25 — Era II: MB2 + M5 specs frozen; terminology migration started.**
 
 Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 debt · 🟢 net-new · ✅ done.
 
@@ -11,9 +11,12 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 1. **M3 close-out** ✅
 2. **M4 spec + implementation** ✅ — `m4-complete`
 3. **MB1 Phase 2** ✅ — runtime + packet FSM
-4. **Era II constitution** ✅ — ADR-0026, `docs/platform/era-model.md`, `docs/platform/runtime-model.md`
-5. **MB2 spec freeze** 🔴 — derive from runtime-model; **no MB2 code before freeze**
-6. **M5 spec freeze** 🔴 — Product Track (orthogonal)
+4. **Era II constitution** ✅ — ADR-0026, platform docs
+5. **MB2 spec freeze** ✅ — adaptive runtime design + plan
+6. **M5 spec freeze** ✅ — tool router design + ADR-0027 + plan
+7. **Terminology migration** 🟡 — high-visibility files done; see `docs/platform/terminology-migration.md`
+8. **MB2 implementation** 🔴 — branch `mb2-adaptive-runtime` (no code before spec read)
+9. **M5 implementation** 🔴 — after Critic sign-off on M5 spec §12
 
 ---
 

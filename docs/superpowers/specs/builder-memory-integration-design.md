@@ -2,7 +2,8 @@
 
 - **Date:** 2026-06-24
 - **Status:** Approved (Architect 2026-06-24) — ADR-0019; V1 BM25-only, SQLite episodic, no Mem0
-- **Scope:** Retrieval-only memory layer for **Builder Agents** (Cursor / BuilderOS). **Excludes** ThesisOS runtime memory (M2 `MemoryService`, `/memory` API, `memory_context_node`).
+- **Terminology (ADR-0026):** Legacy *BuilderOS* / *Agent OS* in this frozen spec map to **ASEP** — **Build Control Plane** + **execution workers** (Cursor agents). Diagram labels and historical prose below are preserved; see `docs/platform/terminology-migration.md`.
+- **Scope:** Retrieval-only memory layer for **Builder Agents** (ASEP execution workers on the Build Control Plane). **Excludes** ThesisOS runtime memory (M2 `MemoryService`, `/memory` API, `memory_context_node`) — Product Plane.
 - **Authors:** Builder Architect session
 - **Builds on:** M0/M1 frozen seams, M2 memory design (parallel, non-overlapping), `orchestrate-builders` skill, framework analysis (`docs/research/builder-memory-framework-analysis.md`)
 - **New ADR (proposed):** ADR-00XX Builder Memory Boundaries (builder-only, retrieval-only, filesystem authority)

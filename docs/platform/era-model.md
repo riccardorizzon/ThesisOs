@@ -192,7 +192,7 @@ Indicators (directional):
 - [x] Product Track vs Platform Track interaction defined
 - [x] Terminology aligned with ADR-0026
 
-**Next authorized work:** Platform specs derived from `runtime-model.md` (MB2 design spec + ADR if needed) — **not** MB2 implementation until those freeze.
+**Next authorized work:** MB2 implementation on branch `mb2-adaptive-runtime` per frozen spec. M5 Product Track spec also frozen (orthogonal).
 
 ---
 

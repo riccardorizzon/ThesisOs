@@ -1,5 +1,7 @@
 # Roadmap (M0 → M18)
 
+> **Platform context (ADR-0026):** This table is the **Product Track** (M0–M18) within **ASEP** (Adaptive Software Engineering Platform). Build-time platform evolution (MB-series) is tracked separately on the **Platform Track** — see `docs/platform/era-model.md` and `decisions/ADR-0026-platform-model-terminology.md`.
+>
 > Sources: `docs/superpowers/specs/2026-06-23-thesisos-m0-foundations-design.md` §18 (roadmap alignment); `docs/architecture.md`; `contracts/openapi/openapi.yaml` (`x-milestone`); `contracts/agents/*.json` (`milestone`); `contracts/events/events.json`.
 
 The roadmap is a sequence of **vertical slices**. Each milestone delivers one
@@ -15,8 +17,8 @@ usable capability end-to-end against frozen contracts and passes a promotion gat
 | **M1** | Conversation System | ✅ | Streaming chat: `POST /chat` → LangGraph (1 node) → Gemini → SSE → React | `/chat`, `GraphState` (messages only), `RunContext`, checkpointer; ADR-0011..0014 |
 | **M2** | Memory | ✅ | Memory foundation: DB, Service, API, Admin UI, `memory_context_node` | `/memory`, ADR-0015/0017/0018; tag `m2-complete` |
 | **M3** | Ingestion | ✅ | Document upload → parse → chunks + events; tag `m3-complete` | `/upload`, `/documents`, events |
-| **M4** | Retrieval | 🟡 | **Spec frozen 2026-06-25** — embed + hybrid search + retriever; impl pending | `/search`, `retriever`, ADR-0024 |
-| **M5** | Tool Router / Orchestration | ⬜ | Supervisor → Planner → Router wired; multi-node graph | `supervisor`/`planner`/`router` agents |
+| **M4** | Retrieval | ✅ | Embed + hybrid search + retriever; promoted tag `m4-complete` | `/search`, `retriever`, ADR-0024 |
+| **M5** | Tool Router / Orchestration | 🟡 | **Spec frozen 2026-06-25** — supervisor/planner/router; impl pending Critic §12 | ADR-0027, `contracts/agents/*` |
 | **M6** | Writing | ⬜ | Writer agent drafts chapters from plan + context | `/chapters`, `writer` agent |
 | **M7** | Citations | ⬜ | CSL-JSON → APA7/MLA/Chicago; bibliography | `/citations`, `/bibliography`, `citation` agent |
 | **M8** | Outline | ⬜ | Outline/chapter tree management | `/outline`, `ChapterCreated` event |

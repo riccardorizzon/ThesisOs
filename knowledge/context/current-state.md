@@ -1,41 +1,33 @@
 # Current State
 
-> Snapshot as of **2026-06-25**. Branch: `main` @ `m4-complete`.
+> Snapshot as of **2026-06-25**. Branch: `main`.
 
 ## Where are we?
 
-**Era I closed. Era II constitution frozen — implementation not started.**
+**Era II constitution frozen. MB2 + M5 specs frozen. Terminology migration started.**
 
 ```text
 Era I   Execution Foundation     ✅  M0–M4 + MB1 Ph 1–2
-Era II  Adaptive Workflow Intel  🟡  ADR-0026 + platform docs frozen; MB2 spec next
-Product Track                      M5+ awaits frozen spec
-Platform Track                     MB2 blocked until MB2 spec freeze
+Era II  Adaptive Workflow Intel  🟡  MB2 spec frozen — impl on mb2-adaptive-runtime next
+Product Track                      M5 spec frozen — impl after Critic sign-off recorded
+Platform Track                     MB2 plan ready; no code before branch work
 ```
 
-> `make ci` green. DB integration tests waived (Docker I/O, 2026-06-25).
+## ASEP vocabulary
 
-## ASEP vocabulary (official)
+Official terms per ADR-0026. Migration tracker: `docs/platform/terminology-migration.md`.
 
-| Term | Meaning |
-|------|---------|
-| **ASEP** | Whole platform |
-| **Product Plane** | M-track / ThesisOS runtime |
-| **Build Control Plane** | Plans, ADR, knowledge, policies, operator skill |
-| **Engineering Runtime** | Deterministic cycle executor (`builder_engine/` today) |
+## Frozen specs (parallel 2026-06-25)
 
-See ADR-0026, `docs/platform/era-model.md`, `docs/platform/runtime-model.md`.
-
-## Global rule (all capabilities)
-
-```text
-Vision → Spec → ADR → Freeze → Implementation → Gate → Promotion
-```
+| Track | Spec | Plan | ADR |
+|-------|------|------|-----|
+| Platform MB2 | `docs/superpowers/specs/2026-06-25-thesisos-mb2-adaptive-runtime-design.md` | `plans/mb2-adaptive-runtime-plan.md` | — |
+| Product M5 | `docs/superpowers/specs/2026-06-25-thesisos-m5-tool-router-orchestration-design.md` | `plans/m5-tool-router-plan.md` | ADR-0027 |
 
 ## What is next?
 
-1. **MB2 spec** — translate `runtime-model.md` phases to modules (no code before freeze)
-2. **M5 spec freeze** — Product Track (planner/router)
-3. **Incremental doc migration** — replace legacy "Agent OS" when touching files
+1. **MB2 implementation** — branch `mb2-adaptive-runtime`, translate runtime-model phases
+2. **M5 implementation** — branch `m5-tool-router` after explicit Critic pass on spec §12
+3. **Terminology** — incremental per `terminology-migration.md` checklist
 
 See `context/next-actions.md`.

@@ -36,6 +36,8 @@ implementers** (safe isolation), **file locks in STATE** for explorers/reviewers
 
 ## Quick Reference
 
+**ASEP operator surface (ADR-0026):** This skill is the human/LLM **operator surface** on the **Build Control Plane**. Deterministic orchestration decisions are delegated to the **Engineering Runtime** (`builder-engine` CLI). Execution workers (Cursor Task agents) implement packets in isolated worktrees.
+
 | Command surface | Action |
 |-----------------|--------|
 | `start <epic>` | Init epic from plan/handoff → STATE + packet files |
@@ -60,11 +62,15 @@ implementers** (safe isolation), **file locks in STATE** for explorers/reviewers
 ## Architecture
 
 ```text
-Orchestrator (this session)
+Build Control Plane — operator surface (this session / orchestrate-builders skill)
   ├── Planner      → epic → work packets (DAG) in plans/builder/
-  ├── Dispatcher   → fan-out Task agents per ready packet (parallel)
+  ├── Dispatcher   → fan-out execution workers (Cursor Task agents) per ready packet
   ├── Sync         → barrier: checks, merge worktrees, update STATE
   └── Integrator   → cross-package validation after last wave
+
+Engineering Runtime (builder_engine/) — deterministic control decisions
+  ├── lint-graph / ready / schedule / sync / check
+  └── reads STATE + packets; never source of truth (ADR-0023, ADR-0026)
 ```
 
 **Communication channels:**
