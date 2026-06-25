@@ -1,70 +1,162 @@
-# ASEP — MB2 "Adaptive Runtime" Design Spec
+# ASEP — MB2 Adaptive Runtime Design Spec (L4)
 
-> **⚠️ SUPERSEDED / FREEZE RE-OPENED (ADR-0028, 2026-06-25).** This spec is re-scoped
-> from "the MB2 design" to the **L4+ implementation spec** beneath a new platform
-> constitution. The freeze is **re-opened**: before MB2 implementation begins this
-> document MUST be rebased so every deliverable traces to an object in
-> `docs/platform/engineering-meta-model.md` (L0) and an invariant in
-> `docs/platform/invariant-model.md` (L1). The authority MB2 implements is L0–L3,
-> not this spec's original framing. **Do not start MB2 code against this version.**
-
-- **Date:** 2026-06-25
-- **Status:** Superseded as design authority; pending rebase on L0–L2 (ADR-0028). **No MB2 implementation until rebased + re-frozen.**
-- **Scope:** Platform Track milestone **MB2** — the **implementation** (L4+: event bus, policy engine hooks, replan) of the constitution in `engineering-meta-model.md`, `invariant-model.md`, `runtime-model.md`. **NOT** the meta model; **NOT** Product Plane work.
+- **Date:** 2026-06-25 (rebased 2026-06-25)
+- **Status:** **Rebased — pending Architect sign-off on this document.** No L4 code until sign-off.
+- **Milestone:** Platform Track **MB2** — L4 implementation of frozen constitution (not a redesign).
+- **Scope:** Complete the Engineering Runtime processor head and tail (Observe → Policies → Plan extend → Publish → Replan) and wire event emission into existing Schedule/Validate/Update paths. **Does not modify** L0, L1, BS, L2, L3, or existing ADRs.
+- **Authority chain:** Vision → ADR → L0 → L1 → BS → L2 → L3 → ETM → **this spec** → Implementation (`plans/mb2-adaptive-runtime-plan.md` + prerequisite `plans/l2-global-state-machine-plan.md` Ph 1–2).
 - **Authors:** ThesisOS Platform Team
-- **Builds on:** Era I closure (`m4-complete`, `docs/mb1-phase2-gate.md`), frozen `docs/platform/runtime-model.md`, `docs/platform/era-model.md`, ADR-0026
-- **New ADR:** None required unless build-bus persistence choice becomes irreversible (default: filesystem append-only under `.builder-engine/`)
+- **Builds on:** Era I (`m4-complete`, `docs/mb1-phase2-gate.md`); constitution frozen through DR-001 + ADR-0029
+
+> **Rebase rule (Architect 2026-06-25):** This spec **conforms** to the constitution; it does not extend it. Any gap discovered during implementation → record in §11 → new ADR or DR — **never** amend L0–L3 inside MB2 work.
 
 ---
 
 ## 1. Vision
 
-Era I delivered a **vertical slice** of the Engineering Runtime: Schedule → Execute (manifest) → Validate → Update State. Era II MB2 **completes the processor head and tail** so the Build Control Plane can react to outcomes without heroic operator intervention:
+| Vision source | MB2 satisfies |
+|---------------|---------------|
+| `vision.md` §Contract-first, gate-driven | Observe + Policy stub enforce freeze/gate awareness before schedule |
+| `vision.md` §Who builds it | Workers remain external; runtime orchestrates Delegation behavior only |
+| ADR-0026 §5 lifecycle | MB2 enables systematic Observe→Replan loop (Era II processor completion) |
+| ADR-0028 layered constitution | MB2 is **L4** — concretizes L3 phases not yet in Era I code |
+| ADR-0029 Behavioral Semantics | Every module implements a named BS behavior — no invented semantics |
+| `era-model.md` Era II | Adaptive Workflow Intelligence — event-driven, observable factory |
 
-```text
-Observe State ──► Evaluate Policies ──► Plan (extended) ──► … existing MB1 loop …
-                                                              │
-                                                              ▼
-                                                    Publish Events (build bus)
-                                                              │
-                                                              ▼
-                                                    Replan (minimal) ──► Observe
-```
+**Era I delivered:** Schedule → Execute (manifest) → Validate → Update State.
 
-**Success criterion:** A single `builder-engine cycle` (or equivalent orchestration entry) runs Observe → Policies → Plan before `schedule`, and Publish → Replan after `sync`; typed build events append to a local bus; failed validation triggers a minimal replan proposal; **packet-level FSM (ADR-0025) unchanged**; M0–M4 product suites and `builder_engine` tests stay green.
+**MB2 delivers:** Observe → Evaluate Policies → Plan (extended) → **Publish Events** → Replan — orchestrated by `EngineeringRuntimeCycle`, without changing packet FSM semantics (ADR-0025).
 
-**MB2 meaning:** Implement the frozen **Engineering Runtime** phases as modules and tests — translate `runtime-model.md`, do **not** invent a parallel "Agent OS" or global workflow FSM.
+**Success criterion:** `builder-engine cycle --dry-run` runs C-01→C-05; post-`sync` postflight runs C-12→C-14; typed events append to `.builder-engine/events.jsonl`; failed validation produces `ReplanProposal` (proposal only); M0–M4 + `builder_engine` tests green; **no** `import backend.app`.
 
 ---
 
-## 2. Scope & non-goals
+## 2. Constitutional acceptance criteria
 
-### 2.1 In scope (MB2 MUST ship)
+Every MB2 deliverable and PR must pass:
 
-| # | Deliverable |
-|---|-------------|
-| 1 | **`ObservedSnapshot`** — unified derived read model (STATE + git + CI stub + queue depth) |
-| 2 | **Policy stub** — `PolicyDecision` after Observe; wraps `validate_graph` + declarative YAML rules |
-| 3 | **Extended `Plan`** — ready set + wave intent + surfaced blockers + critical-path hints (not full optimizer) |
-| 4 | **Build event bus** — typed, append-only, filesystem-backed; producers in Validate/Schedule/State/Replan |
-| 5 | **Minimal Replan** — on `ValidationFailed`, propose recovery (unblock dependents, suggest fix packet metadata) |
-| 6 | **`EngineeringRuntimeCycle`** — orchestrates Observe→Policies→Plan before schedule; Publish→Replan after sync |
-| 7 | **CLI projections** — `observe`, `plan`, `events` (tail), extend `status` with snapshot summary |
-| 8 | **Tests** — unit per module + integration cycle test with fixture STATE |
-| 9 | **Promotion** — `docs/mb2-phase-gate.md`, knowledge mirror |
+| Criterion | Rule |
+|-----------|------|
+| **Constitutional Completeness** | Traceable Vision → ADR → L0 → L1 → BS → L2 → L3 without gaps |
+| **Constitutional Minimality** | No new L0 objects, L1 invariants, L2 transitions, or BS behaviors |
+| **Behavioral Purity** | `Behavior (BS) → Implementation` only — never `Implementation → New Behavior` |
+| **Traceability Closure** | ETM row ends with Observability **and** Evidence (verifiable artifact) |
 
-### 2.2 Non-goals (hard boundary)
+---
 
-| Forbidden | Rationale |
-|-----------|-----------|
-| Product LangGraph topology / new graph nodes | Product Plane — M5+ specs |
-| `import backend.app` or product DB access from `builder_engine/` | ADR-0023, ADR-0026 |
-| Global project FSM replacing packet FSM | ADR-0025 remains authoritative for packet execution |
-| Full Policy Engine (Era II late / MB3) | MB2 ships **stub** only |
-| Observability dashboard / web UI | MB3+ |
-| Automated git merge / Integrator worker | Merge eligibility hook only; execution stays external |
-| Auto-editing ADRs, specs, or `STATE.yaml` recovery packets | Architect / human gate |
-| Product event outbox coupling | Build bus is sidecar-local unless future ADR |
+## 3. Deliverable traceability matrix (normative)
+
+Columns: **V** Vision · **A** ADR · **M** L0 · **I** L1 · **B** BS · **S** L2 state · **T** L2 transition · **L3** cycle · **E** event · **Mod** module · **O** observability · **Test** · **Evidence**
+
+### D1 — `ObservedSnapshot` / Observe module
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Gate-driven factory | 0028, 0023 | Snapshot | INV-B8 | Observing | `SNAP_*` | S-01,S-02,C-01,C-02 | Observe §3.1 | `SnapshotCreated`, `StateObserved` | `observe.py` | `observe` CLI JSON; `staleness_reasons` | `test_observe.py` | frozen snapshot dataclass; no STATE mutation |
+
+### D2 — Policy stub
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Contract-first | 0028, 0026 §8 | Policy | (eval not inv) | Escalation | `CYCLE_POLICY_EVAL` | C-03,C-04 | Evaluate §3.2 | `PolicyAllowed`, `PolicyBlocked` | `policy.py` | `PolicyDecision.outcome`; violations list | `test_policy.py` | block when implementer lacks `checks` (policy hint per L1 litmus) |
+| Sidecar isolation | 0023 | — | INV-B8 on commit | — | — | — | — | — | `policies.yaml` | YAML load log | policy YAML sample | file exists under `plans/builder/` |
+
+> **Note:** `validate_graph` **errors** are L1 invariants (fail-closed via D-prereq `invariants.py`), not policy. Policy stub evaluates **warnings** + declarative YAML rules only.
+
+### D3 — Extended `Plan`
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Deterministic orchestration | 0025 | Task, Epic | INV-A5, INV-B7 | Scheduling | `TASK_READY` | T-01,C-05 | Plan §3.3 | `PlanGenerated`, `PlanEmpty` | `planner.py` | `plan` CLI; ready set listing | planner tests | `ready_packets` == `compute_ready()` parity |
+
+### D4 — Build event bus
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Observable factory | 0028, 0006 pattern | Event | — | (emission) | `CYCLE_PUBLISHING` | C-12 | Publish §3.8 | `EventsPublished` + per-type §7 | `events.py` | `events --tail N` | `test_events.py` | `.builder-engine/events.jsonl` append-only lines |
+
+**Event catalog (MB2 minimum — must match L2 §7):**  
+`StateObserved`, `PolicyAllowed`, `PolicyBlocked`, `PlanGenerated`, `PlanEmpty`, `TaskScheduled`, `LockAcquired`, `ValidationPassed`, `ValidationFailed`, `StateUpdated`, `WaveAdvanced`, `MergeAccepted`, `MergeRejected`, `Replanned`, `RecoveryTaskCreated`, `WorkerDispatched`, `WorkerReported`, `CycleStarted`, `CycleHalted`
+
+No events outside L2 §7 without constitution amendment.
+
+### D5 — Minimal Replan
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Self-improving direction | 0029 | Task, Epic | INV-A4, INV-B7 | Replanning, Recovery | `CYCLE_REPLANNING` | C-14,C-15,T-09 | Replan §3.10 | `Replanned`, `RecoveryTaskCreated` | `replan.py` | proposal JSON; no STATE auto-write | `test_replan.py` | `ReplanProposal` after `ValidationFailed` fixture |
+
+### D6 — `EngineeringRuntimeCycle`
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Era II processor | 0028 | Snapshot, Event, Policy | INV-B8 | Observing…Replanning | `CYCLE_*` | C-01–C-15 | all §3 | per phase | `cycle.py` | `cycle --dry-run` trace | `test_cycle.py` | preflight returns (Snapshot, PolicyDecision, Plan) |
+
+### D7 — CLI projections (additive)
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ADR-0025 projections | 0025 §2 | all workflow | — | — | projected | — | — | — | `cli.py` | stdout tables | cli tests | existing commands unchanged semantics |
+
+Commands: `observe`, `plan`, `cycle`, `events`, `merge-check` — **projections only**, not authoritative state.
+
+### D8 — Merge eligibility stub
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Evidence before merge | 0025 §4 | Task, Artifact | INV-A2 | Merging | `CYCLE_MERGING` | C-10,C-11,T-06 | Merge §3.7 | `MergeAccepted`, `MergeRejected` | `merge.py` | `merge-check` CLI | merge stub test | always `deferred`; **no git mutations** |
+
+### D9 — Wire Schedule / Validate / Update (event emission)
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| MB1 parity + observability | 0025 | Task, Lock, Wave | INV-A*, INV-B* | Scheduling, Validating | `TASK_*`, `WAVE_*` | T-02–T-07,W-03,L-01,L-02 | Schedule, Validate, Update | `TaskScheduled`, `ValidationPassed`, `StateUpdated`, `WaveAdvanced` | `runtime.py`, `scheduler.py`, `checks.py`, `state_io.py` | schedule/sync CLI; CheckRunner output | existing + new emit tests | MB1 Phase 2 behavior preserved |
+
+### D10 — `EngineeringRuntime` rename
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ASEP terminology | 0028, 0029 | Engineering Runtime | — | Delegation | — | — | — | — | rename `WorkflowRuntime` | grep | regression | zero `WorkflowRuntime` in `builder_engine/` |
+
+### D11 — Tests & promotion
+
+| V | A | M | I | B | S | T | L3 | E | Mod | O | Test | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Gate-driven | 0010 | Milestone `mb2` | — | Promotion | `MS_*` | M-03 (manual) | Validate gate | `MilestoneValidated` | `docs/mb2-phase-gate.md` | gate YAML | integration cycle test | `mb2-phase-gate.md` all green |
+
+---
+
+## 4. Prerequisites (not MB2 scope — constitutional minimality)
+
+These deliverables live in `plans/l2-global-state-machine-plan.md` and **must complete before D9 wire runtime**:
+
+| Prereq | B | T | Mod | Evidence |
+|--------|---|---|-----|----------|
+| L2 Ph1 Executable Task FSM | Validating, Claiming | T-01–T-12 | `gsm_task.py` | `test_gsm_task.py` green |
+| L2 Ph2 Class B invariant pass | all commits | INV-B* | `invariants.py` | `InvariantViolation` on illegal commit |
+
+If prerequisite work reveals a constitution gap → §11 log → stop MB2 → DR/ADR separately.
+
+---
+
+## 5. Scope & non-goals
+
+### 5.1 In scope
+
+Deliverables **D1–D11** only.
+
+### 5.2 Non-goals (unchanged — constitutional boundaries)
+
+| Forbidden | Rationale | If needed |
+|-----------|-----------|-----------|
+| New L0/L1/BS/L2/L3 artifacts | Minimality | DR + constitution amendment |
+| Product LangGraph / `backend.app` | ADR-0023 | M5 Product spec |
+| Global project FSM replacing packet FSM | ADR-0025 | Already in L2 |
+| Full Policy Engine | MB3+ | ADR when scope frozen |
+| Observability web UI | MB3+ | Separate spec |
+| Auto git merge / Integrator worker | Merge behavior external | C-10/C-11 eligibility only |
+| Auto-editing STATE/ADRs from replan | INV-B7, BS Replanning | Human Operator |
+| Auto recovery packet creation | Q-MB2-3 resolution | Proposal only |
 
 ```yaml
 product_langgraph: false
@@ -72,416 +164,174 @@ backend_app_imports: false
 global_project_fsm: false
 auto_merge: false
 auto_spec_edits: false
+new_constitution_objects: false
+new_l2_transitions: false
 ```
 
 ---
 
-## 3. Architecture
+## 6. Architecture
 
-### 3.1 Component model
+### 6.1 Component model (L4 modules → BS behaviors)
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    BUILD CONTROL PLANE (hooks only)                      │
-│  strategic objectives · ADR/spec authority · policy YAML (declarative)   │
-└───────────────────────────────┬─────────────────────────────────────────┘
-                                │ supplies rules + intent
-                                ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      ENGINEERING RUNTIME (builder_engine/)               │
-│                                                                          │
-│  observe.py ──► ObservedSnapshot                                         │
-│       │                                                                  │
-│       ▼                                                                  │
-│  policy.py ──► PolicyDecision (allow | block | escalate)               │
-│       │                                                                  │
-│       ▼                                                                  │
-│  planner.py ──► Plan (extended; wraps compute_ready)                     │
-│       │                                                                  │
-│       ├──► scheduler.py + runtime.schedule()  [MB1 ✅]                   │
-│       ├──► executor.py manifest              [MB1 ✅]                   │
-│       ├──► checks.py + runtime.sync()        [MB1 ✅]                   │
-│       │                                                                  │
-│       ▼                                                                  │
-│  events.py ──► BuildEventBus (.builder-engine/events.jsonl)             │
-│       │                                                                  │
-│       ▼                                                                  │
-│  replan.py ──► ReplanProposal (minimal)                                  │
-│                                                                          │
-│  cycle.py ──► EngineeringRuntimeCycle (orchestrator, not a new FSM)      │
-└─────────────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-                    Execution workers (external — Cursor Task, human)
+Build Control Plane (rules only — policies.yaml, governance)
+        │
+        ▼
+Engineering Runtime (builder_engine/)
+  observe.py    → Observing
+  policy.py     → Escalation (evaluation)
+  planner.py    → Scheduling (extended Plan)
+  events.py     → (emission infrastructure)
+  replan.py     → Replanning, Recovery
+  merge.py      → Merging (stub)
+  cycle.py      → C-01…C-15 orchestration
+  runtime.py    → EngineeringRuntime (rename) — Schedule, Validate, Update
+  gsm_task.py   → [prerequisite] L2 transitions
+  invariants.py → [prerequisite] L1 enforcement
+        │
+        ▼
+Execution Workers (external — replaceable LLM/human)
 ```
 
-### 3.2 Sidecar boundary (normative)
+### 6.2 Sidecar boundary
 
 | Concern | Owner | MB2 access |
 |---------|-------|------------|
-| `plans/builder/STATE.yaml` | Workflow state (filesystem) | read/write via `state_io` only |
-| `.builder-engine/events.jsonl` | Build event bus | append-only writes |
-| `.builder-engine/last-dispatch-manifest.json` | Execute projection | read (existing) |
-| `backend/app/*` | Product Plane | **forbidden import** |
-| Git working tree | Authority for merge | read-only status in Observe |
+| `STATE.yaml` | Workflow state | read/write via `state_io` + invariant pass |
+| `.builder-engine/events.jsonl` | Build event bus | append-only |
+| `backend/app/*` | Product Plane | **forbidden** |
 
 ---
 
-## 4. Phase mapping — all 10 Engineering Runtime phases
+## 7. L3 phase mapping (implementation targets)
 
-Each row traces `runtime-model.md` §3 to modules. **MB2 implements** rows marked 🟢; **carry forward** rows marked ⚪ (wire + events only).
-
-### 4.1 Observe State 🟢
-
-| Property | Value |
-|----------|-------|
-| **Module** | `builder_engine/observe.py` — `StateObserver`, `ObservedSnapshot` |
-| **CLI projection** | `builder-engine observe`, enriched `status` |
-| **Inputs** | `STATE.yaml` (via `BuilderGraph`), optional `git` porcelain status, CI status stub (`checks.run_stage("ci")` exit code cache or `unknown`), `.builder-engine/` queue depth (in-flight + ready counts), knowledge drift flag (file mtime stub) |
-| **Outputs** | `ObservedSnapshot` — immutable dataclass: `observed_at`, `graph`, `git_branch`, `git_dirty`, `ci_status`, `ready_count`, `in_flight_count`, `blockers`, `staleness_reasons` |
-| **Events** | `StateObserved` (published when cycle starts Observe) |
-| **Failure** | Partial snapshot (`staleness_reasons` non-empty) → cycle aborts before Schedule |
-| **Acceptance** | Snapshot includes all packets + locks; git/CI fields present; second observe in same second produces new immutable instance; abort if STATE unreadable |
-
-### 4.2 Evaluate Policies 🟢
-
-| Property | Value |
-|----------|-------|
-| **Module** | `builder_engine/policy.py` — `PolicyEngine` (stub), `PolicyDecision` |
-| **Config** | `plans/builder/policies.yaml` (optional; default rules embedded) |
-| **Inputs** | `ObservedSnapshot`, policy set (YAML + `validate_graph` invariants) |
-| **Outputs** | `PolicyDecision`: `allow` \| `block` \| `escalate` + `violations: list[str]` |
-| **Events** | `PolicyViolated`, `PolicyEscalated` |
-| **Failure** | `block` → cycle stops before Plan; `escalate` → emit event, continue with warning |
-| **Acceptance** | Implementer without `checks` → `block` (§8.8); invalid graph → `block`; frozen spec gate example rule (YAML): `product_spec_frozen: m4` blocks embed-stage scheduling if M4 gate doc missing; `validate_graph` warnings alone → `allow` |
-
-### 4.3 Plan 🟢 (extend)
-
-| Property | Value |
-|----------|-------|
-| **Module** | `builder_engine/planner.py` — extend with `Plan`, `build_plan()` |
-| **CLI projection** | `builder-engine plan` (replaces/aliases `ready` detail) |
-| **Inputs** | `ObservedSnapshot`, `PolicyDecision`, optional strategic objective string from STATE metadata |
-| **Outputs** | `Plan`: `ready_packets`, `wave_intent`, `blockers`, `critical_path_packet_ids` (longest dependency chain heuristic), `empty: bool` |
-| **Events** | `PlanGenerated`, `PlanEmpty` |
-| **Failure** | Empty plan with open blockers → `escalate` policy path |
-| **Acceptance** | `build_plan()` ready set equals `compute_ready()` for same graph; critical path non-empty when deps exist; `PlanEmpty` when no ready and wave incomplete |
-
-### 4.4 Schedule ⚪
-
-| Property | Value |
-|----------|-------|
-| **Module** | `builder_engine/scheduler.py`, `builder_engine/runtime.py` — `WorkflowRuntime.schedule()` |
-| **Inputs** | `Plan.ready_packets` (or graph), `ObservedSnapshot` |
-| **Outputs** | CLAIMED state, `DispatchManifest`, file locks |
-| **Events** | `TaskScheduled`, `LockAcquired` (MB2: emit via bus on schedule) |
-| **Failure** | Concurrent in-flight → abort (existing) |
-| **Acceptance** | MB1 Phase 2 behavior preserved; events appended on successful schedule |
-
-### 4.5 Execute ⚪
-
-| Property | Value |
-|----------|-------|
-| **Module** | `builder_engine/executor.py` — manifest only |
-| **Inputs** | `DispatchManifest`, worker type |
-| **Outputs** | External worker artifacts; `.builder-engine/last-dispatch-manifest.json` |
-| **Events** | `TaskStarted`, `TaskCompleted`, `TaskFailed` (MB2: **no emitter** — workers external; manifest read by operator) |
-| **Acceptance** | No runtime code changes except bus docs; manifest schema unchanged |
-
-### 4.6 Validate ⚪
-
-| Property | Value |
-|----------|-------|
-| **Module** | `builder_engine/checks.py`, `builder_engine/runtime.py` — `WorkflowRuntime.sync()` |
-| **Inputs** | In-flight packets, `checks` stages |
-| **Outputs** | Pass/fail per packet; VALIDATING → DONE or FAILED |
-| **Events** | `ValidationPassed`, `ValidationFailed` (MB2: emit on sync) |
-| **Acceptance** | Failed checks emit `ValidationFailed` with packet id + failed stage list |
-
-### 4.7 Merge ⚪ (gap — eligibility only)
-
-| Property | Value |
-|----------|-------|
-| **Module** | `builder_engine/merge.py` — `merge_eligibility(snapshot, packet)` stub |
-| **Inputs** | Passed validation, integration notes |
-| **Outputs** | `MergeEligibility`: `eligible` \| `deferred` \| `rejected` + reason |
-| **Events** | `MergeAccepted`, `MergeRejected` (MB2: emit only when operator invokes `builder-engine merge-check` stub CLI) |
-| **Failure** | Not eligible → event + replan input |
-| **Acceptance** | Stub always `deferred` with reason "integrator external"; no git mutations |
-
-### 4.8 Publish Events 🟢
-
-| Property | Value |
-|----------|-------|
-| **Module** | `builder_engine/events.py` — `BuildEvent`, `BuildEventBus`, `EventType` enum |
-| **Storage** | `.builder-engine/events.jsonl` (append-only, one JSON object per line) |
-| **Inputs** | Outcomes from Observe, Policies, Plan, Schedule, Validate, Update State, Replan |
-| **Outputs** | Persisted typed events; in-memory fan-out to registered handlers (tests only) |
-| **Events** | All §4 event types (catalog below) |
-| **Rule** | Phases call `bus.publish()`; no cross-phase direct callbacks for audit/replan |
-| **Acceptance** | Publish is append-only; replay returns ordered events; consumers idempotent; crash between write and publish prevented by write-before-emit |
-
-**Event catalog (MB2 minimum):**
-
-`StateObserved`, `PolicyViolated`, `PolicyEscalated`, `PlanGenerated`, `PlanEmpty`, `TaskScheduled`, `LockAcquired`, `ValidationPassed`, `ValidationFailed`, `StateUpdated`, `WaveAdvanced`, `MergeAccepted`, `MergeRejected`, `Replanned`, `RecoveryTaskCreated`
-
-### 4.9 Update State ⚪
-
-| Property | Value |
-|----------|-------|
-| **Module** | `builder_engine/state_io.py`, `builder_engine/runtime.py` — `save_raw_state` in schedule/sync |
-| **Inputs** | Validation outcomes |
-| **Outputs** | Updated `STATE.yaml` |
-| **Events** | `StateUpdated`, `WaveAdvanced` (MB2: emit after successful save) |
-| **Acceptance** | Atomic rename preserved; wave advance emits `WaveAdvanced` |
-
-### 4.10 Replan 🟢 (minimal)
-
-| Property | Value |
-|----------|-------|
-| **Module** | `builder_engine/replan.py` — `ReplanProposal`, `minimal_replan()` |
-| **Inputs** | Recent bus events (esp. `ValidationFailed`), fresh `ObservedSnapshot` |
-| **Outputs** | `ReplanProposal`: `suggested_actions: list[str]`, `recovery_packet_template: dict | None`, `revised_ready: list[str]` |
-| **Events** | `Replanned`, `RecoveryTaskCreated` |
-| **Failure** | Does not auto-mutate STATE — proposal only |
-| **Acceptance** | On validation failure: dependents unblocked in *proposal*; suggests fix packet YAML snippet; emits `Replanned`; human applies changes |
+| L3 §3 | BS | MB2 deliverable | Status Era I |
+|-------|-----|-----------------|------------|
+| Observe | Observing | D1 | partial (`lint-graph`, `status`) |
+| Evaluate Policies | Escalation | D2 | `validate_graph` only |
+| Plan | Scheduling | D3 | `compute_ready` only |
+| Schedule | Scheduling, Claiming | D9 wire | ✅ MB1 |
+| Execute | Delegation | external | ✅ manifest |
+| Validate | Validating | D9 wire | ✅ sync |
+| Merge | Merging | D8 stub | manual |
+| Publish Events | — | D4, D9 | none |
+| Update State | — | D9 wire | partial |
+| Replan | Replanning | D5, D6 | none |
 
 ---
 
-## 5. Gap closure vs runtime-model §4
+## 8. Interfaces
 
-| Runtime phase | MB1 Phase 2 | MB2 closure |
-|---------------|-------------|-------------|
-| Observe State | `lint-graph`, `status` | Unified `ObservedSnapshot` + git/CI aggregate |
-| Evaluate Policies | `validate_graph` | `PolicyEngine` stub + `policies.yaml` |
-| Plan | `plan_ready` | `Plan` with critical path + blockers |
-| Schedule | ✅ | Event emission wired |
-| Execute | manifest ✅ | Unchanged |
-| Validate | `sync()` ✅ | Event emission wired |
-| Merge | — | Eligibility stub + CLI; no auto-merge |
-| Publish Events | direct calls | `BuildEventBus` |
-| Update State | `sync()` partial | `StateUpdated` / `WaveAdvanced` events |
-| Replan | — | `minimal_replan()` proposal path |
+*(Unchanged from pre-rebase — dataclass shapes preserved.)*
+
+See §6 in prior revision: `ObservedSnapshot`, `PolicyDecision`, `Plan`, `BuildEvent`, `EngineeringRuntimeCycle.run_preflight/postflight`.
+
+**Rename:** `WorkflowRuntime` → `EngineeringRuntime` (D10).
 
 ---
 
-## 6. Interfaces
+## 9. Data flows
 
-### 6.1 `ObservedSnapshot` (Python)
-
-```python
-@dataclass(frozen=True)
-class ObservedSnapshot:
-    observed_at: datetime
-    graph: BuilderGraph
-    git_branch: str | None
-    git_dirty: bool
-    ci_status: Literal["green", "red", "unknown"]
-    ready_count: int
-    in_flight_count: int
-    blockers: dict[str, str]
-    staleness_reasons: tuple[str, ...]
-```
-
-### 6.2 `PolicyDecision`
-
-```python
-@dataclass(frozen=True)
-class PolicyDecision:
-    outcome: Literal["allow", "block", "escalate"]
-    violations: tuple[str, ...]
-```
-
-### 6.3 `Plan`
-
-```python
-@dataclass(frozen=True)
-class Plan:
-    ready_packets: tuple[Packet, ...]
-    wave_intent: int
-    blockers: dict[str, str]
-    critical_path_packet_ids: tuple[str, ...]
-    empty: bool
-```
-
-### 6.4 `BuildEvent`
-
-```python
-@dataclass(frozen=True)
-class BuildEvent:
-    type: EventType
-    timestamp: datetime
-    payload: dict[str, Any]
-    cycle_id: str | None = None
-```
-
-### 6.5 CLI commands (additive)
-
-| Command | Runtime phase | Notes |
-|---------|---------------|-------|
-| `observe` | Observe | Print snapshot JSON/table |
-| `plan` | Plan | Show `Plan` after policies |
-| `cycle --dry-run` | Full processor | Observe→Policies→Plan; optional `--sync` tail |
-| `events --tail N` | Publish (read) | Tail build bus |
-| `merge-check` | Merge stub | Eligibility only |
-
-Existing `schedule`, `sync`, `lint-graph`, `status`, `ready`, `check` remain projections.
-
-### 6.6 `EngineeringRuntimeCycle`
-
-```python
-class EngineeringRuntimeCycle:
-    def run_preflight(self) -> tuple[ObservedSnapshot, PolicyDecision, Plan]: ...
-    def run_postflight(self, sync_result: SyncResult) -> ReplanProposal | None: ...
-```
-
-`WorkflowRuntime` may delegate to cycle for event emission; **packet FSM transitions stay in `runtime.py`**.
-
----
-
-## 7. Data flow
-
-### 7.1 Preflight (before schedule)
+### 9.1 Preflight (C-01 → C-05)
 
 ```text
-STATE.yaml + git + CI stub
-        │
-        ▼
-StateObserver.observe() → ObservedSnapshot
-        │
-        ▼
-PolicyEngine.evaluate() → PolicyDecision
-        │ (block → stop)
-        ▼
-build_plan() → Plan
-        │
-        ▼
+StateObserver → ObservedSnapshot (S-01,S-02)
+PolicyEngine → PolicyDecision (C-03|C-04)
+build_plan → Plan (C-05)
 bus.publish(PlanGenerated | PlanEmpty)
 ```
 
-### 7.2 Existing execution slice (unchanged semantics)
+### 9.2 Execution slice (unchanged semantics)
 
 ```text
-WorkflowRuntime.schedule() → manifest
-        │ bus: TaskScheduled, LockAcquired
-        ▼
-[external workers]
-        │
-        ▼
-WorkflowRuntime.sync() → STATE update
-        │ bus: ValidationPassed|Failed, StateUpdated, WaveAdvanced
+EngineeringRuntime.schedule() → T-02,T-03,L-01,K-01 + events
+[external workers — C-07a,b]
+EngineeringRuntime.sync() → T-04…T-07,W-03,L-02 + events
 ```
 
-### 7.3 Postflight (after sync)
+### 9.3 Postflight (C-12 → C-14)
 
 ```text
-bus tail + fresh Observe
-        │
-        ▼
-minimal_replan() → ReplanProposal
-        │
-        ▼
-bus: Replanned, RecoveryTaskCreated (if template)
-        │
-        ▼
-operator / Architect applies proposal (no auto STATE write)
+bus.publish(EventsPublished)
+minimal_replan → ReplanProposal (C-14)
+operator applies proposal — no auto STATE write (INV-B7)
 ```
 
 ---
 
-## 8. Acceptance criteria (promotion gate preview)
+## 10. Promotion gate (`docs/mb2-phase-gate.md`)
 
 ```yaml
-observed_snapshot: green       # unified read model with git/CI fields
-policy_stub: green             # block implementer-without-checks; YAML rule loads
-extended_plan: green           # critical path + ready set parity with compute_ready
-build_event_bus: green         # append-only jsonl; replay ordering
-cycle_preflight: green         # observe→policies→plan integrated
-cycle_postflight: green        # validation failure → replan proposal
-schedule_sync_parity: green    # MB1 behavior unchanged
-event_emission: green          # schedule/sync emit typed events
-merge_eligibility_stub: green  # deferred external integrator
-no_backend_imports: green      # isolation check in CI
+constitutional_traceability: green   # §3 all rows populated
+prerequisite_gsm: green              # l2 plan Ph1-2
+observed_snapshot: green
+policy_stub: green
+extended_plan: green
+build_event_bus: green
+cycle_preflight: green
+cycle_postflight: green
+schedule_sync_parity: green
+event_emission: green
+merge_eligibility_stub: green
+engineering_runtime_rename: green
+no_backend_imports: green
+no_new_constitution_artifacts: green # minimality audit
 m0_m1_m2_m3_m4_tests: green
 builder_engine_tests: green
+etm_rows_complete: green
 documentation: complete
 knowledge_updated: true
-mb2_gate: docs/mb2-phase-gate.md
 ```
 
 ---
 
-## 9. Failure modes
+## 11. Constitutional gap log
 
-| Failure | Detection | Mitigation |
-|---------|-----------|------------|
-| Stale STATE mid-cycle | `staleness_reasons` | Abort preflight; operator refresh |
-| Policy block | `PolicyDecision.block` | Emit `PolicyViolated`; no schedule |
-| Empty plan with blockers | `Plan.empty` + blockers | `PlanEmpty` + escalate |
-| Event bus corrupt line | replay parser | Skip line + warn; test guards |
-| Replan overreach | QA review | Proposal only — no auto packet creation |
-| Scope creep: global FSM | ADR-0025 review | Reject PR |
-| `backend.app` import | `make isolation` / lint | Reject PR |
+| ID | Discovered | Action | MB2 blocked? |
+|----|------------|--------|--------------|
+| — | *(none at rebase)* | — | — |
+
+**Process:** If implementation finds a gap → add row here → open DR/ADR → **do not** patch L0–L3 in MB2 branch.
 
 ---
 
-## 10. Migration strategy
+## 12. Implementation sequencing
 
-| Phase | Deliverable |
-|-------|-------------|
-| **1 — Observe** | `observe.py`, tests, CLI `observe` |
-| **2 — Policies** | `policy.py`, `policies.yaml` sample, tests |
-| **3 — Plan extend** | `Plan`, `build_plan()`, tests, CLI `plan` |
-| **4 — Event bus** | `events.py`, jsonl storage, tests |
-| **5 — Wire runtime** | cycle preflight/postflight; schedule/sync emit events |
-| **6 — Replan** | `replan.py`, merge stub, integration test |
-| **7 — Promotion** | gate doc, knowledge mirror |
+```text
+Prerequisite: l2-global-state-machine-plan Ph1–2 (gsm + invariants)
+Phase 1: D1 Observe
+Phase 2: D2 Policy
+Phase 3: D3 Plan extend
+Phase 4: D4 Event bus
+Phase 5: D6 Cycle + D9 wire + D8 merge stub
+Phase 6: D5 Replan
+Phase 7: D10 rename + D7 CLI + D11 promotion
+```
 
-**Order:** Spec freeze (this doc) → `plans/mb2-adaptive-runtime-plan.md` → implementation on branch `mb2-adaptive-runtime`.
-
----
-
-## 11. Relationship to Product Track (M5+)
-
-MB2 does **not** block M5 spec freeze. Product milestones may register new CheckRunner stages; MB2 policy stub may reference gate doc presence (e.g. `docs/m5-promotion.md`) but must not import product services.
-
-Per ADR-0025 sequencing: if Platform schedule must understand new Product job semantics, **Product spec freezes first**.
-
----
-
-## 12. Open questions (resolved in this spec)
-
-| ID | Question | Resolution |
-|----|----------|------------|
-| Q-MB2-1 | Is MB2 a global FSM? | **No** — processor orchestration + packet FSM (ADR-0025) |
-| Q-MB2-2 | Build bus storage | Filesystem `.builder-engine/events.jsonl` |
-| Q-MB2-3 | Auto recovery packets | **No** — `ReplanProposal` only |
-| Q-MB2-4 | Full policy engine | Deferred MB3; stub in MB2 |
-| Q-MB2-5 | Merge automation | Eligibility stub; integrator external |
-| Q-MB2-6 | CI signal in Observe | Stub via last `check ci` exit or `unknown` |
+Detail: `plans/mb2-adaptive-runtime-plan.md` (updated for traceability).
 
 ---
 
 ## 13. Freeze record
 
-- [x] All 10 runtime phases mapped to modules, I/O, events, acceptance
-- [x] MB2 scope: Observe, Policies stub, Plan extend, Publish bus, Replan minimal, §4 gaps
-- [x] Non-goals: Product LangGraph, `backend.app` imports, global FSM
-- [x] Promotion gate preview defined
-- [x] Aligns with ADR-0026, `runtime-model.md`, `era-model.md`
-- [x] Planner plan: `plans/mb2-adaptive-runtime-plan.md` (2026-06-25)
+- [x] All deliverables trace §3 matrix (Completeness)
+- [x] No new constitution artifacts (Minimality)
+- [x] Every module maps to BS §2 (Purity)
+- [x] Every row has Test + Evidence (Closure)
+- [x] Prerequisites separated from MB2 scope
+- [x] Constitutional gap log §11 empty
+- [x] Aligns with L0, L1, BS, L2, L3, ETM, DR-001, ADR-0029
+- [ ] **Architect sign-off on rebased spec:** _pending_
 
-**Implementation authorized:** Architect freeze + Planner plan delivered.
+**Implementation authorized:** Architect sign-off on **this rebased document** + prerequisite Ph1–2 plan acceptance.
 
 ---
 
 ## 14. References
 
-- ADR-0026 Platform Model & Terminology
-- ADR-0025 Builder Execution State Machine
-- ADR-0023 Build Workflow Engine
-- ADR-0006 Event-Driven Architecture (product pattern extended build-side)
-- `docs/platform/runtime-model.md`
-- `docs/platform/era-model.md`
-- `docs/mb1-phase2-gate.md`
-- `builder_engine/runtime.py`, `planner.py`, `validate.py`, `cli.py`
+- Constitution: L0, L1, `behavioral-semantics.md`, L2, L3
+- DR-001, ADR-0026, ADR-0028, ADR-0029, ADR-0025, ADR-0023, ADR-0010, ADR-0006
+- `engineering-traceability-matrix.md` §3
+- `plans/l2-global-state-machine-plan.md` (prerequisite)
+- `plans/mb2-adaptive-runtime-plan.md`

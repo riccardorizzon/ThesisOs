@@ -146,15 +146,15 @@ Before merging any `builder_engine/` PR:
 
 ---
 
-## 5. DR-001 / Architect sign-off (closed)
+## 5. DR-001 / Architect sign-off
 
 | Item | Status |
 |------|--------|
-| DR-001 | ✅ Approved (Conditional Pass confirmed) |
-| ETM v1.1 | ✅ Approved (Event + Observability) |
-| L2.1 micro-patch | ✅ Applied |
-| Behavioral Semantics | ✅ Frozen (ADR-0029) |
-| MB2 rebase | 🔴 **Authorized now** — use §3 template |
+| DR-001 | ✅ Approved |
+| ETM v1.1 | ✅ Approved |
+| L2.1 + BS (ADR-0029) | ✅ Frozen |
+| **MB2 spec rebase** | ✅ Complete — pending Architect sign-off on rebased spec §13 |
+| L4 implementation | ⏸️ After rebased spec sign-off + Phase 0 prerequisite |
 
 ---
 

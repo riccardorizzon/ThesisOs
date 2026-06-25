@@ -1,34 +1,42 @@
 # MB2 Adaptive Runtime — Implementation Plan
 
-> **⚠️ ON HOLD — rebase required (ADR-0028, 2026-06-25).** A platform constitution
-> (L0 `engineering-meta-model.md`, L1 `invariant-model.md`) was frozen above the
-> runtime model. Before executing this plan, rebase it so each phase concretizes
-> an L0 object and wires the relevant L1 invariants, and rename
-> `WorkflowRuntime` → `EngineeringRuntime`. The next authorized platform work is
-> **L2 (Global State Machine)**, not this plan.
+> **Status:** Rebased on constitution (2026-06-25). Implements MB2 spec §3 deliverables D1–D11.
+> **Prerequisite:** `plans/l2-global-state-machine-plan.md` **Phases 1–2** (GSM + invariant pass) MUST complete before Phase 5.
+> **Constitutional rules:** Completeness · Minimality · Behavioral Purity · Traceability Closure (spec §2).
+> **No constitution changes** during implementation — gaps → MB2 spec §11 → DR/ADR.
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans. Each phase has explicit promotion criteria — do not start the next phase until the current phase gate passes. **Architect + Critic mandatory every phase.**
+> **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development or superpowers:executing-plans. Each phase must cite **MB2 spec §3 row** (D#) and **ETM** columns in PR description.
 
-**Goal:** Translate frozen `docs/platform/runtime-model.md` into Engineering Runtime modules — Observe, Policy stub, extended Plan, build event bus, minimal Replan — **without** a global project FSM, Product LangGraph changes, or `backend.app` imports.
+**Goal:** L4 implementation of rebased MB2 spec — concretize L3 phases Observe, Evaluate Policies, Plan extend, Publish, Replan; wire events into existing Schedule/Validate/Update.
 
-**Architecture:** Sidecar modules in `builder_engine/`; `EngineeringRuntimeCycle` orchestrates preflight/postflight around existing `WorkflowRuntime.schedule()` / `sync()`; append-only build bus at `.builder-engine/events.jsonl`; packet FSM (ADR-0025) unchanged.
+**Architecture:** Sidecar `builder_engine/`; `EngineeringRuntimeCycle` orchestrates C-01–C-15 preflight/postflight; `EngineeringRuntime` (renamed) preserves packet FSM; build bus at `.builder-engine/events.jsonl`.
 
-**Tech Stack:** Python 3.11+, dataclasses, Typer CLI, pytest, subprocess git, existing CheckRunner stages.
+**Spec:** `docs/superpowers/specs/2026-06-25-thesisos-mb2-adaptive-runtime-design.md` (rebased — pending Architect sign-off)  
+**Prerequisite plan:** `plans/l2-global-state-machine-plan.md` Ph 1–2  
+**ADRs:** 0029, 0028, 0026, 0025, 0023
 
-**Spec:** `docs/superpowers/specs/2026-06-25-thesisos-mb2-adaptive-runtime-design.md` (Frozen 2026-06-25)  
-**ADRs:** 0026 (terminology), 0025 (packet FSM), 0023 (sidecar isolation)
+**Branch:** `mb2-adaptive-runtime` (from `main` after spec sign-off).
 
-**Branch:** `mb2-adaptive-runtime` (from `main` @ Era I closure / `m4-complete`).  
-**Conventions:** TDD where practical, additive CLI only, M0–M4 + `builder_engine` tests green after every phase.
-
-**Forbidden in all phases:** `import backend.app`, Product LangGraph edits, auto-mutating `STATE.yaml` from replan, global project FSM, observability web UI.
+**Traceability per phase:** V → ADR → L0 → L1 → BS → T → L3 → E → Mod → O → Test → Evidence (see spec §3).
 
 ---
 
-## Phase 1 — Observe State: `ObservedSnapshot`
+## Phase 0 — Prerequisite: L2 GSM + invariants (NOT MB2 D#)
 
-### Objective
-Implement unified read model aggregating `BuilderGraph`, git status, CI stub, and queue depth.
+Execute `plans/l2-global-state-machine-plan.md` Phases 1–2 before Phase 5.
+
+| Deliverable | BS | T | Mod | Evidence |
+|-------------|----|---|-----|----------|
+| Executable Task FSM | Validating, Claiming | T-01–T-12 | `gsm_task.py` | `test_gsm_task.py` |
+| Class B invariant pass | all commits | INV-B* | `invariants.py` | `test_invariants.py` |
+
+**Gate:** Phase 0 complete when prerequisite promotion criteria green.
+
+---
+
+## Phase 1 — Observe State (MB2 **D1**)
+
+**Traceability:** BS Observing · T S-01,S-02,C-01,C-02 · L3 Observe · E `StateObserved` · Evidence: immutable snapshot, no STATE write
 
 ### Files affected
 | Action | Path |
@@ -68,10 +76,12 @@ isolation: green
 
 ---
 
-## Phase 2 — Evaluate Policies: stub engine
+## Phase 2 — Evaluate Policies (MB2 **D2**)
+
+**Traceability:** BS Escalation · T C-03,C-04 · L3 Evaluate Policies · E `PolicyAllowed`/`PolicyBlocked` · Evidence: block without checks
 
 ### Objective
-`PolicyEngine` returns `PolicyDecision` after Observe; wraps `validate_graph` + optional `plans/builder/policies.yaml`.
+`PolicyEngine` returns `PolicyDecision` after Observe; evaluates **warnings** + `plans/builder/policies.yaml`. Structural **errors** from `validate_graph` are L1 invariants (via Phase 0 `invariants.py`), not policy.
 
 ### Files affected
 | Action | Path |
@@ -94,8 +104,8 @@ isolation: green
 - `escalate` emits violation list but allows continue (test hook)
 
 ### Critic checklist (Phase 2)
+- [ ] Invariants enforced by Phase 0 pass — policy does not override INV-*
 - [ ] Policies are declarative file — no hard-coded M5+ product logic
-- [ ] `validate_graph` remains source of structural invariants
 
 ### Promotion criteria
 ```yaml
@@ -107,10 +117,9 @@ m0_m1_m2_m3_m4_tests: green
 
 ---
 
-## Phase 3 — Extend Plan: critical path + blockers
+## Phase 3 — Extend Plan (MB2 **D3**)
 
-### Objective
-`build_plan()` produces `Plan` with wave intent, critical-path heuristic, and blocker surfacing; parity with `compute_ready()`.
+**Traceability:** BS Scheduling · T T-01,C-05 · L3 Plan · E `PlanGenerated` · Evidence: ready set parity
 
 ### Files affected
 | Action | Path |
@@ -146,10 +155,9 @@ unit_builder_engine: green
 
 ---
 
-## Phase 4 — Build event bus
+## Phase 4 — Build event bus (MB2 **D4**)
 
-### Objective
-Typed append-only event log; publish/replay API; no cross-phase callbacks.
+**Traceability:** L3 Publish · T C-12 · E `EventsPublished` + catalog · Evidence: append-only jsonl
 
 ### Files affected
 | Action | Path |
@@ -165,7 +173,7 @@ Typed append-only event log; publish/replay API; no cross-phase callbacks.
 ### Tests
 - Publish appends line; tail returns last N in order
 - Corrupt line skipped with warning
-- Event types cover catalog from spec §4.8
+- Event types must match L2 §7 / spec §3 D4 catalog — no new event names
 - Concurrent publish from single process serialized (file lock or append atomicity)
 - CLI `events --tail` read-only
 
@@ -183,16 +191,20 @@ unit_builder_engine: green
 
 ---
 
-## Phase 5 — Wire runtime: cycle + event emission
+## Phase 5 — Wire runtime + cycle (MB2 **D6**, **D8**, **D9**)
+
+**Traceability:** BS Scheduling, Validating, Merging · T T-02–T-07,C-01–C-13 · Evidence: MB1 parity + events
+
+**Requires Phase 0 complete.**
 
 ### Objective
-`EngineeringRuntimeCycle` preflight; `schedule`/`sync` publish events; `StateUpdated` / `WaveAdvanced` after saves.
+`EngineeringRuntimeCycle` preflight; `EngineeringRuntime.schedule()`/`sync()` publish events; merge eligibility stub.
 
 ### Files affected
 | Action | Path |
 |--------|------|
 | Create | `builder_engine/cycle.py` — `EngineeringRuntimeCycle` |
-| Modify | `builder_engine/runtime.py` — optional `bus: BuildEventBus`, emit on schedule/sync |
+| Modify | `builder_engine/runtime.py` — rename class to `EngineeringRuntime`; optional `bus`, emit on schedule/sync |
 | Modify | `builder_engine/cli.py` — add `cycle --dry-run`, wire bus into schedule/sync |
 | Create | `builder_engine/tests/test_cycle.py` |
 | Modify | `builder_engine/tests/test_runtime.py` — assert events on schedule/sync |
@@ -226,10 +238,9 @@ m0_m1_m2_m3_m4_tests: green
 
 ---
 
-## Phase 6 — Replan minimal + merge eligibility stub
+## Phase 6 — Replan minimal (MB2 **D5**)
 
-### Objective
-`minimal_replan()` produces `ReplanProposal` on validation failure; merge eligibility CLI stub; postflight integration.
+**Traceability:** BS Replanning, Recovery · T C-14,T-09 · E `Replanned` · Evidence: proposal without STATE write
 
 ### Files affected
 | Action | Path |
@@ -265,10 +276,12 @@ m0_m1_m2_m3_m4_tests: green
 
 ---
 
-## Phase 7 — Promotion gate + knowledge
+## Phase 7 — Promotion + CLI completion (MB2 **D7**, **D10**, **D11**)
+
+**Traceability:** BS Promotion · Evidence: `docs/mb2-phase-gate.md` all green; zero `WorkflowRuntime` in tree
 
 ### Objective
-`docs/mb2-phase-gate.md`, knowledge mirror, optional `plans/builder/STATE.yaml` epic `mb2-adaptive-runtime`.
+Complete CLI projections; `EngineeringRuntime` rename audit; `docs/mb2-phase-gate.md`; knowledge mirror.
 
 ### Files affected
 | Action | Path |
@@ -288,8 +301,9 @@ cycle_preflight: green
 cycle_postflight: green
 schedule_sync_parity: green
 event_emission: green
-merge_eligibility_stub: green
-no_backend_imports: green
+engineering_runtime_rename: green
+constitutional_traceability: green
+etm_rows_complete: green
 m0_m1_m2_m3_m4_tests: green
 builder_engine_tests: green
 documentation: complete
@@ -319,9 +333,8 @@ Packet `checks` should include `unit-builder-engine` and `isolation` after Phase
 
 ## References
 
-- `docs/superpowers/specs/2026-06-25-thesisos-mb2-adaptive-runtime-design.md`
-- `docs/platform/runtime-model.md`
-- `docs/platform/era-model.md`
-- `decisions/ADR-0026-platform-model-terminology.md`
+- MB2 spec (rebased): `docs/superpowers/specs/2026-06-25-thesisos-mb2-adaptive-runtime-design.md`
+- Constitution: L0, L1, `behavioral-semantics.md`, L2, L3
+- `engineering-traceability-matrix.md` · DR-001 · ADR-0029
+- Prerequisite: `plans/l2-global-state-machine-plan.md`
 - `docs/mb1-phase2-gate.md`
-- Tag `m4-complete`
