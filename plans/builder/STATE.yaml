@@ -1,54 +1,53 @@
-# Builder orchestration STATE — M3 Document System, Phase 5–6 (events + promotion).
-# Validate: .cursor/skills/orchestrate-builders/scripts/validate-state.sh
-#
-# Phases 1–4 committed; Phase 5 (events) + Phase 6 (knowledge freeze) complete in
-# working tree. Source: plans/m3-document-system-plan.md §Phase 5–6.
+# Builder orchestration STATE — MB1 Phase 1 (Build Workflow Engine read-model).
+# Validate: builder-engine lint-graph --repo-root .
 
-epic: m3-document-system-phase5
-chain: m3-events-001
-status: closed   # active | closed — Phase 5 events + Phase 6 promotion docs complete; make ci green
+epic: mb1-workflow-engine-phase1
+chain: mb1-engine-001
+status: closed   # Phase 1 graph read-model shipped; Phase 2 schedule/sync next
 wave: 1
 
 decisions:
-  - "Event bus persists to events table in-producer transaction (ADR-0006)"
-  - "DocumentUploaded on upload; ChunkCreated per chunk on successful parse only"
-  - "Additive chunk_hash in ChunkCreated payload + events.json"
-  - "NO embeddings, retrieval, /search, graph integration"
-  - "DB integration tests skip-guarded until Docker/Postgres available"
+  - "builder_engine is build-time only — no backend.app imports (ADR-0023)"
+  - "STATE/packet YAML schema unchanged; additive engine only"
+  - "lint-graph supersedes validate-state.sh (shim kept as fallback)"
+  - "Wave coherence: in_progress must match STATE.wave; future-wave ready is OK"
 
 file_locks: {}
 blockers: {}
 
 packets:
-  P-EVENTS:
+  P-GRAPH:
     wave: 1
     agent_type: implementer
     status: done
     depends_on: []
     owned_files:
-      - backend/app/services/events/bus.py
-      - backend/app/services/document/service.py
-      - contracts/events/events.json
-      - backend/tests/test_document_events.py
-      - backend/tests/test_document_integration.py
-    output: "Event bus + DocumentService emitters; unit/integration tests."
-    checks: ["make ci"]
-    integration_notes: "31 backend tests skip without Postgres."
+      - builder_engine/
+    output: "GraphLoader, Validator, Scheduler, CLI (lint-graph, status, ready)"
+    checks: ["make unit-builder-engine"]
+    integration_notes: "8 pytest; validate-state.sh delegates to builder-engine"
 
-  P-PROMOTION:
+  P-CI:
+    wave: 1
+    agent_type: implementer
+    status: done
+    depends_on: [P-GRAPH]
+    owned_files:
+      - Makefile
+      - .github/workflows/ci.yml
+      - .cursor/skills/orchestrate-builders/scripts/validate-state.sh
+    output: "unit-builder-engine in make ci; isolation covers builder_engine"
+    checks: ["make ci"]
+    integration_notes: "GitHub Actions builder-engine job added"
+
+  P-DOCS:
     wave: 1
     agent_type: documenter
     status: done
-    depends_on: [P-EVENTS]
+    depends_on: [P-GRAPH]
     owned_files:
-      - docs/m3-promotion.md
-      - knowledge/context/current-state.md
-      - knowledge/context/completed-work.md
-      - knowledge/context/next-actions.md
-      - knowledge/architecture/documents.md
-      - knowledge/memory/project-memory.md
-      - knowledge/project/milestones.md
-      - knowledge/project/roadmap.md
-    output: "M3 promotion gate doc + knowledge mirror."
+      - docs/mb1-phase1-gate.md
+      - .cursor/skills/orchestrate-builders/SKILL.md
+    output: "Phase 1 gate doc + skill cites engine commands"
     checks: []
-    integration_notes: "Tag m3-complete pending merge approval."
+    integration_notes: "MB1 Phase 2 = schedule/sync"

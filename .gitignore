@@ -47,6 +47,7 @@ references/design-skills/
 
 # Builder Memory local venv
 builder_memory/.venv/
+builder_engine/.venv/
 
 # Local agent config (skills under .cursor/skills/ ARE tracked)
 .cursor/hooks.json

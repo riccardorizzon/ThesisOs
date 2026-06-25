@@ -50,6 +50,21 @@ jobs:
       - name: Build
         run: npm run build
 
+  builder-engine:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: builder_engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (editable, dev)
+        run: python -m venv .venv && .venv/bin/pip install -q -e ".[dev]"
+      - name: Unit tests (pytest)
+        run: .venv/bin/pytest -q
+
   isolation:
     runs-on: ubuntu-latest
     steps:
@@ -58,5 +73,7 @@ jobs:
         run: command -v rg >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y ripgrep)
       - name: Build-time sidecar runtime isolation
         run: |
-          ! rg -n "^[[:space:]]*(from|import)[[:space:]]+backend([[:space:].]|$)" builder_memory 2>/dev/null \
-            || { echo "isolation FAIL: a build-time sidecar imports backend.app"; exit 1; }
+          for dir in builder_memory builder_engine; do
+            ! rg -n "^[[:space:]]*(from|import)[[:space:]]+backend([[:space:].]|$)" "$dir" 2>/dev/null \
+              || { echo "isolation FAIL: $dir imports backend.app"; exit 1; }
+          done

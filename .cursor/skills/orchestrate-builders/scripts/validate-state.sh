@@ -1,25 +1,26 @@
 #!/usr/bin/env bash
-# Validate plans/builder/STATE.yaml consistency (no external deps).
-# Usage: validate-state.sh [path-to-STATE.yaml]
+# Validate plans/builder/STATE.yaml consistency.
+# Prefers builder-engine lint-graph (MB1 Phase 1); falls back to inline validator.
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../../../" && pwd)"
 STATE_FILE="${1:-$ROOT/plans/builder/STATE.yaml}"
 
-if [[ ! -f "$STATE_FILE" ]]; then
-  echo "ERROR: STATE file not found: $STATE_FILE"
-  echo "Copy plans/builder/STATE.example.yaml → plans/builder/STATE.yaml"
-  exit 1
+if command -v builder-engine >/dev/null 2>&1; then
+  exec builder-engine lint-graph --state "$STATE_FILE" --repo-root "$ROOT"
 fi
 
+ENGINE="$ROOT/builder_engine/.venv/bin/builder-engine"
+if [[ -x "$ENGINE" ]]; then
+  exec "$ENGINE" lint-graph --state "$STATE_FILE" --repo-root "$ROOT"
+fi
+
+# Fallback: inline Python (legacy, no MB1 §8.5–8.8 invariants)
 python3 - "$STATE_FILE" <<'PY'
 import re
 import sys
 from pathlib import Path
-
-# Minimal YAML loader for STATE files (no PyYAML dependency).
-# Supports: mappings, lists, scalars, inline comments.
 
 def parse_value(s: str):
     s = s.strip()

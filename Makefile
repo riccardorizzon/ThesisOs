@@ -11,7 +11,7 @@ RUFF     := $(BACKEND)/.venv/bin/ruff
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install lint format format-fix typecheck unit unit-frontend test \
+.PHONY: help install lint format format-fix typecheck unit unit-frontend unit-builder-engine test \
         drift scope isolation check ci up down
 
 help: ## Show available targets
@@ -42,6 +42,11 @@ unit: ## backend pytest (DB integration tests self-skip without Postgres)
 unit-frontend: ## frontend vitest
 	cd $(FRONTEND) && npm run test
 
+unit-builder-engine: ## builder_engine pytest (MB1 Phase 1)
+	cd builder_engine && (test -d .venv || python3 -m venv .venv) \
+		&& .venv/bin/pip install -q -e ".[dev]" \
+		&& .venv/bin/pytest -q
+
 drift: ## DB schema / contract drift test
 	cd $(BACKEND) && .venv/bin/python -m pytest -q tests/test_schema_snapshot.py
 
@@ -51,8 +56,10 @@ scope: ## scope-creep guard (informational: stubs must be milestone-tagged)
 		--glob '!**/__pycache__/**' || echo "  (none)"
 
 isolation: ## build-time sidecars must not import the runtime (ADR-0019/0023)
-	@! rg -n "^[[:space:]]*(from|import)[[:space:]]+backend([[:space:].]|$$)" builder_memory 2>/dev/null \
-		|| { echo "isolation FAIL: a build-time sidecar imports backend.app"; exit 1; }
+	@for dir in builder_memory builder_engine; do \
+		! rg -n "^[[:space:]]*(from|import)[[:space:]]+backend([[:space:].]|$$)" $$dir 2>/dev/null \
+			|| { echo "isolation FAIL: $$dir imports backend.app"; exit 1; }; \
+	done
 
 # --- aggregates --------------------------------------------------------------
 # NOTE: `format` is intentionally NOT in `check`/`ci` yet — the M0–M2 code
@@ -60,9 +67,9 @@ isolation: ## build-time sidecars must not import the runtime (ADR-0019/0023)
 # reformat as one isolated change, then add `format` back to the gate below.
 check: lint typecheck unit drift isolation ## Fast local gate (pre-commit / pre-push)
 
-test: unit unit-frontend ## All unit suites (backend + frontend)
+test: unit unit-frontend unit-builder-engine ## All unit suites
 
-ci: lint typecheck unit unit-frontend drift scope isolation ## Full CI gate
+ci: lint typecheck unit unit-frontend unit-builder-engine drift scope isolation ## Full CI gate
 
 # --- local stack -------------------------------------------------------------
 up: ## Start local stack (docker compose)

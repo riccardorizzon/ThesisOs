@@ -44,6 +44,14 @@ implementers** (safe isolation), **file locks in STATE** for explorers/reviewers
 | `status` | Print STATE summary (packets, locks, blockers) |
 | `close` | Final integrator pass + handoff prompt for next session |
 
+**Deterministic engine (MB1 Phase 1 — prefer over prose):**
+
+| Engine command | Replaces |
+|----------------|----------|
+| `builder-engine lint-graph` | `validate-state.sh`, §1 packet rules |
+| `builder-engine status` | Manual STATE summary |
+| `builder-engine ready` | §2A ready-set computation |
+
 ---
 
 ## Architecture
@@ -115,6 +123,12 @@ Use [`references/packet-template.yaml`](references/packet-template.yaml) and
 ## Step 2: Dispatch Wave (`wave`)
 
 ### 2A: Identify ready packets
+
+Run the engine (preferred):
+
+```bash
+builder-engine ready --repo-root .
+```
 
 A packet is **ready** when:
 

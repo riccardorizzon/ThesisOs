@@ -4,7 +4,7 @@
 
 ## Where are we?
 
-**M3 Document System — Phases 1–6 complete in code; promotion doc ready; tag `m3-complete` pending merge. Build-time: Builder Memory + MB1 Phase 0 pipeline shipped.**
+**M3 Document System — Phases 1–6 complete; tag pending. Build-time Agent OS: MB1 Phase 1 `builder_engine` shipped (`lint-graph`, `status`, `ready`).**
 
 ```text
 M0 Foundations     ✅ promoted (m0-complete)
@@ -61,7 +61,9 @@ See `context/completed-work.md`. Chat seam frozen. M2 tagged `m2-complete` on `m
 
 - **Builder Memory** — shipped (ADR-0019).
 - **MB1 Phase 0** — `Makefile`, pre-commit, GitHub Actions CI.
-- **MB1 engine** — ADR-0023 + spec frozen; implementation Phase 1+ pending.
+- **MB1 Phase 1 — Build Workflow Engine read-model (added):** `builder_engine/`
+  with `lint-graph`, `status`, `ready`; 8 unit tests; `validate-state.sh` shim.
+- **MB1 Phase 2+** — `schedule`/`sync`, unified state, replan (spec §10).
 
 ## What is next?
 
