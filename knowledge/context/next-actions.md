@@ -12,11 +12,14 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 2. **M4 spec + implementation** ✅ — `m4-complete`
 3. **MB1 Phase 2** ✅ — runtime + packet FSM
 4. **Era II constitution** ✅ — ADR-0026, platform docs
-5. **MB2 spec freeze** ✅ — adaptive runtime design + plan
-6. **M5 spec freeze** ✅ — tool router design + ADR-0027 + plan
-7. **Terminology migration** 🟡 — high-visibility files done; see `docs/platform/terminology-migration.md`
-8. **MB2 implementation** 🔴 — branch `mb2-adaptive-runtime` (no code before spec read)
-9. **M5 implementation** 🔴 — after Critic sign-off on M5 spec §12
+5. **Platform meta model (L0)** ✅ — `engineering-meta-model.md` (ADR-0028)
+6. **Invariant model (L1)** ✅ — `invariant-model.md` (ADR-0028)
+7. **M5 spec freeze** ✅ — tool router design + ADR-0027 + plan
+8. **L2 Global State Machine** 🔴 — extend ADR-0025 to project scope (next platform work)
+9. **Rebase MB2 impl spec** 🔴 — onto L0–L2, re-freeze, then implement (event bus, policy, replan)
+10. **M5 implementation** 🔴 — after Critic sign-off on M5 spec §12 (orthogonal, unblocked)
+11. **`WorkflowRuntime` → `EngineeringRuntime`** 🟡 — code rename on MB2 branch (ADR-0028)
+12. **Terminology migration** 🟡 — incremental; see `docs/platform/terminology-migration.md`
 
 ---
 

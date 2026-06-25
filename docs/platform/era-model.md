@@ -100,13 +100,18 @@ Eras describe **how intelligent the factory is**, not which product feature ship
 
 **Theme:** The Control Plane and Runtime share a **frozen processor model**. Workflows become event-driven and observable; replanning is systematic, not heroic.
 
-**Constitution (frozen before MB2 code):**
+**Constitution (frozen before MB2 code) — layered (ADR-0028):**
 
-| Artifact | Role |
-|----------|------|
-| ADR-0026 | Terminology |
-| This document | Era boundaries + track interaction |
-| `runtime-model.md` | Engineering cycle processor |
+| Layer | Artifact | Role |
+|-------|----------|------|
+| — | ADR-0026 | Terminology |
+| — | This document | Era boundaries + track interaction |
+| **L0** | `engineering-meta-model.md` | Objects + relations (semantics) |
+| **L1** | `invariant-model.md` | Laws (fail-closed) |
+| **L2** | extends ADR-0025 | Global State Machine (states) — **next** |
+| **L3** | `runtime-model.md` | Engineering cycle (dynamics) — frozen |
+
+> **L0–L3 are formalization (no feature code). L4+ (event bus, policy engine, planner) are MB2+ implementation that concretizes them.** The original MB2 spec is superseded/re-scoped to L4+ (ADR-0028).
 
 **Target capabilities (implementation follows frozen specs):**
 
@@ -180,6 +185,8 @@ Indicators (directional):
 |---------|---------|
 | "Replace M-series with Eras" | Eras = platform maturity; M-series = product scope |
 | "MB2 = global FSM ticket" | MB2 = implement frozen runtime + control hooks |
+| "Invariants are a kind of policy" | Invariants = fail-closed laws; policies = tunable (ADR-0028, L1) |
+| "Build components, then connect them" | Define L0 meta model first; components concretize it (ADR-0028) |
 | "Skip specs for platform work" | ADR-0026 §5 applies to every MB phase |
 | "Merge product and builder_engine" | Sidecar isolation remains (ADR-0023) |
 
@@ -192,7 +199,7 @@ Indicators (directional):
 - [x] Product Track vs Platform Track interaction defined
 - [x] Terminology aligned with ADR-0026
 
-**Next authorized work:** MB2 implementation on branch `mb2-adaptive-runtime` per frozen spec. M5 Product Track spec also frozen (orthogonal).
+**Next authorized work (Platform):** **L2 — Global State Machine** (formalize project+packet states extending ADR-0025), then rebase the MB2 implementation spec on L0–L2 before any MB2 code. **Product Track (M5)** is orthogonal and unblocked.
 
 ---
 

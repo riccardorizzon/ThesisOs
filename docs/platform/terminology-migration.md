@@ -15,6 +15,7 @@
 | Cursor orchestrator skill | **Operator surface** (on Build Control Plane) | `.cursor/skills/orchestrate-builders/` |
 | Cursor Task agents | **Execution workers** | Non-deterministic implementers invoked by runtime/control plane |
 | ThesisOS runtime | **Product Plane** | `backend/app/`, `frontend/`, M-series |
+| `WorkflowRuntime` (class) | **`EngineeringRuntime`** | ADR-0028: it runs a *cycle*, not a workflow; rename deferred to MB2 branch |
 
 ## Planes and runtimes (quick reference)
 
@@ -43,8 +44,9 @@ Update incrementally when touching a file; add supersession header notes rather 
 | `docs/superpowers/specs/builder-memory-integration-design.md` | ✅ Scope header | Frozen body/diagrams preserved |
 | `docs/superpowers/specs/2026-06-25-thesisos-mb1-workflow-engine-design.md` | 🟡 Partial | Has ADR-0026 supersession note; diagram labels legacy |
 | `docs/research/builder-memory-framework-analysis.md` | ⬜ Pending | BuilderOS references remain |
-| `knowledge/context/current-state.md` | ⬜ Pending | Review on next edit |
+| `knowledge/context/current-state.md` | ✅ Updated | Era II constitution L0–L3 |
 | `docs/architecture.md` | ⬜ Pending | Review on next edit |
+| `WorkflowRuntime` → `EngineeringRuntime` (code) | ⬜ Pending | `builder_engine/runtime.py`, `cli.py`, tests, `runtime-model.md` refs — do on MB2 branch (ADR-0028) |
 | Code comments (`builder_engine/`, `builder_memory/`) | ⬜ Pending | Grep when editing modules |
 
 ## Grep hygiene

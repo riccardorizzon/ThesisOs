@@ -84,7 +84,12 @@ Each phase has: **inputs**, **outputs**, **owner**, **failure modes**, and **eve
 
 | Input | Output |
 |-------|--------|
-| `ObservedSnapshot`, policy set (ADR + YAML + invariants) | `PolicyDecision`: allow \| block \| escalate |
+| `ObservedSnapshot`, policy set (ADR + YAML) | `PolicyDecision`: allow \| block \| escalate |
+
+> **Amended (ADR-0028):** invariants are **not** part of the policy set. They are
+> fail-closed laws enforced separately on every state write — see
+> `docs/platform/invariant-model.md` (L1). Policies decide *whether to proceed*;
+> invariants decide *whether a state write is legal*.
 
 **Owner:** Policy Engine (Era II); stand-in: `validate_graph` + ADR gates.
 

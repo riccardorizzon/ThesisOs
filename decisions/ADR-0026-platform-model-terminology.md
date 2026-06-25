@@ -1,5 +1,10 @@
 # ADR-0026: Platform Model & Terminology
 
+> **Amended by ADR-0028 (2026-06-25):** §8 is refined — invariants are **not** a
+> category of policy. Invariants are fail-closed laws (see `docs/platform/invariant-model.md`),
+> policies are tunable decisions. The state vocabulary (§6) is given an object model
+> in `docs/platform/engineering-meta-model.md`.
+
 - Status: Accepted (frozen 2026-06-25)
 - Context: Era I closed with M0–M4 (product) and MB1 Phases 1–2 (build execution engine). Documentation still mixes legacy terms ("Agent OS", "BuilderOS") with newer terms ("workflow execution engine", "Era", "Control Plane"). Without a frozen vocabulary, Era II implementations (MB2+) will fork concepts in code and docs. The project is no longer "a system of agents" — it is a platform whose **Engineering Runtime** executes a repeatable engineering cycle under a **Build Control Plane**.
 - Decision:

@@ -1,5 +1,12 @@
 # MB2 Adaptive Runtime — Implementation Plan
 
+> **⚠️ ON HOLD — rebase required (ADR-0028, 2026-06-25).** A platform constitution
+> (L0 `engineering-meta-model.md`, L1 `invariant-model.md`) was frozen above the
+> runtime model. Before executing this plan, rebase it so each phase concretizes
+> an L0 object and wires the relevant L1 invariants, and rename
+> `WorkflowRuntime` → `EngineeringRuntime`. The next authorized platform work is
+> **L2 (Global State Machine)**, not this plan.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans. Each phase has explicit promotion criteria — do not start the next phase until the current phase gate passes. **Architect + Critic mandatory every phase.**
 
 **Goal:** Translate frozen `docs/platform/runtime-model.md` into Engineering Runtime modules — Observe, Policy stub, extended Plan, build event bus, minimal Replan — **without** a global project FSM, Product LangGraph changes, or `backend.app` imports.

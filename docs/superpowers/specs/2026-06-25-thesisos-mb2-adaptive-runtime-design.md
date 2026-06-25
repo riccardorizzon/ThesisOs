@@ -1,8 +1,16 @@
 # ASEP — MB2 "Adaptive Runtime" Design Spec
 
+> **⚠️ SUPERSEDED / FREEZE RE-OPENED (ADR-0028, 2026-06-25).** This spec is re-scoped
+> from "the MB2 design" to the **L4+ implementation spec** beneath a new platform
+> constitution. The freeze is **re-opened**: before MB2 implementation begins this
+> document MUST be rebased so every deliverable traces to an object in
+> `docs/platform/engineering-meta-model.md` (L0) and an invariant in
+> `docs/platform/invariant-model.md` (L1). The authority MB2 implements is L0–L3,
+> not this spec's original framing. **Do not start MB2 code against this version.**
+
 - **Date:** 2026-06-25
-- **Status:** Frozen (Architect 2026-06-25) — **no MB2 implementation until this spec is merged and Planner plan delivered.**
-- **Scope:** Platform Track milestone **MB2** only — translate `docs/platform/runtime-model.md` into Engineering Runtime + Build Control Plane hooks. **NOT** a global project FSM ticket; **NOT** Product Plane work.
+- **Status:** Superseded as design authority; pending rebase on L0–L2 (ADR-0028). **No MB2 implementation until rebased + re-frozen.**
+- **Scope:** Platform Track milestone **MB2** — the **implementation** (L4+: event bus, policy engine hooks, replan) of the constitution in `engineering-meta-model.md`, `invariant-model.md`, `runtime-model.md`. **NOT** the meta model; **NOT** Product Plane work.
 - **Authors:** ThesisOS Platform Team
 - **Builds on:** Era I closure (`m4-complete`, `docs/mb1-phase2-gate.md`), frozen `docs/platform/runtime-model.md`, `docs/platform/era-model.md`, ADR-0026
 - **New ADR:** None required unless build-bus persistence choice becomes irreversible (default: filesystem append-only under `.builder-engine/`)
