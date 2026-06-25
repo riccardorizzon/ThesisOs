@@ -39,7 +39,7 @@ def test_failure_recovery_loop():
 
 
 def test_illegal_transition_raises():
-    with pytest.raises(TransitionError, match="illegal transition"):
+    with pytest.raises(TransitionError, match="INV-A3"):
         transition(ExecutionState.DONE, "claim")
 
 

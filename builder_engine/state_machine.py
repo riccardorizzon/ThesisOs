@@ -1,8 +1,11 @@
-"""Formal execution state machine for build-time packets (ADR-0025)."""
+"""Formal execution state machine for build-time packets (ADR-0025, L2 §5.5)."""
 
 from __future__ import annotations
 
 from enum import Enum
+
+from builder_engine import gsm_task
+from builder_engine.graph import BuilderGraph
 
 
 class ExecutionState(str, Enum):
@@ -45,20 +48,6 @@ EXECUTION_TO_YAML_STATUS: dict[ExecutionState, str] = {
 }
 
 
-_TRANSITIONS: dict[tuple[ExecutionState, str], ExecutionState] = {
-    (ExecutionState.CREATED, "prepare"): ExecutionState.READY,
-    (ExecutionState.READY, "claim"): ExecutionState.CLAIMED,
-    (ExecutionState.CLAIMED, "start"): ExecutionState.RUNNING,
-    (ExecutionState.RUNNING, "validate"): ExecutionState.VALIDATING,
-    (ExecutionState.VALIDATING, "pass"): ExecutionState.MERGED,
-    (ExecutionState.MERGED, "complete"): ExecutionState.DONE,
-    (ExecutionState.VALIDATING, "fail"): ExecutionState.FAILED,
-    (ExecutionState.FAILED, "debug"): ExecutionState.DEBUGGING,
-    (ExecutionState.DEBUGGING, "retry"): ExecutionState.READY,
-    (ExecutionState.READY, "cancel"): ExecutionState.CANCELLED,
-}
-
-
 def execution_from_yaml_status(status: str) -> ExecutionState:
     try:
         return YAML_STATUS_TO_EXECUTION[status]
@@ -70,8 +59,11 @@ def yaml_status_from_execution(state: ExecutionState) -> str:
     return EXECUTION_TO_YAML_STATUS[state]
 
 
-def transition(current: ExecutionState, event: str) -> ExecutionState:
-    key = (current, event)
-    if key not in _TRANSITIONS:
-        raise TransitionError(f"illegal transition: {current.value} --{event}--> ?")
-    return _TRANSITIONS[key]
+def transition(
+    current: ExecutionState,
+    event: str,
+    *,
+    graph: BuilderGraph | None = None,
+    packet_id: str | None = None,
+) -> ExecutionState:
+    return gsm_task.transition(current, event, graph=graph, packet_id=packet_id)

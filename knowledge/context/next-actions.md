@@ -1,6 +1,6 @@
 # Next Actions — 100-task backlog
 
-> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-25 — DR-001 + ETM complete; implementation blocked pending Architect sign-off.**
+> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-25 — MB2 spec Architect Approved; L4 Phase 0 implemented.**
 
 Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 debt · 🟢 net-new · ✅ done.
 
@@ -20,11 +20,12 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 10. **L2.1 micro-patch** ✅ — Goal guards, T-00, C-07 split
 11. **Behavioral Semantics (BS)** ✅ — ADR-0029
 12. **Architect sign-off constitution** ✅ — 2026-06-25
-13. **MB2 spec rebase** ✅ — full traceability §3; **sign-off §13 pending**
-14. **Architect sign-off rebased MB2** 🔴
-15. **L4 Phase 0** (l2 plan Ph1–2: GSM + invariants) 🔴 — after step 14
-16. **L4 MB2 Ph1–7** ⏸️ — after Phase 0
-17. **M5 implementation** 🔴 — Critic §12 (orthogonal)
+13. **MB2 spec rebase** ✅ — full traceability §3; **Architect sign-off §13** ✅ 2026-06-25
+14. **Architect sign-off rebased MB2** ✅ — spec only; L4 Phase 0 authorized
+15. **L4 Phase 0** (l2 plan Ph1–2: GSM + invariants) ✅ — gate `docs/l4-phase0-gate.md`; tag `l4-phase0-complete`
+16. **L4 MB2 Ph1 (D1 Observe)** 🟢 — authorized after Phase 0 gate
+17. **L4 MB2 Ph2–7** ⏸️ — sequential per plan
+18. **M5 implementation** 🔴 — Critic §12 (orthogonal)
 
 ---
 

@@ -1,7 +1,7 @@
 # ASEP — MB2 Adaptive Runtime Design Spec (L4)
 
 - **Date:** 2026-06-25 (rebased 2026-06-25)
-- **Status:** **Rebased — pending Architect sign-off on this document.** No L4 code until sign-off.
+- **Status:** **Architect Approved 2026-06-25** — spec frozen; L4 Phase 0 authorized; MB2 D1–D11 after Phase 0 gate.
 - **Milestone:** Platform Track **MB2** — L4 implementation of frozen constitution (not a redesign).
 - **Scope:** Complete the Engineering Runtime processor head and tail (Observe → Policies → Plan extend → Publish → Replan) and wire event emission into existing Schedule/Validate/Update paths. **Does not modify** L0, L1, BS, L2, L3, or existing ADRs.
 - **Authority chain:** Vision → ADR → L0 → L1 → BS → L2 → L3 → ETM → **this spec** → Implementation (`plans/mb2-adaptive-runtime-plan.md` + prerequisite `plans/l2-global-state-machine-plan.md` Ph 1–2).
@@ -322,9 +322,9 @@ Detail: `plans/mb2-adaptive-runtime-plan.md` (updated for traceability).
 - [x] Prerequisites separated from MB2 scope
 - [x] Constitutional gap log §11 empty
 - [x] Aligns with L0, L1, BS, L2, L3, ETM, DR-001, ADR-0029
-- [ ] **Architect sign-off on rebased spec:** _pending_
+- [x] **Architect sign-off on rebased spec:** Approved 2026-06-25 (spec only; L4 Phase 0 authorized; no MB2 deliverables until Phase 0 complete)
 
-**Implementation authorized:** Architect sign-off on **this rebased document** + prerequisite Ph1–2 plan acceptance.
+**Implementation authorized:** L4 Phase 0 (L2 plan Ph1–2: GSM + invariant pass) per Architect conditions. MB2 deliverables D1–D11 after Phase 0 gate.
 
 ---
 

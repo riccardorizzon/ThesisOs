@@ -40,6 +40,8 @@ def validate_graph(graph: BuilderGraph) -> ValidationResult:
             if dep not in ids:
                 result.errors.append(f"{pid}: depends_on unknown packet {dep}")
         for dep in pkt.depends_on:
+            if dep not in ids:
+                continue
             dep_status = packets[dep].status
             if pkt.status in ("in_progress", "done") and dep_status != "done":
                 result.errors.append(

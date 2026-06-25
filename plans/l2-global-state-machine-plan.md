@@ -66,10 +66,10 @@ Replace ad-hoc transitions in `runtime.py` with GSM-authoritative `GlobalStateMa
 | Create | `builder_engine/tests/test_gsm_task.py` — every T-* row + illegal transition |
 
 ### Promotion criteria
-- [ ] All T-01–T-12 transitions executable with `TransitionError` on illegal
-- [ ] INV-A1–A5 enforced as Class A guards
-- [ ] Existing `test_state_machine.py` green (or migrated)
-- [ ] `make unit-builder-engine` green
+- [x] All T-01–T-12 transitions executable with `TransitionError` on illegal
+- [x] INV-A1–A5 enforced as Class A guards
+- [x] Existing `test_state_machine.py` green (or migrated)
+- [x] `make unit-builder-engine` green
 
 ### L2 traceability
 | Deliverable | L2 section |
@@ -93,10 +93,10 @@ Centralized fail-closed pass before every StateWriter commit (L1 §4, L2 §8).
 | Create | `builder_engine/tests/test_invariants.py` — INV-B1–B9 where testable |
 
 ### Promotion criteria
-- [ ] INV-B4, B5, B6, B8 enforced on commit (extend existing validate.py coverage)
-- [ ] INV-B3 at schedule/claim time
-- [ ] InvariantViolation halts with clear message (never warning)
-- [ ] `make unit-builder-engine` green
+- [x] INV-B4, B5, B6, B8 enforced on commit (extend existing validate.py coverage)
+- [x] INV-B3 at schedule/claim time (via INV-A5 + graph validation)
+- [x] InvariantViolation halts with clear message (never warning)
+- [x] `make unit-builder-engine` green
 
 ### L2 traceability
 | Deliverable | L2 section |

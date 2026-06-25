@@ -153,8 +153,9 @@ Before merging any `builder_engine/` PR:
 | DR-001 | ✅ Approved |
 | ETM v1.1 | ✅ Approved |
 | L2.1 + BS (ADR-0029) | ✅ Frozen |
-| **MB2 spec rebase** | ✅ Complete — pending Architect sign-off on rebased spec §13 |
-| L4 implementation | ⏸️ After rebased spec sign-off + Phase 0 prerequisite |
+| **MB2 spec rebase** | ✅ Architect Approved 2026-06-25 (§13; spec only) |
+| **L4 Phase 0** | ✅ Approved — `docs/l4-phase0-gate.md`; tag `l4-phase0-complete` |
+| L4 MB2 D1–D11 | 🟢 **MB2 Phase 1 (D1 Observe) authorized** — after Phase 0 baseline committed |
 
 ---
 

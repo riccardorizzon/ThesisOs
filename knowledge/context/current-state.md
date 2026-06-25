@@ -1,38 +1,44 @@
 # Current State
 
-> Snapshot as of **2026-06-25**. Branch: `main`.
+> Snapshot as of **2026-06-25**. Branch: `main`. Tag: `l4-phase0-complete`.
 
 ## Where are we?
 
-**MB2 spec rebased on constitution. Pending your sign-off on rebased spec §13. No code.**
+**L4 Phase 0 gate closed. Baseline committed. MB2 Phase 1 (D1 — Observe) authorized.**
 
 ```text
 Constitution (L0–L3 + BS)     ✅ frozen, signed
 DR-001 + ETM v1.1             ✅ approved
-MB2 spec rebase               ✅ complete → §13 sign-off pending
-L4 implementation             ⏸️ blocked
+MB2 spec rebase               ✅ Architect Approved §13
+L4 Phase 0 (l2 plan Ph1–2)    ✅ gate closed — docs/l4-phase0-gate.md
+L4 MB2 D1 (Observe)           🟢 authorized — not started
 ```
 
 ## Authorized pipeline
 
 ```text
-✅ Constitution → DR-001 → ETM → L2.1 → BS → MB2 rebase
-🔴 Architect sign-off rebased MB2 spec (§13)
-⏸️ L4: Phase 0 (l2 plan Ph1–2) → MB2 plan Ph1–7
+✅ Constitution → MB2 spec → L4 Phase 0 → Gate → Baseline
+🟢 MB2 Phase 1 — D1 Observe (plans/mb2-adaptive-runtime-plan.md Ph1)
+⏸️ MB2 Ph2–7 — sequential per plan
 ```
 
-## MB2 rebase summary
+## Phase 0 baseline (committed)
 
-- **11 deliverables** (D1–D11) with full traceability: Vision → … → Evidence
-- **4 constitutional criteria** embedded (§2)
-- **Prerequisites** separated: `l2-global-state-machine-plan` Ph1–2 before wire runtime
-- **§11 gap log** empty — no constitution changes during rebase
-- **Policy fix:** invariants ≠ policy (validate errors → L1 pass)
+| Module | Purpose |
+|--------|---------|
+| `builder_engine/gsm_task.py` | T-01–T-12 + INV-A1–A5 |
+| `builder_engine/gsm.py` | `GlobalStateMachine` wrapper |
+| `builder_engine/invariants.py` | Class B pre-commit pass |
+| `builder_engine/state_io.py` | Invariant hook on `save_raw_state` |
+| `builder_engine/runtime.py` | GSM-aligned schedule/sync |
+
+**Rollback baseline:** `f117d3d`  
+**Gate record:** `docs/l4-phase0-gate.md`  
+**Evidence:** 33/33 unit tests (ETM §3 GSM guards + Invariant pass)
 
 ## What is next?
 
-1. **Your sign-off** on `docs/superpowers/specs/…-mb2-adaptive-runtime-design.md` §13
-2. **L4 Phase 0** — GSM + invariants (`l2-global-state-machine-plan` Ph1–2)
-3. **L4 MB2** — `plans/mb2-adaptive-runtime-plan.md` Ph1–7
+1. **MB2 Phase 1** — D1 `observe.py` + `test_observe.py` per rebased spec §3
+2. Branch `mb2-adaptive-runtime` from Phase 0 baseline (optional per L2 plan)
 
 Product M5 orthogonal (Critic §12 pending).

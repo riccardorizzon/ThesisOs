@@ -102,5 +102,9 @@ def dump_state(data: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def save_raw_state(path: Path, data: dict[str, Any]) -> None:
+def save_raw_state(path: Path, data: dict[str, Any], *, skip_invariant_check: bool = False) -> None:
+    if not skip_invariant_check:
+        from builder_engine.invariants import check_raw_state
+
+        check_raw_state(data, path)
     atomic_write_text(path, dump_state(data))

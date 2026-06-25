@@ -12,10 +12,11 @@ from builder_engine.executor import build_dispatch_entry
 from builder_engine.graph import BuilderGraph
 from builder_engine.planner import next_wave_from_raw, plan_ready, wave_complete_raw
 from builder_engine.scheduler import file_locks_for_packet, in_flight_packets
+from builder_engine.gsm_task import schedule_packet, sync_validate_outcome
+from builder_engine.invariants import check_raw_state
 from builder_engine.state_io import load_raw_state, save_raw_state
 from builder_engine.state_machine import (
     execution_from_yaml_status,
-    transition,
     yaml_status_from_execution,
 )
 from builder_engine.validate import validate_graph
@@ -87,8 +88,7 @@ class WorkflowRuntime:
                 )
 
             state = execution_from_yaml_status(packet.status)
-            state = transition(state, "claim")
-            state = transition(state, "start")
+            state = schedule_packet(graph, packet.id, current=state)
 
             locks.update(file_locks_for_packet(packet))
 
@@ -99,6 +99,7 @@ class WorkflowRuntime:
             entries.append(entry.to_dict())
 
         raw["file_locks"] = locks
+        check_raw_state(raw, self.state_path)
         save_raw_state(self.state_path, raw)
 
         self.engine_dir.mkdir(parents=True, exist_ok=True)
@@ -123,21 +124,20 @@ class WorkflowRuntime:
 
         for packet in in_progress:
             exec_state = execution_from_yaml_status(packet.status)
-            exec_state = transition(exec_state, "validate")
-            check_results = run_packet_checks(packet.checks, self.repo_root) if packet.checks else []
 
-            if packet.checks and not all(r.ok for r in check_results):
-                exec_state = transition(exec_state, "fail")
-                raw["packets"][packet.id]["status"] = yaml_status_from_execution(exec_state)
-                failed_checks = [r.command for r in check_results if not r.ok]
-                raw["packets"][packet.id]["integration_notes"] = (
-                    f"checks failed: {', '.join(failed_checks)}"
-                )
-                result.failed.append(packet.id)
-                continue
+            if packet.checks:
+                check_results = run_packet_checks(packet.checks, self.repo_root)
+                if not all(r.ok for r in check_results):
+                    exec_state = sync_validate_outcome(exec_state, checks_passed=False)
+                    raw["packets"][packet.id]["status"] = yaml_status_from_execution(exec_state)
+                    failed_checks = [r.command for r in check_results if not r.ok]
+                    raw["packets"][packet.id]["integration_notes"] = (
+                        f"checks failed: {', '.join(failed_checks)}"
+                    )
+                    result.failed.append(packet.id)
+                    continue
 
-            exec_state = transition(exec_state, "pass")
-            exec_state = transition(exec_state, "complete")
+            exec_state = sync_validate_outcome(exec_state, checks_passed=True)
             raw["packets"][packet.id]["status"] = yaml_status_from_execution(exec_state)
             result.completed.append(packet.id)
 
@@ -153,6 +153,7 @@ class WorkflowRuntime:
             raw["file_locks"] = {}
 
         if not dry_run:
+            check_raw_state(raw, self.state_path)
             save_raw_state(self.state_path, raw)
 
         return result

@@ -13,8 +13,9 @@ decisions:
   - "Era II = formalization-first (ADR-0028): L0 meta model + L1 invariants frozen"
   - "Invariants are fail-closed laws, distinct from tunable policies (L1)"
   - "Meta model platform-only; Milestone = sole boundary object"
-  - "MB2 spec rebased (D1-D11 traceability); §13 Architect sign-off pending"
-  - "L4 blocked until rebased spec sign-off; Phase 0 = l2 plan Ph1-2 first"
+  - "MB2 spec Architect Approved 2026-06-25 (§13; spec only)"
+  - "L4 Phase 0 gate closed (docs/l4-phase0-gate.md); tag l4-phase0-complete"
+  - "MB2 Phase 1 (D1 Observe) authorized; rollback baseline f117d3d"
   - "M5 product spec frozen (ADR-0027) — impl after Critic sign-off (orthogonal)"
 
 file_locks: {}
