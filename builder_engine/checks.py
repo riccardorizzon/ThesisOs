@@ -17,6 +17,8 @@ STAGE_COMMANDS: dict[str, str] = {
     "scope": "make scope",
     "isolation": "make isolation",
     "ci": "make ci",
+    "embed": "cd backend && .venv/bin/python -m pytest -q tests/test_retrieval_service.py tests/test_retrieval_migration.py",
+    "search-smoke": "cd backend && .venv/bin/python -m pytest -q tests/test_search_api.py tests/test_retriever_node.py",
 }
 
 

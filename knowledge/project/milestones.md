@@ -53,16 +53,18 @@ Promoted 2026-06-25. See `docs/m3-promotion.md`, `context/completed-work.md`.
 
 ---
 
-## M4 — Retrieval 🟡 (spec frozen 2026-06-25)
+## M4 — Retrieval ✅ (`m4-complete` on `main`)
+
+Promoted 2026-06-25. See `docs/m4-promotion.md`, `context/completed-work.md`.
 
 **Frozen spec:** `docs/superpowers/specs/2026-06-25-thesisos-m4-retrieval-system-design.md`  
 **ADR:** 0024 (retrieval ownership)
 
 | Phase | Status | Deliverable |
 |-------|--------|-------------|
-| Spec | ✅ | Frozen 2026-06-25 + Critic sign-off |
-| Plan | ✅ | `plans/m4-retrieval-system-plan.md` |
-| Implementation | 🔴 | Phase 1 DB — not started |
+| Spec + plan | ✅ | Frozen spec, ADR-0024, implementation plan |
+| Implementation | ✅ | RetrievalService, `/search`, retriever node, embed pipeline |
+| Promotion | ✅ | `m4-complete` tag |
 
 ---
 

@@ -59,35 +59,36 @@ Streaming chat on the frozen seam: `POST /chat` SSE, `ConversationService`, sing
 - **Service-first sequencing:** Service → API → Admin UI → Knowledge → Graph.
 - **Prompt context:** `transient_only`; not a public API; operational kinds only in graph (Phase 6).
 
-## M3 — Document System 🟢 (branch `m3-document-system`, Phases 1–6)
+## M3 — Document System ✅ (`m3-complete` on `main`)
+
+Phases 1–6 complete. Upload/parse/chunk/versioning, Document Administration UI, event bus (`DocumentUploaded`, `ChunkCreated`). See `docs/m3-promotion.md`.
+
+## M4 — Retrieval System ✅ (`m4-complete` on `main`)
 
 ### Phase 1 — Database
-- Alembic `0003_document_system`: `documents`, `document_versions`, `chunks` extensions.
-- Drift test green.
+- Alembic `0004_retrieval_system`: LIST-partitioned `embeddings`, HNSW on default model partition, `chunks.content_tsv` GIN, composite PK `(id, model)`.
 
-### Phase 2 — DocumentService (sole writer)
-- `app/services/document/service.py` — upload, parse, reparse, CRUD, versioning.
-- Storage: `LocalStorageAdapter` / `GCSStorageAdapter`.
-- Parsers: Docling primary, PyMuPDF PDF fallback; `chunk_hash` on every chunk.
-- ADRs: 0020, 0021, 0022.
+### Phase 2 — RetrievalService
+- `app/services/retrieval/service.py` — `embed_document`, `embed_chunks`, hybrid `search`, `delete_embeddings_for_document`.
+- `LiteLLMClient.embed()` wired to Vertex multilingual model.
+- `DocumentService.mark_indexed()` hook (ADR-0024).
 
 ### Phase 3 — REST API
-- `app/api/documents.py` — thin adapter; background parse after upload.
-- OpenAPI additive (`/upload`, `/documents/*`).
+- `POST /search` — ranked hybrid results; OpenAPI `SearchRequest`/`SearchResponse`.
+- `POST /documents/{id}/index` — manual embed trigger.
 
-### Phase 4 — Document Administration UI
-- Routes: `/documents`, `/documents/upload`, `/documents/[id]`, `/documents/[id]/chunks`.
-- `documentClient.ts`, `documentStore.ts`, six components; vitest coverage.
+### Phase 4 — Graph
+- `retriever_node` — `START → memory_context → retriever → conversation → END`.
+- Populates `GraphState.retrieved_context` per `contracts/agents/retriever.json`.
 
-### Phase 5 — Events
-- `app/services/events/bus.py` — catalog-validated publish → `events` outbox.
-- `DocumentUploaded` on upload; `ChunkCreated` per chunk on successful parse.
-- Additive `chunk_hash` in events catalog.
+### Phase 5 — Embed pipeline
+- Background parse→embed after upload/reparse.
+- Orphan embedding cleanup on reparse/delete.
 
-### Phase 6 — Knowledge freeze + promotion
-- `docs/m3-promotion.md`, knowledge mirror updated.
-- **Frozen seams unchanged:** GraphState, ConversationService, memory_context_node.
+### Phase 6 — Promotion
+- `docs/m4-promotion.md`, CheckRunner `embed` + `search-smoke` stages, knowledge mirror, tag `m4-complete`.
 
 ## Not yet done
-- M3: merge + tag `m3-complete`; DB integration validation (Docker).
-- M4+.
+- M5+ (require frozen specs).
+- MB1 Phase 3+ (unified state, replanning).
+- DB integration re-run when Docker repaired.
