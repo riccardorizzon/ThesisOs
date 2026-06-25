@@ -8,9 +8,8 @@ wave: 2
 
 decisions:
   - "Pipeline order: Vision → Spec Freeze → Engine → Implementation → Validation"
-  - "M3 promoted (m3-complete); M4 spec frozen — no M4 code until Planner plan"
+  - "M4 promoted (m4-complete); M5+ requires spec freeze"
   - "MB1 Phase 2 = runtime + execution state machine (ADR-0025), CLI as views — shipped"
-  - "M4 code blocked until plans/m4-retrieval-system-plan.md"
 
 file_locks: {}
 blockers: {}

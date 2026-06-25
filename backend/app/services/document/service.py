@@ -170,6 +170,26 @@ class DocumentService:
         async with AsyncSessionLocal() as s:
             return await self._list_versions(s, document_id)
 
+    async def mark_indexed(
+        self, document_id: str, *, session: AsyncSession
+    ) -> DocumentRecord:
+        """M4 hook — RetrievalService calls after successful embed (ADR-0024)."""
+        row = await session.get(models.Document, document_id)
+        if row is None:
+            raise DocumentNotFoundError(document_id)
+        if row.status not in ("parsed", "indexed"):
+            raise DocumentServiceError(
+                f"cannot mark indexed from status {row.status}"
+            )
+        row.status = "indexed"
+        row.version += 1
+        row.error_message = None
+        row.updated_at = datetime.now(timezone.utc)
+        await session.flush()
+        await self._append_version_snapshot(session, row, change_reason="index")
+        await session.flush()
+        return self._to_record(row)
+
     # ------------------------------------------------------------------
     # Internal write path — the only place that mutates the domain tables
     # ------------------------------------------------------------------
@@ -277,6 +297,11 @@ class DocumentService:
         row = await session.get(models.Document, document_id)
         if row is None:
             raise DocumentNotFoundError(document_id)
+        from app.services.retrieval.service import RetrievalService
+
+        await RetrievalService(documents=self).delete_embeddings_for_document(
+            document_id, session=session
+        )
         await session.execute(delete(models.Chunk).where(models.Chunk.document_id == document_id))
         await session.execute(
             delete(models.DocumentVersion).where(
@@ -307,6 +332,11 @@ class DocumentService:
             result = parse_document(row.source_type, data, primary=primary, fallback=fallback)
         except (DocumentServiceError, OSError) as exc:
             # Failed parse leaves ZERO chunks (spec §7.2, Critic Phase 2).
+            from app.services.retrieval.service import RetrievalService
+
+            await RetrievalService(documents=self).delete_embeddings_for_document(
+                document_id, session=session
+            )
             await session.execute(
                 delete(models.Chunk).where(models.Chunk.document_id == document_id)
             )
@@ -315,6 +345,11 @@ class DocumentService:
             await session.flush()
             return self._to_record(row)
 
+        from app.services.retrieval.service import RetrievalService
+
+        await RetrievalService(documents=self).delete_embeddings_for_document(
+            document_id, session=session
+        )
         await session.execute(delete(models.Chunk).where(models.Chunk.document_id == document_id))
         now = datetime.now(timezone.utc)
         chunk_rows: list[models.Chunk] = []

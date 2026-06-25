@@ -219,7 +219,7 @@ def check(
 ) -> None:
     """Run a validation stage or arbitrary check command."""
     root = _root(repo_root)
-    if stage in ("lint", "typecheck", "unit", "unit-frontend", "unit-builder-engine", "drift", "scope", "isolation", "ci"):
+    if stage in ("lint", "typecheck", "unit", "unit-frontend", "unit-builder-engine", "drift", "scope", "isolation", "ci", "embed", "search-smoke"):
         result = run_stage(stage, root)
     else:
         from builder_engine.checks import run_shell

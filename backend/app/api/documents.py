@@ -12,10 +12,10 @@ from app.schemas.document import DocumentListFilters, DocumentUpdate, DocumentUp
 from app.services.document import (
     DocumentNotFoundError,
     DocumentService,
-    DocumentServiceError,
     DocumentWriteConflictError,
     UnsupportedFormatError,
 )
+from app.services.retrieval import EmbedFailedError, RetrievalService, RetrievalServiceError
 
 router = APIRouter()
 _service = DocumentService()
@@ -27,12 +27,15 @@ def _err(status: int, code: str, message: str) -> JSONResponse:
 
 
 async def _parse_in_background(document_id: str) -> None:
-    """Run the parse pipeline off the request path (spec §7.2). Parse failures are
-    recorded on the document by the service; only infra errors are logged here."""
+    """Run parse then M4 embed pipeline off the request path."""
     try:
-        await _service.parse(document_id)
-    except DocumentServiceError:
-        _log.warning("background parse failed for %s", document_id, exc_info=True)
+        record = await _service.parse(document_id)
+        if record.status == "parsed":
+            from app.services.retrieval import RetrievalService
+
+            await RetrievalService().embed_document(document_id)
+    except Exception:
+        _log.warning("background parse/index failed for %s", document_id, exc_info=True)
 
 
 @router.post("/upload", status_code=201)
@@ -120,3 +123,17 @@ async def reparse_document(document_id: str, background_tasks: BackgroundTasks):
         return _err(404, "document_not_found", str(exc))
     background_tasks.add_task(_parse_in_background, document_id)
     return {"document_id": document_id, "status": "processing"}
+
+
+@router.post("/documents/{document_id}/index")
+async def index_document(document_id: str):
+    """Manual embed trigger for parsed documents (M4 spec §5.1)."""
+    try:
+        count = await RetrievalService().embed_document(document_id)
+    except DocumentNotFoundError as exc:
+        return _err(404, "document_not_found", str(exc))
+    except EmbedFailedError as exc:
+        return _err(422, "embed_failed", str(exc))
+    except RetrievalServiceError as exc:
+        return _err(400, "index_failed", str(exc))
+    return {"document_id": document_id, "embedded": count, "status": "indexed"}

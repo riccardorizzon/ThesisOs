@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, UniqueConstraint, text
-from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
+from sqlalchemy import Boolean, Computed, ForeignKey, Index, Integer, PrimaryKeyConstraint, String, Text, UniqueConstraint, text
+from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, TSVECTOR, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -56,6 +56,7 @@ class Chunk(Base):
     __table_args__ = (
         UniqueConstraint("document_id", "chunk_index", name="uq_chunks_document_id_chunk_index"),
         UniqueConstraint("document_id", "chunk_hash", name="uq_chunks_document_id_chunk_hash"),
+        Index("idx_chunks_content_tsv", "content_tsv", postgresql_using="gin"),
     )
 
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
@@ -63,6 +64,10 @@ class Chunk(Base):
     chunk_index: Mapped[int] = mapped_column(Integer)
     chunk_hash: Mapped[str] = mapped_column(String(64))
     content: Mapped[str] = mapped_column(Text)
+    content_tsv: Mapped[str | None] = mapped_column(
+        TSVECTOR,
+        Computed("to_tsvector('english', content)", persisted=True),
+    )
     token_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     page_from: Mapped[int | None] = mapped_column(Integer, nullable=True)
     page_to: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -73,7 +78,12 @@ class Chunk(Base):
 
 class Embedding(Base):
     __tablename__ = "embeddings"
-    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
+    __table_args__ = (
+        PrimaryKeyConstraint("id", "model"),
+        Index("idx_embeddings_owner_model", "owner_type", "owner_id", "model"),
+    )
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), server_default=text("gen_random_uuid()"))
     owner_type: Mapped[str] = mapped_column(String(16))
     owner_id: Mapped[str] = mapped_column(UUID(as_uuid=False))
     model: Mapped[str] = mapped_column(String(128))
