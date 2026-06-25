@@ -13,8 +13,7 @@ decisions:
   - "M4 code blocked until plans/m4-retrieval-system-plan.md"
 
 file_locks: {}
-blockers:
-  P-M4-PLAN: "Critic sign-off + plans/m4-retrieval-system-plan.md required before M4 Phase 1"
+blockers: {}
 
 packets:
   P-M4-SPEC:

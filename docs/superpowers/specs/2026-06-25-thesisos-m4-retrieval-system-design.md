@@ -349,7 +349,10 @@ Per ADR-0025, MB1 Phase 2 `schedule`/`sync` must not hard-code M4 retrieval sema
 - [x] GraphState frozen
 - [x] Critic conditions: no admin search; no direct chunk→chat; DocumentService boundary preserved
 
-**Implementation authorized only after:** Critic sign-off line added to this doc + `plans/m4-retrieval-system-plan.md` delivered by Planner.
+- [x] Critic sign-off: 2026-06-25 — DocumentService boundary preserved; no GraphState fields; no admin search UI; chunk→chat only via `retrieved_context` (QA checklist §8)
+- [x] Planner plan: `plans/m4-retrieval-system-plan.md` (2026-06-25)
+
+**Implementation authorized:** Critic sign-off + Planner plan delivered.
 
 ---
 
