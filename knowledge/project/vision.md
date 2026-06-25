@@ -9,6 +9,13 @@ assistant that helps one researcher take a real thesis from raw sources to a
 finished, well-cited document, while progressively becoming a **self-improving
 research assistant**.
 
+More precisely, ThesisOS is the **first instance of a general Knowledge OS**: a
+persistent environment where documents, memory, reasoning, and writing
+collaborate through a multi-agent architecture to turn large amounts of
+information into reliable, coherent, verifiable output. Academic thesis writing
+is the first domain; the underlying architecture is designed to generalize (see
+*Two-layer vision* below).
+
 It combines, in one system:
 
 - **Chat** — a ChatGPT-style conversational interface.
@@ -29,6 +36,51 @@ It combines, in one system:
 The end state (M18) is an **autonomous research assistant**: it observes the
 thesis state, proposes work, executes it through specialized agents, critiques
 its own output, and improves — with the human as director, not operator.
+
+## Two-layer vision: a Knowledge OS, with the thesis as its first instance
+
+> Source: 2026-06-25 vision brief — "ThesisOS è un sistema operativo per la
+> conoscenza".
+
+ThesisOS is best understood as **two layers**:
+
+- **Layer 1 — the Knowledge OS (the architecture).** A persistent environment in
+  which documents, memory, reasoning, and writing collaborate through a
+  multi-agent graph to turn large volumes of information into reliable, coherent,
+  verifiable output. Its pipeline is **domain-agnostic**: *acquire knowledge →
+  organize it → keep it coherent → retrieve it on demand → use it to produce new
+  work.*
+- **Layer 2 — ThesisOS (the first instance).** A concrete, opinionated
+  instantiation of Layer 1 for **one user writing a real Italian-language
+  academic thesis**. The single-user / thesis-first / Italian-first choices
+  (principles 1–2 below) scope *this instance*; they are deliberate near-term
+  constraints, **not** limits of the underlying architecture.
+
+This mirrors the instance-of-a-general-system framing used elsewhere in the
+project (runtime vs builder; M-series product milestones vs MB-series build
+milestones).
+
+**Already domain-agnostic** (reusable as-is across domains): LLM provider-swap via
+LiteLLM (ADR-0002); model-agnostic `embeddings` (per-row `model` + `dimension`);
+the multi-agent graph (Supervisor → Planner → Router → …); event bus, jobs,
+telemetry; promotion gates and the AgentOS loop; the
+acquire → organize → retrieve → produce pipeline itself.
+
+**Thesis-specific today** (would generalize per target domain): the domain model
+(`chapters` / outline tree — a specialization of a generic *project / section*
+model); academic citation styles (APA7 / MLA / Chicago → per-domain output
+templates); Italian-first embeddings; single-user / no-auth (multi-tenant only if
+a future domain requires it).
+
+**Target domains** the same architecture can serve later: scientific research,
+legal work, consulting, design, technical documentation, software development,
+enterprise knowledge management. In every case the flow is identical — only the
+domain model, output templates, and (optionally) tenancy change.
+
+**Scope discipline.** This generalization is a **long-term horizon**, not current
+work. Per the project's "don't build it early" rule, no generalization is
+implemented before the thesis instance (M0–M18) proves the pipeline. See the
+*Post-M18 horizon* in [`roadmap.md`](./roadmap.md).
 
 ## Defining principles
 
@@ -63,3 +115,6 @@ calls Cursor (`docs/architecture.md` §2). See `agents/` and `development/`.
   (ADR-0003); Mem0-style auto-extraction is deferred to M15–M16.
 - Not a "build agents early" project — orchestration is frozen early as a *seam*,
   but real agents arrive milestone by milestone (M1 spec §1).
+- Not a multi-domain / multi-tenant platform *yet* — domain generalization (legal,
+  enterprise KM, etc.) is a **post-M18 horizon**, deliberately not built before the
+  thesis instance proves the architecture (see *Two-layer vision*).
