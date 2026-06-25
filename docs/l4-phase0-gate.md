@@ -50,7 +50,7 @@ sidecar_boundary: green        # no import backend.app in builder_engine/
 mb2_deliverables: not_in_scope # D1–D11 deferred
 promotion_decision: approved
 rollback_baseline: f117d3d
-phase0_baseline: see git tag l4-phase0-complete (this commit)
+phase0_baseline: e44a678   # tag l4-phase0-complete
 ```
 
 ---
