@@ -1,77 +1,85 @@
-# Builder orchestration STATE — M1 Conversation System.
+# Builder orchestration STATE — M3 Document System, Phase 4 (Admin UI).
 # Validate: .cursor/skills/orchestrate-builders/scripts/validate-state.sh
 #
-# NOTE: The generic explorer layout (P1–P7) was replaced by the plan-driven
-# packets below. The written plan IS the analysis, so wave-1 explorers are
-# dropped (see docs/superpowers/plans/2026-06-24-m1-conversation-system.md).
-# Source of truth per packet = the task ranges in that plan + the design spec.
+# Phases 1–3 (DB, DocumentService, REST API) are committed and green under
+# `make ci`. This epic drives Phase 4 (Document Administration UI) — frontend
+# only, so it is validatable in CI without Postgres/Docker.
+# Source of truth: plans/m3-document-system-plan.md §Phase 4 + the M3 frozen spec.
 
-epic: m1-conversation-system
-chain: m1-conv-001
-status: closed  # active | closed — Architect approved merge 2026-06-24; tag m1-complete
-wave: 1
+epic: m3-document-system-phase4
+chain: m3-ui-001
+status: closed   # active | closed — Phase 4 Admin UI complete; make ci green (frontend 33 passed)
+wave: 2
 
-# Frozen constraints — every agent MUST respect (from plan anti-goals + ADRs + Architect review 2787400)
+# Frozen constraints — every builder MUST respect (M3 spec §11, §13; plan Phase 4)
 decisions:
-  - "GraphState frozen (ADR-0007) — no new fields without ADR"
-  - "RunContext separate from GraphState, runtime-only (ADR-0014)"
-  - "TokenChunk frozen: text, finish_reason, metadata (ADR-0011)"
-  - "M1 scope: chat loop only — no agents, RAG, tools, ingestion"
-  - "Seam-first: NO add_messages reducer on GraphState — caller builds messages from DB"
-  - "Token usage recorded on agent_runs, NOT on messages (spec §5)"
-  - "Architect 2787400: per-conversation locking, SSE heartbeat (ping=15), langgraph-owned schema (ADR-0012)"
+  - "Mirror the Memory Administration UI pattern (client/store/components/pages)"
+  - "Admin tooling ONLY — no PDF reader, no notebook, no chat sidebar, no summarize button"
+  - "NO corpus search box; chunk list is document-scoped, unranked, verification-only"
+  - "Chunk preview truncated (~200 chars); status badge shows uploaded|processing|parsed|failed (no 'indexed')"
+  - "Frontend gate = `make ci` (tsc --noEmit + vitest + build); no DB needed"
+  - "Contracts additive only; backend frozen (DocumentService + /documents API from Phase 2/3)"
 
-# Active file ownership during a wave (path prefix → packet id). Empty until a wave starts.
+# Active file ownership during a wave (path prefix → packet id). Empty between waves.
 file_locks: {}
 
 # Open blockers (packet id → description)
 blockers: {}
 
-# Plan ↔ builder packet map:
-#   P-B = plan Tasks 1–12 (backend)   — executed SEQUENTIALLY via subagent-driven-development
-#   P-F = plan Tasks 13–16 (frontend) — builder wave, 1 worktree
-#   P-G = plan Task 17 (gate)         — integrator, main repo
 packets:
-  P-B:
+  P-CLIENT:
     wave: 1
     agent_type: implementer
-    status: done  # ready | in_progress | done | blocked | cancelled
+    status: done
     depends_on: []
     owned_files:
-      - backend/pyproject.toml
-      - backend/app/llm/
-      - backend/app/schemas/run_context.py
-      - backend/app/db/session_async.py
-      - backend/app/graph/
-      - backend/app/services/conversation/
-      - backend/app/api/chat.py
-      - backend/app/main.py
-      - contracts/
-    output: "Tasks 1-12 done. Backend suite 19 passed / 1 skipped (live-DB integration), ruff clean. Decisions: langgraph pinned to 1.x (APIs verified), sqlalchemy[asyncio]+greenlet added, usage via custom stream writer (GraphState frozen)."
+      - frontend/lib/documentClient.ts
+      - frontend/lib/documentStore.ts
+    output: "documentClient (list/get/upload/update/delete/listChunks/listVersions/reparse + DocumentApiError) and zustand documentStore mirroring memoryStore."
     checks: []
-    integration_notes: "ConversationService.stream_turn NOT unit-tested (only lock guard) — validated at T17 live smoke (Docker+DB+Vertex ADC, deferred)."
+    integration_notes: "Multipart upload via FormData; reparse returns 202."
 
-  P-F:
+  P-COMP:
+    wave: 1
+    agent_type: implementer
+    status: done
+    depends_on: []
+    owned_files:
+      - frontend/components/DocumentList.tsx
+      - frontend/components/DocumentStatusBadge.tsx
+      - frontend/components/DocumentForm.tsx
+      - frontend/components/DocumentChunkList.tsx
+      - frontend/components/DocumentVersionList.tsx
+      - frontend/components/DocumentErrorBanner.tsx
+    output: "Six presentational components mirroring Memory admin; status badge colors per lifecycle; chunk preview truncated."
+    checks: []
+    integration_notes: "No search box on chunk list (Critic Phase 4 guardrail)."
+
+  P-PAGES:
     wave: 2
     agent_type: implementer
     status: done
-    depends_on: [P-B]
+    depends_on: [P-CLIENT, P-COMP]
     owned_files:
-      - frontend/lib/api.ts
-      - frontend/lib/store.ts
-      - frontend/components/
-      - frontend/app/chat/
-    output: "Tasks 13–16 done (subagent-driven in main session, not a separate worktree). npx tsc --noEmit clean; next build compiled, /chat route present."
+      - frontend/app/documents/page.tsx
+      - frontend/app/documents/upload/page.tsx
+      - frontend/app/documents/[id]/page.tsx
+      - frontend/app/documents/[id]/chunks/page.tsx
+    output: "List (filters q/status/source_type), upload (file + metadata), detail (edit/reparse/delete/versions), chunks preview."
     checks: []
-    integration_notes: "postChatStream/store/components/page wired to backend SSE contract. End-to-end UI↔backend streaming unverified until T17 live smoke."
+    integration_notes: "Upload redirects to detail; reparse triggers async parse."
 
-  P-G:
-    wave: 3
-    agent_type: integrator
+  P-TESTS:
+    wave: 2
+    agent_type: implementer
     status: done
-    depends_on: [P-F]
+    depends_on: [P-CLIENT, P-COMP]
     owned_files:
-      - docs/
-    output: "Task 17 gate green: live docker compose vs real Gemini (thesisos-prod), langgraph checkpoint tables, persistence, docs/m1-promotion.md. Merged main + tag m1-complete (96fd2d9)."
+      - frontend/lib/documentClient.test.ts
+      - frontend/lib/documentStore.test.ts
+      - frontend/components/DocumentList.test.tsx
+      - frontend/components/DocumentStatusBadge.test.tsx
+      - frontend/components/DocumentChunkList.test.tsx
+    output: "Vitest: client param/error mapping + upload FormData; store fetch flows; component render + truncation + no-search guard."
     checks: []
-    integration_notes: "Epic closed. Cloud Run deploy (Fase 4) optional follow-up. Usage accounting on agent_runs deferred to M2 (low priority)."
+    integration_notes: "Runs in CI (jsdom), no DB."
