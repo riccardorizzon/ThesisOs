@@ -14,7 +14,7 @@ usable capability end-to-end against frozen contracts and passes a promotion gat
 | **M0** | Foundations | ✅ | Architecture, contracts, schema, infra, deployed `/health` shell | All contracts frozen; ADR-0001..0010 |
 | **M1** | Conversation System | ✅ | Streaming chat: `POST /chat` → LangGraph (1 node) → Gemini → SSE → React | `/chat`, `GraphState` (messages only), `RunContext`, checkpointer; ADR-0011..0014 |
 | **M2** | Memory | ✅ | Memory foundation: DB, Service, API, Admin UI, `memory_context_node` | `/memory`, ADR-0015/0017/0018; tag `m2-complete` |
-| **M3** | Ingestion | 🟡 | Document upload → parse (Docling/PyMuPDF/OCR) → chunks; **Phase 1 DB done (uncommitted)**, Phase 2+ pending | `/upload`, `/documents`, `/summarize`, `document` agent, `DocumentUploaded`/`ChunkCreated` |
+| **M3** | Ingestion | 🟢 | Document upload → parse (Docling/PyMuPDF) → chunks + events; **Phases 1–6 complete**, tag pending | `/upload`, `/documents`, `DocumentUploaded`/`ChunkCreated` |
 | **M4** | Retrieval | ⬜ | Hybrid search over embeddings; pgvector index strategy | `/search`, `retriever` agent |
 | **M5** | Tool Router / Orchestration | ⬜ | Supervisor → Planner → Router wired; multi-node graph | `supervisor`/`planner`/`router` agents |
 | **M6** | Writing | ⬜ | Writer agent drafts chapters from plan + context | `/chapters`, `writer` agent |

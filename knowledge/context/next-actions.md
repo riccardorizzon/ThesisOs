@@ -1,28 +1,26 @@
 # Next Actions — 100-task backlog
 
-> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-24 — M3 spec frozen, plan delivered.**
+> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-25 — M3 Phases 1–6 complete; tag pending.**
 
 Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 debt · 🟢 net-new · ✅ done.
 
 ---
 
-## IMMEDIATE — M3 Implementation (P0 — after plan review)
+## IMMEDIATE — M3 close-out (P0)
 
-- **T034** [P0] 🔴 Review `plans/m3-document-system-plan.md` → authorize Phase 1. dep: spec frozen ✅, plan ✅
-- **T035** [P0] 🔴 Phase 1: DB migration `0003_document_system`. dep: T034
-- **T036–T039** [P0] Phases 2–6 per plan. dep: sequential gates
+- **T034–T039** ✅ M3 Phases 1–6 implemented per `plans/m3-document-system-plan.md`
+- **T042** [P0] 🔴 Fix Docker → run DB-backed document tests → merge + tag `m3-complete`. dep: T034–T039 ✅
 
 ## M3 Spec + Plan ✅
 
-- **T030** ✅ Critic review — approved (3 conditions applied)
-- **T031** ✅ Spec frozen
-- **T032** ✅ Planner: `plans/m3-document-system-plan.md`
+- **T030–T032** ✅ Spec frozen, plan delivered, Critic approved
+- **T036** ✅ `DocumentUploaded` + `ChunkCreated` events wired
+- **Still forbidden:** embeddings, retrieval, `/search`, graph document node
 
-**Still forbidden:** embeddings, retrieval, `/search`, graph integration, `status=indexed`.
+## M4 — Retrieval (P0 — next milestone)
 
-## M2 ✅ (promoted on `main`, tag `m2-complete`)
-
-Merged 2026-06-24. Phases 1–6 complete.
+- **T043** [P0] 🔴 Architect: freeze M4 spec (pgvector strategy, hybrid search) + ADR. dep: T042
+- **T044–T052** Phases per M4 plan (after spec frozen)
 
 ---
 

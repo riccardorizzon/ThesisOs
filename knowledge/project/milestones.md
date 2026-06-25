@@ -41,27 +41,31 @@ Promoted. See `context/completed-work.md`. Optional: prod Cloud Run deploy smoke
 
 ---
 
-## M2 — Memory 🟡 (branch `m2-memory-system`)
+## M2 — Memory ✅ (`m2-complete` on `main`)
 
-**Frozen spec:** `docs/superpowers/specs/2026-06-24-thesisos-m2-memory-system-design.md`
-
-| Phase | Status | Deliverable |
-|-------|--------|-------------|
-| 1 DB | ✅ | `0002_memory_system`, `memory_versions`, indexes |
-| 2 Service | ✅ | `MemoryService`, `PromptContext`, ADR-0015/0017/0018 |
-| 3 API | ✅ | Thin `/memory` CRUD + versions |
-| 4 Admin UI | ✅ | Memory Administration at `/memory` |
-| 5 Knowledge | ✅ | knowledge/ + `docs/m2-promotion.md` |
-| 6 Graph | ⬜ | `memory_context_node`, transient injection |
-
-**Gate:** `docs/m2-promotion.md` — Phases 1–4 green; Phase 6 + tag pending.
-
-**Deferred within M2 close-out:** `MemoryUpdated` events, conversation titling (Q10), restore_version.
-
-**Explicitly not M2:** embeddings, retrieval, RAG, writer, multi-agent runtime.
+Promoted. See `context/completed-work.md`.
 
 ---
 
-## M3–M18
+## M3 — Document System 🟢 (branch `m3-document-system`)
 
-M3+ require Architect-frozen specs before implementation (ADR-0001). M2 spec is the template for scope discipline.
+**Frozen spec:** `docs/superpowers/specs/2026-06-24-thesisos-m3-document-system-design.md`
+
+| Phase | Status | Deliverable |
+|-------|--------|-------------|
+| 1 DB | ✅ | `0003_document_system`, models, drift |
+| 2 Service | ✅ | `DocumentService`, storage, parsers, chunk_hash |
+| 3 API | ✅ | `/upload`, `/documents/*`, OpenAPI |
+| 4 Admin UI | ✅ | Document Administration at `/documents` |
+| 5 Events | ✅ | Event bus + `DocumentUploaded`/`ChunkCreated` |
+| 6 Promotion | ✅ | `docs/m3-promotion.md`, knowledge mirror |
+
+**Gate:** `docs/m3-promotion.md` — code green in CI; DB integration + tag pending.
+
+**Explicitly not M3:** embeddings, retrieval, `/search`, document graph node, `/summarize`.
+
+---
+
+## M4–M18
+
+M4+ require Architect-frozen specs before implementation (ADR-0001). M3 spec is the template for scope discipline.

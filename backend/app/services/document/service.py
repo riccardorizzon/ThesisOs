@@ -35,6 +35,7 @@ from app.services.document.exceptions import (
 )
 from app.services.document.parsers import Parser, parse_document
 from app.services.document.storage import StorageAdapter, build_storage_adapter, storage_key
+from app.services.events.bus import publish
 
 
 class DocumentService:
@@ -205,6 +206,12 @@ class DocumentService:
         row.gcs_uri = self._storage.put(storage_key(row.id, filename), data)
         await session.flush()
         await self._append_version_snapshot(session, row, change_reason="metadata")
+        await publish(
+            "DocumentUploaded",
+            {"document_id": row.id},
+            session=session,
+            source="document_service",
+        )
         await session.flush()
         return self._to_record(row)
 
@@ -353,6 +360,17 @@ class DocumentService:
             row.language = result.language
         row.updated_at = now
         await session.flush()
+        for chunk in chunk_rows:
+            await publish(
+                "ChunkCreated",
+                {
+                    "chunk_id": chunk.id,
+                    "document_id": row.id,
+                    "chunk_hash": chunk.chunk_hash,
+                },
+                session=session,
+                source="document_service",
+            )
         await self._append_version_snapshot(session, row, change_reason="parse")
         await session.flush()
         return self._to_record(row)

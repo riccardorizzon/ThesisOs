@@ -59,7 +59,35 @@ Streaming chat on the frozen seam: `POST /chat` SSE, `ConversationService`, sing
 - **Service-first sequencing:** Service → API → Admin UI → Knowledge → Graph.
 - **Prompt context:** `transient_only`; not a public API; operational kinds only in graph (Phase 6).
 
+## M3 — Document System 🟢 (branch `m3-document-system`, Phases 1–6)
+
+### Phase 1 — Database
+- Alembic `0003_document_system`: `documents`, `document_versions`, `chunks` extensions.
+- Drift test green.
+
+### Phase 2 — DocumentService (sole writer)
+- `app/services/document/service.py` — upload, parse, reparse, CRUD, versioning.
+- Storage: `LocalStorageAdapter` / `GCSStorageAdapter`.
+- Parsers: Docling primary, PyMuPDF PDF fallback; `chunk_hash` on every chunk.
+- ADRs: 0020, 0021, 0022.
+
+### Phase 3 — REST API
+- `app/api/documents.py` — thin adapter; background parse after upload.
+- OpenAPI additive (`/upload`, `/documents/*`).
+
+### Phase 4 — Document Administration UI
+- Routes: `/documents`, `/documents/upload`, `/documents/[id]`, `/documents/[id]/chunks`.
+- `documentClient.ts`, `documentStore.ts`, six components; vitest coverage.
+
+### Phase 5 — Events
+- `app/services/events/bus.py` — catalog-validated publish → `events` outbox.
+- `DocumentUploaded` on upload; `ChunkCreated` per chunk on successful parse.
+- Additive `chunk_hash` in events catalog.
+
+### Phase 6 — Knowledge freeze + promotion
+- `docs/m3-promotion.md`, knowledge mirror updated.
+- **Frozen seams unchanged:** GraphState, ConversationService, memory_context_node.
+
 ## Not yet done
-- M2: `MemoryUpdated` event persistence (optional close-out).
-- M2 promotion gate + tag `m2-complete`.
-- M3+.
+- M3: merge + tag `m3-complete`; DB integration validation (Docker).
+- M4+.
