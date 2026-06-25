@@ -13,8 +13,8 @@ usable capability end-to-end against frozen contracts and passes a promotion gat
 |---|------|--------|----------------------|---------------------|
 | **M0** | Foundations | ✅ | Architecture, contracts, schema, infra, deployed `/health` shell | All contracts frozen; ADR-0001..0010 |
 | **M1** | Conversation System | ✅ | Streaming chat: `POST /chat` → LangGraph (1 node) → Gemini → SSE → React | `/chat`, `GraphState` (messages only), `RunContext`, checkpointer; ADR-0011..0014 |
-| **M2** | Memory | 🟡 | Memory foundation: DB, Service, API, Admin UI; graph node pending | `/memory`, ADR-0015/0017/0018; `memory_context_node` Phase 6 |
-| **M3** | Ingestion | ⬜ | Document upload → parse (Docling/PyMuPDF/OCR) → chunks | `/upload`, `/documents`, `/summarize`, `document` agent, `DocumentUploaded`/`ChunkCreated` |
+| **M2** | Memory | ✅ | Memory foundation: DB, Service, API, Admin UI, `memory_context_node` | `/memory`, ADR-0015/0017/0018; tag `m2-complete` |
+| **M3** | Ingestion | 🟢 | Document upload → parse (Docling/PyMuPDF) → chunks + events; **Phases 1–6 complete**, tag pending | `/upload`, `/documents`, `DocumentUploaded`/`ChunkCreated` |
 | **M4** | Retrieval | ⬜ | Hybrid search over embeddings; pgvector index strategy | `/search`, `retriever` agent |
 | **M5** | Tool Router / Orchestration | ⬜ | Supervisor → Planner → Router wired; multi-node graph | `supervisor`/`planner`/`router` agents |
 | **M6** | Writing | ⬜ | Writer agent drafts chapters from plan + context | `/chapters`, `writer` agent |
@@ -49,6 +49,30 @@ M7–M11 make it trustworthy; M12–M18 make it autonomous.
 - **Open questions are scheduled, not lost.** E.g. the pgvector index/partition
   strategy is explicitly deferred to M2/M4 (M0 spec §19). See
   `context/open-questions.md`.
+
+## Post-M18 horizon: generalizing to a Knowledge OS (uncommitted)
+
+> Source: 2026-06-25 vision brief. **Not scheduled** — no committed milestones, no
+> frozen scope. Listed only so the direction stays traceable, per `vision.md`
+> *Two-layer vision*.
+
+M0–M18 deliver the **thesis instance**. Once that instance proves the
+acquire → organize → retrieve → produce pipeline, the *same architecture* can be
+generalized into a domain-agnostic **Knowledge OS**. The generalization axes
+(each a potential future milestone band — none committed):
+
+| Axis | Thesis instance today | Generalized Knowledge OS |
+|------|-----------------------|--------------------------|
+| Domain model | `chapters` / outline tree | generic `project` / `section` model, domain-pluggable |
+| Output templates | academic citations (APA7/MLA/Chicago) | per-domain output + citation templates |
+| Language | Italian-first embeddings | multi-language embedding strategy |
+| Tenancy | single-user, no auth | optional multi-tenant for team / enterprise domains |
+| Target domains | academic thesis | research, legal, consulting, technical docs, software, enterprise KM |
+
+**Discipline:** this stays a horizon, not a backlog. It is implemented only if and
+when the thesis instance is complete *and* a concrete second domain is chosen —
+which would then get its own frozen spec + promotion gates like any milestone
+(ADR-0001, ADR-0010).
 
 ## Caveats / unknowns
 - M13 (Research), M14 (NotebookLM-like), M17 (Voice) are named in the roadmap but

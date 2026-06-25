@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     vertex_location: str = "europe-west1"
     gemini_model: str = "gemini-2.5-pro"
     embedding_model: str = "text-multilingual-embedding-002"
+    # M3 document storage (spec §4.1): "local" filesystem adapter or "gcs".
+    document_storage_backend: str = "local"
+    document_storage_local_dir: str = "/tmp/thesisos-documents"
+    documents_bucket: str = ""
 
 
 settings = Settings()

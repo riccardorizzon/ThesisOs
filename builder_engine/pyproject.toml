@@ -1,0 +1,30 @@
+[project]
+name = "thesisos-builder-engine"
+version = "0.1.0"
+description = "Deterministic build workflow engine for ThesisOS BuilderOS (ADR-0023, MB1)"
+requires-python = ">=3.12"
+dependencies = [
+  "typer>=0.12",
+  "rich>=13.7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "ruff>=0.6"]
+
+[project.scripts]
+builder-engine = "builder_engine.cli:app"
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = [".."]
+include = ["builder_engine*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".."]
+
+[tool.ruff]
+line-length = 100

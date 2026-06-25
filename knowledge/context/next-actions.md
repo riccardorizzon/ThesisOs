@@ -1,30 +1,34 @@
 # Next Actions — 100-task backlog
 
-> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-24 after M2 Phase 6.**
+> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-25 — M3 Phases 1–6 complete; tag pending.**
 
 Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 debt · 🟢 net-new · ✅ done.
 
 ---
 
-## IMMEDIATE — M2 Promotion (P0)
+## IMMEDIATE — M3 close-out (P0)
 
-- **T029f** [P0] 🔴 Merge `m2-memory-system` → `main`; tag `m2-complete`. dep: Phases 1–6 ✅, Critic/QA ✅
-- **T029e** [P1] 🟢 Wire `MemoryUpdated` event (optional M2 close-out). dep: event bus
+- **T034–T039** ✅ M3 Phases 1–6 implemented per `plans/m3-document-system-plan.md`
+- **T042** [P0] 🔴 Fix Docker → run DB-backed document tests → merge + tag `m3-complete`. dep: T034–T039 ✅
 
-## M2 Phases 1–6 ✅ (completed on `m2-memory-system`)
+## M3 Spec + Plan ✅
 
-- **T017** ✅ M2 spec frozen + ADR-0015/0017/0018
-- **T019** ✅ MemoryService
-- **T020** ✅ `/memory` API
-- **T025** ✅ Memory Administration UI (+ Vitest T016 partial)
-- **T027** ✅ Memory tests (service + API)
-- **T029a–d** ✅ Phase 6 graph + Critic + QA
+- **T030–T032** ✅ Spec frozen, plan delivered, Critic approved
+- **T036** ✅ `DocumentUploaded` + `ChunkCreated` events wired
+- **Still forbidden:** embeddings, retrieval, `/search`, graph document node
+
+## M4 — Retrieval (P0 — next milestone)
+
+- **T043** [P0] 🔴 Architect: freeze M4 spec (pgvector strategy, hybrid search) + ADR. dep: T042
+- **T044–T052** Phases per M4 plan (after spec frozen)
 
 ---
 
-## M3 — Document System (P0 next milestone)
+## M3 — Document System (reference)
 
-Requires Architect-frozen M3 spec before implementation. No embeddings, retrieval, or writer agents.
+Frozen spec: `docs/superpowers/specs/2026-06-24-thesisos-m3-document-system-design.md`  
+Plan: `plans/m3-document-system-plan.md`  
+ADRs: 0020, 0021, 0022.
 
 ---
 

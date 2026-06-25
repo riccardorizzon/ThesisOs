@@ -1,0 +1,79 @@
+# ThesisOS CI — validation gate (MB1 Phase 0).
+# Additive test gate that runs BEFORE any deploy. The existing Cloud Build
+# pipeline (infra/ci/cloudbuild.yaml) remains deploy-only; wiring a test stage
+# into Cloud Build before deploy is the alternative tracked in the MB1 spec §14.
+#
+# Mirrors the `make ci` stages so local and CI validation match.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (editable, dev)
+        run: python -m venv .venv && .venv/bin/pip install -e ".[dev]"
+      - name: Lint (ruff)
+        run: .venv/bin/ruff check app
+      # Format check is not in the gate yet (M0–M2 code predates ruff-format).
+      # Adopt via `make format-fix`, then re-enable here.
+      - name: Unit + drift tests (pytest)
+        run: .venv/bin/python -m pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Unit tests (vitest)
+        run: npm run test
+      - name: Build
+        run: npm run build
+
+  builder-engine:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: builder_engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (editable, dev)
+        run: python -m venv .venv && .venv/bin/pip install -q -e ".[dev]"
+      - name: Unit tests (pytest)
+        run: .venv/bin/pytest -q
+
+  isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure ripgrep
+        run: command -v rg >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y ripgrep)
+      - name: Build-time sidecar runtime isolation
+        run: |
+          for dir in builder_memory builder_engine; do
+            ! rg -n "^[[:space:]]*(from|import)[[:space:]]+backend([[:space:].]|$)" "$dir" 2>/dev/null \
+              || { echo "isolation FAIL: $dir imports backend.app"; exit 1; }
+          done

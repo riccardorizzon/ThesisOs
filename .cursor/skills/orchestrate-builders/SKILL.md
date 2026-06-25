@@ -44,6 +44,14 @@ implementers** (safe isolation), **file locks in STATE** for explorers/reviewers
 | `status` | Print STATE summary (packets, locks, blockers) |
 | `close` | Final integrator pass + handoff prompt for next session |
 
+**Deterministic engine (MB1 Phase 1 — prefer over prose):**
+
+| Engine command | Replaces |
+|----------------|----------|
+| `builder-engine lint-graph` | `validate-state.sh`, §1 packet rules |
+| `builder-engine status` | Manual STATE summary |
+| `builder-engine ready` | §2A ready-set computation |
+
 ---
 
 ## Architecture
@@ -116,6 +124,12 @@ Use [`references/packet-template.yaml`](references/packet-template.yaml) and
 
 ### 2A: Identify ready packets
 
+Run the engine (preferred):
+
+```bash
+builder-engine ready --repo-root .
+```
+
 A packet is **ready** when:
 
 - `status: ready`
@@ -158,6 +172,7 @@ Launch **one Task per ready packet in a single message** (parallel dispatch).
 
 Each prompt must be **self-contained** — see agent prompt templates. Include:
 
+- **Builder Memory context** (optional but recommended): run `builder-memory retrieve --task "…" --role <agent_type> --epic <epic> --packet <id>` and paste the `NON-AUTHORITATIVE` block (see `knowledge/development/builder-memory.md`). Preflight: `.cursor/skills/orchestrate-builders/scripts/builder-memory-preflight.sh`
 - Packet ID, wave, depends_on (with outputs from completed deps)
 - `owned_files` and explicit **DO NOT touch** list
 - `decisions` from STATE (verbatim)

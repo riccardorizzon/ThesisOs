@@ -53,24 +53,93 @@ paths:
         "503": { description: LLM runtime not configured }
   /upload:
     post:
-      summary: Upload a document
+      summary: Upload a document (PDF/EPUB/DOCX); parsing runs asynchronously
       x-milestone: M3
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                title: { type: string, nullable: true }
+                author: { type: string, nullable: true }
+                language: { type: string, nullable: true }
       responses:
-        "501": { description: not implemented yet }
+        "201": { description: Created (status uploaded; parse runs async), content: { application/json: { schema: { $ref: "#/components/schemas/Document" } } } }
+        "400": { description: Unsupported format, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
   /documents:
     get:
-      summary: List documents
+      summary: List documents (q is an ILIKE filter on title/filename only — not search)
       x-milestone: M3
+      parameters:
+        - { name: source_type, in: query, required: false, schema: { type: string, enum: [pdf, epub, docx] } }
+        - { name: status, in: query, required: false, schema: { type: string, enum: [uploaded, processing, parsed, failed] } }
+        - { name: q, in: query, required: false, schema: { type: string }, description: "Case-insensitive substring on title/filename (not corpus search)" }
+        - { name: limit, in: query, required: false, schema: { type: integer, default: 50, minimum: 1, maximum: 200 } }
+        - { name: offset, in: query, required: false, schema: { type: integer, default: 0, minimum: 0 } }
       responses:
-        "501": { description: not implemented yet }
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Document" } } } } }
   /documents/{id}:
     get:
       summary: Get a document
       x-milestone: M3
       parameters:
-        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
       responses:
-        "501": { description: not implemented yet }
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Document" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    patch:
+      summary: Update document metadata (optimistic lock)
+      x-milestone: M3
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DocumentUpdate" }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Document" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "409": { description: write_conflict, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    delete:
+      summary: Delete a document (cascades chunks, versions, original bytes)
+      x-milestone: M3
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Deleted }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /documents/{id}/chunks:
+    get:
+      summary: List a document's chunks, ordered by chunk_index (unranked, document-scoped)
+      x-milestone: M3
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/DocumentChunk" } } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /documents/{id}/versions:
+    get:
+      summary: List document version history (read-only)
+      x-milestone: M3
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/DocumentVersion" } } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /documents/{id}/reparse:
+    post:
+      summary: Re-parse a document from its stored original (async)
+      x-milestone: M3
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "202": { description: Accepted (parse runs async) }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
   /search:
     post:
       summary: Search the corpus
@@ -255,4 +324,64 @@ components:
         content: { type: string }
         metadata: { type: object }
         source: { type: string }
+        changed_at: { type: string, format: date-time }
+    Document:
+      type: object
+      required: [id, title, source_type, status, version, metadata, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        author: { type: string, nullable: true }
+        source_type: { type: string, enum: [pdf, epub, docx] }
+        original_filename: { type: string, nullable: true }
+        gcs_uri: { type: string, nullable: true }
+        status: { type: string, enum: [uploaded, processing, parsed, failed] }
+        page_count: { type: integer, nullable: true }
+        language: { type: string, nullable: true }
+        version: { type: integer, minimum: 1 }
+        parser: { type: string, nullable: true, enum: [docling, pymupdf, null] }
+        parsed_at: { type: string, format: date-time, nullable: true }
+        chunk_count: { type: integer, nullable: true }
+        error_message: { type: string, nullable: true }
+        metadata: { type: object }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    DocumentUpdate:
+      type: object
+      required: [expected_version]
+      properties:
+        title: { type: string, nullable: true }
+        author: { type: string, nullable: true }
+        language: { type: string, nullable: true }
+        metadata: { type: object, nullable: true }
+        expected_version: { type: integer, minimum: 1 }
+    DocumentChunk:
+      type: object
+      required: [id, document_id, chunk_index, chunk_hash, content, metadata, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        document_id: { type: string, format: uuid }
+        chunk_index: { type: integer, minimum: 0 }
+        chunk_hash: { type: string }
+        content: { type: string }
+        page_from: { type: integer, nullable: true }
+        page_to: { type: integer, nullable: true }
+        section_path: { type: string, nullable: true }
+        token_count: { type: integer, nullable: true }
+        metadata: { type: object }
+        created_at: { type: string, format: date-time }
+    DocumentVersion:
+      type: object
+      required: [document_id, version, title, source_type, change_reason, changed_at]
+      properties:
+        document_id: { type: string, format: uuid }
+        version: { type: integer }
+        title: { type: string }
+        author: { type: string, nullable: true }
+        source_type: { type: string, enum: [pdf, epub, docx] }
+        page_count: { type: integer, nullable: true }
+        chunk_count: { type: integer, nullable: true }
+        parser: { type: string, nullable: true }
+        metadata: { type: object }
+        change_reason: { type: string, enum: [metadata, parse] }
         changed_at: { type: string, format: date-time }

@@ -11,7 +11,8 @@ Single-user research/thesis AgentOS on GCP. Runtime stack:
 ```text
 Next.js (App Router, Tailwind, Zustand)  →  FastAPI (no auth, single user)
   →  LangGraph (StateGraph[GraphState]; M2 = memory_context_node + conversation_node)
-  →  Services (conversation live; memory live M2 Ph1-4; events/jobs/telemetry/ingestion/retrieval/citation stubs)
+  →  Services (conversation live; memory live; document ingestion M3; events bus live M3;
+      jobs/telemetry/ingestion/retrieval/citation stubs)
   →  LiteLLM seam (generate/astream/embed/vision)  →  Vertex AI (Gemini + multilingual embeddings)
   →  Postgres + pgvector (Cloud SQL) · Cloud Storage · Secret Manager · OTel
 ```
@@ -21,10 +22,12 @@ Next.js (App Router, Tailwind, Zustand)  →  FastAPI (no auth, single user)
   → Vertex; tokens rise back as SSE `event: token`. Persistence on
   `conversations`/`messages` (system of record); checkpoints in the `langgraph`
   schema; token accounting on `agent_runs`.
-- **Memory path (M2, branch `m2-memory-system`):** Admin UI / REST →
-  `MemoryService` (sole writer) → `memories` + `memory_versions`.
-  `load_prompt_context()` → `PromptContext` (operational kinds only) →
-  `memory_context_node` prepends transient system wire each turn.
+- **Memory path (M2):** Admin UI / REST → `MemoryService` → `memories` +
+  `memory_versions`. `load_prompt_context()` → transient system wire via
+  `memory_context_node`.
+- **Document path (M3, branch `m3-document-system`):** Admin UI / REST →
+  `DocumentService` (sole writer) → `documents`/`chunks`/storage →
+  `DocumentUploaded`/`ChunkCreated` events on outbox.
 - **Builder side:** Cursor agents (build-time only) using the AgentOS loop +
   orchestrate-builders waves. Never a runtime dependency.
 
@@ -41,10 +44,10 @@ model `gemini-2.5-pro`.
 | **Domain DB schema** | `contracts/db/schema.sql`, `app/db/models.py` | 15 domain tables (+ `memory_versions` M2); drift-tested |
 | **OpenAPI** | `contracts/openapi/openapi.yaml` | additive only; `x-milestone` stubs |
 | **Agent I/O contracts (9)** | `contracts/agents/*.json` | reads/writes/errors/mutations per agent |
-| **Event catalog (5)** | `contracts/events/events.json` | DocumentUploaded, ChunkCreated, MemoryUpdated, ChapterCreated, CritiqueCompleted |
+| **Event catalog (5)** | `contracts/events/events.json` | DocumentUploaded, ChunkCreated (+ chunk_hash), MemoryUpdated, … |
 | **`TokenChunk`** | `app/llm/base.py` | exactly 3 fields (ADR-0011) |
 | **`RunContext`** | `app/schemas/run_context.py` | runtime-only, never in GraphState/checkpoint (ADR-0014) |
-| **ADR-0001..0018** | `decisions/` | append-only; none superseded |
+| **ADR-0001..0022** | `decisions/` | append-only; M3 adds 0020/0021/0022 |
 
 External (non-domain) infra: `langgraph` schema checkpoint tables, owned by
 `AsyncPostgresSaver`, excluded from domain governance (ADR-0012).
@@ -67,11 +70,10 @@ Technical: 0002 Vertex-Runtime-Only · 0003 Custom-Memory · 0011 Streaming-Firs
 - **M0 Foundations — ✅ complete & promoted** (`m0-complete`). Deployed on
   `thesisos-prod`; gate fully green.
 - **M1 Conversation System — ✅ promoted** (`m1-complete` on `main`).
-- **M2 Memory — 🟡 Phases 1–6 complete** (branch `m2-memory-system`): DB, Service,
-  API, Admin UI, graph injection. **Open:** events (optional), promotion tag.
-- **M3–M18 ⬜** — M3+ require frozen specs before implementation.
-
-Detail: `project/milestones.md`, `project/roadmap.md`.
+- **M2 Memory — ✅ promoted** (`m2-complete` on `main`).
+- **M3 Documents — 🟢 Phases 1–6 complete** (branch `m3-document-system`): DocumentService,
+  REST API, Admin UI, event bus wired. Tag `m3-complete` pending merge.
+- **M4–M18 ⬜** — require frozen specs before implementation.
 
 ---
 
@@ -108,7 +110,8 @@ Detail: `project/milestones.md`, `project/roadmap.md`.
 
 ## 7. Future planned work
 
-- **Next:** **M2 promotion** (merge + tag) → **M3 Document System** (spec first).
+- **Next:** Merge + tag **M3** (`m3-complete`) after DB validation → freeze **M4**
+  retrieval spec. **No embeddings until M4.**
 - **M4–M6** (usable-product line): retrieval → tool router → writing.
 - **M7–M11:** citations → outline → critic → QA → GCP hardening (tracing, durable
   jobs, instance sizing, cold starts).

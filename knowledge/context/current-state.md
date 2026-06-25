@@ -1,64 +1,75 @@
 # Current State
 
-> Snapshot as of **2026-06-24** (M2 Phase 6 complete). Branch: `m2-memory-system` (from `main` @ `m1-complete`). Sources: code, tests, `docs/m2-promotion.md`, gates M0/M1, M2 spec.
+> Snapshot as of **2026-06-25**. Branch: `m3-document-system` (from `main` @ `m2-complete`).
 
 ## Where are we?
 
-**M2 Memory System — Phases 1–6 complete; promotion gate pending.**
-
-M0 and M1 are **promoted and tagged** on `main` (`m0-complete`, `m1-complete`). Active development is on branch `m2-memory-system` for the memory foundation.
+**M3 Document System — Phases 1–6 complete; tag pending. Build-time Agent OS: MB1 Phase 1 `builder_engine` shipped (`lint-graph`, `status`, `ready`).**
 
 ```text
 M0 Foundations     ✅ promoted (m0-complete)
 M1 Conversation    ✅ promoted (m1-complete)
-M2 Memory          🟡 Phases 1–6 done; promotion + tag pending
-M3+                ⬜ not started
+M2 Memory          ✅ promoted (m2-complete)
+M3 Documents       🟢 Phases 1-6 done; merge + tag pending
+M4+                ⬜ not started (next: freeze M4 spec)
 ```
+
+> `make ci` green: backend **77 passed / 31 skipped**, frontend **33 passed**
+> (10 files). ⚠️ DB-backed document service/event/integration tests are
+> skip-guarded — re-run after fixing local Docker (`make up` + `alembic upgrade head`).
 
 ## What is completed?
 
-### M0 / M1 (promoted)
-See `context/completed-work.md`. Chat seam frozen: `POST /chat` → `ConversationService` → LangGraph (`conversation_node`) → LiteLLM → SSE. ADR-0001..0014.
+### M0 / M1 / M2 (promoted)
+See `context/completed-work.md`. Chat seam frozen. M2 tagged `m2-complete` on `main`.
 
-### M2 — Phases 1–4 (on `m2-memory-system`, not yet tagged)
+### M3 — Document System (branch `m3-document-system`)
 
 | Phase | Deliverable | Status |
 |-------|-------------|--------|
-| **1 — DB** | Alembic `0002_memory_system`: `memories.title`, `memory_versions`, singleton indexes; drift test green | ✅ |
-| **2 — Service** | `MemoryService` (sole writer), `WriteConflictError`, `load_prompt_context()` → `PromptContext`, versioning | ✅ |
-| **3 — API** | Thin `/memory` CRUD + versions; OpenAPI updated (additive); error mapping 409/404/400 | ✅ |
-| **4 — Admin UI** | Memory Administration UI: list/detail/create/edit/delete/versions; `memoryClient` + `useMemoryStore`; Vitest 15/15 | ✅ |
-| **5 — Knowledge** | Freeze + `docs/m2-promotion.md` + Health Report v2 | ✅ |
-| **6 — Graph** | `memory_context_node`; `START → memory_context_node → conversation_node → END` | ✅ |
+| **1 — DB** | Alembic `0003_document_system`; drift test green | ✅ |
+| **2 — Service** | `DocumentService` sole writer; storage; parsers; chunk_hash | ✅ |
+| **3 — API** | `/upload`, `/documents/*`; OpenAPI additive | ✅ |
+| **4 — Admin UI** | `/documents` routes; client/store/components; vitest | ✅ |
+| **5 — Events** | Event bus + `DocumentUploaded`/`ChunkCreated` | ✅ |
+| **6 — Promotion** | `docs/m3-promotion.md` + knowledge mirror | ✅ |
 
-**New ADRs (M2):** 0015 (ownership), 0017 (versioning), 0018 (query model).  
-**Frozen spec:** `docs/superpowers/specs/2026-06-24-thesisos-m2-memory-system-design.md`.
+**New ADRs (M3):** 0020 (ownership), 0021 (versioning), 0022 (query model).  
+**Frozen spec:** `docs/superpowers/specs/2026-06-24-thesisos-m3-document-system-design.md`.
 
-## What is NOT done (M2 remainder)?
+## What is NOT done (M3 remainder)?
 
-- **`MemoryUpdated` events** — event bus still stub; optional M2 close-out (not gate-blocking for graph).
-- **M2 promotion gate** — see `docs/m2-promotion.md` (`memory_events` optional; merge + tag pending).
-- **Merge + tag `m2-complete`** — after QA/Critic sign-off on promotion doc.
+- **DB integration validation** — Docker image store corrupted locally; skip-guarded tests not yet executed against live Postgres.
+- **Real parser QA** — PDF/EPUB/DOCX with `backend[parsers]` optional deps (manual fixtures).
+- **Merge + tag `m3-complete`** — see `docs/m3-promotion.md`.
 
 ## What is deployed?
 
-- **M0/M1 shell** on `thesisos-prod` (Cloud Run + Cloud SQL). Domain migration on prod may still be `0001_initial` until M2 deploy.
-- **M2 memory stack** validated locally via docker compose + Postgres; not deployed to Cloud Run.
+- **M0/M1 shell** on `thesisos-prod`. M2/M3 stacks validated locally; not deployed to Cloud Run.
 
 ## What is validated?
 
 | Suite | Result |
 |-------|--------|
-| Backend pytest | **39 passed, 14 skipped**, ruff clean (changed files) |
-| Backend memory (docker DB) | 8 service + 11 API integration tests green |
-| Frontend vitest | **15 passed** |
-| Frontend build | green (`/memory`, `/memory/new`, `/memory/[id]`) |
-| M0/M1 gates | green (historical) |
+| Backend pytest | **77 passed, 31 skipped**, ruff clean |
+| Frontend vitest | **33 passed** (10 files) |
+| Frontend build | green (`/documents`, `/memory`, `/chat`) |
+| `make ci` | **green** |
+| M0/M1/M2 gates | green (historical) |
+
+## Build-time system (BuilderOS)
+
+- **Builder Memory** — shipped (ADR-0019).
+- **MB1 Phase 0** — `Makefile`, pre-commit, GitHub Actions CI.
+- **MB1 Phase 1 — Build Workflow Engine read-model (added):** `builder_engine/`
+  with `lint-graph`, `status`, `ready`; 8 unit tests; `validate-state.sh` shim.
+- **MB1 Phase 2+** — `schedule`/`sync`, unified state, replan (spec §10).
 
 ## What is next?
 
-1. **M2 promotion** — flip remaining gate items in `docs/m2-promotion.md` → merge `m2-memory-system` → `main` → tag `m2-complete`.
-2. **M3 Document System** — Architect frozen spec first (Docling, chunks, storage; no embeddings/retrieval).
+1. **Fix Docker** → run DB-backed M3 tests (`test_document_service`, `test_document_events`, `test_document_integration`).
+2. **Merge + tag** — `docs/m3-promotion.md` promotion steps → `m3-complete`.
+3. **M4 Retrieval** — Architect freezes M4 spec (embeddings, `/search`, pgvector) before implementation.
 
 See `context/next-actions.md`.
 
@@ -66,11 +77,10 @@ See `context/next-actions.md`.
 
 | Area | State |
 |------|-------|
-| M0 | ✅ tagged |
-| M1 | ✅ tagged on main |
-| M2 DB/Service/API/UI | ✅ Phases 1–4 |
-| M2 graph injection | ✅ Phase 6 |
-| M2 tag | ⬜ pending promotion |
-| M3+ | ⬜ not started |
-| GraphState / RunContext / LLMClient / ConversationService | frozen, unchanged |
-| Tests | backend 39/14 skip; frontend 15 |
+| M0–M2 | ✅ tagged on main |
+| M3 spec/plan | ✅ frozen |
+| M3 code | 🟢 Phases 1–6 |
+| M3 tag | ⬜ pending merge |
+| M4+ | ⬜ spec required |
+| Validation gate | ✅ `make ci` green |
+| GraphState / ConversationService | frozen, unchanged |
