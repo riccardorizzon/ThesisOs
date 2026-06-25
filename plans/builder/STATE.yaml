@@ -1,53 +1,53 @@
-# Builder orchestration STATE — MB1 Phase 1 (Build Workflow Engine read-model).
+# Builder orchestration STATE — post-M3; M4 spec frozen; MB1 Phase 2 next.
 # Validate: builder-engine lint-graph --repo-root .
 
-epic: mb1-workflow-engine-phase1
-chain: mb1-engine-001
-status: closed   # Phase 1 graph read-model shipped; Phase 2 schedule/sync next
+epic: mb1-workflow-engine-phase2-prep
+chain: pipeline-2026-06-25
+status: active
 wave: 1
 
 decisions:
-  - "builder_engine is build-time only — no backend.app imports (ADR-0023)"
-  - "STATE/packet YAML schema unchanged; additive engine only"
-  - "lint-graph supersedes validate-state.sh (shim kept as fallback)"
-  - "Wave coherence: in_progress must match STATE.wave; future-wave ready is OK"
+  - "Pipeline order: Vision → Spec Freeze → Engine → Implementation → Validation"
+  - "M3 promoted (m3-complete); M4 spec frozen — no M4 code until Planner plan"
+  - "MB1 Phase 2 = runtime + execution state machine (ADR-0025), CLI as views"
+  - "Do NOT implement schedule/sync until M4 plan exists"
 
 file_locks: {}
-blockers: {}
+blockers:
+  P-M4-PLAN: "Critic sign-off + plans/m4-retrieval-system-plan.md required before M4 Phase 1"
 
 packets:
-  P-GRAPH:
-    wave: 1
-    agent_type: implementer
-    status: done
-    depends_on: []
-    owned_files:
-      - builder_engine/
-    output: "GraphLoader, Validator, Scheduler, CLI (lint-graph, status, ready)"
-    checks: ["make unit-builder-engine"]
-    integration_notes: "8 pytest; validate-state.sh delegates to builder-engine"
-
-  P-CI:
-    wave: 1
-    agent_type: implementer
-    status: done
-    depends_on: [P-GRAPH]
-    owned_files:
-      - Makefile
-      - .github/workflows/ci.yml
-      - .cursor/skills/orchestrate-builders/scripts/validate-state.sh
-    output: "unit-builder-engine in make ci; isolation covers builder_engine"
-    checks: ["make ci"]
-    integration_notes: "GitHub Actions builder-engine job added"
-
-  P-DOCS:
+  P-M4-SPEC:
     wave: 1
     agent_type: documenter
     status: done
-    depends_on: [P-GRAPH]
+    depends_on: []
     owned_files:
-      - docs/mb1-phase1-gate.md
-      - .cursor/skills/orchestrate-builders/SKILL.md
-    output: "Phase 1 gate doc + skill cites engine commands"
+      - docs/superpowers/specs/2026-06-25-thesisos-m4-retrieval-system-design.md
+      - decisions/ADR-0024-retrieval-ownership.md
+    output: "M4 frozen spec + ADR-0024"
     checks: []
-    integration_notes: "MB1 Phase 2 = schedule/sync"
+    integration_notes: "Critic sign-off pending"
+
+  P-MB1-RUNTIME-DOC:
+    wave: 1
+    agent_type: documenter
+    status: done
+    depends_on: []
+    owned_files:
+      - decisions/ADR-0025-builder-execution-state-machine.md
+      - docs/superpowers/specs/2026-06-25-thesisos-mb1-workflow-engine-design.md
+    output: "ADR-0025 + MB1 spec §10.1 runtime amendment"
+    checks: []
+    integration_notes: "Phase 2 implementation not started"
+
+  P-MB1-PHASE2:
+    wave: 2
+    agent_type: implementer
+    status: ready
+    depends_on: [P-M4-SPEC, P-MB1-RUNTIME-DOC]
+    owned_files:
+      - builder_engine/
+    output: "Runtime loop + execution state machine; schedule/sync as CLI views"
+    checks: ["make unit-builder-engine", "make ci"]
+    integration_notes: "Blocked on M4 Planner plan for validation stage registry"

@@ -259,11 +259,41 @@ Each phase is independently shippable, additive, and leaves the prose flow worki
 |-------|----------|-------------|-----|
 | **0 — Validation pipeline** | `builder check <stage>` runner + pre-commit hook + CI test stage before deploy | G1 (no CI/test gate) | All stages runnable by name; CI fails on red; pre-commit active |
 | **1 — Graph read-model** | `builder_engine/` package + `lint-graph`, `status`, `ready` (ports & extends `validate-state.sh`, invariants §8.1–8.8) | G2 (manual ready/validate), G5 (DoD) | `lint-graph` reproduces validate-state.sh results + new invariants; `ready` matches SKILL §2A by construction |
-| **2 — Scheduler & sync** | `schedule` (locks + dispatch manifest + worktrees) and `sync` (run checks, merge gate, advance wave) | G2 (scheduler), G5 (DoD enforcement) | An epic runs end-to-end with engine-computed waves; no packet `done` on failing check |
+| **2 — Runtime & sync** | **Execution state machine** (ADR-0025) + internal loop `State→Planner→Scheduler→Executor→Validator→StateUpdate`; CLI `schedule`/`sync` as projections; worktree manifest + CheckRunner DoD | G2 (scheduler), G5 (DoD enforcement) | End-to-end epic with formal transitions; no packet DONE without VALIDATING pass; **blocked until M4 spec frozen** |
 | **3 — Unified state** | `builder state` + knowledge-drift check added to pipeline | G3 (state drift) | One derived state object; drift check catches mirror/ADR-index divergence |
 | **4 — Replanning & governance** | `replan` (critical path/bottlenecks), debug-stage wiring, `adr-index` | G4 (manual replanning), G6 (debug), G7 (ADR drift) | `replan` proposes next packets from state; ADR index lint green |
 
 (Gap IDs G1–G7 reference the migration analysis delivered with this spec.)
+
+### 10.1 Phase 2 runtime model (amendment 2026-06-25, ADR-0025)
+
+Phase 1 shipped CLI commands. Phase 2 **must not** grow as a bag of commands. The engine becomes a **workflow execution runtime**; agents are plug-in workers.
+
+**Execution state machine (packet):**
+
+```text
+CREATED → READY → CLAIMED → RUNNING → VALIDATING → MERGED → DONE
+                               ↘ FAILED → DEBUGGING → READY
+```
+
+**Internal loop (deterministic core):**
+
+```text
+State → Planner → Scheduler → Executor → Validator → StateUpdate
+```
+
+| Layer | Owner | Examples |
+|-------|-------|----------|
+| State | StateWriter + graph loader | STATE.yaml, wave, locks |
+| Planner | Replanner (Phase 4) / stub in Phase 2 | ready set, critical path |
+| Scheduler | Scheduler | locks, dispatch manifest |
+| Executor | Orchestrator LLM + Cursor agents | code in worktrees |
+| Validator | CheckRunner | `make ci`, packet `required_checks` |
+| StateUpdate | StateWriter | status transitions, wave advance |
+
+CLI mapping: `lint-graph`/`status`/`ready`/`schedule`/`sync` invoke runtime methods — they are not the source of truth for transitions.
+
+**Sequencing gate:** M4 product spec must be frozen before Phase 2 ships, so embedding/search validation stages are not guessed in the engine.
 
 ---
 

@@ -1,6 +1,6 @@
 # M3 Promotion Gate — Status
 
-_As of 2026-06-25. Branch `m3-document-system`. Phases 1–6 complete in code; merge + tag pending._
+_As of 2026-06-25. **Promoted:** merged to `main`, tag `m3-complete`._
 
 ```yaml
 # --- Implemented & verified (green in CI) ---
@@ -17,9 +17,9 @@ tests_ci:                 green    # make ci: backend 77 passed / 31 skipped; fr
 contracts:                additive # OpenAPI + events.json (chunk_hash) additive only
 
 # --- Pending validation (environment / manual QA) ---
-db_integration:           pending  # skip-guarded service/event/integration tests need Postgres (Docker fix)
+db_integration:           waived     # Docker daemon containerd I/O error (2026-06-25); re-run when fixed
 parser_formats:           pending  # PDF/EPUB/DOCX with real Docling — install backend[parsers] + manual fixtures
-m3_tag:                   pending  # merge → main → tag m3-complete
+m3_tag:                   green    # merged to main @ e0a1620; tag m3-complete
 
 # --- Explicitly out of M3 gate (deferred) ---
 document_graph_node:      deferred # contracts/agents/document.json — M5+

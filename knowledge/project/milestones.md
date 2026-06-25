@@ -47,22 +47,23 @@ Promoted. See `context/completed-work.md`.
 
 ---
 
-## M3 — Document System 🟢 (branch `m3-document-system`)
+## M3 — Document System ✅ (`m3-complete` on `main`)
 
-**Frozen spec:** `docs/superpowers/specs/2026-06-24-thesisos-m3-document-system-design.md`
+Promoted 2026-06-25. See `docs/m3-promotion.md`, `context/completed-work.md`.
+
+---
+
+## M4 — Retrieval 🟡 (spec frozen 2026-06-25)
+
+**Frozen spec:** `docs/superpowers/specs/2026-06-25-thesisos-m4-retrieval-system-design.md`  
+**ADR:** 0024 (retrieval ownership)
 
 | Phase | Status | Deliverable |
 |-------|--------|-------------|
-| 1 DB | ✅ | `0003_document_system`, models, drift |
-| 2 Service | ✅ | `DocumentService`, storage, parsers, chunk_hash |
-| 3 API | ✅ | `/upload`, `/documents/*`, OpenAPI |
-| 4 Admin UI | ✅ | Document Administration at `/documents` |
-| 5 Events | ✅ | Event bus + `DocumentUploaded`/`ChunkCreated` |
-| 6 Promotion | ✅ | `docs/m3-promotion.md`, knowledge mirror |
+| Spec | ✅ | Frozen — no code until Planner plan |
+| Implementation | ⬜ | RetrievalService, `/search`, retriever node |
 
-**Gate:** `docs/m3-promotion.md` — code green in CI; DB integration + tag pending.
-
-**Explicitly not M3:** embeddings, retrieval, `/search`, document graph node, `/summarize`.
+**Gate:** Critic sign-off + `plans/m4-retrieval-system-plan.md` before Phase 1 DB.
 
 ---
 

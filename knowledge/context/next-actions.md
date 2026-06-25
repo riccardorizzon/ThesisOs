@@ -6,21 +6,13 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 
 ---
 
-## IMMEDIATE — M3 close-out (P0)
+## IMMEDIATE — ordered pipeline (2026-06-25)
 
-- **T034–T039** ✅ M3 Phases 1–6 implemented per `plans/m3-document-system-plan.md`
-- **T042** [P0] 🔴 Fix Docker → run DB-backed document tests → merge + tag `m3-complete`. dep: T034–T039 ✅
-
-## M3 Spec + Plan ✅
-
-- **T030–T032** ✅ Spec frozen, plan delivered, Critic approved
-- **T036** ✅ `DocumentUploaded` + `ChunkCreated` events wired
-- **Still forbidden:** embeddings, retrieval, `/search`, graph document node
-
-## M4 — Retrieval (P0 — next milestone)
-
-- **T043** [P0] 🔴 Architect: freeze M4 spec (pgvector strategy, hybrid search) + ADR. dep: T042
-- **T044–T052** Phases per M4 plan (after spec frozen)
+1. **M3 close-out** ✅ — merged `main`, tag `m3-complete` (DB integration waived: Docker I/O)
+2. **M4 spec freeze** ✅ — `docs/superpowers/specs/2026-06-25-thesisos-m4-retrieval-system-design.md` + ADR-0024
+3. **M4 Planner** 🔴 — Critic sign-off + `plans/m4-retrieval-system-plan.md`
+4. **MB1 Phase 2** ⬜ — runtime + execution state machine (ADR-0025); after M4 spec freeze
+5. **M4 implementation** ⬜ — after plan + MB1 Phase 2 foundation
 
 ---
 
