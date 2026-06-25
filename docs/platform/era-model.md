@@ -108,7 +108,7 @@ Eras describe **how intelligent the factory is**, not which product feature ship
 | — | This document | Era boundaries + track interaction |
 | **L0** | `engineering-meta-model.md` | Objects + relations (semantics) |
 | **L1** | `invariant-model.md` | Laws (fail-closed) |
-| **L2** | extends ADR-0025 | Global State Machine (states) — **next** |
+| **L2** | extends ADR-0025 | Global State Machine (states) | ✅ `global-state-machine.md` |
 | **L3** | `runtime-model.md` | Engineering cycle (dynamics) — frozen |
 
 > **L0–L3 are formalization (no feature code). L4+ (event bus, policy engine, planner) are MB2+ implementation that concretizes them.** The original MB2 spec is superseded/re-scoped to L4+ (ADR-0028).
@@ -199,7 +199,7 @@ Indicators (directional):
 - [x] Product Track vs Platform Track interaction defined
 - [x] Terminology aligned with ADR-0026
 
-**Next authorized work (Platform):** **L2 — Global State Machine** (formalize project+packet states extending ADR-0025), then rebase the MB2 implementation spec on L0–L2 before any MB2 code. **Product Track (M5)** is orthogonal and unblocked.
+**Next authorized work (Platform):** Rebase MB2 implementation spec on L2 GSM; then L4 implementation per `plans/l2-global-state-machine-plan.md`. **Product Track (M5)** orthogonal and unblocked.
 
 ---
 

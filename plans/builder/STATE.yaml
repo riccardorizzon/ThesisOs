@@ -13,7 +13,8 @@ decisions:
   - "Era II = formalization-first (ADR-0028): L0 meta model + L1 invariants frozen"
   - "Invariants are fail-closed laws, distinct from tunable policies (L1)"
   - "Meta model platform-only; Milestone = sole boundary object"
-  - "Next platform work: L2 Global State Machine; then rebase MB2 impl spec (L4+)"
+  - "L2 Global State Machine frozen — GSM is executable behavioral model (global-state-machine.md)"
+  - "Next: rebase MB2 impl spec on L2; then L4 per l2-global-state-machine-plan.md"
   - "M5 product spec frozen (ADR-0027) — impl after Critic sign-off (orthogonal)"
 
 file_locks: {}
