@@ -35,7 +35,9 @@ Update incrementally when touching a file; add supersession header notes rather 
 | `decisions/ADR-0026-platform-model-terminology.md` | ✅ Canonical | Source of truth |
 | `docs/platform/era-model.md` | ✅ Updated | References ADR-0026 |
 | `docs/platform/runtime-model.md` | ✅ Canonical | Engineering Runtime model |
-| `docs/platform/global-state-machine.md` | ✅ Canonical | L2 GSM — executable behavioral model |
+| `docs/platform/global-state-machine.md` | ✅ Canonical | L2 GSM |
+| `docs/platform/DR-001-constitutional-review.md` | ✅ Canonical | Constitutional design review |
+| `docs/platform/engineering-traceability-matrix.md` | ✅ Canonical | Vision → code traceability |
 | `docs/platform/terminology-migration.md` | ✅ This doc | Living checklist |
 | `decisions/ADR-0023-build-workflow-engine.md` | ✅ Header note | Historical Context preserved |
 | `decisions/ADR-0019-builder-memory-boundaries.md` | ✅ Context line | Legacy tagged inline |

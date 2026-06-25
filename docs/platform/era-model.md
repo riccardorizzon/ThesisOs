@@ -111,7 +111,12 @@ Eras describe **how intelligent the factory is**, not which product feature ship
 | **L2** | extends ADR-0025 | Global State Machine (states) | ✅ `global-state-machine.md` |
 | **L3** | `runtime-model.md` | Engineering cycle (dynamics) — frozen |
 
-> **L0–L3 are formalization (no feature code). L4+ (event bus, policy engine, planner) are MB2+ implementation that concretizes them.** The original MB2 spec is superseded/re-scoped to L4+ (ADR-0028).
+> **L0–L3 are formalization (no feature code). L4+ concretizes them only after DR-001 + ETM + Architect sign-off.**
+
+| Review | Artifact | Role |
+|--------|----------|------|
+| DR-001 | `DR-001-constitutional-review.md` | Constitutional design review |
+| ETM | `engineering-traceability-matrix.md` | Vision → code traceability |
 
 **Target capabilities (implementation follows frozen specs):**
 
@@ -199,7 +204,7 @@ Indicators (directional):
 - [x] Product Track vs Platform Track interaction defined
 - [x] Terminology aligned with ADR-0026
 
-**Next authorized work (Platform):** Rebase MB2 implementation spec on L2 GSM; then L4 implementation per `plans/l2-global-state-machine-plan.md`. **Product Track (M5)** orthogonal and unblocked.
+**Next authorized work (Platform):** Architect sign-off on DR-001 + ETM → rebase MB2 spec (total traceability) → sign-off → L4. **No code before sign-off.**
 
 ---
 

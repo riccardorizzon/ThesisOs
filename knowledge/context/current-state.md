@@ -4,42 +4,44 @@
 
 ## Where are we?
 
-**Era II constitution complete through L2. Platform GSM frozen. MB2 impl pending rebase.**
+**Constitution L0–L3 frozen. DR-001 + Traceability Matrix complete. Implementation blocked.**
 
 ```text
 Era I   Execution Foundation     ✅  M0–M4 + MB1 Ph 1–2
-Era II  Adaptive Workflow Intel  🟡  L0–L3 frozen; L2 GSM frozen; L4 (MB2) next
-Product Track                      M5 spec frozen — impl after Critic sign-off (orthogonal)
+Era II  Adaptive Workflow Intel  🟡  Constitution done; DR-001 conditional pass; ETM frozen
+Product Track                      M5 spec frozen — orthogonal, unblocked after Critic §12
 ```
 
-## Platform constitution (layered — ADR-0028)
+## Authorized pipeline (ADR-0028 + DR-001)
+
+```text
+L0–L3 constitution     ✅ frozen
+DR-001 review          ✅ conditional pass (Architect sign-off pending)
+Traceability Matrix    ✅ frozen
+Rebase MB2 spec        🔴 next — total traceability to Vision
+Architect sign-off     🔴 after rebase + optional L2 micro-patch
+L4 implementation      🔴 blocked until sign-off
+```
+
+**No production code until Architect sign-off.**
+
+## Platform constitution
 
 | Layer | Artifact | Status |
 |-------|----------|--------|
-| L0 Meta Model (objects) | `docs/platform/engineering-meta-model.md` | ✅ frozen |
-| L1 Invariants (laws) | `docs/platform/invariant-model.md` | ✅ frozen |
-| L2 Global State Machine | `docs/platform/global-state-machine.md` | ✅ frozen |
-| L3 Runtime Cycle (dynamics) | `docs/platform/runtime-model.md` | ✅ frozen |
-| L4+ Event bus / Policy / Planner | MB2 impl | 🔴 rebase MB2 spec → implement per `plans/l2-global-state-machine-plan.md` |
-
-Principle: **every engineering operation is a state transition**. The runtime executes transitions; nothing else.
-
-## ASEP vocabulary
-
-Official terms per ADR-0026 (§8 refined by ADR-0028). Pending code rename: `WorkflowRuntime → EngineeringRuntime`.
-
-## Frozen specs
-
-| Track | Spec | Plan | ADR |
-|-------|------|------|-----|
-| Platform L2 | `docs/platform/global-state-machine.md` | `plans/l2-global-state-machine-plan.md` | ADR-0028 |
-| Platform MB2 (impl) | `…-mb2-adaptive-runtime-design.md` ⚠️ re-scoped L4+, rebase pending | on hold | ADR-0028 |
-| Product M5 | `…-m5-tool-router-orchestration-design.md` | `plans/m5-tool-router-plan.md` | ADR-0027 |
+| L0 | `engineering-meta-model.md` | ✅ |
+| L1 | `invariant-model.md` | ✅ |
+| L2 | `global-state-machine.md` | ✅ |
+| L3 | `runtime-model.md` | ✅ |
+| DR-001 | `DR-001-constitutional-review.md` | ✅ conditional pass |
+| ETM | `engineering-traceability-matrix.md` | ✅ |
 
 ## What is next?
 
-1. **Rebase MB2 impl spec** on L2 GSM (trace every deliverable to transition ID)
-2. **Implement L4** — Phases 1–7 in `plans/l2-global-state-machine-plan.md`
-3. **M5 implementation** — after Critic §12 (orthogonal)
+1. **Architect sign-off** on DR-001 + ETM
+2. **Optional L2 micro-patch** (DR-001 §7 — Goal guards, Task birth, C-07 owner)
+3. **Rebase MB2 spec** using ETM §3 (every deliverable → Transition ID → Vision)
+4. **Architect sign-off** on rebased MB2
+5. **L4 implementation** per `plans/l2-global-state-machine-plan.md`
 
 See `context/next-actions.md`.

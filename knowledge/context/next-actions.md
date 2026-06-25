@@ -1,6 +1,6 @@
 # Next Actions — 100-task backlog
 
-> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-25 — Era II: MB2 + M5 specs frozen; terminology migration started.**
+> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-25 — DR-001 + ETM complete; implementation blocked pending Architect sign-off.**
 
 Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 debt · 🟢 net-new · ✅ done.
 
@@ -14,13 +14,16 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 4. **Era II constitution** ✅ — ADR-0026, platform docs
 5. **Platform meta model (L0)** ✅ — `engineering-meta-model.md` (ADR-0028)
 6. **Invariant model (L1)** ✅ — `invariant-model.md` (ADR-0028)
-7. **Global State Machine (L2)** ✅ — `global-state-machine.md` (ADR-0028)
-8. **M5 spec freeze** ✅ — tool router design + ADR-0027 + plan
-9. **Rebase MB2 impl spec on L2** 🔴 — trace deliverables to GSM transition IDs; re-freeze
-10. **L4 MB2 implementation** 🔴 — `plans/l2-global-state-machine-plan.md` Phases 1–7 (no code before step 9)
-11. **M5 implementation** 🔴 — after Critic sign-off on M5 spec §12 (orthogonal)
-12. **`WorkflowRuntime` → `EngineeringRuntime`** 🟡 — Phase 7 of L2 plan
-13. **Terminology migration** 🟡 — incremental
+7. **Global State Machine (L2)** ✅ — `global-state-machine.md`
+8. **DR-001 constitutional review** ✅ — conditional pass; Architect sign-off pending
+9. **Engineering Traceability Matrix** ✅ — `engineering-traceability-matrix.md`
+10. **M5 spec freeze** ✅ — ADR-0027 + plan (orthogonal)
+11. **Architect sign-off DR-001 + ETM** 🔴
+12. **Optional L2 micro-patch** 🟡 — DR-001 §7 (Goal guards, Task birth, C-07)
+13. **Rebase MB2 spec (total traceability)** 🔴 — ETM §3; every row → Vision
+14. **Architect sign-off rebased MB2** 🔴
+15. **L4 MB2 implementation** 🔴 — blocked until step 14
+16. **M5 implementation** 🔴 — after Critic §12 (orthogonal)
 
 ---
 
