@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, text
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,16 +21,47 @@ class Document(Base):
     status: Mapped[str] = mapped_column(String(16), default="uploaded")
     page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     language: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    parser: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    parsed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    chunk_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, server_default=text("'{}'::jsonb"))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
     updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
 
 
+class DocumentVersion(Base):
+    __tablename__ = "document_versions"
+    __table_args__ = (
+        UniqueConstraint("document_id", "version", name="uq_document_versions_document_id_version"),
+    )
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
+    document_id: Mapped[str] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"))
+    version: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(Text)
+    author: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_type: Mapped[str] = mapped_column(String(16))
+    page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    chunk_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    parser: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, server_default=text("'{}'::jsonb"))
+    changed_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    change_reason: Mapped[str] = mapped_column(String(16))
+
+
 class Chunk(Base):
     __tablename__ = "chunks"
+    __table_args__ = (
+        UniqueConstraint("document_id", "chunk_index", name="uq_chunks_document_id_chunk_index"),
+        UniqueConstraint("document_id", "chunk_hash", name="uq_chunks_document_id_chunk_hash"),
+    )
+
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
     document_id: Mapped[str] = mapped_column(ForeignKey("documents.id"))
     chunk_index: Mapped[int] = mapped_column(Integer)
+    chunk_hash: Mapped[str] = mapped_column(String(64))
     content: Mapped[str] = mapped_column(Text)
     token_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     page_from: Mapped[int | None] = mapped_column(Integer, nullable=True)

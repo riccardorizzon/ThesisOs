@@ -32,6 +32,11 @@ CREATE TABLE documents (
 	status VARCHAR(16) NOT NULL, 
 	page_count INTEGER, 
 	language VARCHAR(16), 
+	version INTEGER NOT NULL, 
+	parser VARCHAR(32), 
+	parsed_at TIMESTAMP WITH TIME ZONE, 
+	chunk_count INTEGER, 
+	error_message TEXT, 
 	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
 	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
@@ -112,6 +117,7 @@ CREATE TABLE chunks (
 	id UUID DEFAULT gen_random_uuid() NOT NULL, 
 	document_id UUID NOT NULL, 
 	chunk_index INTEGER NOT NULL, 
+	chunk_hash VARCHAR(64) NOT NULL, 
 	content TEXT NOT NULL, 
 	token_count INTEGER, 
 	page_from INTEGER, 
@@ -120,7 +126,27 @@ CREATE TABLE chunks (
 	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
 	PRIMARY KEY (id), 
+	CONSTRAINT uq_chunks_document_id_chunk_index UNIQUE (document_id, chunk_index), 
+	CONSTRAINT uq_chunks_document_id_chunk_hash UNIQUE (document_id, chunk_hash), 
 	FOREIGN KEY(document_id) REFERENCES documents (id)
+);
+
+CREATE TABLE document_versions (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	document_id UUID NOT NULL, 
+	version INTEGER NOT NULL, 
+	title TEXT NOT NULL, 
+	author TEXT, 
+	source_type VARCHAR(16) NOT NULL, 
+	page_count INTEGER, 
+	chunk_count INTEGER, 
+	parser VARCHAR(32), 
+	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	changed_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	change_reason VARCHAR(16) NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT uq_document_versions_document_id_version UNIQUE (document_id, version), 
+	FOREIGN KEY(document_id) REFERENCES documents (id) ON DELETE CASCADE
 );
 
 CREATE TABLE memory_versions (
