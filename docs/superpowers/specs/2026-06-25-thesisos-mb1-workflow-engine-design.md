@@ -1,8 +1,8 @@
 # MB1 — Build Workflow Engine — Design Spec
 
 - **Date:** 2026-06-25
-- **Status:** Frozen (Architect-approved 2026-06-25, per the "System Architecture Evolution — Adaptive Workflow-Driven Agent OS" brief). Implementation gated behind §13 promotion criteria.
-- **Scope:** The **build-time Agent OS** (BuilderOS) — the Cursor-agent system that *builds* ThesisOS. Introduces a deterministic **Build Workflow Engine** (`builder_engine/`) that owns orchestration decisions currently described as prose in the `orchestrate-builders` skill. **Excludes** the ThesisOS runtime product (system A: `/chat`, `ConversationService`, LangGraph graph, M2 `MemoryService`, `tasks`/`agent_runs`/`agent_steps`). The runtime is never modified or called by the engine.
+- **Status:** Frozen (Architect-approved 2026-06-25). **Terminology supersession (2026-06-25):** legacy "Build-time Agent OS / BuilderOS" → **ASEP** with **Build Control Plane** + **Engineering Runtime** (ADR-0026). Implementation gated behind §13 promotion criteria.
+- **Scope:** The **Build Control Plane + Engineering Runtime** side of ASEP — the Cursor-agent system that *builds* ThesisOS. Introduces a deterministic **Build Workflow Engine** (`builder_engine/`) that owns orchestration decisions currently described as prose in the `orchestrate-builders` skill. **Excludes** the ThesisOS runtime product (system A: `/chat`, `ConversationService`, LangGraph graph, M2 `MemoryService`, `tasks`/`agent_runs`/`agent_steps`). The runtime is never modified or called by the engine.
 - **Authors:** Builder Architect session
 - **Builds on:** `orchestrate-builders` skill (`.cursor/skills/orchestrate-builders/SKILL.md`), Builder Memory (ADR-0019, `builder_memory/`), Promotion Gates (ADR-0010), State/Run-context discipline (ADR-0007, ADR-0014), Contract-First (ADR-0001), Vertex-runtime-only boundary (ADR-0002), the M0/M1/M2/M3 frozen seams.
 - **New ADR:** ADR-0023 Build Workflow Engine (build-time deterministic orchestration; filesystem authority; runtime isolation).

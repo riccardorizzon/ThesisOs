@@ -4,30 +4,38 @@
 
 ## Where are we?
 
-**M4 promoted (`m4-complete`). MB1 Phase 2 runtime shipped. Pipeline objective complete.**
+**Era I closed. Era II constitution frozen — implementation not started.**
 
 ```text
-M0–M3           ✅ promoted
-M4 Retrieval    ✅ m4-complete
-MB1 Engine      ✅ Phase 2 (runtime + schedule/sync/check)
-M5+             ⬜ require frozen specs before implementation
+Era I   Execution Foundation     ✅  M0–M4 + MB1 Ph 1–2
+Era II  Adaptive Workflow Intel  🟡  ADR-0026 + platform docs frozen; MB2 spec next
+Product Track                      M5+ awaits frozen spec
+Platform Track                     MB2 blocked until MB2 spec freeze
 ```
 
-> `make ci` green (86 backend / 36 skip, 33 frontend, 20 builder_engine). ⚠️ DB
-> integration tests **waived** — Docker containerd I/O error (2026-06-25).
+> `make ci` green. DB integration tests waived (Docker I/O, 2026-06-25).
 
-## Pipeline discipline (2026-06-25)
+## ASEP vocabulary (official)
+
+| Term | Meaning |
+|------|---------|
+| **ASEP** | Whole platform |
+| **Product Plane** | M-track / ThesisOS runtime |
+| **Build Control Plane** | Plans, ADR, knowledge, policies, operator skill |
+| **Engineering Runtime** | Deterministic cycle executor (`builder_engine/` today) |
+
+See ADR-0026, `docs/platform/era-model.md`, `docs/platform/runtime-model.md`.
+
+## Global rule (all capabilities)
 
 ```text
-Vision → Spec Freeze → Engine → Implementation → Validation
+Vision → Spec → ADR → Freeze → Implementation → Gate → Promotion
 ```
-
-Completed for M4 retrieval milestone.
 
 ## What is next?
 
-1. **M5 spec freeze** — planner/router (ADR backlog)
-2. **MB1 Phase 3** — unified `builder state` + knowledge drift
-3. **Docker fix** — optional: re-run waived M3/M4 DB integration tests
+1. **MB2 spec** — translate `runtime-model.md` phases to modules (no code before freeze)
+2. **M5 spec freeze** — Product Track (planner/router)
+3. **Incremental doc migration** — replace legacy "Agent OS" when touching files
 
 See `context/next-actions.md`.
