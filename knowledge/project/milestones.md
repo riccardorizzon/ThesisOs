@@ -60,10 +60,9 @@ Promoted 2026-06-25. See `docs/m3-promotion.md`, `context/completed-work.md`.
 
 | Phase | Status | Deliverable |
 |-------|--------|-------------|
-| Spec | ✅ | Frozen — no code until Planner plan |
-| Implementation | ⬜ | RetrievalService, `/search`, retriever node |
-
-**Gate:** Critic sign-off + `plans/m4-retrieval-system-plan.md` before Phase 1 DB.
+| Spec | ✅ | Frozen 2026-06-25 + Critic sign-off |
+| Plan | ✅ | `plans/m4-retrieval-system-plan.md` |
+| Implementation | 🔴 | Phase 1 DB — not started |
 
 ---
 
