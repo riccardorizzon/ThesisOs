@@ -108,15 +108,11 @@ Eras describe **how intelligent the factory is**, not which product feature ship
 | — | This document | Era boundaries + track interaction |
 | **L0** | `engineering-meta-model.md` | Objects + relations (semantics) |
 | **L1** | `invariant-model.md` | Laws (fail-closed) |
-| **L2** | extends ADR-0025 | Global State Machine (states) | ✅ `global-state-machine.md` |
+| **BS** | `behavioral-semantics.md` | Why objects collaborate (ADR-0029) |
+| **L2** | `global-state-machine.md` | Valid transitions (L2.1 amended) |
 | **L3** | `runtime-model.md` | Engineering cycle (dynamics) — frozen |
-
-> **L0–L3 are formalization (no feature code). L4+ concretizes them only after DR-001 + ETM + Architect sign-off.**
-
-| Review | Artifact | Role |
-|--------|----------|------|
-| DR-001 | `DR-001-constitutional-review.md` | Constitutional design review |
-| ETM | `engineering-traceability-matrix.md` | Vision → code traceability |
+| DR-001 | `DR-001-constitutional-review.md` | Constitutional design review ✅ |
+| ETM | `engineering-traceability-matrix.md` | Vision → Observability → Tests ✅ |
 
 **Target capabilities (implementation follows frozen specs):**
 
@@ -132,6 +128,18 @@ Eras describe **how intelligent the factory is**, not which product feature ship
 **MB2 meaning (post-freeze):** Implement the **Engineering Runtime** and Control Plane hooks defined in `runtime-model.md` — not "add a FSM" as an isolated feature.
 
 **Product Track in Era II:** M5+ specs continue under Product Track rules; they **consume** Platform improvements (e.g. better validation stages) but do not define Platform architecture.
+
+**Engineering Constitution (signed 2026-06-25):**
+
+```text
+Engineering Constitution     L0 + L1 + BS + L2 (+ L3 dynamics)
+        ↓
+Engineering Semantics        behaviors + states + transitions
+        ↓
+Engineering Runtime          L3 cycle + L4 code
+        ↓
+Execution Workers            LLM / human — interchangeable
+```
 
 ---
 
@@ -204,7 +212,7 @@ Indicators (directional):
 - [x] Product Track vs Platform Track interaction defined
 - [x] Terminology aligned with ADR-0026
 
-**Next authorized work (Platform):** Architect sign-off on DR-001 + ETM → rebase MB2 spec (total traceability) → sign-off → L4. **No code before sign-off.**
+**Next authorized work (Platform):** **MB2 spec rebase** (ETM §3 total traceability) → Architect sign-off on rebased spec → L4. No code before rebased spec sign-off.
 
 ---
 

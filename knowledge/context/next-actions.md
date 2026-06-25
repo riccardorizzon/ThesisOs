@@ -15,15 +15,15 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 5. **Platform meta model (L0)** ✅ — `engineering-meta-model.md` (ADR-0028)
 6. **Invariant model (L1)** ✅ — `invariant-model.md` (ADR-0028)
 7. **Global State Machine (L2)** ✅ — `global-state-machine.md`
-8. **DR-001 constitutional review** ✅ — conditional pass; Architect sign-off pending
-9. **Engineering Traceability Matrix** ✅ — `engineering-traceability-matrix.md`
-10. **M5 spec freeze** ✅ — ADR-0027 + plan (orthogonal)
-11. **Architect sign-off DR-001 + ETM** 🔴
-12. **Optional L2 micro-patch** 🟡 — DR-001 §7 (Goal guards, Task birth, C-07)
-13. **Rebase MB2 spec (total traceability)** 🔴 — ETM §3; every row → Vision
+8. **DR-001** ✅ — Architect approved
+9. **ETM v1.1** ✅ — Event + Observability columns
+10. **L2.1 micro-patch** ✅ — Goal guards, T-00, C-07 split
+11. **Behavioral Semantics (BS)** ✅ — ADR-0029
+12. **Architect sign-off constitution** ✅ — 2026-06-25
+13. **Rebase MB2 spec (total traceability)** 🔴 — ETM §3; **next platform work**
 14. **Architect sign-off rebased MB2** 🔴
-15. **L4 MB2 implementation** 🔴 — blocked until step 14
-16. **M5 implementation** 🔴 — after Critic §12 (orthogonal)
+15. **L4 MB2 implementation** ⏸️ — blocked until step 14
+16. **M5 implementation** 🔴 — Critic §12 (orthogonal)
 
 ---
 

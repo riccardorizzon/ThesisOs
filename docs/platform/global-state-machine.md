@@ -1,9 +1,9 @@
 # ASEP — Global State Machine (L2)
 
-- **Status:** Frozen (Architect 2026-06-25)
+- **Status:** Frozen (Architect 2026-06-25) — **L2.1 amendment** 2026-06-25 (Goal guards, T-00, C-07 owner split; DR-001 + Architect sign-off)
 - **Layer:** L2 — **states**. The executable behavioral model of the platform. Extends ADR-0025 (packet FSM) to all L0 entities and binds every transition to L1 invariants and L3 cycle ownership.
 - **Scope:** Platform plane only. Product plane domain state is out of scope (L0 §2).
-- **Authority:** ADR-0028 §1 (L2 extends ADR-0025). **Does not modify** L0, L1, L3, or existing ADRs — only extends them.
+- **Authority:** ADR-0028 §1 (L2 extends ADR-0025). **Does not modify** L0, L1, L3, or existing ADRs — only extends them. Semantic *why* lives in `behavioral-semantics.md` (ADR-0029).
 - **Derivation:** Consolidates `decisions/ADR-0025`, `builder_engine/state_machine.py`, `builder_engine/runtime.py`, `plans/builder/STATE.yaml`, and the lifecycles declared in L0 §5.
 
 ---
@@ -15,7 +15,8 @@ The Global State Machine (GSM) is the **composition of entity-level state machin
 ```text
 L0  objects + relations     (what exists)
 L1  invariants              (what must always hold)
-L2  global state machine    (what may change, how)          ← this document
+BS  behavioral semantics    (why objects collaborate)  ← behavioral-semantics.md
+L2  global state machine    (what may change, how)     ← this document
 L3  engineering cycle       (when transitions are invoked)
 L4+ implementation          (code that executes transitions)
 ```
@@ -111,6 +112,9 @@ Every state is named `{ENTITY}_{STATE}`. No anonymous states.
 | State | Meaning | YAML projection (ADR-0025 §3) |
 |-------|---------|-------------------------------|
 | `TASK_CREATED` | Packet exists; dependencies may be open | — (not persisted) |
+
+**Birth (L2.1):** `T-00 create_packet` — Build Control Plane adds packet to `STATE.yaml`. Not invoked by Engineering Runtime cycle; governance act outside C-*.
+
 | `TASK_READY` | Dependencies satisfied; schedulable | `ready` |
 | `TASK_CLAIMED` | Locks assigned; manifest pending dispatch | `in_progress`* |
 | `TASK_RUNNING` | Worker dispatched; execution in flight | `in_progress` |
@@ -309,13 +313,13 @@ Each row is deterministic. **Owner** is singular. **Inv** = L1 invariant IDs gua
 
 | ID | From | Trigger | To | Owner | Pre | Post | Events | Failures | Recovery | Rollback |
 |----|------|---------|-----|-------|-----|------|--------|----------|----------|----------|
-| G-01 | `GOAL_PROPOSED` | `activate` | `GOAL_ACTIVE` | Human Operator | goal defined | milestones linkable | `GoalActivated` | — | — | — |
+| G-01 | `GOAL_PROPOSED` | `activate` | `GOAL_ACTIVE` | Human Operator | goal defined; ≥1 linked Milestone at `MS_PLANNED` or later | milestones linkable | `GoalActivated` | `NO_MILESTONE` | define milestone | — |
 | G-02 | `GOAL_ACTIVE` | `achieve` | `GOAL_ACHIEVED` | Human Operator | all MS `PROMOTED` or waived | goal closed | `GoalAchieved` | `MS_NOT_PROMOTED` | fix milestone | — |
-| G-03 | `GOAL_ACTIVE` | `suspend` | `GOAL_SUSPENDED` | Human Operator | — | no new schedules | `GoalSuspended` | — | `resume`→G-04 | — |
+| G-03 | `GOAL_ACTIVE` | `suspend` | `GOAL_SUSPENDED` | Human Operator | no Task in `TASK_CLAIMED`/`RUNNING`/`VALIDATING`/`MERGED` | no new schedules | `GoalSuspended` | `TASKS_IN_FLIGHT` | wait or force (policy) | — |
 | G-04 | `GOAL_SUSPENDED` | `resume` | `GOAL_ACTIVE` | Human Operator | — | scheduling re-enabled | `GoalResumed` | — | — | — |
-| G-05 | `GOAL_ACTIVE` | `abandon` | `GOAL_ABANDONED` | Human Operator | — | terminal | `GoalAbandoned` | — | — | — |
+| G-05 | `GOAL_ACTIVE` | `abandon` | `GOAL_ABANDONED` | Human Operator | all Tasks `TASK_DONE` or `TASK_CANCELLED` | terminal | `GoalAbandoned` | `TASKS_OPEN` | cancel tasks | — |
 
-**Inv:** G-02 → INV-B2 (each milestone promoted only if validated).
+**Inv:** G-02 → INV-B2; G-03 → INV-B6 (wave/task coherence on suspend write); G-04, G-05 → INV-B8 (atomic project-state write).
 
 ### 5.2 Milestone transitions
 
@@ -336,7 +340,7 @@ Each row is deterministic. **Owner** is singular. **Inv** = L1 invariant IDs gua
 | E-02 | `EPIC_OPEN` | `begin_close` | `EPIC_CLOSING` | Planner | all tasks terminal | no new tasks | `EpicClosing` | `TASKS_OPEN` | complete tasks | — |
 | E-03 | `EPIC_CLOSING` | `close` | `EPIC_CLOSED` | Engineering Runtime | promotion or waive | `status: closed` | `EpicClosed` | — | — | — |
 
-**Inv:** E-02 → INV-A3 (no open non-terminal tasks).
+**Inv:** E-01 → INV-B8; E-02 → INV-A3 (no open non-terminal tasks).
 
 ### 5.4 Wave transitions
 
@@ -348,10 +352,13 @@ Each row is deterministic. **Owner** is singular. **Inv** = L1 invariant IDs gua
 
 **Inv:** W-01 → INV-B6; W-03 → INV-B6.
 
+**Inv:** E-02 → INV-A3 (no open non-terminal tasks).
+
 ### 5.5 Task transitions (ADR-0025 extended)
 
 | ID | From | Trigger | To | Owner | Pre | Post | Events | Failures | Recovery | Rollback |
 |----|------|---------|-----|-------|-----|------|--------|----------|----------|----------|
+| T-00 | `(none)` | `create_packet` | `TASK_CREATED` | Build Control Plane | epic `EPIC_OPEN`; unique packet id | packet row in STATE | `TaskCreated` | `DUPLICATE_ID` | fix id | remove row |
 | T-01 | `TASK_CREATED` | `prepare` | `TASK_READY` | Planner | deps declared | schedulable if deps done | `TaskPrepared` | `DEPS_UNKNOWN` | fix graph | — |
 | T-02 | `TASK_READY` | `claim` | `TASK_CLAIMED` | Scheduler | deps `DONE`; wave active | locks assigned | `TaskClaimed`, `LockAcquired` | `LOCK_CONFLICT`, `POLICY_BLOCK` | replan | release locks |
 | T-03 | `TASK_CLAIMED` | `start` | `TASK_RUNNING` | Scheduler | manifest built | worker dispatchable | `ExecutionStarted`, `TaskScheduled` | `MANIFEST_FAIL` | unclaim | T-10 cancel path |
@@ -421,7 +428,9 @@ Each row is deterministic. **Owner** is singular. **Inv** = L1 invariant IDs gua
 | C-04 | `CYCLE_POLICY_EVAL` | `policy_block` | `CYCLE_IDLE` | Policy Engine | — | `PolicyBlocked` |
 | C-05 | `CYCLE_PLANNING` | `plan_ready` | `CYCLE_SCHEDULING` | Planner | T-01 (batch) | `PlanGenerated` |
 | C-06 | `CYCLE_SCHEDULING` | `schedule_complete` | `CYCLE_EXECUTING` | Scheduler | T-02, T-03, L-01, K-01 | `TaskScheduled` |
-| C-07 | `CYCLE_EXECUTING` | `execute_complete` | `CYCLE_VALIDATING` | Worker → Runtime | K-02, K-03, A-01, A-02 | `ExecutionStarted` |
+| C-07a | `CYCLE_EXECUTING` | `worker_begin` | `CYCLE_EXECUTING` | Worker | K-02 | `WorkerExecutionStarted` |
+| C-07b | `CYCLE_EXECUTING` | `worker_report` | `CYCLE_EXECUTING` | Worker | K-03, A-01, A-02 | `WorkerReported`, `ArtifactProduced` |
+| C-07c | `CYCLE_EXECUTING` | `execute_complete` | `CYCLE_VALIDATING` | Engineering Runtime | T-04 pending (after K-03) | `ExecutionStarted` |
 | C-08 | `CYCLE_VALIDATING` | `validate_pass` | `CYCLE_MERGING` | Validator | T-04, T-05 | `ValidationPassed` |
 | C-09 | `CYCLE_VALIDATING` | `validate_fail` | `CYCLE_REPLANNING` | Validator | T-04, T-07 | `ValidationFailed` |
 | C-10 | `CYCLE_MERGING` | `merge_complete` | `CYCLE_PUBLISHING` | Integrator | T-06 (partial) | `MergeAccepted` |
@@ -442,15 +451,15 @@ Exactly one owner per transition. "Engineering Runtime" = deterministic sidecar 
 | Owner | Transitions | L3 phase |
 |-------|-------------|----------|
 | **Human Operator** | G-01, G-03–G-05, M-01, A-03, T-08, T-10, C-15 | Control Plane governance |
-| **Build Control Plane** | M-02, E-01 | Intent + authorisation |
+| **Build Control Plane** | T-00, M-02, E-01 | Intent + authorisation |
 | **Promotion Engine** | M-04 | Post-validation promotion (ADR-0010) |
 | **Planner** | T-01, T-09, E-02, C-05, C-14 | Plan, Replan |
 | **Scheduler** | T-02, T-03, T-12, L-01, K-01, C-06 | Schedule |
-| **Worker** | K-02, K-03, A-01, A-02 | Execute |
+| **Worker** | K-02, K-03, A-01, A-02, C-07a, C-07b | Execute |
 | **Validator** | T-05, T-07, M-03, C-08, C-09 | Validate |
 | **Integrator** | C-10, C-11 | Merge (worker role) |
 | **Policy Engine** | C-03, C-04 | Evaluate Policies |
-| **Engineering Runtime** | T-04, T-06, T-11, W-01–W-03, E-03, L-02, S-01–S-03, K-04, C-01–C-02, C-12–C-13 | Observe, Update State, invariant enforcement |
+| **Engineering Runtime** | T-04, T-06, T-11, W-01–W-03, E-03, L-02, S-01–S-03, K-04, C-01–C-02, C-07c, C-12–C-13 | Observe, Update State, invariant enforcement |
 
 No transition has multiple owners. Integrator is a Worker subtype; listed separately because Merge ownership is distinct in L3 §3.7.
 
@@ -463,6 +472,7 @@ Events are emitted **only** by transitions. Format: `{Entity}{Action}` in Pascal
 | Event | Transition ID | Producer (owner) |
 |-------|---------------|------------------|
 | `GoalActivated` | G-01 | Human Operator |
+| `TaskCreated` | T-00 | Build Control Plane |
 | `GoalAchieved` | G-02 | Human Operator |
 | `GoalSuspended` | G-03 | Human Operator |
 | `GoalResumed` | G-04 | Human Operator |
@@ -529,6 +539,8 @@ Events are emitted **only** by transitions. Format: `{Entity}{Action}` in Pascal
 | **INV-A5** | T-02, T-03 | schedule with open deps | Class A + graph |
 | **INV-B1** | A-03, M-01 | mutate `ART_FROZEN` | Class B |
 | **INV-B2** | M-04, G-02 | promote without validation | Class B |
+| **INV-B6** | T-03, W-01, W-03, G-03 | in-flight task wrong wave / suspend with active tasks | Class B |
+| **INV-B8** | G-04, G-05, E-01, all commits | partial Workflow write | Class B |
 | **INV-B3** | T-02, L-01 | acquire over existing lock | Class B |
 | **INV-B4** | L-01, L-02 | lock outside `owned_files` | Class B |
 | **INV-B5** | T-02, L-01 | overlapping `owned_files` | Class B |
@@ -594,7 +606,7 @@ TASK_RUNNING → TASK_VALIDATING → TASK_FAILED → TASK_DEBUGGING → TASK_REA
 | Evaluate Policies | `CYCLE_POLICY_EVAL` | C-03, C-04 |
 | Plan | `CYCLE_PLANNING` | T-01, C-05 |
 | Schedule | `CYCLE_SCHEDULING` | T-02, T-03, L-01, K-01 |
-| Execute | `CYCLE_EXECUTING` | K-02, K-03, A-01, A-02 |
+| Execute | `CYCLE_EXECUTING` | C-07a, C-07b, C-07c, K-02, K-03, A-01, A-02 |
 | Validate | `CYCLE_VALIDATING` | T-04, T-05, T-07 |
 | Merge | `CYCLE_MERGING` | T-06, C-10, C-11 |
 | Publish Events | `CYCLE_PUBLISHING` | C-12, §7 all |
@@ -653,7 +665,8 @@ TASK_RUNNING → TASK_VALIDATING → TASK_FAILED → TASK_DEBUGGING → TASK_REA
 - [x] Recovery never bypasses state machine (§9.2)
 - [x] L3 cycle bound to GSM (§10)
 - [x] Gap analysis vs Era I (§12)
-- [x] MB2 implementation derivable (see `plans/l2-global-state-machine-plan.md`)
+- [x] L2.1 amendment: Goal guards (G-01, G-03, G-05), T-00 birth, C-07 owner split (DR-001 + Architect 2026-06-25)
+- [x] Behavioral Semantics companion frozen (ADR-0029) — *why* not duplicated here
 
 **Implementation authorized:** L4 (MB2) after rebasing MB2 spec on this document. No production code before plan approval.
 

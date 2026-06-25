@@ -4,44 +4,42 @@
 
 ## Where are we?
 
-**Constitution L0–L3 frozen. DR-001 + Traceability Matrix complete. Implementation blocked.**
+**Constitution complete. Architect sign-off recorded. MB2 rebase is next. No code yet.**
 
 ```text
-Era I   Execution Foundation     ✅  M0–M4 + MB1 Ph 1–2
-Era II  Adaptive Workflow Intel  🟡  Constitution done; DR-001 conditional pass; ETM frozen
-Product Track                      M5 spec frozen — orthogonal, unblocked after Critic §12
+Engineering Constitution   L0 + L1 + BS + L2 + L3   ✅ frozen, signed
+DR-001 + ETM v1.1          ✅ Architect approved
+L2.1 micro-patch           ✅ applied
+Next                       MB2 spec rebase → sign-off → L4
 ```
 
-## Authorized pipeline (ADR-0028 + DR-001)
+## Constitution stack (ADR-0029)
 
 ```text
-L0–L3 constitution     ✅ frozen
-DR-001 review          ✅ conditional pass (Architect sign-off pending)
-Traceability Matrix    ✅ frozen
-Rebase MB2 spec        🔴 next — total traceability to Vision
-Architect sign-off     🔴 after rebase + optional L2 micro-patch
-L4 implementation      🔴 blocked until sign-off
+L0  Meta Model           who exists
+L1  Invariants            laws
+BS  Behavioral Semantics  why objects collaborate
+L2  Global State Machine  valid transitions (L2.1)
+L3  Runtime Cycle         when transitions run
 ```
 
-**No production code until Architect sign-off.**
+**Center of gravity:** rules + state + semantics — not agents. Workers implement behaviors.
 
-## Platform constitution
+## Authorized pipeline
 
-| Layer | Artifact | Status |
-|-------|----------|--------|
-| L0 | `engineering-meta-model.md` | ✅ |
-| L1 | `invariant-model.md` | ✅ |
-| L2 | `global-state-machine.md` | ✅ |
-| L3 | `runtime-model.md` | ✅ |
-| DR-001 | `DR-001-constitutional-review.md` | ✅ conditional pass |
-| ETM | `engineering-traceability-matrix.md` | ✅ |
+```text
+✅ GSM → DR-001 → ETM → L2.1 → Behavioral Semantics → Architect sign-off
+🔴 MB2 rebase (ETM §3 — total traceability)
+🔴 Architect sign-off rebased MB2
+⏸️ L4 implementation (blocked until rebased MB2 sign-off)
+```
 
 ## What is next?
 
-1. **Architect sign-off** on DR-001 + ETM
-2. **Optional L2 micro-patch** (DR-001 §7 — Goal guards, Task birth, C-07 owner)
-3. **Rebase MB2 spec** using ETM §3 (every deliverable → Transition ID → Vision)
-4. **Architect sign-off** on rebased MB2
-5. **L4 implementation** per `plans/l2-global-state-machine-plan.md`
+1. **Rebase MB2 spec** — every deliverable fills ETM columns (Vision → … → Tests)
+2. **Architect sign-off** on rebased MB2
+3. **L4** per `plans/l2-global-state-machine-plan.md`
+
+Product M5 remains orthogonal (Critic §12 pending).
 
 See `context/next-actions.md`.

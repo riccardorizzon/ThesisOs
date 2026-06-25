@@ -13,8 +13,8 @@ decisions:
   - "Era II = formalization-first (ADR-0028): L0 meta model + L1 invariants frozen"
   - "Invariants are fail-closed laws, distinct from tunable policies (L1)"
   - "Meta model platform-only; Milestone = sole boundary object"
-  - "L2 GSM frozen; DR-001 conditional pass; ETM frozen"
-  - "Pipeline: sign-off DR+ETM → rebase MB2 → sign-off → L4 (no code yet)"
+  - "Constitution signed: L0-L3 + BS + DR-001 + ETM v1.1 + L2.1"
+  - "Next: MB2 spec rebase (ETM §3) → sign-off → L4 — no code yet"
   - "M5 product spec frozen (ADR-0027) — impl after Critic sign-off (orthogonal)"
 
 file_locks: {}

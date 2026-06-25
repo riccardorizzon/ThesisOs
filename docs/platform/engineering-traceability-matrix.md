@@ -1,9 +1,9 @@
 # ASEP — Engineering Traceability Matrix (ETM)
 
-- **Status:** Frozen (Architect 2026-06-25) — living document; **Tests** column filled as L4 ships
-- **Authority:** DR-001 §7; ADR-0028 traceability requirement
+- **Status:** Frozen (Architect 2026-06-25) — **ETM v1.1** (Event + Observability columns; ADR-0029)
+- **Authority:** DR-001 §7; ADR-0028; ADR-0029
 - **Purpose:** Every runtime element must answer *"Why does this exist?"* by tracing upward to Vision. Prevents orphan components.
-- **Companion:** `docs/platform/DR-001-constitutional-review.md`
+- **Companion:** `docs/platform/DR-001-constitutional-review.md`, `docs/platform/behavioral-semantics.md`
 
 ---
 
@@ -11,19 +11,44 @@
 
 | Pattern | Definition | Where it lives |
 |---------|------------|----------------|
+| **Behavior** | Named collaboration intent (*why*) | `behavioral-semantics.md` |
 | **Transition** | Legal state change (L2 row ID) | GSM §5 |
 | **Command / Trigger** | Intent that invokes a transition | GSM Trigger column |
+| **Event** | Typed semantic fact emitted by a transition | GSM §7; build bus (L4) |
+| **Observability** | Evidence the behavior occurred (proof) | tests, logs, gates, projections — **distinct from Event** |
 | **Transaction** | Atomic state commit after invariant pass | StateWriter + INV-B8 |
 | **Projection** | Read-only view of GSM state (not authoritative) | CLI, YAML `status`, `lint-graph` |
 | **Evaluation** | Per-cycle policy decision (not entity state) | C-03, C-04 |
 
-**Traceability chain (normative):**
+**Traceability chain (normative — Architect approved 2026-06-25):**
 
 ```text
-Vision → ADR → Meta Model (L0) → Invariant (L1) → State → Transition (L2) → Runtime Module → Tests
+Vision
+  ↓
+ADR
+  ↓
+Meta Model (L0)
+  ↓
+Invariant (L1)
+  ↓
+Behavior (BS)
+  ↓
+State
+  ↓
+Transition (L2)
+  ↓
+Event
+  ↓
+Module (L4)
+  ↓
+Observability
+  ↓
+Tests
 ```
 
 If any code path cannot complete this chain, it is **orphan debt** (DR-001).
+
+**Column legend (§2):** V=Vision · A=ADR · M=L0 · I=L1 · B=Behavior · S=State · T=Transition · E=Event · O=Observability · Mod=Module · Test=Tests
 
 ---
 
@@ -31,182 +56,116 @@ If any code path cannot complete this chain, it is **orphan debt** (DR-001).
 
 | Vision source | Statement | Platform plane expression |
 |---------------|-----------|---------------------------|
-| `vision.md` §Contract-first | Freeze before implement | M-01, INV-B7, freeze-first pipeline |
-| `vision.md` §Who builds it | Cursor agents = build-time workers | Worker (L0), INV-B9, ADR-0023 |
-| `vision.md` §North star | Self-improving assistant (M18) | Era III–IV; GSM enables observability + replan |
-| ADR-0026 §5 | Vision → Spec → ADR → Freeze → Impl → Gate | Milestone FSM M-01–M-04 |
-| ADR-0028 | Constitution before features | L0–L2 before L4 |
-| `era-model.md` | Agents are workers, not architecture | K-*, Worker engagement overlay |
+| `vision.md` §Contract-first | Freeze before implement | Freezing behavior; M-01, INV-B7 |
+| `vision.md` §Who builds it | Cursor agents = build-time workers | Delegation behavior; INV-B9 |
+| `vision.md` §North star | Self-improving assistant (M18) | Replanning + Observability |
+| ADR-0026 §5 | Vision → Spec → ADR → Freeze → Impl → Gate | Promotion behavior |
+| ADR-0028 | Constitution before features | L0–L2 + BS before L4 |
+| ADR-0029 | Why before what | Behavioral Semantics layer |
 
 ---
 
 ## 2. Master traceability matrix
 
-Columns: **Vision** | **ADR** | **L0** | **L1** | **State** | **Transition** | **Runtime module** | **Tests**
-
 ### 2.1 Governance & freeze-first
 
-| Vision | ADR | L0 | L1 | State | Transition | Module | Tests |
-|--------|-----|----|----|-------|------------|--------|-------|
-| Contract-first gate-driven product | ADR-0010, ADR-0026 §5 | Milestone, Artifact | INV-B1, INV-B2, INV-B7 | `MS_*`, `ART_*` | M-01–M-04, A-03 | Human Operator; `docs/m{n}-promotion.md` | Manual gate YAML |
-| Platform constitution | ADR-0028 | All L0 objects | INV-A*, INV-B* | all §3 | all §5 | `docs/platform/*` | DR-001 review |
-| Sidecar isolation | ADR-0023 | Worker, Task | INV-B9 | `TASK_*` | K-02, K-03 | `builder_engine/` (no `backend.app`) | import lint |
-| Spec before engine semantics | ADR-0025 §6 | Milestone | INV-B7 | `MS_SPEC_FROZEN` | M-02 | CheckRunner stages | M4 embed stage tests |
+| V | A | M | I | B | S | T | E | Mod | O | Test |
+|---|---|---|---|---|---|---|---|-----|---|------|
+| Contract-first | ADR-0010, 0026 §5 | Milestone, Artifact | INV-B1,B2,B7 | Freezing | `MS_*`, `ART_FROZEN` | M-01, A-03 | `ArtifactFrozen`, `MilestoneSpecFrozen` | promotion docs | freeze §12; ADR Accepted | gate YAML |
+| Platform constitution | ADR-0028, 0029 | all L0 | INV-A*,B* | all BS §2 | all §3 | all §5 | per §7 | `docs/platform/*` | DR-001 record | DR-001 |
+| Sidecar isolation | ADR-0023 | Worker, Task | INV-B9 | Delegation | `TASK_*` | K-02,K-03 | `WorkerReported` | `builder_engine/` | no `backend.app` import | import lint |
 
-### 2.2 Strategic intent
+### 2.2 Strategic intent (L2.1 Goal guards)
 
-| Vision | ADR | L0 | L1 | State | Transition | Module | Tests |
-|--------|-----|----|----|-------|------------|--------|-------|
-| Directed multi-milestone work | ADR-0028 | Goal | INV-B2 (G-02) | `GOAL_*` | G-01–G-05 | `/goal`, `knowledge/context/` | `[ ]` — DR-001-M02 |
-| Goal achievement = promoted milestones | ADR-0010 | Goal, Milestone | INV-B2 | `GOAL_ACHIEVED`, `MS_PROMOTED` | G-02, M-04 | promotion docs, git tags | tag presence |
+| V | A | M | I | B | S | T | E | Mod | O | Test |
+|---|---|---|---|---|---|---|---|-----|---|------|
+| Directed work | ADR-0028 | Goal | INV-B8 | Escalation | `GOAL_*` | G-01–G-05 | `GoalActivated`… | `/goal`, knowledge | context/current-state | `[ ]` |
+| Goal activate | ADR-0029 | Goal, Milestone | INV-B8 | — | `GOAL_ACTIVE` | G-01 | `GoalActivated` | knowledge | ≥1 milestone linked | `[ ]` |
+| Goal suspend | ADR-0029 | Goal, Task | INV-B6 | Escalation | `GOAL_SUSPENDED` | G-03 | `GoalSuspended` | operator | no in-flight tasks | `[ ]` |
+| Goal abandon | ADR-0029 | Goal, Task | INV-B8 | Recovery | `GOAL_ABANDONED` | G-05 | `GoalAbandoned` | operator | all tasks terminal | `[ ]` |
 
-### 2.3 Workflow execution (Era I implemented)
+### 2.3 Workflow execution (Era I)
 
-| Vision | ADR | L0 | L1 | State | Transition | Module | Tests |
-|--------|-----|----|----|-------|------------|--------|-------|
-| Deterministic build orchestration | ADR-0025 | Task, Epic, Wave | INV-A1–A5, INV-B4–B6 | `TASK_*`, `WAVE_*` | T-02–T-07, W-03 | `state_machine.py`, `runtime.py` | `test_state_machine.py`, `test_runtime.py` |
-| Graph structural validity | MB1 §8 | Task, Lock, Wave | INV-B4, INV-B5, INV-B6 | locks, waves | (invariant pass) | `validate.py` | validate unit tests |
-| Atomic workflow writes | ADR-0028 | Workflow state | INV-B8 | all workflow | all commits | `state_io.py` | state_io tests |
-| Ready set planning | L3 §3.3 | Task, Epic | INV-A5 | `TASK_READY` | T-01 | `planner.py` | planner tests |
-| Schedule + dispatch | L3 §3.4 | Task, Lock, Worker | INV-B3, INV-B5 | `TASK_CLAIMED`, `TASK_RUNNING` | T-02, T-03, L-01, K-01 | `runtime.schedule()`, `scheduler.py` | runtime schedule tests |
-| Validate + complete | L3 §3.6 | Task | INV-A1, INV-A2 | `TASK_VALIDATING`→`TASK_DONE` | T-04–T-06 | `runtime.sync()`, `checks.py` | sync tests |
-| Validation failure | L3 §3.6, §9 | Task | INV-A1, INV-A4 | `TASK_FAILED`, `TASK_DEBUGGING` | T-07–T-09 | `state_machine.py` | `test_failure_recovery_loop` |
-| Wave advance | L3 §3.9 | Wave, Epic | INV-B6 | `WAVE_COMPLETED` | W-02, W-03 | `runtime.sync()` wave logic | wave tests |
-| CLI projections | ADR-0025 §2 | all workflow | — | projected | — | `cli.py` lint/status/ready/schedule/sync | cli tests |
+| V | A | M | I | B | S | T | E | Mod | O | Test |
+|---|---|---|---|---|---|---|---|-----|---|------|
+| Build orchestration | ADR-0025 | Task, Wave | INV-A*, B4–B6 | Scheduling | `TASK_*` | T-02–T-07 | `TaskScheduled`… | `runtime.py` | schedule/sync CLI | `test_runtime.py` |
+| Task birth | ADR-0029 | Task, Epic | INV-B8 | — | `TASK_CREATED` | T-00 | `TaskCreated` | STATE.yaml edit | packet row exists | `[ ]` |
+| Claim paths | MB1 §8 | Task, Lock | INV-B3–B5 | Claiming | `LOCK_ACQUIRED` | T-02, L-01 | `LockAcquired` | scheduler | `file_locks` | validate tests |
+| Delegate to worker | ADR-0023 | Worker, Task | INV-B9 | Delegation | `WK_*` | T-03,K-01,K-02 | `WorkerDispatched` | manifest | `.builder-engine/last-dispatch-manifest.json` | `[ ]` |
+| Validate evidence | ADR-0025 §4 | Task | INV-A1,A2 | Validating | `TASK_VALIDATING` | T-04–T-07 | `ValidationPassed/Failed` | `checks.py`, sync | CheckRunner output | sync tests |
+| Failure recovery | L2 §9 | Task | INV-A4 | Recovery, Retry | `TASK_DEBUGGING` | T-08,T-09 | `TaskRetryScheduled` | state_machine | blocked→ready path | `test_failure_recovery_loop` |
+| Execute cycle split | ADR-0029 | Worker, Task | INV-B9 | Delegation | `CYCLE_EXECUTING` | C-07a,b,c | `WorkerReported` | `[planned] cycle.py` | worker then runtime handoff | `[ ]` |
 
-### 2.4 Workflow container
+### 2.4 Engineering cycle (L3)
 
-| Vision | ADR | L0 | L1 | State | Transition | Module | Tests |
-|--------|-----|----|----|-------|------------|--------|-------|
-| Bounded platform work body | ADR-0026 | Epic | INV-A3 (E-02) | `EPIC_*` | E-01–E-03 | `STATE.yaml` epic, status | `[ ]` — DR-001-M04 |
-| Epic open | ADR-0026 §3 tracks | Epic, Milestone | INV-B8 (proposed E-01) | `EPIC_OPEN` | E-01 | STATE.yaml | `[ ]` |
-| Epic close | Era I closure | Epic | INV-A3 | `EPIC_CLOSED` | E-03 | STATE `status: closed` | manual |
+| V | A | M | I | B | S | T | E | Mod | O | Test |
+|---|---|---|---|---|---|---|---|-----|---|------|
+| Observe | L3 §3.1 | Snapshot | INV-B8 | Observing | `SNAP_*` | S-01,S-02,C-01,C-02 | `StateObserved` | `[planned] observe.py` | snapshot sealed | `[ ]` |
+| Policy eval | L3 §3.2 | Policy | (eval) | Escalation | `CYCLE_POLICY_EVAL` | C-03,C-04 | `PolicyBlocked` | policy stub | block reason | `[ ]` |
+| Publish facts | L3 §3.8 | Event | — | — | `CYCLE_PUBLISHING` | C-12 | `EventsPublished` | `[planned] events.py` | JSONL append | `[ ]` |
+| Replan | L3 §3.10 | Task, Epic | INV-A4,B7 | Replanning | `CYCLE_REPLANNING` | C-14,C-15,T-09 | `Replanned` | `[planned] replan` | plan diff | `[ ]` |
 
-### 2.5 Resources
+### 2.5 Invariants → observability
 
-| Vision | ADR | L0 | L1 | State | Transition | Module | Tests |
-|--------|-----|----|----|-------|------------|--------|-------|
-| Produced outputs | ADR-0001 | Artifact | INV-B1 | `ART_*` | A-01–A-03 | git, filesystem | `[ ]` |
-| Exclusive file access | MB1 §8.6 | Lock, Task | INV-B3, INV-B4 | `LOCK_*` | L-01, L-02 | `file_locks`, scheduler | validate tests |
-| Observe read model | L3 §3.1 | Snapshot | INV-B8 | `SNAP_*` | S-01, S-02 | `[planned] observe.py` | `[ ]` MB2 Ph4 |
-| Worker dispatch | ADR-0023 | Worker, Task | INV-B9 | `WK_*` | K-01–K-04 | manifest, executor | `[ ]` |
-
-### 2.6 Engineering cycle (L3 → L2 binding)
-
-| Vision | ADR | L0 | L1 | State | Transition | Module | Tests |
-|--------|-----|----|----|-------|------------|--------|-------|
-| Repeatable engineering loop | L3 §1 | Snapshot, Task, Event | INV-B8 | `CYCLE_*` | C-01–C-15 | `[planned] cycle.py` | `[ ]` MB2 Ph4 |
-| Observe | L3 §3.1 | Snapshot | INV-B8 | `SNAP_*`, `CYCLE_OBSERVING` | C-01, C-02, S-* | `[planned] observe.py` | `[ ]` |
-| Evaluate policies | L3 §3.2, ADR-0028 | Policy | (not invariant) | `CYCLE_POLICY_EVAL` | C-03, C-04 | `[planned] policy stub` | `[ ]` MB2 |
-| Plan | L3 §3.3 | Task, Epic | INV-A5 | `CYCLE_PLANNING` | C-05, T-01 | `planner.py` | planner tests |
-| Schedule | L3 §3.4 | Task, Lock | INV-B3–B6 | `CYCLE_SCHEDULING` | C-06 | `runtime.schedule()` | runtime tests |
-| Execute | L3 §3.5 | Worker, Artifact | INV-B9 | `CYCLE_EXECUTING` | C-07, K-*, A-* | manifest, workers | `[ ]` |
-| Validate | L3 §3.6 | Task | INV-A1, A2 | `CYCLE_VALIDATING` | C-08, C-09, T-04–07 | `runtime.sync()` | sync tests |
-| Merge | L3 §3.7 | Task | INV-A2 | `CYCLE_MERGING` | C-10, C-11, T-06 | skill / `[planned]` | `[ ]` |
-| Publish events | L3 §3.8 | Event | — | `CYCLE_PUBLISHING` | C-12 | `[planned] events.py` | `[ ]` MB2 Ph5 |
-| Update state | L3 §3.9 | Wave, Epic, Lock | INV-B8 | `CYCLE_UPDATING` | C-13, W-*, E-*, L-02 | `state_io`, sync | state tests |
-| Replan | L3 §3.10 | Task, Epic | INV-A4 | `CYCLE_REPLANNING` | C-14, C-15, T-09 | `[planned] replan` | `[ ]` MB2 |
-
-### 2.7 Invariants (L1 → enforcement)
-
-| Vision | ADR | L0 | L1 | Enforced on | Transition / pass | Module | Tests |
-|--------|-----|----|----|-------------|-------------------|--------|-------|
-| No illegal task states | ADR-0025 | Task | INV-A1–A4 | transition | T-04–T-09 | `[planned] gsm_task.py` | `[ ]` Ph1 |
-| No done without validation | ADR-0025 §4 | Task | INV-A2 | T-05, T-06 | T-05, T-06 | sync | sync tests |
-| Dependency order | MB1 §8 | Task, Epic | INV-A5 | T-02, T-03 | T-02 | validate.py | validate tests |
-| Frozen artifacts immutable | ADR-0026 §5 | Artifact | INV-B1 | all writes | A-03 guard | `[planned] invariants.py` | `[ ]` Ph2 |
-| Promote only when validated | ADR-0010 | Milestone | INV-B2 | M-04, G-02 | M-04 | promotion docs | gate YAML |
-| Lock discipline | MB1 §8.5–8.7 | Lock, Task | INV-B3–B5 | schedule, commit | L-01, T-02 | validate, scheduler | validate tests |
-| Wave coherence | MB1 §8.7 | Wave, Task | INV-B6 | in-flight | T-03, W-* | validate.py | validate tests |
-| Planner read-only on frozen | ADR-0028 | Artifact, State | INV-B7 | plan | M-01, C-05 | `[planned]` | `[ ]` |
-| Atomic writes | ADR-0028 | Workflow state | INV-B8 | every commit | all C-* writes | state_io | `[ ]` Ph2 |
-| Worker boundary | ADR-0023 | Worker | INV-B9 | execute | K-02, K-03 | runtime boundary | import lint |
+| I | B | T | E | O (evidence invariant holds) | Test |
+|---|----|---|----|------------------------------|------|
+| INV-A1 | Validating | T-04,T-07 | `ValidationStarted` | sync only from in_progress | state_machine |
+| INV-A4 | Retry | T-09 | `TaskRetryScheduled` | only from DEBUGGING | recovery test |
+| INV-B2 | Promotion | M-04 | `PromotionCompleted` | tag + gate doc | manual |
+| INV-B8 | all | all commits | `StateUpdated` | atomic rename | state_io |
+| INV-B9 | Delegation | K-* | `WorkerReported` | runtime never writes STATE from worker | boundary test |
 
 ---
 
-## 3. MB2 deliverable traceability (rebase target)
+## 3. MB2 rebase template (mandatory columns)
 
-When rebasing `docs/superpowers/specs/…-mb2-adaptive-runtime-design.md`, every row MUST appear:
+Every rebased MB2 deliverable row MUST fill **all** columns:
 
-| MB2 deliverable (original) | Transition IDs | L0 | L1 | Planned module | Planned tests |
-|----------------------------|----------------|----|----|----------------|---------------|
-| `ObservedSnapshot` | S-01, S-02, C-01, C-02 | Snapshot | INV-B8 | `observe.py` | `test_observe.py` |
-| Policy stub | C-03, C-04 | Policy | (policy not inv) | policy stub | `test_policy.py` |
-| Extended Plan | C-05, T-01 | Task, Epic | INV-A5, INV-B7 | `planner.py` extend | planner tests |
-| Build event bus | C-12, §7 all events | Event | — | `events.py` | `test_events.py` |
-| Minimal Replan | C-14, T-09 | Task | INV-A4 | `cycle.py` | `test_cycle.py` |
-| `EngineeringRuntimeCycle` | C-01–C-15 | Cycle | INV-B8 | `cycle.py` | `test_cycle.py` |
-| `WorkflowRuntime` rename | all | Engineering Runtime | — | `runtime.py` rename | regression |
-| Class A guards | T-* | Task | INV-A* | `gsm_task.py` | `test_gsm_task.py` |
-| Class B pass | all commits | Workflow | INV-B* | `invariants.py` | `test_invariants.py` |
-| Recovery CLI | T-08, T-09 | Task | INV-A4 | `cli debug/retry` | recovery tests |
+| MB2 deliverable | B | T | E | Mod | O | Test |
+|-----------------|---|---|---|-----|---|------|
+| `ObservedSnapshot` | Observing | S-01,S-02,C-01,C-02 | `StateObserved` | `observe.py` | snapshot dump | `test_observe.py` |
+| Policy stub | Escalation | C-03,C-04 | `PolicyBlocked` | policy stub | decision log | `test_policy.py` |
+| Event bus | (all) | §7 all | all events | `events.py` | `.builder-engine/events.jsonl` | `test_events.py` |
+| `EngineeringRuntimeCycle` | Scheduling…Replanning | C-01–C-15 | per phase | `cycle.py` | cycle trace | `test_cycle.py` |
+| GSM guards | Validating, Claiming | T-*, INV-A* | per T-* | `gsm_task.py` | TransitionError on illegal | `test_gsm_task.py` |
+| Invariant pass | all | commits | `InvariantViolation` | `invariants.py` | halt on violation | `test_invariants.py` |
+| Recovery CLI | Retry, Recovery | T-08,T-09 | `TaskRetryScheduled` | cli debug/retry | blocked packet recovery | recovery tests |
+| Rename runtime | Delegation | all | — | `EngineeringRuntime` | grep no WorkflowRuntime | regression |
 
-**Rebase rule:** Remove any MB2 deliverable with empty Transition IDs column.
+**Rebase rule:** empty **T** or **B** column → remove deliverable or amend L2 first.
 
 ---
 
-## 4. Orphan prevention rules
+## 4. Orphan prevention
 
 Before merging any `builder_engine/` PR:
 
-1. Fill a new ETM row or extend an existing row.
-2. Link PR description: `ETM §2.x row, Transition T-xx`.
-3. If no transition exists → **stop** — add L2 transition first (Architect) or declare governance exemption in DR log.
-
-**Projections** (`cli.py` commands) trace to "Projection of Transition X" — they do not need new L0 objects.
-
-**Worker prompts** (Cursor Task) trace to Worker + Task + Transition K-* / Execute phase — not to new platform objects.
+1. Add or extend an ETM §2 row with **all** columns populated.
+2. PR description: `ETM §2.x · Behavior · Transition · Event`.
+3. **Observability ≠ Event:** event = fact emitted; observability = proof (test assertion, log, gate file).
 
 ---
 
-## 5. DR-001 action traceability
+## 5. DR-001 / Architect sign-off (closed)
 
-| DR finding | ETM section | Resolution |
-|------------|-------------|------------|
-| DR-001-M02 Goal inv gaps | §2.2 | Optional L2 §5.1 patch; G-01 tests `[ ]` |
-| DR-001-M03 Task birth | §2.3 | T-00 row or governance exemption note |
-| DR-001-M04 Milestone–Epic | §2.4 | E-01 guard row; track metadata in STATE |
-| DR-001-M05 Policy lifecycle | §0 Evaluation pattern | Accepted |
-| DR-001-m06 C-07 owner | §2.6 | Split: K-03 (Worker) then T-04 (Runtime) |
-
----
-
-## 6. Product plane boundary (explicit non-trace)
-
-These **do not** appear in Platform ETM rows (Product Track owns its traceability):
-
-| Product concept | Product authority |
-|-----------------|-------------------|
-| GraphState, LangGraph nodes | M-series specs, ADR-0007 |
-| `/chat`, documents, memory | M1–M3 specs |
-| Product event outbox | ADR-0006, `events` table |
-| Supervisor, Planner, Router agents | M5 spec, ADR-0027 |
-
-**Boundary trace:** Platform `Milestone` (M4, M5, MB2) ↔ Product milestone tags — single shared object per L0 §2.
+| Item | Status |
+|------|--------|
+| DR-001 | ✅ Approved (Conditional Pass confirmed) |
+| ETM v1.1 | ✅ Approved (Event + Observability) |
+| L2.1 micro-patch | ✅ Applied |
+| Behavioral Semantics | ✅ Frozen (ADR-0029) |
+| MB2 rebase | 🔴 **Authorized now** — use §3 template |
 
 ---
 
-## 7. Freeze record
+## 6. Product plane boundary
 
-- [x] Glossary: Transition, Command, Transaction, Projection, Evaluation
-- [x] Vision anchors mapped
-- [x] Era I implemented modules traced
-- [x] L1 invariants traced to modules and transitions
-- [x] L3 phases traced to C-* transitions
-- [x] MB2 rebase template (§3)
-- [x] Orphan prevention rules (§4)
-- [x] DR-001 actions cross-referenced (§5)
-- [x] Product boundary explicit (§6)
-
-**Living columns:** Tests filled incrementally during L4. Empty `[ ]` = planned, not orphan.
-
-**Next:** Architect sign-off on DR-001 + ETM → MB2 rebase → implementation.
+Platform ETM does not trace Product LangGraph, GraphState, or `/chat` — see M-series specs. Shared object: **Milestone** only.
 
 ---
 
-## 8. References
+## 7. References
 
-- DR-001 `docs/platform/DR-001-constitutional-review.md`
-- L0–L3 platform docs · ADR-0025, ADR-0026, ADR-0028, ADR-0010, ADR-0023
-- `knowledge/project/vision.md`
+- DR-001 · ADR-0028 · ADR-0029
+- L0 · L1 · `behavioral-semantics.md` · L2 · L3
 - `plans/l2-global-state-machine-plan.md`

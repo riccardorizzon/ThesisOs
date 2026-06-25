@@ -5,7 +5,7 @@
 - **Type:** Design review of the **platform constitution** (not code review)
 - **Scope:** L0 `engineering-meta-model.md`, L1 `invariant-model.md`, L2 `global-state-machine.md`, L3 `runtime-model.md`, ADR-0026, ADR-0028, ADR-0025, ADR-0010, ADR-0023
 - **Reviewers:** Architect (requestor), Platform review (this document)
-- **Verdict:** **CONDITIONAL PASS** — constitution is fit to govern L4+ implementation after documented amendments (§7) and traceability matrix (companion doc). **No implementation until DR actions closed + Architect sign-off.**
+- **Verdict:** **APPROVED** (Conditional Pass confirmed by Architect 2026-06-25). Findings M02–M04 addressed via L2.1 micro-patch + Behavioral Semantics (ADR-0029).
 
 ---
 
@@ -227,12 +227,12 @@ The Product plane retains LangGraph agents (M5+) under its own model — correct
 
 ## 9. Sign-off record
 
-| Role | DR-001 verdict | Traceability Matrix | L2 micro-patch | MB2 rebase | L4 code |
-|------|----------------|---------------------|----------------|------------|---------|
-| Platform review | Conditional pass | Required next | Optional | After matrix | After sign-off |
-| Architect | `[ ] Pending` | `[ ] Pending` | `[ ] Pending` | `[ ] Pending` | `[ ] Pending` |
+| Role | DR-001 | ETM v1.1 | L2.1 patch | Behavioral Semantics | MB2 rebase | L4 code |
+|------|--------|----------|------------|---------------------|------------|---------|
+| Architect | ✅ Approved 2026-06-25 | ✅ Approved | ✅ Approved | ✅ Approved (ADR-0029) | ✅ Authorized | ⏸️ After rebase + sign-off |
+| Platform review | Closed | Closed | Applied | Frozen | Next step | Blocked |
 
-**DR-001 status:** **Conditional pass** — pending Architect acknowledgment.
+**DR-001 status:** **Approved.** MB2 rebase is the next authorized platform action.
 
 ---
 
