@@ -4,42 +4,35 @@
 
 ## Where are we?
 
-**Constitution complete. Architect sign-off recorded. MB2 rebase is next. No code yet.**
+**MB2 spec rebased on constitution. Pending your sign-off on rebased spec §13. No code.**
 
 ```text
-Engineering Constitution   L0 + L1 + BS + L2 + L3   ✅ frozen, signed
-DR-001 + ETM v1.1          ✅ Architect approved
-L2.1 micro-patch           ✅ applied
-Next                       MB2 spec rebase → sign-off → L4
+Constitution (L0–L3 + BS)     ✅ frozen, signed
+DR-001 + ETM v1.1             ✅ approved
+MB2 spec rebase               ✅ complete → §13 sign-off pending
+L4 implementation             ⏸️ blocked
 ```
-
-## Constitution stack (ADR-0029)
-
-```text
-L0  Meta Model           who exists
-L1  Invariants            laws
-BS  Behavioral Semantics  why objects collaborate
-L2  Global State Machine  valid transitions (L2.1)
-L3  Runtime Cycle         when transitions run
-```
-
-**Center of gravity:** rules + state + semantics — not agents. Workers implement behaviors.
 
 ## Authorized pipeline
 
 ```text
-✅ GSM → DR-001 → ETM → L2.1 → Behavioral Semantics → Architect sign-off
-🔴 MB2 rebase (ETM §3 — total traceability)
-🔴 Architect sign-off rebased MB2
-⏸️ L4 implementation (blocked until rebased MB2 sign-off)
+✅ Constitution → DR-001 → ETM → L2.1 → BS → MB2 rebase
+🔴 Architect sign-off rebased MB2 spec (§13)
+⏸️ L4: Phase 0 (l2 plan Ph1–2) → MB2 plan Ph1–7
 ```
+
+## MB2 rebase summary
+
+- **11 deliverables** (D1–D11) with full traceability: Vision → … → Evidence
+- **4 constitutional criteria** embedded (§2)
+- **Prerequisites** separated: `l2-global-state-machine-plan` Ph1–2 before wire runtime
+- **§11 gap log** empty — no constitution changes during rebase
+- **Policy fix:** invariants ≠ policy (validate errors → L1 pass)
 
 ## What is next?
 
-1. **Rebase MB2 spec** — every deliverable fills ETM columns (Vision → … → Tests)
-2. **Architect sign-off** on rebased MB2
-3. **L4** per `plans/l2-global-state-machine-plan.md`
+1. **Your sign-off** on `docs/superpowers/specs/…-mb2-adaptive-runtime-design.md` §13
+2. **L4 Phase 0** — GSM + invariants (`l2-global-state-machine-plan` Ph1–2)
+3. **L4 MB2** — `plans/mb2-adaptive-runtime-plan.md` Ph1–7
 
-Product M5 remains orthogonal (Critic §12 pending).
-
-See `context/next-actions.md`.
+Product M5 orthogonal (Critic §12 pending).

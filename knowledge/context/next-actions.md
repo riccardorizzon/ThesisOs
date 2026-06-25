@@ -20,10 +20,11 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 10. **L2.1 micro-patch** ✅ — Goal guards, T-00, C-07 split
 11. **Behavioral Semantics (BS)** ✅ — ADR-0029
 12. **Architect sign-off constitution** ✅ — 2026-06-25
-13. **Rebase MB2 spec (total traceability)** 🔴 — ETM §3; **next platform work**
+13. **MB2 spec rebase** ✅ — full traceability §3; **sign-off §13 pending**
 14. **Architect sign-off rebased MB2** 🔴
-15. **L4 MB2 implementation** ⏸️ — blocked until step 14
-16. **M5 implementation** 🔴 — Critic §12 (orthogonal)
+15. **L4 Phase 0** (l2 plan Ph1–2: GSM + invariants) 🔴 — after step 14
+16. **L4 MB2 Ph1–7** ⏸️ — after Phase 0
+17. **M5 implementation** 🔴 — Critic §12 (orthogonal)
 
 ---
 
