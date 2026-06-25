@@ -1,0 +1,28 @@
+# ThesisOS pre-commit hooks (MB1 Phase 0) — local & offline.
+# Uses the repo's existing toolchain (backend/.venv); no network fetch of hook
+# repos, so it works without internet and stays version-pinned to the project.
+#
+# Enable once per clone:
+#   pip install pre-commit && pre-commit install
+# Run on demand:
+#   pre-commit run --all-files
+#
+# Spec: docs/superpowers/specs/2026-06-25-thesisos-mb1-workflow-engine-design.md (§7)
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-lint
+        name: ruff lint (backend app)
+        entry: backend/.venv/bin/ruff check
+        language: system
+        types: [python]
+        files: ^backend/app/
+
+      # ruff-format is intentionally omitted until the codebase adopts it
+      # (run `make format-fix` once, commit it, then add the hook back).
+
+      - id: runtime-isolation
+        name: build-time sidecars must not import the runtime
+        entry: make isolation
+        language: system
+        pass_filenames: false
