@@ -1,4 +1,4 @@
-"""Build Workflow Engine CLI (MB1 Phase 1: lint-graph, status, ready)."""
+"""Build Workflow Engine CLI — views on WorkflowRuntime (ADR-0025)."""
 
 from __future__ import annotations
 
@@ -9,8 +9,10 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from builder_engine.checks import run_stage
 from builder_engine.graph import BuilderGraph
 from builder_engine.paths import default_state_path, find_repo_root
+from builder_engine.runtime import WorkflowRuntime, WorkflowRuntimeError
 from builder_engine.scheduler import compute_ready
 from builder_engine.validate import validate_graph
 
@@ -154,6 +156,83 @@ def ready(
     for pkt in packets:
         table.add_row(pkt.id, pkt.agent_type, ", ".join(pkt.owned_files) or "—")
     console.print(table)
+
+
+@app.command()
+def schedule(
+    state: Optional[Path] = typer.Option(None, "--state"),
+    repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
+    packet: list[str] = typer.Option(
+        None, "--packet", "-p", help="Schedule only these packet ids"
+    ),
+) -> None:
+    """Claim ready packets, set locks, emit dispatch manifest (runtime projection)."""
+    root = _root(repo_root)
+    state_path = state or default_state_path(root)
+    runtime = WorkflowRuntime(root, state_path)
+    try:
+        result = runtime.schedule(packet_ids=packet or None)
+    except WorkflowRuntimeError as exc:
+        console.print(f"[red]Schedule failed:[/red] {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print(f"[green]Scheduled[/green] {len(result.packet_ids)} packet(s): "
+                  f"{', '.join(result.packet_ids)}")
+    console.print(f"Manifest: {result.manifest_path}")
+    for entry in result.entries:
+        console.print(
+            f"  {entry['packet_id']} → {entry['suggested_subagent_type']} "
+            f"({entry['agent_type']})"
+        )
+
+
+@app.command()
+def sync(
+    state: Optional[Path] = typer.Option(None, "--state"),
+    repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Validate without writing STATE"),
+) -> None:
+    """Run VALIDATING checks on in_progress packets; advance wave when complete."""
+    root = _root(repo_root)
+    state_path = state or default_state_path(root)
+    runtime = WorkflowRuntime(root, state_path)
+    try:
+        result = runtime.sync(dry_run=dry_run)
+    except WorkflowRuntimeError as exc:
+        console.print(f"[red]Sync failed:[/red] {exc}")
+        raise typer.Exit(1) from exc
+
+    if result.completed:
+        console.print(f"[green]Completed:[/green] {', '.join(result.completed)}")
+    if result.failed:
+        console.print(f"[red]Blocked:[/red] {', '.join(result.failed)}")
+    if result.advanced_to_wave is not None:
+        console.print(f"[cyan]Wave advanced to[/cyan] {result.advanced_to_wave}")
+    if dry_run:
+        console.print("[yellow]Dry run — STATE not written[/yellow]")
+
+
+@app.command()
+def check(
+    stage: str = typer.Argument(..., help="Named stage (lint, unit, ci) or shell command"),
+    repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
+) -> None:
+    """Run a validation stage or arbitrary check command."""
+    root = _root(repo_root)
+    if stage in ("lint", "typecheck", "unit", "unit-frontend", "unit-builder-engine", "drift", "scope", "isolation", "ci"):
+        result = run_stage(stage, root)
+    else:
+        from builder_engine.checks import run_shell
+
+        result = run_shell(stage, root)
+
+    if result.ok:
+        console.print(f"[green]OK[/green] {result.command}")
+        raise typer.Exit(0)
+    console.print(f"[red]FAIL[/red] {result.command} (exit {result.exit_code})")
+    if result.stderr:
+        console.print(result.stderr[-2000:])
+    raise typer.Exit(result.exit_code)
 
 
 if __name__ == "__main__":

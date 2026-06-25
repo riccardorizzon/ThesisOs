@@ -51,6 +51,9 @@ implementers** (safe isolation), **file locks in STATE** for explorers/reviewers
 | `builder-engine lint-graph` | `validate-state.sh`, §1 packet rules |
 | `builder-engine status` | Manual STATE summary |
 | `builder-engine ready` | §2A ready-set computation |
+| `builder-engine schedule` | §2 wave dispatch — claim, locks, manifest |
+| `builder-engine sync` | §3 barrier — VALIDATING, wave advance |
+| `builder-engine check <stage>` | Named Makefile stage runner |
 
 ---
 

@@ -18,3 +18,16 @@ def compute_ready(graph: BuilderGraph) -> list[Packet]:
         ready.append(pkt)
     ready.sort(key=lambda p: p.id)
     return ready
+
+
+def in_flight_packets(graph: BuilderGraph) -> list[Packet]:
+    """Packets currently in_progress (CLAIMED/RUNNING/VALIDATING in ADR-0025)."""
+    return sorted(
+        (p for p in graph.packets.values() if p.status == "in_progress"),
+        key=lambda p: p.id,
+    )
+
+
+def file_locks_for_packet(packet: Packet) -> dict[str, str]:
+    """Lock map for owned paths when a packet is scheduled."""
+    return {path: packet.id for path in packet.owned_files}

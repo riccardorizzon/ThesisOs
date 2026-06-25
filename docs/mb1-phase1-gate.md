@@ -41,10 +41,9 @@ make ci
 
 ## Next (MB1 Phase 2)
 
-- `builder schedule` + `builder sync` with CheckRunner and worktree manifest
-- DoD enforcement on packet `checks`
+See `docs/mb1-phase2-gate.md` — runtime shipped.
 
-## Product track (orthogonal)
+## Next (MB1 Phase 3)
 
 - M3 merge + tag `m3-complete` — see `docs/m3-promotion.md`
 - M4 spec freeze — Architect gate before implementation

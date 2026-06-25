@@ -3,14 +3,14 @@
 
 epic: mb1-workflow-engine-phase2-prep
 chain: pipeline-2026-06-25
-status: active
-wave: 1
+status: closed
+wave: 2
 
 decisions:
   - "Pipeline order: Vision → Spec Freeze → Engine → Implementation → Validation"
   - "M3 promoted (m3-complete); M4 spec frozen — no M4 code until Planner plan"
-  - "MB1 Phase 2 = runtime + execution state machine (ADR-0025), CLI as views"
-  - "Do NOT implement schedule/sync until M4 plan exists"
+  - "MB1 Phase 2 = runtime + execution state machine (ADR-0025), CLI as views — shipped"
+  - "M4 code blocked until plans/m4-retrieval-system-plan.md"
 
 file_locks: {}
 blockers:
@@ -44,10 +44,10 @@ packets:
   P-MB1-PHASE2:
     wave: 2
     agent_type: implementer
-    status: ready
+    status: done
     depends_on: [P-M4-SPEC, P-MB1-RUNTIME-DOC]
     owned_files:
       - builder_engine/
     output: "Runtime loop + execution state machine; schedule/sync as CLI views"
     checks: ["make unit-builder-engine", "make ci"]
-    integration_notes: "Blocked on M4 Planner plan for validation stage registry"
+    integration_notes: "Phase 2 complete — see docs/mb1-phase2-gate.md"

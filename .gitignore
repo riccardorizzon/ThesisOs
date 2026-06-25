@@ -42,6 +42,9 @@ references/design-skills/
 # Builder agent worktrees (orchestrate-builders skill)
 .worktrees/
 
+# Builder engine runtime cache (dispatch manifests)
+.builder-engine/
+
 # Builder Memory local index (ADR-0019) — corpus cache, not source of truth
 .builder-memory/
 
