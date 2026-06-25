@@ -158,6 +158,7 @@ Launch **one Task per ready packet in a single message** (parallel dispatch).
 
 Each prompt must be **self-contained** — see agent prompt templates. Include:
 
+- **Builder Memory context** (optional but recommended): run `builder-memory retrieve --task "…" --role <agent_type> --epic <epic> --packet <id>` and paste the `NON-AUTHORITATIVE` block (see `knowledge/development/builder-memory.md`). Preflight: `.cursor/skills/orchestrate-builders/scripts/builder-memory-preflight.sh`
 - Packet ID, wave, depends_on (with outputs from completed deps)
 - `owned_files` and explicit **DO NOT touch** list
 - `decisions` from STATE (verbatim)

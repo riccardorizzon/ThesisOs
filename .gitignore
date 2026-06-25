@@ -42,6 +42,12 @@ references/design-skills/
 # Builder agent worktrees (orchestrate-builders skill)
 .worktrees/
 
+# Builder Memory local index (ADR-0019) — corpus cache, not source of truth
+.builder-memory/
+
+# Builder Memory local venv
+builder_memory/.venv/
+
 # Local agent config (skills under .cursor/skills/ ARE tracked)
 .cursor/hooks.json
 .cursor/settings.json
