@@ -4,19 +4,20 @@
 
 ## Where are we?
 
-**M2 promoted. M3 — spec frozen; Phase 1 (DB) implemented in the working tree (uncommitted); Phase 2 next. Build-time: Builder Memory shipped; MB1 Workflow Engine designed + Phase 0 dev foundation added.**
+**M2 promoted. M3 — Phases 1–3 implemented & committed (DB schema, DocumentService, REST API); Phase 4 (Admin UI) next. Build-time: Builder Memory + MB1 Phase 0 pipeline shipped.**
 
 ```text
 M0 Foundations     ✅ promoted (m0-complete)
 M1 Conversation    ✅ promoted (m1-complete)
 M2 Memory          ✅ promoted (m2-complete)
-M3 Documents       🟡 spec frozen + plan; Phase 1 DB done (uncommitted), Phase 2+ pending
+M3 Documents       🟡 Phases 1-3 done (committed); Phases 4-6 pending
 M4+                ⬜ not started
 ```
 
-> ⚠️ The working tree holds a large body of **uncommitted** work spanning 4
-> concerns (builder_memory · M3 Phase 1 DB · MB1 docs · vision). Last commit:
-> `4fe9906`. See *What is next?* for the commit plan.
+> Working tree committed. `make ci` green: backend 76 passed / 22 skipped,
+> frontend 15. ⚠️ DB-backed M3 service/API integration tests are skip-guarded and
+> **not yet executed** — local Docker image store is corrupted (re-run via
+> `make up` + `alembic upgrade head` once Docker is fixed).
 
 ## What is completed?
 
@@ -57,7 +58,7 @@ See `context/completed-work.md`. Chat seam frozen: `POST /chat` → `Conversatio
 | Frontend vitest | **15 passed** |
 | Frontend build | green (`/memory`, `/memory/new`, `/memory/[id]`) |
 | M0/M1 gates | green (historical) |
-| `make ci` (MB1 Phase 0) | **green** — ruff lint, tsc, backend 46/14-skip, frontend 15, drift, isolation |
+| `make ci` (MB1 Phase 0) | **green** — ruff lint, tsc, backend 76/22-skip, frontend 15, drift, isolation |
 
 ## Build-time system (BuilderOS)
 
@@ -75,13 +76,14 @@ The Cursor-agent build system is now partly hardened (ADR-0023; MB1 spec):
 
 ## What is next?
 
-1. **Commit the working tree** — 4 logical commits: builder-memory · M3 Phase 1 DB
-   · MB1 (ADR-0023 + spec) · vision (Knowledge-OS reframing).
-2. **M3 Phase 2** — document parsing / ingestion per the frozen spec + plan
-   (Phase 1 DB already in tree; gate evidence: `docs/m3-phase1-gate.md`).
-3. **Validate every change** with `make check` (local / pre-commit) and `make ci`.
-4. **Still forbidden until their milestones:** embeddings/retrieval/graph `/search`
-   (M4), writer (M6).
+1. **M3 Phase 4** — Document Administration UI (mirror Memory admin): list, upload,
+   detail, chunk preview, versions, re-parse, delete + Vitest.
+2. **Validate the DB path** — fix Docker, then `make up` + `alembic upgrade head`,
+   then run the skip-guarded `test_document_service.py` / `test_document_api.py`.
+3. **Phases 5–6** — events (`DocumentUploaded`/`ChunkCreated`) + integration tests;
+   knowledge freeze + `docs/m3-promotion.md` + tag `m3-complete`.
+4. **Still forbidden until their milestones:** embeddings/retrieval/`/search` (M4),
+   writer (M6).
 
 See `context/next-actions.md`.
 
@@ -96,10 +98,10 @@ See `context/next-actions.md`.
 | M2 tag | ✅ `m2-complete` on `main` |
 | M3 spec | ✅ frozen (Critic approved 2026-06-24) |
 | M3 plan | ✅ `plans/m3-document-system-plan.md` |
-| M3 code | 🟡 Phase 1 (DB) done (uncommitted); Phase 2+ pending |
+| M3 code | 🟡 Phases 1-3 done (committed); Phases 4-6 pending |
 | M3+ | ⬜ not started |
 | Builder Memory | ✅ shipped (ADR-0019, build-time) |
 | MB1 engine | 🟡 ADR-0023 + spec frozen; Phase 0 validation pipeline added |
 | Validation gate | ✅ `make ci` green (lint/tsc/tests/drift/isolation) |
 | GraphState / RunContext / LLMClient / ConversationService | frozen, unchanged |
-| Tests | backend 46/14 skip; frontend 15 |
+| Tests | backend 76/22 skip; frontend 15 |
