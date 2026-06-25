@@ -53,7 +53,7 @@ CREATE TABLE embeddings (
 	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
 	content_hash VARCHAR(64) NOT NULL, 
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
-	PRIMARY KEY (id)
+	PRIMARY KEY (id, model)
 );
 
 CREATE TABLE events (
@@ -119,6 +119,7 @@ CREATE TABLE chunks (
 	chunk_index INTEGER NOT NULL, 
 	chunk_hash VARCHAR(64) NOT NULL, 
 	content TEXT NOT NULL, 
+	content_tsv TSVECTOR GENERATED ALWAYS AS (to_tsvector('english', content)) STORED, 
 	token_count INTEGER, 
 	page_from INTEGER, 
 	page_to INTEGER, 
