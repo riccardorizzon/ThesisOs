@@ -206,10 +206,11 @@ def test_reparse_202_and_404(fake_service):
     assert client.post("/documents/missing/reparse").status_code == 404
 
 
-def test_no_corpus_search_endpoint(fake_service):
+def test_search_endpoint_exists_requires_body(fake_service):
     client, _ = fake_service
-    # Retrieval/search is M4 — no corpus search endpoint exists in M3.
-    assert client.post("/search").status_code == 404
+    # M4 — corpus search is POST /search with JSON body (not on /documents).
+    assert client.post("/search").status_code == 422
+    assert client.post("/search", json={"query": "x"}).status_code != 404
 
 
 def test_openapi_has_no_document_search_route():
@@ -220,4 +221,4 @@ def test_openapi_has_no_document_search_route():
         pytest.skip("openapi contract not available")
     text = openapi.read_text()
     assert "/documents/search" not in text
-    assert "/search:" in text  # M4 stub still present, not implemented in code
+    assert "/search:" in text  # M4 hybrid search (not on /documents)

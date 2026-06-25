@@ -30,6 +30,22 @@ async def _fake_acompletion(**kwargs):
     return gen()
 
 
+async def test_aembedding_returns_vectors(monkeypatch):
+    import app.llm.litellm_client as mod
+
+    async def fake_aembedding(**kwargs):
+        assert kwargs["model"] == "vertex_ai/text-multilingual-embedding-002"
+        return types.SimpleNamespace(
+            data=[{"embedding": [0.1] * 768}, {"embedding": [0.2] * 768}]
+        )
+
+    monkeypatch.setattr(mod.litellm, "aembedding", fake_aembedding)
+    client = LiteLLMClient(project="p", location="europe-west1", model="gemini-2.5-pro")
+    out = await client.embed(["a", "b"])
+    assert len(out) == 2
+    assert len(out[0]) == 768
+
+
 async def test_astream_yields_token_chunks(monkeypatch):
     import app.llm.litellm_client as mod
     monkeypatch.setattr(mod.litellm, "acompletion", _fake_acompletion)

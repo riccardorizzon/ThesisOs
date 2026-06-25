@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 
 import litellm
 
+from app.core.config import settings
 from app.llm.base import TokenChunk
 
 
@@ -43,7 +44,20 @@ class LiteLLMClient:
                 yield TokenChunk(text=text, finish_reason=finish, metadata=meta)
 
     async def embed(self, texts: list[str], *, model: str | None = None) -> list[list[float]]:
-        raise NotImplementedError("embeddings wired in M2/M4 (ADR-0002)")
+        if not texts:
+            return []
+        embed_model = model or settings.embedding_model
+        try:
+            resp = await litellm.aembedding(
+                model=f"vertex_ai/{embed_model}",
+                input=texts,
+                vertex_project=self._project,
+                vertex_location=self._location,
+            )
+        except Exception as exc:
+            raise NotImplementedError(f"embed failed: {exc}") from exc
+        data = getattr(resp, "data", None) or []
+        return [item["embedding"] for item in data]
 
     async def vision(self, messages: list[dict], *, model: str | None = None) -> str:
         raise NotImplementedError("vision wired in a later milestone")
