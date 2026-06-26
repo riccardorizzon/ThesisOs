@@ -16,6 +16,11 @@ class RetrievedChunk(BaseModel):
     chunk_id: str
     score: float
     content: str
+    # Reference metadata carried through to grounding/citations (M4 recovery).
+    document_id: str | None = None
+    document_title: str | None = None
+    page_from: int | None = None
+    page_to: int | None = None
 
 
 class CitationRef(BaseModel):

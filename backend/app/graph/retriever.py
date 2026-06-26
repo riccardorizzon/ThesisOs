@@ -43,7 +43,15 @@ def make_retriever_node(retrieval_service: RetrievalService | None = None):
 
         return {
             "retrieved_context": [
-                RetrievedChunk(chunk_id=r.chunk_id, score=r.score, content=r.content)
+                RetrievedChunk(
+                    chunk_id=r.chunk_id,
+                    score=r.score,
+                    content=r.content,
+                    document_id=r.document_id,
+                    document_title=r.document_title,
+                    page_from=r.page_from,
+                    page_to=r.page_to,
+                )
                 for r in results
             ],
             "errors": list(state.errors),
