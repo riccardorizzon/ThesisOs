@@ -142,4 +142,20 @@ async def test_list_filters_by_type_and_title(svc, db_session):
 
 async def test_upload_rejects_unsupported_format(svc, db_session):
     with pytest.raises(UnsupportedFormatError):
-        await svc.upload(filename="notes.txt", data=b"x", session=db_session)
+        await svc.upload(filename="notes.xyz", data=b"x", session=db_session)
+
+
+async def test_upload_markdown_infers_source_type(svc, db_session):
+    rec = await svc.upload(filename="chapter.md", data=b"# Intro\n\nBody text.", session=db_session)
+    assert rec.status == "uploaded"
+    assert rec.source_type == "markdown"
+
+
+async def test_parse_markdown_uses_native_parser(svc, db_session):
+    rec = await svc.upload(filename="chapter.md", data=b"# Intro\n\nBody text.", session=db_session)
+    parsed = await svc.parse(rec.id, session=db_session)
+    assert parsed.status == "parsed"
+    assert parsed.parser == "markdown"
+    assert parsed.chunk_count >= 1
+    chunks = await svc.list_chunks(rec.id, session=db_session)
+    assert any("Body text" in c.content for c in chunks)

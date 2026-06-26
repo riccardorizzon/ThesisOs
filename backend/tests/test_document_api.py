@@ -40,9 +40,10 @@ class FakeDocumentService:
 
     async def upload(self, *, filename, data, source_type=None, meta=None, session=None):
         self.calls.append(("upload", filename))
-        if filename.endswith(".txt"):
+        if filename.endswith(".xyz"):
             raise UnsupportedFormatError(filename)
-        return _record(original_filename=filename, title=(meta.title if meta else None) or "Doc")
+        st = "markdown" if filename.endswith(".md") else "pdf"
+        return _record(original_filename=filename, source_type=st, title=(meta.title if meta else None) or "Doc")
 
     async def list(self, filters, *, session=None):
         self.calls.append(("list", filters))
@@ -142,7 +143,7 @@ def test_upload_delegates_and_schedules_parse(fake_service):
 
 def test_upload_unsupported_format_returns_400(fake_service):
     client, _ = fake_service
-    r = client.post("/upload", files={"file": ("notes.txt", b"x", "text/plain")})
+    r = client.post("/upload", files={"file": ("notes.xyz", b"x", "application/octet-stream")})
     assert r.status_code == 400
     assert r.json()["code"] == "unsupported_format"
 
