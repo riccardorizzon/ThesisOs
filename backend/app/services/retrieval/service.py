@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 
 from sqlalchemy import delete, select, text
@@ -14,9 +15,43 @@ from app.db.session_async import AsyncSessionLocal
 from app.llm.base import LLMClient
 from app.llm.factory import get_llm_client
 from app.schemas.retrieval import SearchFilters, SearchResultItem
+from app.services.document.chunking import estimate_tokens
 from app.services.document.exceptions import DocumentNotFoundError
 from app.services.document.service import DocumentService
 from app.services.retrieval.exceptions import EmbedFailedError, RetrievalServiceError
+
+# Provider embedding limits (M4 recovery, bug-4): keep each request under the
+# per-request token cap (~20k for text-multilingual-embedding-002) using the
+# cheap chars/4 estimate with headroom, and cap instances per request.
+_EMBED_MAX_TOKENS = 14000
+_EMBED_MAX_BATCH = 250
+_EMBED_RETRIES = 3
+
+
+def plan_embedding_batches(
+    texts: list[str],
+    *,
+    max_tokens: int = _EMBED_MAX_TOKENS,
+    max_count: int = _EMBED_MAX_BATCH,
+) -> list[list[int]]:
+    """Group text indices into ordered batches under token + count caps.
+
+    Preserves order and never lets a single request exceed the provider's
+    per-request token limit.
+    """
+    batches: list[list[int]] = []
+    current: list[int] = []
+    current_tokens = 0
+    for i, t in enumerate(texts):
+        tokens = estimate_tokens(t)
+        if current and (current_tokens + tokens > max_tokens or len(current) >= max_count):
+            batches.append(current)
+            current, current_tokens = [], 0
+        current.append(i)
+        current_tokens += tokens
+    if current:
+        batches.append(current)
+    return batches
 
 
 @dataclass(frozen=True)
@@ -164,23 +199,22 @@ class RetrievalService:
         if not to_embed:
             return 0
 
-        try:
-            vectors = await self._llm.embed(
-                [c.content for c in to_embed], model=self._embedding_model
-            )
-        except NotImplementedError as exc:
-            raise EmbedFailedError(str(exc)) from exc
-        except Exception as exc:
-            raise EmbedFailedError(str(exc)) from exc
-
-        if len(vectors) != len(to_embed):
-            raise EmbedFailedError("embedding provider returned unexpected vector count")
+        # Batch under the provider token limit, preserving order (M4 recovery).
+        texts = [c.content for c in to_embed]
+        vectors: list[list[float] | None] = [None] * len(to_embed)
+        for batch in plan_embedding_batches(texts):
+            batch_vectors = await self._embed_with_retry([texts[i] for i in batch])
+            if len(batch_vectors) != len(batch):
+                raise EmbedFailedError(
+                    "embedding provider returned unexpected vector count"
+                )
+            for idx, vector in zip(batch, batch_vectors, strict=True):
+                vectors[idx] = vector
 
         for chunk, vector in zip(to_embed, vectors, strict=True):
-            if len(vector) != EMBEDDING_DIM:
-                raise EmbedFailedError(
-                    f"expected dimension {EMBEDDING_DIM}, got {len(vector)}"
-                )
+            if vector is None or len(vector) != EMBEDDING_DIM:
+                got = 0 if vector is None else len(vector)
+                raise EmbedFailedError(f"expected dimension {EMBEDDING_DIM}, got {got}")
             session.add(
                 models.Embedding(
                     owner_type="chunk",
@@ -193,6 +227,23 @@ class RetrievalService:
             )
         await session.flush()
         return len(to_embed)
+
+    async def _embed_with_retry(self, texts: list[str]) -> list[list[float]]:
+        """Embed one batch; retry transient failures, surface permanent ones."""
+        last: Exception | None = None
+        for attempt in range(_EMBED_RETRIES):
+            try:
+                return await self._llm.embed(texts, model=self._embedding_model)
+            except NotImplementedError as exc:
+                raise EmbedFailedError(str(exc)) from exc
+            except Exception as exc:
+                msg = str(exc)
+                if any(s in msg for s in ("BadRequest", "INVALID_ARGUMENT", "400")):
+                    raise EmbedFailedError(msg) from exc  # permanent — do not retry
+                last = exc
+                if attempt < _EMBED_RETRIES - 1:
+                    await asyncio.sleep(0.5 * (attempt + 1))
+        raise EmbedFailedError(str(last) if last else "embedding failed") from last
 
     async def _search(
         self,
