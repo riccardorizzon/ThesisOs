@@ -2,7 +2,7 @@ from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 
 from app.graph.memory_context import make_memory_context_node
-from app.graph.prompt_wire import compose_prompt_wire
+from app.graph.prompt_wire import compose_prompt_wire, format_grounding_sources
 from app.graph.retriever import make_retriever_node
 from app.llm.base import LLMClient
 from app.schemas.graph_state import GraphState, Message
@@ -14,6 +14,14 @@ def make_conversation_node(llm: LLMClient):
     async def conversation_node(state: GraphState) -> dict:
         writer = get_stream_writer()
         wire_messages = compose_prompt_wire(state)
+        if state.retrieved_context:
+            writer(
+                {
+                    "type": "sources",
+                    "text": "",
+                    "sources": format_grounding_sources(state.retrieved_context),
+                }
+            )
         wire = [{"role": m.role, "content": m.content} for m in wire_messages]
         parts: list[str] = []
         usage: dict = {}

@@ -49,3 +49,18 @@ def compose_prompt_wire(state: GraphState) -> list[Message]:
         wire.append(Message(role="system", content="\n\n".join(sections)))
     wire.extend(conversation)
     return wire
+
+
+def format_grounding_sources(chunks: list[RetrievedChunk]) -> list[dict]:
+    """Reference metadata for client/SSE consumers (transient, not persisted)."""
+    return [
+        {
+            "index": i,
+            "chunk_id": c.chunk_id,
+            "document_id": c.document_id,
+            "document_title": c.document_title,
+            "page_from": c.page_from,
+            "score": c.score,
+        }
+        for i, c in enumerate(chunks, 1)
+    ]

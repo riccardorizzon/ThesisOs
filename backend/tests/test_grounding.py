@@ -82,7 +82,7 @@ async def test_retrieved_context_injected_into_prompt():
             page_from=10,
         )
     ]
-    _events, _snap = await _run(_graph(llm, results))
+    events, _snap = await _run(_graph(llm, results))
 
     assert llm.last_messages is not None
     system = llm.last_messages[0]
@@ -91,11 +91,18 @@ async def test_retrieved_context_injected_into_prompt():
     assert "[1]" in system["content"]
     assert chunk_text in system["content"]
 
+    sources = [e for e in events if e.get("type") == "sources"]
+    assert sources, "a 'sources' reference event must be emitted"
+    first = sources[0]["sources"][0]
+    assert first["chunk_id"] == "c1"
+    assert first["document_id"] == "d1"
+
 
 async def test_no_grounding_when_no_results():
     llm = CapturingLLM()
-    _events, _snap = await _run(_graph(llm, []))
+    events, _snap = await _run(_graph(llm, []))
     assert llm.last_messages == [{"role": "user", "content": "What is craftsmanship?"}]
+    assert not [e for e in events if e.get("type") == "sources"]
 
 
 async def test_retrieved_chunks_not_persisted_in_conversation_history():

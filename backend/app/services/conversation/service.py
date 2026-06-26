@@ -95,6 +95,8 @@ class ConversationService:
                         if chunk.get("type") == "token":
                             parts.append(chunk["text"])
                             yield {"event": "token", "data": {"text": chunk["text"]}}
+                        elif chunk.get("type") == "sources":
+                            yield {"event": "sources", "data": {"sources": chunk.get("sources", [])}}
                         elif chunk.get("type") == "usage":
                             usage = chunk.get("usage", {})
                 message_id = await self._persist_assistant(conv_id, "".join(parts))
