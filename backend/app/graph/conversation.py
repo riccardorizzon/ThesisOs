@@ -5,7 +5,7 @@ from app.graph.memory_context import make_memory_context_node
 from app.graph.prompt_wire import compose_prompt_wire, format_grounding_sources
 from app.graph.retriever import make_retriever_node
 from app.llm.base import LLMClient
-from app.schemas.graph_state import GraphState, Message
+from app.schemas.graph_state import CitationRef, GraphState, Message
 from app.services.memory.service import MemoryService
 from app.services.retrieval.service import RetrievalService
 
@@ -38,11 +38,19 @@ def make_conversation_node(llm: LLMClient):
         # chunk is shape-compatible with token chunks for stream consumers.
         if usage:
             writer({"type": "usage", "text": "", "usage": usage})
+        citations = [
+            CitationRef(
+                source_id=c.document_id or c.chunk_id,
+                locator=(f"p.{c.page_from}" if c.page_from else c.chunk_id),
+            )
+            for c in state.retrieved_context
+        ]
         # Replace semantics: the caller owns message history (DB is the
         # system of record), so no add_messages reducer is needed.
         return {
             "messages": [*state.messages, assistant],
             "draft": assistant.content,
+            "citations": citations,
             "errors": list(state.errors),
         }
 

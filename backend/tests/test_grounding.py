@@ -135,3 +135,24 @@ def test_render_grounding_prompt_numbers_and_cites():
     assert "[1] Doc A, p. 3" in out
     assert "[2] Doc B" in out
     assert "Alpha." in out and "Beta." in out
+
+
+async def test_citations_propagated_to_graph_state():
+    llm = CapturingLLM()
+    results = [
+        SearchResultItem(
+            chunk_id="c1",
+            document_id="d1",
+            chunk_hash="h1",
+            score=0.9,
+            content="Alpha.",
+            document_title="Doc A",
+            page_from=3,
+        )
+    ]
+    _events, snap = await _run(_graph(llm, results))
+
+    citations = snap.values["citations"]
+    assert len(citations) == 1
+    assert citations[0].source_id == "d1"
+    assert citations[0].locator == "p.3"
