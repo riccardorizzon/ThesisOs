@@ -190,6 +190,21 @@ class DocumentService:
         await session.flush()
         return self._to_record(row)
 
+    async def record_index_error(
+        self, document_id: str, message: str, *, session: AsyncSession | None = None
+    ) -> DocumentRecord:
+        """Record an indexing failure on the document so it never fails silently."""
+        if session is not None:
+            return await self._record_index_error(session, document_id, message)
+        async with AsyncSessionLocal() as s:
+            try:
+                record = await self._record_index_error(s, document_id, message)
+                await s.commit()
+                return record
+            except Exception:
+                await s.rollback()
+                raise
+
     # ------------------------------------------------------------------
     # Internal write path — the only place that mutates the domain tables
     # ------------------------------------------------------------------
@@ -232,6 +247,17 @@ class DocumentService:
             session=session,
             source="document_service",
         )
+        await session.flush()
+        return self._to_record(row)
+
+    async def _record_index_error(
+        self, session: AsyncSession, document_id: str, message: str
+    ) -> DocumentRecord:
+        row = await session.get(models.Document, document_id)
+        if row is None:
+            raise DocumentNotFoundError(document_id)
+        row.error_message = f"index_failed: {message}"[:2000]
+        row.updated_at = datetime.now(timezone.utc)
         await session.flush()
         return self._to_record(row)
 

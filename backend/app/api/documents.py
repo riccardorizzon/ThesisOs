@@ -27,15 +27,28 @@ def _err(status: int, code: str, message: str) -> JSONResponse:
 
 
 async def _parse_in_background(document_id: str) -> None:
-    """Run parse then M4 embed pipeline off the request path."""
+    """Run parse then the M4 embed pipeline off the request path.
+
+    A failed embedding must never silently succeed (M4 recovery): the error is
+    logged and recorded on the document (`error_message`) so it stays visible.
+    """
     try:
         record = await _service.parse(document_id)
-        if record.status == "parsed":
-            from app.services.retrieval import RetrievalService
-
-            await RetrievalService().embed_document(document_id)
     except Exception:
-        _log.warning("background parse/index failed for %s", document_id, exc_info=True)
+        _log.exception("background parse failed for %s", document_id)
+        return
+    if record.status != "parsed":
+        return  # parse failure already recorded on the document (status=failed)
+    try:
+        from app.services.retrieval import RetrievalService
+
+        await RetrievalService().embed_document(document_id)
+    except Exception as exc:
+        _log.error("background indexing failed for %s: %s", document_id, exc, exc_info=True)
+        try:
+            await _service.record_index_error(document_id, str(exc))
+        except Exception:
+            _log.exception("failed to record index error for %s", document_id)
 
 
 @router.post("/upload", status_code=201)
