@@ -12,7 +12,7 @@ RUFF     := $(BACKEND)/.venv/bin/ruff
 .DEFAULT_GOAL := help
 
 .PHONY: help install lint format format-fix typecheck unit unit-frontend unit-builder-engine test \
-        drift scope isolation check ci up down
+        drift scope isolation check ci up down status unit-m4-recovery dogfood-m4
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -70,6 +70,25 @@ check: lint typecheck unit drift isolation ## Fast local gate (pre-commit / pre-
 test: unit unit-frontend unit-builder-engine ## All unit suites
 
 ci: lint typecheck unit unit-frontend unit-builder-engine drift scope isolation ## Full CI gate
+
+unit-m4-recovery: ## M4 recovery regression suite (53 tests; needs Postgres for some)
+	cd $(BACKEND) && .venv/bin/python -m pytest -q \
+		tests/test_grounding.py \
+		tests/test_embedding_batching.py \
+		tests/test_retrieval_service.py \
+		tests/test_index_observability.py \
+		tests/test_markdown_ingestion.py \
+		tests/test_document_parsers.py \
+		tests/test_retriever_node.py \
+		tests/test_search_api.py \
+		tests/test_packaging.py
+
+dogfood-m4: ## End-to-end M4 product smoke (requires: make up, Vertex ADC)
+	@bash bin/dogfood-m4-run.sh
+
+# --- developer cockpit -------------------------------------------------------
+status: ## "Where are we?" — read-only product/ASEP/infra snapshot
+	@bash bin/status.sh
 
 # --- local stack -------------------------------------------------------------
 up: ## Start local stack (docker compose)

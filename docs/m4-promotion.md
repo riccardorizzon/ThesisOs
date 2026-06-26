@@ -69,3 +69,23 @@ git tag m4-complete
 ## Forbidden until M5+ specs frozen
 
 Writer (M6), planner/router (M5), admin search UI, GraphState new fields, Mem0 auto-extraction (M15–M16).
+
+---
+
+## Recovery sprint addendum (2026-06-26)
+
+Original promotion verified retrieval **in isolation** but not end-to-end grounding.
+Recovery sprint closed that gap:
+
+| Gate | Pre-recovery | Post-recovery |
+|------|--------------|---------------|
+| `retrieved_context` in LLM prompt | ❌ | ✅ `compose_prompt_wire()` |
+| Large document indexing | ❌ token limit | ✅ batched embed (14 batches / 438 chunks) |
+| Async index failure visible | ❌ | ✅ `record_index_error()` |
+| Docker parser deps | ❌ | ✅ `.[parsers]` + contracts |
+| Markdown ingestion | ❌ | ✅ `MarkdownParser` |
+| Dogfood on real corpus | ❌ | ✅ `dogfood-m4.md` |
+
+**Pipeline frozen:** `docs/m4-freeze.md`  
+**Final report:** `docs/m4-recovery-final-report.md`  
+**Regression:** `make unit-m4-recovery` (53 tests) · `make dogfood-m4`

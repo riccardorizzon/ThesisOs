@@ -32,7 +32,9 @@ pytest tests/test_grounding.py \
 # Result: 53 passed
 ```
 
-Re-run dogfood: `bin/dogfood-m4-run.sh`
+Re-run dogfood: `make dogfood-m4` or `bin/dogfood-m4-run.sh`
+
+Unit regression: `make unit-m4-recovery` (53 tests)
 
 ---
 

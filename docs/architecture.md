@@ -6,7 +6,7 @@
 > disagree, the spec wins.
 
 ThesisOS is a **single-user** research and thesis-writing AgentOS: chat,
-long-term editable memory, document ingestion (PDF/EPUB/DOCX),
+long-term editable memory, document ingestion (PDF/EPUB/DOCX/**Markdown/Text**),
 Retrieval-Augmented Generation, citation management, outline/chapter management,
 and multi-agent orchestration — built to run on Google Cloud from day one.
 
@@ -206,6 +206,35 @@ Each per-agent contract under [`../contracts/agents/`](../contracts/agents/)
 *(forward-looking — created in a later M0 task)* declares **input**, **output**,
 **errors**, and **state mutations** (which `GraphState` fields the node
 reads/writes). No node logic exists in M0.
+
+### 6.1 M4 runtime graph (implemented; recovery-hardened 2026-06-26)
+
+As of M4 + recovery sprint, the **chat seam** is a linear graph (M5 will extend
+this to Supervisor→Planner→Router):
+
+```text
+START → memory_context_node → retriever_node → conversation_node → END
+```
+
+| Node | Reads | Writes (GraphState) | Wire effect |
+|------|-------|---------------------|-------------|
+| `memory_context_node` | `messages`, thread config | prepends transient system prefix to `messages` | M2 memory in prompt |
+| `retriever_node` | last user message | `retrieved_context` | — |
+| `conversation_node` | `messages`, `retrieved_context` | `messages` (+ assistant), `draft`, `citations` | `compose_prompt_wire()` injects memory + grounding **transiently** |
+
+**Grounding rule (ADR-0024):** chunk text enters the LLM only via
+`retrieved_context` → `compose_prompt_wire()` — never persisted in DB messages.
+The client receives reference metadata via SSE `sources` events.
+
+**Ingestion → index path:**
+
+```text
+upload → parse (Docling primary / PyMuPDF PDF fallback / MarkdownParser for .md)
+       → chunks → embed (batched Vertex calls) → status=indexed
+```
+
+See `docs/m4-freeze.md` — this pipeline is **frozen**; changes require reproducible
+bugs + regression tests.
 
 ---
 

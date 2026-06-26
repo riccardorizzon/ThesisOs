@@ -1,44 +1,45 @@
 # Current State
 
-> Snapshot as of **2026-06-25**. Branch: `main`. Tag: `l4-phase0-complete`.
+> Snapshot as of **2026-06-26**. Branch: `main`. M4 Recovery Sprint closed.
 
 ## Where are we?
 
-**L4 Phase 0 gate closed. Baseline committed. MB2 Phase 1 (D1 — Observe) authorized.**
+**M4 Recovery Sprint complete. Product dogfood validated on real Sennett corpus. M5 Tool Router is next active work (product-first); MB2 deferred to ASEP maintenance.**
 
 ```text
 Constitution (L0–L3 + BS)     ✅ frozen, signed
-DR-001 + ETM v1.1             ✅ approved
-MB2 spec rebase               ✅ Architect Approved §13
-L4 Phase 0 (l2 plan Ph1–2)    ✅ gate closed — docs/l4-phase0-gate.md
-L4 MB2 D1 (Observe)           🟢 authorized — not started
+M4 Retrieval + Recovery       ✅ closed — docs/m4-recovery-final-report.md
+M4 pipeline                   🔒 frozen — docs/m4-freeze.md
+L4 Phase 0                    ✅ gate closed — docs/l4-phase0-gate.md
+L4 MB2 D1 (Observe)           ⏸️ DEFERRED (product-first)
 ```
 
 ## Authorized pipeline
 
 ```text
-✅ Constitution → MB2 spec → L4 Phase 0 → Gate → Baseline
-🟢 MB2 Phase 1 — D1 Observe (plans/mb2-adaptive-runtime-plan.md Ph1)
-⏸️ MB2 Ph2–7 — sequential per plan
+✅ M1–M4 product path usable (chat → memory → ingest → retrieve → grounded answers)
+🟢 NEXT (product-first): M5 Tool Router → M6 Writing → continuous dogfood
+⏸️ DEFERRED (ASEP maintenance): MB2 Ph1 D1 Observe → Ph2–7 (pull on real block)
 ```
 
-## Phase 0 baseline (committed)
+## M4 recovery summary (2026-06-26)
 
-| Module | Purpose |
-|--------|---------|
-| `builder_engine/gsm_task.py` | T-01–T-12 + INV-A1–A5 |
-| `builder_engine/gsm.py` | `GlobalStateMachine` wrapper |
-| `builder_engine/invariants.py` | Class B pre-commit pass |
-| `builder_engine/state_io.py` | Invariant hook on `save_raw_state` |
-| `builder_engine/runtime.py` | GSM-aligned schedule/sync |
+| Phase | Outcome |
+|-------|---------|
+| P1 Grounding | `retrieved_context` reaches LLM via `compose_prompt_wire()` |
+| P2 Parser | Docling primary in Docker; contracts packaged |
+| P3 Embedding | Batched Vertex embed; async failures surfaced |
+| P4 Markdown | Native `.md`/`.txt` ingestion |
+| P5 Dogfood | End-to-end PASS — `dogfood-m4.md` |
 
-**Rollback baseline:** `f117d3d`  
-**Gate record:** `docs/l4-phase0-gate.md`  
-**Evidence:** 33/33 unit tests (ETM §3 GSM guards + Invariant pass)
+**Regression:** 53 unit tests (`make unit-m4-recovery`) + `make dogfood-m4`.
 
 ## What is next?
 
-1. **MB2 Phase 1** — D1 `observe.py` + `test_observe.py` per rebased spec §3
-2. Branch `mb2-adaptive-runtime` from Phase 0 baseline (optional per L2 plan)
+> **Product-first (provisional trial from 2026-06-25):** ThesisOS = feature acceleration; ASEP = maintenance. See `next-actions.md` → Operating Mode.
 
-Product M5 orthogonal (Critic §12 pending).
+1. **M5 — Tool Router** — Critic §12 sign-off on frozen M5 spec, then supervisor/planner/router graph rewire (ADR-0027).
+2. **M6 — Writing** — chapter drafting; `m6-complete` = usable thesis product line.
+3. **Continuous dogfood** — run `make dogfood-m4` after M5/M6 changes; record bottlenecks in `dogfood-m4.md` or successor.
+
+**Deferred:** MB2 Phase 1 (D1 Observe) — resume only on a real, reproducible product block.

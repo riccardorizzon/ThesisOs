@@ -1,31 +1,65 @@
 # Next Actions — 100-task backlog
 
-> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-25 — MB2 spec Architect Approved; L4 Phase 0 implemented.**
+> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-26 — M4 Recovery closed; M5 active; residual backlog registered below.**
 
 Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 debt · 🟢 net-new · ✅ done.
 
 ---
 
-## IMMEDIATE — ordered pipeline (2026-06-25)
+## OPERATING MODE — provisional (trial from 2026-06-25, **not** an ADR)
 
-1. **M3 close-out** ✅
-2. **M4 spec + implementation** ✅ — `m4-complete`
-3. **MB1 Phase 2** ✅ — runtime + packet FSM
-4. **Era II constitution** ✅ — ADR-0026, platform docs
-5. **Platform meta model (L0)** ✅ — `engineering-meta-model.md` (ADR-0028)
-6. **Invariant model (L1)** ✅ — `invariant-model.md` (ADR-0028)
-7. **Global State Machine (L2)** ✅ — `global-state-machine.md`
-8. **DR-001** ✅ — Architect approved
-9. **ETM v1.1** ✅ — Event + Observability columns
-10. **L2.1 micro-patch** ✅ — Goal guards, T-00, C-07 split
-11. **Behavioral Semantics (BS)** ✅ — ADR-0029
-12. **Architect sign-off constitution** ✅ — 2026-06-25
-13. **MB2 spec rebase** ✅ — full traceability §3; **Architect sign-off §13** ✅ 2026-06-25
-14. **Architect sign-off rebased MB2** ✅ — spec only; L4 Phase 0 authorized
-15. **L4 Phase 0** (l2 plan Ph1–2: GSM + invariants) ✅ — gate `docs/l4-phase0-gate.md`; tag `l4-phase0-complete`
-16. **L4 MB2 Ph1 (D1 Observe)** 🟢 — authorized after Phase 0 gate
-17. **L4 MB2 Ph2–7** ⏸️ — sequential per plan
-18. **M5 implementation** 🔴 — Critic §12 (orthogonal)
+> Direction under trial — validate by *using ThesisOS* for a few weeks before crystallizing into any decision record.
+> - **ThesisOS = feature acceleration. ASEP = maintenance + minimal evolution.**
+> - **Progress metric:** *"Does this directly bring closer the next user-perceivable capability?"* — not *"is it already perceivable?"* (so M5 plumbing that unlocks M6 counts).
+> - **ASEP may be modified only if all three hold at once:** (1) an active product milestone is blocked; (2) the block is identifiable and reproducible; (3) the ASEP change is the minimal fix that removes it. No preventive/speculative platform work.
+
+## IMMEDIATE — ordered pipeline (reordered 2026-06-25 → product-first)
+
+**Active — do next (product):**
+1. **M5 — Tool Router** 🔴 — unblock the Critic §12 sign-off on the frozen M5 spec (ADR-0027), then `T055–T061` (supervisor/planner/router nodes + graph rewire). Plumbing for M6, not user-visible alone.
+2. **M6 — Writing** ⬜ — `T062–T068`. At `m6-complete` = usable thesis product (roadmap "usable product line", M1–M6).
+3. **Dogfood** — use ThesisOS on the real thesis for a few days; record *real* bottlenecks. No further platform work until then.
+
+**Deferred — ASEP maintenance mode (pull only on a real block per Operating Mode):**
+- **L4 MB2 Ph1 (D1 Observe)** ⏸️ — authorized but deferred; resume only if a product milestone is blocked by missing Observe/Replan.
+- **L4 MB2 Ph2–7** ⏸️ — deferred, sequential per `plans/mb2-adaptive-runtime-plan.md`.
+
+**Done — history (Era I + constitution):** M4 Recovery Sprint (2026-06-26) · M3 close-out · M4 (`m4-complete`) · MB1 Phase 2 · Era II constitution (ADR-0026) · L0 meta-model + L1 invariants (ADR-0028) · L2 GSM · DR-001 · ETM v1.1 · L2.1 patch · Behavioral Semantics (ADR-0029) · constitution sign-off · MB2 spec rebase + §13 sign-off · L4 Phase 0 (`l4-phase0-complete`).
+
+---
+
+## M4 Recovery — residual backlog (2026-06-26)
+
+> Post-recovery items **outside** the frozen M4 pipeline (`docs/m4-freeze.md`). Pull when they block product milestones.
+
+### Operational 🟡
+
+| ID | Item | Notes |
+|----|------|-------|
+| R4-OP1 | Docling cold start ~26 s | First PDF parse loads torch weights; dev UX only |
+| R4-OP2 | Docker backend rebuild ~7–12 min | Docling ML deps; CI cache strategy TBD |
+| R4-OP3 | No local `python3-venv` on dev VM | Tests via Docker; `make install` needs `python3.12-venv` package |
+
+### UX 🟡
+
+| ID | Item | Notes | Milestone hint |
+|----|------|-------|----------------|
+| R4-UX1 | Frontend does not render `sources` SSE | Backend emits citation metadata; user sees text-only chat | M6 workspace or M5 follow-up |
+| R4-UX2 | `error_message` on `parsed` docs not prominent in UI | Index failures visible via API only | M3 library route polish |
+
+### Maintenance 🟡
+
+| ID | Item | Notes |
+|----|------|-------|
+| R4-M1 | Re-index legacy `parsed` documents | Pre-P3 failures stuck at `parsed`; `POST /documents/{id}/index` or re-upload |
+| R4-M2 | Single chunk >14k est. tokens | May fail Vertex; needs chunk split in M3 chunking (future) |
+
+### Verification hooks ✅
+
+| Command | Purpose |
+|---------|---------|
+| `make unit-m4-recovery` | 53-test M4 regression suite |
+| `make dogfood-m4` | End-to-end product smoke (`bin/dogfood-m4-run.sh`) |
 
 ---
 
