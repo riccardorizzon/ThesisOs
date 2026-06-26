@@ -7,14 +7,21 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-# Import formats accepted in M3 (spec §1).
-VALID_SOURCE_TYPES = frozenset({"pdf", "epub", "docx"})
+# Accepted import formats. PDF/EPUB/DOCX (M3) + native markdown/text (M4 recovery, P4).
+VALID_SOURCE_TYPES = frozenset({"pdf", "epub", "docx", "markdown", "text"})
 
 # Closed status set (spec §2.1). `indexed` is RESERVED for M4 — never set in M3.
 M3_STATUSES = frozenset({"uploaded", "processing", "parsed", "failed"})
 TERMINAL_SUCCESS_STATUS = "parsed"
 
-_EXTENSION_SOURCE_TYPE = {".pdf": "pdf", ".epub": "epub", ".docx": "docx"}
+_EXTENSION_SOURCE_TYPE = {
+    ".pdf": "pdf",
+    ".epub": "epub",
+    ".docx": "docx",
+    ".md": "markdown",
+    ".markdown": "markdown",
+    ".txt": "text",
+}
 
 
 def infer_source_type(filename: str | None) -> str | None:

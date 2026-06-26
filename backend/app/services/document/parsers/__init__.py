@@ -33,6 +33,12 @@ def parse_document(
     if source_type not in VALID_SOURCE_TYPES:
         raise UnsupportedFormatError(source_type)
 
+    # Native markdown/plain-text: pure-python parser, no Docling, no fallback.
+    if source_type in ("markdown", "text"):
+        from app.services.document.parsers.markdown_parser import MarkdownParser
+
+        return MarkdownParser().parse(data, source_type)
+
     if primary is None:
         from app.services.document.parsers.docling_parser import DoclingParser
 
