@@ -10,35 +10,10 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-from app.services.document.chunking import sliding_window_chunks
 from app.services.document.exceptions import ParseError, ParserUnavailableError
-from app.services.document.parsers.base import ParsedChunk, ParseResult
+from app.services.document.parsers.base import ParseResult, markdown_to_chunks
 
 _EXT = {"pdf": ".pdf", "docx": ".docx", "epub": ".epub"}
-
-
-def _chunks_from_markdown(markdown: str) -> list[ParsedChunk]:
-    """Split exported markdown on headings; window long sections (spec §5.1)."""
-    chunks: list[ParsedChunk] = []
-    section = "Document"
-    buffer: list[str] = []
-
-    def flush() -> None:
-        body = "\n".join(buffer).strip()
-        if not body:
-            return
-        for piece in sliding_window_chunks(body):
-            chunks.append(ParsedChunk(content=piece, section_path=section))
-
-    for line in markdown.splitlines():
-        if line.lstrip().startswith("#"):
-            flush()
-            buffer = []
-            section = line.lstrip("#").strip() or section
-        else:
-            buffer.append(line)
-    flush()
-    return chunks
 
 
 class DoclingParser:
@@ -46,19 +21,30 @@ class DoclingParser:
 
     def parse(self, data: bytes, source_type: str) -> ParseResult:
         try:
-            from docling.document_converter import DocumentConverter  # lazy import
+            from docling.datamodel.base_models import InputFormat
+            from docling.datamodel.pipeline_options import PdfPipelineOptions
+            from docling.document_converter import DocumentConverter, PdfFormatOption
         except ImportError as exc:  # pragma: no cover - env without docling
             raise ParserUnavailableError("docling") from exc
+
+        # M3 defers scanned-PDF OCR; default Docling 2.x OCR init fails in our
+        # container (RapidOCR torch.PP-OCRv6.det.small). Born-digital PDFs parse
+        # cleanly with OCR off; PyMuPDF remains the PDF fallback on other errors.
+        pdf_options = PdfPipelineOptions()
+        pdf_options.do_ocr = False
+        converter = DocumentConverter(
+            format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_options)}
+        )
 
         suffix = _EXT.get(source_type, "")
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as tmp:
             tmp.write(data)
             tmp.flush()
             try:
-                result = DocumentConverter().convert(Path(tmp.name))
+                result = converter.convert(Path(tmp.name))
                 markdown = result.document.export_to_markdown()
             except Exception as exc:  # docling raises a variety of errors
                 raise ParseError(f"docling failed for {source_type}: {exc}") from exc
 
-        chunks = _chunks_from_markdown(markdown or "")
+        chunks = markdown_to_chunks(markdown or "")
         return ParseResult(parser=self.name, chunks=chunks)
