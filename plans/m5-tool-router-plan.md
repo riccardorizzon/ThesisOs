@@ -18,7 +18,26 @@
 1. **Shippable phases** — after each step: `make ci` green, M4 regression green, branch merge-ready (no half-wired graph).
 2. **No dead code** — every module shipped in a step is fully tested and contract-complete even if not yet wired to `build_graph()`.
 
-**Phase order (11 steps):** supervisor → planner → router → **routing infrastructure** (`routing.py`) → graph wiring → TaskService → telemetry → `/chat` → eval → dogfood/benchmark → promotion.
+**Phase order (11 steps):** supervisor → planner → router → **M5.2A routing infrastructure** → **M5.2B graph wiring** → TaskService → telemetry → `/chat` → eval → dogfood/benchmark → promotion.
+
+**Milestone cadence (every sub-milestone):**
+
+1. Implementazione  
+2. Test unitari  
+3. Integrazione (when applicable)  
+4. Regression (`make ci` + `make unit-m4-recovery`)  
+5. Commit  
+6. Review  
+
+**Frozen milestones:**
+
+| Tag | Commit | Scope |
+|-----|--------|-------|
+| M5.1 | `9e2aa9b` | supervisor, planner, router, orchestration helpers — **do not reopen except demonstrable bugs** |
+
+**M5.2 baseline:** branch `m5-tool-router` @ `9e2aa9b`. M5.2A and M5.2B are separate ASEP cycles with separate commits.
+
+**Prompt discipline (from M5.2 onward):** ASEP is the project's implicit way of working — Observe → Analyze → Strategy → Execute → Verify → Report runs on every milestone without restating it in prompts. Milestone prompts define **scope only** (baseline, in/out, constraints, gates, commit). Cadence remains: implement → unit test → integrate (if applicable) → regression → commit → review.
 
 **Forbidden in all phases:** GraphState new fields, writer/critic/citation nodes, M12 re-entry loop, new REST endpoints, Engineering Runtime imports of `backend.app`.
 
@@ -110,21 +129,37 @@ unit_m4_recovery: green
 
 ---
 
-## Phase 4 — Routing infrastructure (`routing.py`)
+## Phase 4 — M5.2A: Routing infrastructure (`routing.py`)
+
+> **Baseline:** `9e2aa9b` (M5.1 frozen). **No `build_graph()` changes in this phase.**
 
 ### Objective
-Pure routing helpers — testable **without** modifying `build_graph()`.
+LangGraph dispatch helpers — testable in isolation. Reuses M5.1 route vocabulary (`orchestration/constants.py`, silent normalization already in router node).
+
+### ASEP cycle
+1. Implement `routing.py`  
+2. Unit tests (`test_routing.py`)  
+3. *(no graph integration yet)*  
+4. `make ci` + `make unit-m4-recovery`  
+5. Commit (M5.2A)  
+6. Review  
 
 ### Files affected
 | Action | Path |
 |--------|------|
-| Create | `backend/app/graph/routing.py` — `M5_ROUTES`, `normalize_route()`, `route_after_router()` |
+| Create | `backend/app/graph/routing.py` — `M5_WIRED_ROUTES`, edge key map, `route_after_router(state)` |
 | Create | `backend/tests/test_routing.py` |
 
+### `route_after_router` contract
+- Input: `GraphState` with `route` set by router node (already wired vocabulary)
+- Output: LangGraph conditional edge key (`"conversation"` \| `"grounded_chat"`)
+- Unknown/null `route` → `"conversation"` (safe default for graph dispatch only; router node owns `no_route` errors)
+
 ### Tests
-- Reserved route (`writer`) → normalized per spec §6.2
-- `route_after_router(state)` returns correct LangGraph edge key
-- Parse-failure / unknown route → safe default `conversation`
+- `route=conversation` → edge key `conversation`
+- `route=grounded_chat` → edge key `grounded_chat`
+- `route=None` / unknown → defaults to `conversation` edge
+- `build_graph` topology unchanged (grep/assert no new edges in conversation.py)
 
 ### Promotion criteria
 ```yaml
@@ -132,14 +167,25 @@ routing_unit: green
 make_ci: green
 unit_m4_recovery: green
 build_graph_unchanged: true
+m5_1_unmodified: true   # except bugfixes with evidence
 ```
 
 ---
 
-## Phase 5 — Graph topology + conditional edges
+## Phase 5 — M5.2B: Graph integration (conditional edges)
+
+> **Prerequisite:** M5.2A commit green. **Only phase that modifies `build_graph()`.**
 
 ### Objective
-Wire ADR-0027 topology in `build_graph`; use Phase 4 `route_after_router`; preserve M4 execution node bodies.
+Wire ADR-0027 topology in `build_graph`; conditional edges via M5.2A `route_after_router`; preserve M4 execution node bodies.
+
+### ASEP cycle
+1. Modify `build_graph()` only  
+2. Graph topology unit tests  
+3. Integration tests (InMemorySaver E2E both routes)  
+4. `make ci` + `make unit-m4-recovery` + graph integration suite  
+5. Commit (M5.2B)  
+6. Review  
 
 ### Files affected
 | Action | Path |
@@ -147,7 +193,7 @@ Wire ADR-0027 topology in `build_graph`; use Phase 4 `route_after_router`; prese
 | Modify | `backend/app/graph/conversation.py` — `build_graph` topology only |
 | Create | `backend/tests/test_m5_graph_topology.py` |
 | Modify | `backend/tests/test_conversation_graph.py` |
-| Modify | `backend/tests/test_retriever_node.py` — grounded path only |
+| Modify | `backend/tests/test_grounding.py` if needed — explicit grounded path |
 
 ### Target topology
 ```text
@@ -162,7 +208,7 @@ START → supervisor → planner → router → conditional
 - Full graph E2E with InMemorySaver + fake LLM (all orchestration + execution nodes)
 - GraphState field list unchanged
 
-### Critic checklist (Phase 5)
+### Critic checklist (Phase 5 / M5.2B)
 - [ ] M4 retriever behavior unchanged on grounded path
 - [ ] No writer/critic nodes added
 - [ ] `/chat` still compiles graph successfully

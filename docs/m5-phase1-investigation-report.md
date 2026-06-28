@@ -170,29 +170,29 @@ Orphan modules, stub classes, and “Phase N will wire this” comments in produ
 make ci && make unit-m4-recovery
 ```
 
+**Process note:** From M5.2 onward, ASEP is implicit in every milestone — prompts specify scope only; the cycle is not restated each time.
+
 ---
 
 ## Authorized implementation sequence
 
 Investigation is closed. Implementation proceeds in this order (routing infrastructure **before** `build_graph()` changes):
 
-| Step | Phase | Deliverable | Shippable criterion |
-|------|-------|-------------|---------------------|
-| 1 | **Supervisor** | `supervisor.py` + `test_supervisor_node.py` | Node tested in isolation; CI green; not wired to graph |
-| 2 | **Planner** | `planner.py` + `test_planner_node.py` | Same |
-| 3 | **Router** | `router.py` + `test_router_node.py` | Same |
-| 4 | **Routing infrastructure** | `routing.py` — `M5_ROUTES`, `normalize_route()`, `route_after_router()` + `test_routing.py` | Pure functions tested; **no** `build_graph()` change yet |
-| 5 | **Graph wiring** | `build_graph()` conditional edges (ADR-0027) + `test_m5_graph_topology.py` | Both routes E2E; retriever skip/assert |
-| 6 | **TaskService** | `services/task/` + planner hook + tests | DB upsert; planner calls service |
-| 7 | **Telemetry** | `agent_steps` recorder + RunContext in config | Steps per node; non-blocking writes |
-| 8 | **`/chat` integration** | ConversationService polish + HTTP tests | SSE shape unchanged |
-| 9 | **Integration + eval** | `m5_routing_eval.yaml`, routing benchmark tests | KPI harness (may be non-blocking until step 10) |
-| 10 | **Dogfood + benchmark** | conversation smoke + `dogfood-m4` + latency/token report | Both dogfood paths PASS |
-| 11 | **Promotion** | `docs/m5-promotion.md`, knowledge mirror, tag `m5-complete` | DoD checklist complete |
+| Step | Phase | Deliverable |
+|------|-------|-------------|
+| 1–3 | M5.1 @ `9e2aa9b` | supervisor, planner, router (**frozen**) |
+| 4 | **M5.2A** | `routing.py` + unit tests; graph unchanged |
+| 5 | **M5.2B** | `build_graph()` conditional edges + graph integration tests |
+| 6 | Phase 6 | TaskService |
+| 7 | Phase 7 | Telemetry (`agent_steps`) |
+| 8 | Phase 8 | `/chat` integration |
+| 9 | Phase 9 | Eval dataset + routing benchmark |
+| 10 | Phase 10 | Dogfood + latency/token benchmark |
+| 11 | Phase 11 | Promotion + tag `m5-complete` |
 
-**Branch:** `m5-tool-router` from `main` @ `143f429`.
+**Branch:** `m5-tool-router` @ `9e2aa9b` (M5.2 baseline).
 
-**Rationale for step 4 before step 5:** test route normalization and conditional edge keys without touching M4 composition root — isolates routing logic regressions from graph wiring regressions.
+**Rationale for M5.2A before M5.2B:** isolate LangGraph dispatch logic from graph composition — if regressions appear, the fault domain is unambiguous.
 
 ---
 
@@ -201,10 +201,8 @@ Investigation is closed. Implementation proceeds in this order (routing infrastr
 | Role | Status | Date |
 |------|--------|------|
 | Architecture investigation | **Closed** | 2026-06-28 |
-| Rejected alternatives documented | **Complete** | 2026-06-28 |
-| Quantitative KPIs defined | **Complete** | 2026-06-28 |
-| Definition of Done defined | **Complete** | 2026-06-28 |
-| Implementation discipline agreed | **Complete** | 2026-06-28 |
-| Code start authorization | **Conditional** — verify repo gates below, then begin step 1 |
+| M5.1 orchestration foundation | **Frozen** @ `9e2aa9b` | 2026-06-28 |
+| M5.2A / M5.2B plan documented | **Complete** | — |
+| Code start (M5.2A) | **Awaiting authorization** | — |
 
-**Next action (when implementer starts):** Create branch `m5-tool-router`, implement step 1 (supervisor only) — fully tested, not wired to graph.
+**Next action (when authorized):** M5.2A — `routing.py` + `test_routing.py`; no `build_graph()` changes.
