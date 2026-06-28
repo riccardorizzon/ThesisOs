@@ -41,9 +41,12 @@
 | M5.1 | `9e2aa9b` | supervisor, planner, router, orchestration helpers |
 | M5.2A | `c3097ea` | `routing.py`, `route_after_router()` |
 | M5.2B | `c1075d1` | `build_graph()` orchestration + conditional routing |
-| M5.3 | *(pending commit)* | TaskService, planner hook, lifecycle behavior tests |
+| M5.3 | `c4d5e68` | TaskService, planner hook, lifecycle behavior tests |
+| Governance baseline | `05a1249` | Runtime Constitution v1, ADR-0030, runtime contract, ADC checklist |
 
 Frozen scopes **do not reopen** except demonstrable bugs.
+
+**Logical baseline before M5.4:** `05a1249` (clean tree, `make ci` green). M5.4 builds the Runtime Event Bus on top of this; any Event Bus rework stays isolated to the runtime, not governance.
 
 **M5.2 baseline:** branch `m5-tool-router` @ `9e2aa9b`. M5.2A and M5.2B are separate ASEP cycles with separate commits.
 
