@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import inspect
-
 from app.graph import routing
-from app.graph.conversation import build_graph
 from app.graph.orchestration.constants import DEFAULT_ROUTE, GROUNDED_ROUTE, WIRED_ROUTES
 from app.graph.routing import M5_ROUTE_EDGE_KEYS, resolve_route, route_after_router
 from app.schemas.graph_state import GraphState, Message, Plan
@@ -59,14 +56,6 @@ def test_route_after_router_with_full_state():
         route=GROUNDED_ROUTE,
     )
     assert route_after_router(state) == GROUNDED_ROUTE
-
-
-def test_build_graph_unchanged_linear_m4_topology():
-    source = inspect.getsource(build_graph)
-    assert "supervisor" not in source
-    assert "route_after_router" not in source
-    assert "add_conditional_edges" not in source
-    assert 'add_edge(START, "memory_context_node")' in source
 
 
 def test_routing_reexports_no_duplicate_constants():

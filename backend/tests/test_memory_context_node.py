@@ -3,25 +3,18 @@ from app.graph.conversation import build_graph
 from app.llm.base import TokenChunk
 from app.schemas.graph_state import GraphState, Message
 from app.schemas.memory import PromptContext, PromptMemoryItem
+from tests.support.orchestration_llm import OrchestrationLLM
 
 
-class CapturingLLM:
+class CapturingLLM(OrchestrationLLM):
     def __init__(self):
+        super().__init__(stream_parts=["ok"])
         self.last_messages: list[dict] | None = None
 
     async def astream(self, messages, *, model=None, params=None):
         self.last_messages = messages
-        yield TokenChunk(text="ok")
-        yield TokenChunk(text="", finish_reason="stop", metadata={"usage": {"total_tokens": 1}})
-
-    async def generate(self, *a, **k):
-        return "ok"
-
-    async def embed(self, *a, **k):
-        raise NotImplementedError
-
-    async def vision(self, *a, **k):
-        raise NotImplementedError
+        async for chunk in super().astream(messages, model=model, params=params):
+            yield chunk
 
 
 class StubMemoryService:
@@ -99,22 +92,10 @@ async def test_memory_context_excludes_concept_from_prompt(in_memory_graph_facto
 
 
 async def test_graph_topology_still_streams_assistant(in_memory_graph_factory):
-    class FakeLLM:
-        async def astream(self, messages, *, model=None, params=None):
-            for t in ["Ciao", " ", "mondo"]:
-                yield TokenChunk(text=t)
-            yield TokenChunk(text="", finish_reason="stop", metadata={"usage": {"total_tokens": 3}})
-
-        async def generate(self, *a, **k):
-            return "Ciao mondo"
-
-        async def embed(self, *a, **k):
-            raise NotImplementedError
-
-        async def vision(self, *a, **k):
-            raise NotImplementedError
-
-    graph = in_memory_graph_factory(FakeLLM(), StubMemoryService(PromptContext()))
+    graph = in_memory_graph_factory(
+        OrchestrationLLM(stream_parts=["Ciao", " ", "mondo"]),
+        StubMemoryService(PromptContext()),
+    )
     state = GraphState(messages=[Message(role="user", content="hi")])
     cfg = {"configurable": {"thread_id": "conv-1"}}
     tokens = []

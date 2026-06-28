@@ -1,18 +1,8 @@
 import pytest
-from app.llm.base import TokenChunk
 from app.graph.conversation import build_graph
 from app.schemas.graph_state import GraphState, Message
 from app.schemas.memory import PromptContext
-
-
-class FakeLLM:
-    async def astream(self, messages, *, model=None, params=None):
-        for t in ["Ciao", " ", "mondo"]:
-            yield TokenChunk(text=t)
-        yield TokenChunk(text="", finish_reason="stop", metadata={"usage": {"total_tokens": 3}})
-    async def generate(self, *a, **k): return "Ciao mondo"
-    async def embed(self, *a, **k): raise NotImplementedError
-    async def vision(self, *a, **k): raise NotImplementedError
+from tests.support.orchestration_llm import OrchestrationLLM
 
 
 class StubMemoryService:
@@ -22,9 +12,13 @@ class StubMemoryService:
 
 @pytest.fixture
 def app_graph():
-    # InMemorySaver keeps this test free of Postgres
     from langgraph.checkpoint.memory import InMemorySaver
-    return build_graph(FakeLLM(), checkpointer=InMemorySaver(), memory_service=StubMemoryService())
+
+    return build_graph(
+        OrchestrationLLM(stream_parts=["Ciao", " ", "mondo"]),
+        checkpointer=InMemorySaver(),
+        memory_service=StubMemoryService(),
+    )
 
 
 async def test_graph_streams_tokens_and_persists_assistant(app_graph):

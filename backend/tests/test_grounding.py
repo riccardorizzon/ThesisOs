@@ -8,30 +8,23 @@ retrieved chunk text stays transient (never persisted in message history).
 from __future__ import annotations
 
 from app.graph.conversation import build_graph
+from app.graph.orchestration.constants import GROUNDED_ROUTE
 from app.graph.prompt_wire import render_grounding_prompt
-from app.llm.base import TokenChunk
 from app.schemas.graph_state import GraphState, Message, RetrievedChunk
 from app.schemas.memory import PromptContext
 from app.schemas.retrieval import SearchResultItem
+from tests.support.orchestration_llm import OrchestrationLLM
 
 
-class CapturingLLM:
+class CapturingLLM(OrchestrationLLM):
     def __init__(self) -> None:
+        super().__init__(route=GROUNDED_ROUTE, stream_parts=["answer [1]"])
         self.last_messages: list[dict] | None = None
 
     async def astream(self, messages, *, model=None, params=None):
         self.last_messages = messages
-        yield TokenChunk(text="answer [1]")
-        yield TokenChunk(text="", finish_reason="stop", metadata={"usage": {"total_tokens": 2}})
-
-    async def generate(self, *a, **k):
-        return "answer"
-
-    async def embed(self, *a, **k):
-        raise NotImplementedError
-
-    async def vision(self, *a, **k):
-        raise NotImplementedError
+        async for chunk in super().astream(messages, model=model, params=params):
+            yield chunk
 
 
 class StubMemory:

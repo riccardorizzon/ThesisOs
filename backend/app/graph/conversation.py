@@ -2,8 +2,13 @@ from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 
 from app.graph.memory_context import make_memory_context_node
+from app.graph.orchestration.constants import DEFAULT_ROUTE, GROUNDED_ROUTE
+from app.graph.planner import make_planner_node
 from app.graph.prompt_wire import compose_prompt_wire, format_grounding_sources
 from app.graph.retriever import make_retriever_node
+from app.graph.router import make_router_node
+from app.graph.routing import route_after_router
+from app.graph.supervisor import make_supervisor_node
 from app.llm.base import LLMClient
 from app.schemas.graph_state import CitationRef, GraphState, Message
 from app.services.memory.service import MemoryService
@@ -64,12 +69,27 @@ def build_graph(
     memory_service: MemoryService | None = None,
     retrieval_service: RetrievalService | None = None,
 ):
+    """M5 graph (ADR-0027): orchestration chain + conditional execution subgraph."""
     g = StateGraph(GraphState)
+    g.add_node("supervisor_node", make_supervisor_node(llm))
+    g.add_node("planner_node", make_planner_node(llm))
+    g.add_node("router_node", make_router_node(llm))
     g.add_node("memory_context_node", make_memory_context_node(memory_service))
     g.add_node("retriever_node", make_retriever_node(retrieval_service))
     g.add_node("conversation_node", make_conversation_node(llm))
-    g.add_edge(START, "memory_context_node")
-    g.add_edge("memory_context_node", "retriever_node")
+
+    g.add_edge(START, "supervisor_node")
+    g.add_edge("supervisor_node", "planner_node")
+    g.add_edge("planner_node", "router_node")
+    g.add_edge("router_node", "memory_context_node")
+    g.add_conditional_edges(
+        "memory_context_node",
+        route_after_router,
+        {
+            DEFAULT_ROUTE: "conversation_node",
+            GROUNDED_ROUTE: "retriever_node",
+        },
+    )
     g.add_edge("retriever_node", "conversation_node")
     g.add_edge("conversation_node", END)
     return g.compile(checkpointer=checkpointer)
