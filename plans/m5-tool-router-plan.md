@@ -46,6 +46,7 @@
 | M5.4A | `0339643` | Runtime Event Contract (RuntimeEvent, EventType, Protocols) |
 | M5.4B | `520d3bb` | Runtime Event Bus (fan-out, non-blocking, zero-subscriber valid) |
 | M5.4C | `630d647` | Observability subscribers + lifecycle emission (agent_steps, logging, RunContext-in-config) |
+| M5.5 | `82c3dd3` | Runtime Qualification (integration, error contracts, routing eval, dogfood-m5) |
 
 Frozen scopes **do not reopen** except demonstrable bugs.
 
@@ -392,7 +393,13 @@ m0_m1_m2_m3_m4_tests: green
 
 ---
 
-## Phase 8 — M5.5: Runtime Qualification
+## Phase 8 — M5.5: Runtime Qualification — DONE (`82c3dd3`)
+
+> Integration (error contracts via the real service; both routes via the orchestrated
+> graph + Event Bus), deterministic routing eval (`make qualify-m5`), and the
+> `dogfood-m5` stack smoke. `agent_runs.graph` → `orchestrated_conversation`.
+> Eval/dogfood used JSON (not YAML) to avoid a new backend dependency; HTTP shim
+> stays covered by `test_chat_endpoint.py`.
 
 ### Objective
 **Qualify the runtime** end-to-end — not validate a single feature. HTTP integration, error contracts, eval harness, dogfood, latency/token benchmarks, full regression suite.

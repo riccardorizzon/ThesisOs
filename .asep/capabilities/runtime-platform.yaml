@@ -80,9 +80,15 @@ capabilities:
     title: Runtime Qualification
     aliases: [qualify, qualification, benchmark, dogfood, eval]
     phase: M5.5
-    status: planned
+    status: done
+    baseline: "82c3dd3"
     depends_on: [observability, lifecycle-instrumentation]
-    gates: [make ci, make unit-m4-recovery, eval, dogfood, benchmark]
+    gates: [make ci, make unit-m4-recovery, qualify-m5, dogfood-m5]
+    artifacts:
+      - backend/tests/test_m5_chat_integration.py
+      - backend/tests/test_m5_routing_eval.py
+      - backend/tests/fixtures/m5_routing_eval.json
+      - bin/dogfood-m5-conversation-run.sh
 
   promotion:
     title: Promotion
