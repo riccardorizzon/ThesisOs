@@ -1,0 +1,91 @@
+# Capability Graph — ThesisOS Runtime Platform
+#
+# The ASEP skill reasons over CAPABILITIES, not milestone numbers. A request like
+# "implementa l'Event Bus" resolves to a node here; the node carries deps,
+# required ADRs, baseline, tests, and promotion target.
+#
+# Source-of-truth note: the PLAN (plans/m5-tool-router-plan.md) remains
+# authoritative for exact scope. This graph is the navigation layer (what is
+# ready, what it depends on, what it needs). Phases map nodes to plan sections.
+
+platform: Runtime Platform
+
+governance:
+  constitution: docs/runtime-constitution.md
+  layer_rules: decisions/ADR-0030-agent-runtime-layer-boundaries.md
+  contract: docs/runtime-contract.md
+  checklist: docs/architecture-decision-checklist.md
+  plan: plans/m5-tool-router-plan.md
+
+# status: done | ready | planned | blocked
+capabilities:
+
+  event-contract:
+    title: Runtime Event Contract
+    aliases: [event contract, runtime event model, event vocabulary]
+    phase: M5.4A
+    status: done
+    baseline: "0339643"
+    depends_on: []
+    requires: [runtime-constitution, ADR-0030]
+    artifacts: [backend/app/runtime/events.py, backend/app/runtime/contracts.py]
+    tests: [make ci, make unit-m4-recovery]
+
+  event-bus:
+    title: Runtime Event Bus
+    aliases: [event bus, runtime bus, dispatch]
+    phase: M5.4B
+    status: ready
+    depends_on: [event-contract]
+    requires: [runtime-constitution, ADR-0030]
+    invariant: >-
+      Event Bus depends only on RuntimeSubscriber / RuntimeEventEmitter; it must
+      not import any concrete subscriber; a zero-subscriber runtime stays valid
+      and silent (Constitution C4; ADR-0030 R6/R8).
+    artifacts: [backend/app/runtime/event_bus.py]
+    tests: [make ci, make unit-m4-recovery]
+    promotion: M5.6
+
+  observability:
+    title: Observability subscribers
+    aliases: [observability, agent_steps, telemetry subscriber, logging subscriber]
+    phase: M5.4C
+    status: planned
+    depends_on: [event-bus]
+    requires: [ADR-0030]
+    invariant: >-
+      Subscribers map canonical events to agent_steps + structured logs. Business
+      never emits (R8). Subscriber failure is non-blocking (R6).
+    artifacts:
+      - backend/app/runtime/subscribers/agent_steps.py
+      - backend/app/runtime/subscribers/logging.py
+
+  lifecycle-instrumentation:
+    title: Lifecycle event emission
+    aliases: [lifecycle, runcontext, node instrumentation]
+    phase: M5.4C
+    status: planned
+    depends_on: [event-bus]
+    requires: [ADR-0014, ADR-0030]
+    invariant: >-
+      RunContext flows via LangGraph config (never GraphState). Events are emitted
+      at the composition root / node wrappers, never inside Business node bodies.
+
+  qualification:
+    title: Runtime Qualification
+    aliases: [qualify, qualification, benchmark, dogfood, eval]
+    phase: M5.5
+    status: planned
+    depends_on: [observability, lifecycle-instrumentation]
+    gates: [make ci, make unit-m4-recovery, eval, dogfood, benchmark]
+
+  promotion:
+    title: Promotion
+    aliases: [promote, promotion, freeze, tag]
+    phase: M5.6
+    status: planned
+    depends_on: [qualification]
+    deliverables:
+      - docs/m5-promotion.md
+      - runtime-contract frozen
+      - tag m5-complete

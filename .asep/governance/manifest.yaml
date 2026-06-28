@@ -1,0 +1,27 @@
+# Governance load manifest — pointers only (single source of truth lives at paths).
+# The Governance Engine loads these in order before building a Work Order.
+
+load_order:
+  - id: constitution
+    path: docs/runtime-constitution.md
+    authority: architectural invariants C1-C8 (highest)
+  - id: layer-rules
+    path: decisions/ADR-0030-agent-runtime-layer-boundaries.md
+    authority: layers + rules R1-R8, event model, ASEP taxonomy
+  - id: runtime-contract
+    path: docs/runtime-contract.md
+    authority: extension points + stability guarantees
+  - id: checklist
+    path: docs/architecture-decision-checklist.md
+    authority: per-PR review gate
+  - id: plan
+    path: plans/m5-tool-router-plan.md
+    authority: authoritative milestone scope + promotion criteria
+
+# Live context the loader must read from the repo (not files here):
+context:
+  - HEAD + current branch
+  - git log --oneline -5   # last commit, author convention
+  - working tree status     # must be clean before execute
+  - frozen-milestones table in the plan  # baseline
+  - latest report in .asep/reports/       # where we left off
