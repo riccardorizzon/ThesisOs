@@ -10,9 +10,10 @@ from app.graph.router import make_router_node
 from app.graph.routing import route_after_router
 from app.graph.supervisor import make_supervisor_node
 from app.llm.base import LLMClient
-from app.schemas.graph_state import CitationRef, GraphState, Message
+from app.schemas.graph_state import CitationRef, GraphState, Message, TaskRef
 from app.services.memory.service import MemoryService
 from app.services.retrieval.service import RetrievalService
+from app.services.task.service import TaskService
 
 
 def make_conversation_node(llm: LLMClient):
@@ -68,11 +69,22 @@ def build_graph(
     checkpointer,
     memory_service: MemoryService | None = None,
     retrieval_service: RetrievalService | None = None,
+    task_service: TaskService | None = None,
 ):
     """M5 graph (ADR-0027): orchestration chain + conditional execution subgraph."""
+    on_task_ref = None
+    if task_service is not None:
+
+        async def on_task_ref(task: TaskRef, plan_steps: list[str]) -> None:
+            await task_service.upsert_from_task_ref(
+                task,
+                owner_agent="planner",
+                plan_steps=plan_steps,
+            )
+
     g = StateGraph(GraphState)
     g.add_node("supervisor_node", make_supervisor_node(llm))
-    g.add_node("planner_node", make_planner_node(llm))
+    g.add_node("planner_node", make_planner_node(llm, on_task_ref=on_task_ref))
     g.add_node("router_node", make_router_node(llm))
     g.add_node("memory_context_node", make_memory_context_node(memory_service))
     g.add_node("retriever_node", make_retriever_node(retrieval_service))

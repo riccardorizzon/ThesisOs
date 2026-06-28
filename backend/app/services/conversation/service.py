@@ -15,6 +15,7 @@ from app.graph.conversation import build_graph
 from app.llm.factory import get_llm_client
 from app.schemas.graph_state import GraphState, Message
 from app.schemas.run_context import RunContext
+from app.services.task.service import TaskService
 
 logger = logging.getLogger("app.services.conversation")
 
@@ -22,6 +23,9 @@ logger = logging.getLogger("app.services.conversation")
 class ConversationService:
     """Boundary between HTTP and the graph. `messages` is the system of record; the
     checkpointer holds derived working state (spec §5)."""
+
+    def __init__(self, *, task_service: TaskService | None = None) -> None:
+        self._task_service = task_service or TaskService()
 
     async def _get_or_create_conversation(self, session, conversation_id: str | None) -> models.Conversation:
         if conversation_id:
@@ -86,10 +90,15 @@ class ConversationService:
         # --- Stream + persist (guarded so the AgentRun is always finalized).
         state = GraphState(messages=history)
         parts: list[str] = []
+        task_id: str | None = None
         try:
             try:
                 async with open_checkpointer() as saver:
-                    graph = build_graph(get_llm_client(), checkpointer=saver)
+                    graph = build_graph(
+                        get_llm_client(),
+                        checkpointer=saver,
+                        task_service=self._task_service,
+                    )
                     cfg = {"configurable": {"thread_id": conv_id}}
                     async for chunk in graph.astream(state, cfg, stream_mode="custom"):
                         if chunk.get("type") == "token":
@@ -99,8 +108,12 @@ class ConversationService:
                             yield {"event": "sources", "data": {"sources": chunk.get("sources", [])}}
                         elif chunk.get("type") == "usage":
                             usage = chunk.get("usage", {})
+                    snap = await graph.aget_state(cfg)
+                    task = snap.values.get("task") if snap.values else None
+                    if task is not None:
+                        task_id = task.id
                 message_id = await self._persist_assistant(conv_id, "".join(parts))
-                await self._finalize(run_id, conv_id, status="done", usage=usage)
+                await self._finalize(run_id, conv_id, status="done", usage=usage, task_id=task_id)
                 finalized = True
                 yield {"event": "done", "data": {"conversation_id": conv_id,
                                                  "message_id": message_id, "usage": usage}}
@@ -144,8 +157,16 @@ class ConversationService:
             await session.commit()
             return msg.id
 
-    async def _finalize(self, run_id: str, conversation_id: str, *, status: str,
-                        usage: dict, error: str | None = None) -> None:
+    async def _finalize(
+        self,
+        run_id: str,
+        conversation_id: str,
+        *,
+        status: str,
+        usage: dict,
+        error: str | None = None,
+        task_id: str | None = None,
+    ) -> None:
         async with AsyncSessionLocal() as session:
             run = await session.get(models.AgentRun, run_id)
             if run:
@@ -154,3 +175,8 @@ class ConversationService:
                 run.finished_at = datetime.now(timezone.utc)
                 run.output = {"usage": usage} if usage else {}   # token accounting on agent_runs (spec §5)
                 await session.commit()
+        if status == "done" and task_id is not None:
+            try:
+                await self._task_service.mark_done(task_id)
+            except Exception:
+                logger.exception("failed to mark task %s done after turn finalize", task_id)
