@@ -45,6 +45,7 @@
 | Governance baseline | `05a1249` | Runtime Constitution v1, ADR-0030, runtime contract, ADC checklist |
 | M5.4A | `0339643` | Runtime Event Contract (RuntimeEvent, EventType, Protocols) |
 | M5.4B | `520d3bb` | Runtime Event Bus (fan-out, non-blocking, zero-subscriber valid) |
+| M5.4C | `630d647` | Observability subscribers + lifecycle emission (agent_steps, logging, RunContext-in-config) |
 
 Frozen scopes **do not reopen** except demonstrable bugs.
 
@@ -319,9 +320,11 @@ m5_4_blocked_until: adr_0030_accepted
 `RuntimeEventEmitter`, depends only on the contracts (no concrete subscriber), zero-subscriber
 runtime stays valid/silent, subscriber failure non-blocking (R6). Bus only — no subscribers, no wiring.
 
-### M5.4C — Observability subscribers + lifecycle emission — NEXT
-Concrete subscribers (`agent_steps`, logging), RunContext in LangGraph config, and event
-emission at composition-root/node wrappers. Scope below.
+### M5.4C — Observability subscribers + lifecycle emission — DONE (`630d647`)
+`runtime/instrumentation.py` (node wrappers, signature-transparent), `runtime/subscribers/`
+(`AgentStepsSubscriber`, `LoggingSubscriber`), `build_graph` emitter/run_context wiring, and
+`ConversationService` RunStarted/RunCompleted + RunContext in LangGraph config. Business agents
+untouched (R8/C3); subscriber failures non-blocking (R6). Full M5.4 (Runtime Observability) complete.
 
 ### Objective (M5.4C)
 Wire the Event Bus into the runtime: emit canonical events at lifecycle boundaries with pluggable subscribers. Telemetry, logging, and future tracing/UI are subscribers; the Event Bus does not know what subscribers do with events (ADR-0030 R6, R8).

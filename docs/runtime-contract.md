@@ -93,8 +93,8 @@ Runtime composition  →  emit(event)  →  Event Bus  →  subscribers
 | `RuntimeEvent` / `EventType` | Runtime | Event contract + vocabulary | M5.4A ✅ |
 | `RuntimeSubscriber` / `RuntimeEventEmitter` | Runtime | Consumer/producer Protocols | M5.4A ✅ |
 | `RuntimeEventBus` | Runtime | Fan-out to subscribers; no storage logic | M5.4B ✅ |
-| `AgentStepsSubscriber` | Runtime | Maps node events → `agent_steps` table | M5.4C |
-| `LoggingSubscriber` | Runtime | Structured logs | M5.4C |
+| `AgentStepsSubscriber` | Runtime | Maps node terminal events → `agent_steps` table | M5.4C ✅ |
+| `LoggingSubscriber` | Runtime | Structured logs | M5.4C ✅ |
 | *(future)* `OpenTelemetrySubscriber` | Runtime | OTel export | — |
 | *(future)* `TracingUISubscriber` | Runtime | Debug / replay UI | — |
 

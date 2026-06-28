@@ -51,7 +51,8 @@ capabilities:
     title: Observability subscribers
     aliases: [observability, agent_steps, telemetry subscriber, logging subscriber]
     phase: M5.4C
-    status: planned
+    status: done
+    baseline: "630d647"
     depends_on: [event-bus]
     requires: [ADR-0030]
     invariant: >-
@@ -65,12 +66,15 @@ capabilities:
     title: Lifecycle event emission
     aliases: [lifecycle, runcontext, node instrumentation]
     phase: M5.4C
-    status: planned
+    status: done
+    baseline: "630d647"
     depends_on: [event-bus]
     requires: [ADR-0014, ADR-0030]
     invariant: >-
       RunContext flows via LangGraph config (never GraphState). Events are emitted
       at the composition root / node wrappers, never inside Business node bodies.
+    artifacts:
+      - backend/app/runtime/instrumentation.py
 
   qualification:
     title: Runtime Qualification
