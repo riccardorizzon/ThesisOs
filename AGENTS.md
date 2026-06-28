@@ -57,6 +57,11 @@ is governed by:
 (Event Bus, contracts, lifecycle, observability) is the M5 subsystem of ASEP governed by
 the Constitution + ADR-0030 (§0).
 
+**Milestone execution:** Run Runtime Platform milestones via the `asep` skill
+(`.cursor/skills/asep/SKILL.md`) — e.g. `ASEP: implementa M5.4B`. It loads governance,
+builds the Work Order, runs Observe→…→Report, enforces the Constitution, and stops on any
+violation. Operational templates live in `.asep/`.
+
 ## Review norms
 
 - **Review order (Constitution C7):** Constitution → Layer → Contracts → Events → Feature → Performance → Code
