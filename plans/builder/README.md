@@ -73,3 +73,13 @@ chmod +x .cursor/skills/orchestrate-builders/scripts/validate-state.sh
 | 3 | P7 | integrator | main repo |
 
 See skill § "Example: M1 three-wave layout" for details.
+
+## Loop engineering (ASEP)
+
+This bus is the **state spine** for ASEP's builder loop — the same role as
+`STATE.md` in [loop-engineering](https://github.com/cobusgreyling/loop-engineering)
+starters. Bridge docs at repo root: `LOOP.md`, `STATE.md` (pointer), `loop-budget.md`,
+`loop-run-log.md`. Full platform cycle: `docs/platform/runtime-model.md`.
+
+Policy rules (declarative): `plans/builder/policies.yaml` — evaluated by
+`builder-engine policy` after observe.

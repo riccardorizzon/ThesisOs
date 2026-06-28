@@ -1,6 +1,6 @@
 # Next Actions — 100-task backlog
 
-> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-26 — M4 Recovery closed; M5 active; residual backlog registered below.**
+> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-28 — Pre-M5 Closure complete; M5 authorized.**
 
 Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 debt · 🟢 net-new · ✅ done.
 
@@ -16,13 +16,14 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 ## IMMEDIATE — ordered pipeline (reordered 2026-06-25 → product-first)
 
 **Active — do next (product):**
-1. **M5 — Tool Router** 🔴 — unblock the Critic §12 sign-off on the frozen M5 spec (ADR-0027), then `T055–T061` (supervisor/planner/router nodes + graph rewire). Plumbing for M6, not user-visible alone.
+1. **M5 — Tool Router** 🔴 — `T055–T061` (supervisor/planner/router nodes + graph rewire). Critic §12 sign-off complete (`docs/m5-critic-signoff.md`).
 2. **M6 — Writing** ⬜ — `T062–T068`. At `m6-complete` = usable thesis product (roadmap "usable product line", M1–M6).
 3. **Dogfood** — use ThesisOS on the real thesis for a few days; record *real* bottlenecks. No further platform work until then.
 
 **Deferred — ASEP maintenance mode (pull only on a real block per Operating Mode):**
-- **L4 MB2 Ph1 (D1 Observe)** ⏸️ — authorized but deferred; resume only if a product milestone is blocked by missing Observe/Replan.
-- **L4 MB2 Ph2–7** ⏸️ — deferred, sequential per `plans/mb2-adaptive-runtime-plan.md`.
+- **L4 MB3+** ⏸️ — next platform era work per `docs/platform/era-model.md` / ETM; no pull until product dogfood surfaces a block.
+
+**Done — platform (2026-06-28):** **MB2 Adaptive Runtime** (D1–D10) — `docs/mb2-phase-gate.md`; 65 `builder_engine` tests; full operator loop in `LOOP.md`.
 
 **Done — history (Era I + constitution):** M4 Recovery Sprint (2026-06-26) · M3 close-out · M4 (`m4-complete`) · MB1 Phase 2 · Era II constitution (ADR-0026) · L0 meta-model + L1 invariants (ADR-0028) · L2 GSM · DR-001 · ETM v1.1 · L2.1 patch · Behavioral Semantics (ADR-0029) · constitution sign-off · MB2 spec rebase + §13 sign-off · L4 Phase 0 (`l4-phase0-complete`).
 
@@ -38,7 +39,7 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 |----|------|-------|
 | R4-OP1 | Docling cold start ~26 s | First PDF parse loads torch weights; dev UX only |
 | R4-OP2 | Docker backend rebuild ~7–12 min | Docling ML deps; CI cache strategy TBD |
-| R4-OP3 | No local `python3-venv` on dev VM | Tests via Docker; `make install` needs `python3.12-venv` package |
+| R4-OP3 | No local `python3-venv` on dev VM | Resolved: Makefile uses `PYTHON ?= python3`; install `python3.12-venv` if needed |
 
 ### UX 🟡
 

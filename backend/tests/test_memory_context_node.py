@@ -123,26 +123,16 @@ async def test_graph_topology_still_streams_assistant(in_memory_graph_factory):
     assert "".join(tokens) == "Ciao mondo"
 
 
-async def test_memory_context_integration_with_db(in_memory_graph_factory):
-    from sqlalchemy import text
-
-    from app.db.session_async import AsyncSessionLocal
+async def test_memory_context_integration_with_db(in_memory_graph_factory, db_session):
     from app.schemas.memory import MemoryCreate
     from app.services.memory.service import MemoryService
 
-    try:
-        async with AsyncSessionLocal() as session:
-            await session.execute(text("SELECT 1"))
-    except Exception as exc:
-        pytest.skip(f"async DB not reachable: {exc}")
-
     svc = MemoryService()
-    async with AsyncSessionLocal() as session:
-        await svc.create(
-            MemoryCreate(kind="editable", content="Always-on thesis rules.", title="Rules"),
-            session=session,
-        )
-        await session.commit()
+    await svc.create(
+        MemoryCreate(kind="editable", content="Always-on thesis rules.", title="Rules"),
+        session=db_session,
+    )
+    await db_session.commit()
 
     llm = CapturingLLM()
     graph = in_memory_graph_factory(llm, svc)

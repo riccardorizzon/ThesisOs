@@ -51,6 +51,10 @@ implementers** (safe isolation), **file locks in STATE** for explorers/reviewers
 | Engine command | Replaces |
 |----------------|----------|
 | `builder-engine lint-graph` | `validate-state.sh`, §1 packet rules |
+| `builder-engine observe` | Preflight snapshot (MB2 D1) |
+| `builder-engine policy` | Evaluate policies (MB2 D2) |
+| `builder-engine plan` | Extended plan + critical path (MB2 D3) |
+| `builder-engine cycle --dry-run` | Full preflight Observe→Policy→Plan (MB2 D6) |
 | `builder-engine status` | Manual STATE summary |
 | `builder-engine ready` | §2A ready-set computation |
 | `builder-engine schedule` | §2 wave dispatch — claim, locks, manifest |
@@ -281,13 +285,13 @@ See [`references/wave-sync-checklist.md`](references/wave-sync-checklist.md).
 1. Run integrator packet if not done (full test suite, OpenAPI diff, lint).
 2. Update STATE `status: closed`.
 3. Run `/handoff` with epic summary.
-4. Provide paste prompt for next session:
+4. Tell the user to run in a fresh session:
 
-```markdown
-Epic `${EPIC}` builder orchestration complete.
-Read `plans/builder/STATE.yaml` and latest handoff.
-Continue from: [next milestone / follow-up tasks].
 ```
+/handoff start
+```
+
+Include epic context in the handoff: Epic `${EPIC}` complete — read `plans/builder/STATE.yaml` and continue from [next milestone / follow-up tasks].
 
 ---
 

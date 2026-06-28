@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import pytest
-from sqlalchemy import select, text
+from sqlalchemy import select
 
 from app.db import models
-from app.db.session_async import AsyncSessionLocal
 from app.schemas.document import DocumentUploadMetadata
 from app.services.document import DocumentService
 from app.services.document.parsers.base import ParsedChunk, ParseResult
@@ -19,18 +18,6 @@ class FakeParser:
 
     def parse(self, data, source_type):
         return self._result
-
-
-@pytest.fixture
-async def db_session():
-    try:
-        async with AsyncSessionLocal() as session:
-            await session.execute(text("SELECT 1"))
-    except Exception as exc:
-        pytest.skip(f"async DB not reachable: {exc}")
-    async with AsyncSessionLocal() as session:
-        yield session
-        await session.rollback()
 
 
 @pytest.fixture

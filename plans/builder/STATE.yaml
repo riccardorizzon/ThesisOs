@@ -1,58 +1,37 @@
-# Builder orchestration STATE — post-M3; M4 spec frozen; MB1 Phase 2 next.
-# Validate: builder-engine lint-graph --repo-root .
+# Builder orchestration STATE — MB2 Adaptive Runtime (closed)
+# Preflight: builder-engine cycle --dry-run --repo-root .
 
-epic: mb1-workflow-engine-phase2-prep
-chain: pipeline-2026-06-25
+epic: mb2-adaptive-runtime
+chain: mb2-loop-2026-06-28
 status: closed
-wave: 2
+wave: 1
 
 decisions:
-  - "Pipeline order: Vision → Spec Freeze → Engine → Implementation → Validation"
-  - "Era I complete (m4-complete, MB1 Ph 1–2); Era II constitution frozen (ADR-0026)"
-  - "ASEP = platform; Engineering Runtime = cycle executor; Build Control Plane = govern/plan/observe"
-  - "Era II = formalization-first (ADR-0028): L0 meta model + L1 invariants frozen"
-  - "Invariants are fail-closed laws, distinct from tunable policies (L1)"
-  - "Meta model platform-only; Milestone = sole boundary object"
-  - "MB2 spec Architect Approved 2026-06-25 (§13; spec only)"
-  - "L4 Phase 0 gate closed (docs/l4-phase0-gate.md); tag l4-phase0-complete"
-  - "MB2 Phase 1 (D1 Observe) authorized; rollback baseline f117d3d"
-  - "M5 product spec frozen (ADR-0027) — impl after Critic sign-off (orthogonal)"
+  - "MB2 D1–D10 complete — Era II processor head/tail in builder_engine/"
+  - "EngineeringRuntime replaces WorkflowRuntime (D10)"
+  - "Policy declarative in plans/builder/policies.yaml — invariants in validate_graph"
+  - "Replan advisory only — no auto STATE writes (INV-B7)"
+  - "Event bus append-only at .builder-engine/events.jsonl"
 
 file_locks: {}
 blockers: {}
 
 packets:
-  P-M4-SPEC:
+  P-MB2-D3-D10:
     wave: 1
-    agent_type: documenter
-    status: done
-    depends_on: []
-    owned_files:
-      - docs/superpowers/specs/2026-06-25-thesisos-m4-retrieval-system-design.md
-      - decisions/ADR-0024-retrieval-ownership.md
-    output: "M4 frozen spec + ADR-0024"
-    checks: []
-    integration_notes: "Critic sign-off pending"
-
-  P-MB1-RUNTIME-DOC:
-    wave: 1
-    agent_type: documenter
-    status: done
-    depends_on: []
-    owned_files:
-      - decisions/ADR-0025-builder-execution-state-machine.md
-      - docs/superpowers/specs/2026-06-25-thesisos-mb1-workflow-engine-design.md
-    output: "ADR-0025 + MB1 spec §10.1 runtime amendment"
-    checks: []
-    integration_notes: "Phase 2 implementation not started"
-
-  P-MB1-PHASE2:
-    wave: 2
     agent_type: implementer
     status: done
-    depends_on: [P-M4-SPEC, P-MB1-RUNTIME-DOC]
+    depends_on: []
     owned_files:
-      - builder_engine/
-    output: "Runtime loop + execution state machine; schedule/sync as CLI views"
-    checks: ["make unit-builder-engine", "make ci"]
-    integration_notes: "Phase 2 complete — see docs/mb1-phase2-gate.md"
+      - builder_engine/planner.py
+      - builder_engine/events.py
+      - builder_engine/cycle.py
+      - builder_engine/replan.py
+      - builder_engine/merge.py
+      - builder_engine/runtime.py
+      - builder_engine/cli.py
+      - docs/mb2-phase-gate.md
+    output: "Extended plan, event bus, cycle pre/postflight, replan stub, EngineeringRuntime + events"
+    checks:
+      - make unit-builder-engine
+    integration_notes: "65 unit tests; see docs/mb2-phase-gate.md"

@@ -9,9 +9,21 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### M5 — Tool Router (in progress)
+### M5 — Tool Router (authorized)
 
-- Not started — awaiting Critic §12 sign-off on frozen M5 spec (ADR-0027).
+- Critic §12 sign-off complete (2026-06-28) — `docs/m5-critic-signoff.md`.
+- Pre-M5 Closure: isolated `thesisos_test` DB, `make ci` green, M4 regression PASS.
+
+### Platform — MB2 Engineering Runtime (closed 2026-06-28)
+
+- D1–D10 adaptive runtime loop: observe, policy, plan, cycle, replan, merge, events.
+- 65 `builder_engine` tests; gate doc `docs/mb2-phase-gate.md`.
+
+### CI / test infrastructure
+
+- `bin/ensure-test-db.sh` — creates `thesisos_test`, runs Alembic; backend pytest no longer touches dev DB.
+- Makefile `PYTHON ?= python3`; GitHub Actions postgres + pgvector service for backend tests.
+- Frontend vitest requires Node ≥20 (`.nvmrc`).
 
 ---
 

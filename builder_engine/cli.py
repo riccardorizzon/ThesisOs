@@ -1,4 +1,4 @@
-"""Build Workflow Engine CLI — views on WorkflowRuntime (ADR-0025)."""
+"""Build Workflow Engine CLI — projections on EngineeringRuntime (ADR-0025)."""
 
 from __future__ import annotations
 
@@ -11,8 +11,14 @@ from rich.table import Table
 
 from builder_engine.checks import run_stage
 from builder_engine.graph import BuilderGraph
+from builder_engine.cycle import CycleError, EngineeringRuntimeCycle
+from builder_engine.events import BuildEventBus
+from builder_engine.merge import merge_eligibility
+from builder_engine.observe import StateObserver
 from builder_engine.paths import default_state_path, find_repo_root
-from builder_engine.runtime import WorkflowRuntime, WorkflowRuntimeError
+from builder_engine.planner import PlanError, build_plan
+from builder_engine.policy import PolicyEngine
+from builder_engine.runtime import EngineeringRuntime, EngineeringRuntimeError
 from builder_engine.scheduler import compute_ready
 from builder_engine.validate import validate_graph
 
@@ -129,6 +135,247 @@ def status(
 
 
 @app.command()
+def observe(
+    state: Optional[Path] = typer.Option(None, "--state"),
+    repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
+    json_out: bool = typer.Option(False, "--json", help="Emit ObservedSnapshot as JSON"),
+) -> None:
+    """Observe workflow + git state into an immutable snapshot (MB2 D1, read-only)."""
+    root = _root(repo_root)
+    state_path = state or default_state_path(root)
+    snapshot = StateObserver(root, state_path).observe()
+
+    if json_out:
+        import json
+
+        payload = {
+            "observed_at": snapshot.observed_at,
+            "state_path": snapshot.state_path,
+            "epic": snapshot.epic,
+            "chain": snapshot.chain,
+            "epic_status": snapshot.epic_status,
+            "wave": snapshot.wave,
+            "packet_count": snapshot.packet_count,
+            "ready_count": snapshot.ready_count,
+            "in_flight_count": snapshot.in_flight_count,
+            "done_count": snapshot.done_count,
+            "blocked_count": snapshot.blocked_count,
+            "decisions_count": snapshot.decisions_count,
+            "file_locks": dict(snapshot.file_locks),
+            "blockers": dict(snapshot.blockers),
+            "packets": [
+                {
+                    "id": p.id,
+                    "wave": p.wave,
+                    "status": p.status,
+                    "agent_type": p.agent_type,
+                    "depends_on": list(p.depends_on),
+                    "checks": list(p.checks),
+                }
+                for p in snapshot.packets
+            ],
+            "git": {
+                "is_repo": snapshot.git.is_repo,
+                "branch": snapshot.git.branch,
+                "dirty": snapshot.git.dirty,
+                "uncommitted_count": snapshot.git.uncommitted_count,
+            },
+            "validation_ok": snapshot.validation_ok,
+            "validation_errors": list(snapshot.validation_errors),
+            "validation_warnings": list(snapshot.validation_warnings),
+            "staleness_reasons": list(snapshot.staleness_reasons),
+            "is_complete": snapshot.is_complete,
+        }
+        console.print_json(json.dumps(payload))
+        if not snapshot.is_complete:
+            raise typer.Exit(1)
+        return
+
+    table = Table(title="Observed Snapshot")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("observed_at", snapshot.observed_at)
+    table.add_row("epic", snapshot.epic or "—")
+    table.add_row("status", snapshot.epic_status or "—")
+    table.add_row("wave", str(snapshot.wave))
+    table.add_row("packets", str(snapshot.packet_count))
+    table.add_row("ready", str(snapshot.ready_count))
+    table.add_row("in_flight", str(snapshot.in_flight_count))
+    table.add_row("done", str(snapshot.done_count))
+    table.add_row("validation", "OK" if snapshot.validation_ok else "FAIL")
+    if snapshot.git.is_repo:
+        table.add_row("git branch", snapshot.git.branch or "—")
+        table.add_row("git dirty", str(snapshot.git.dirty))
+    table.add_row("is_complete", str(snapshot.is_complete))
+    console.print(table)
+
+    if snapshot.validation_errors:
+        for err in snapshot.validation_errors:
+            console.print(f"[red]ERROR:[/red] {err}")
+    for warn in snapshot.validation_warnings:
+        console.print(f"[yellow]WARN:[/yellow] {warn}")
+    for reason in snapshot.staleness_reasons:
+        console.print(f"[red]STALE:[/red] {reason}")
+
+    if not snapshot.is_complete:
+        raise typer.Exit(1)
+
+
+@app.command()
+def policy(
+    state: Optional[Path] = typer.Option(None, "--state"),
+    repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
+    json_out: bool = typer.Option(False, "--json", help="Emit PolicyDecision as JSON"),
+) -> None:
+    """Evaluate policies after Observe (MB2 D2, read-only)."""
+    root = _root(repo_root)
+    state_path = state or default_state_path(root)
+    snapshot = StateObserver(root, state_path).observe()
+    decision = PolicyEngine(root).evaluate(snapshot)
+
+    if json_out:
+        import json
+
+        payload = {
+            "outcome": decision.outcome,
+            "violations": [
+                {"rule_id": v.rule_id, "message": v.message, "action": v.action}
+                for v in decision.violations
+            ],
+            "warnings": list(decision.warnings),
+        }
+        console.print_json(json.dumps(payload))
+        if decision.outcome == "block":
+            raise typer.Exit(1)
+        return
+
+    table = Table(title="Policy Decision")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("outcome", decision.outcome)
+    table.add_row("violations", str(len(decision.violations)))
+    table.add_row("warnings", str(len(decision.warnings)))
+    console.print(table)
+
+    for v in decision.violations:
+        color = {"block": "red", "escalate": "yellow", "allow": "green"}.get(v.action, "white")
+        console.print(f"[{color}]{v.action.upper()}[/{color}] [{v.rule_id}] {v.message}")
+    for warn in decision.warnings:
+        console.print(f"[yellow]WARN:[/yellow] {warn}")
+
+    if decision.outcome == "block":
+        raise typer.Exit(1)
+
+
+@app.command()
+def plan(
+    state: Optional[Path] = typer.Option(None, "--state"),
+    repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
+    json_out: bool = typer.Option(False, "--json"),
+) -> None:
+    """Build extended plan after observe + policy (MB2 D3)."""
+    root = _root(repo_root)
+    state_path = state or default_state_path(root)
+    snapshot = StateObserver(root, state_path).observe()
+    decision = PolicyEngine(root).evaluate(snapshot)
+
+    if decision.outcome == "block":
+        console.print("[red]Policy blocked — cannot build plan[/red]")
+        raise typer.Exit(1)
+
+    try:
+        built = build_plan(snapshot, decision)
+    except PlanError as exc:
+        console.print(f"[red]Plan failed:[/red] {exc}")
+        raise typer.Exit(1) from exc
+
+    if json_out:
+        import json
+
+        payload = {
+            "epic": built.epic,
+            "wave": built.wave,
+            "ready_packets": list(built.ready_packets),
+            "critical_path": list(built.critical_path),
+            "blockers": dict(built.blockers),
+            "empty": built.empty,
+        }
+        console.print_json(json.dumps(payload))
+        return
+
+    table = Table(title=f"Plan — {built.epic}")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("wave", str(built.wave))
+    table.add_row("ready", ", ".join(built.ready_packets) or "—")
+    table.add_row("critical_path", " → ".join(built.critical_path) or "—")
+    table.add_row("empty", str(built.empty))
+    table.add_row("blockers", str(len(built.blockers)))
+    console.print(table)
+
+
+@app.command()
+def cycle(
+    state: Optional[Path] = typer.Option(None, "--state"),
+    repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
+    dry_run: bool = typer.Option(True, "--dry-run/--execute", help="Preflight only (default)"),
+) -> None:
+    """Run engineering cycle preflight (MB2 D6)."""
+    root = _root(repo_root)
+    state_path = state or default_state_path(root)
+    eng_cycle = EngineeringRuntimeCycle(root, state_path)
+    try:
+        result = eng_cycle.run_preflight()
+    except CycleError as exc:
+        console.print(f"[red]Cycle failed:[/red] {exc}")
+        raise typer.Exit(1) from exc
+
+    console.print(f"[cyan]Cycle[/cyan] {result.cycle_id}")
+    console.print(f"Policy: {result.policy.outcome}")
+    if result.plan:
+        console.print(
+            f"Plan: ready={list(result.plan.ready_packets)} "
+            f"path={' → '.join(result.plan.critical_path)} empty={result.plan.empty}"
+        )
+    if result.policy.outcome == "block":
+        raise typer.Exit(1)
+    if dry_run:
+        console.print("[yellow]Dry run — no schedule/sync executed[/yellow]")
+
+
+@app.command()
+def events(
+    tail: int = typer.Option(20, "--tail", "-n"),
+    repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
+) -> None:
+    """Tail build event bus (MB2 D4, read-only)."""
+    root = _root(repo_root)
+    bus = BuildEventBus(root)
+    items = bus.tail(tail)
+    if not items:
+        console.print("[yellow]No events[/yellow]")
+        raise typer.Exit(0)
+    table = Table(title=f"Events (last {len(items)})")
+    table.add_column("Time")
+    table.add_column("Type")
+    table.add_column("Payload")
+    for ev in items:
+        table.add_row(ev.timestamp[:19], ev.type, str(ev.payload)[:80])
+    console.print(table)
+
+
+@app.command("merge-check")
+def merge_check(
+    repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
+) -> None:
+    """Merge eligibility stub — always defers to integrator (MB2 D8)."""
+    root = _root(repo_root)
+    eligibility = merge_eligibility(validation_passed=True)
+    console.print(f"Outcome: {eligibility.outcome}")
+    console.print(f"Reason: {eligibility.reason}")
+
+
+@app.command()
 def ready(
     state: Optional[Path] = typer.Option(None, "--state"),
     repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
@@ -169,10 +416,10 @@ def schedule(
     """Claim ready packets, set locks, emit dispatch manifest (runtime projection)."""
     root = _root(repo_root)
     state_path = state or default_state_path(root)
-    runtime = WorkflowRuntime(root, state_path)
+    runtime = EngineeringRuntime(root, state_path)
     try:
         result = runtime.schedule(packet_ids=packet or None)
-    except WorkflowRuntimeError as exc:
+    except EngineeringRuntimeError as exc:
         console.print(f"[red]Schedule failed:[/red] {exc}")
         raise typer.Exit(1) from exc
 
@@ -195,10 +442,10 @@ def sync(
     """Run VALIDATING checks on in_progress packets; advance wave when complete."""
     root = _root(repo_root)
     state_path = state or default_state_path(root)
-    runtime = WorkflowRuntime(root, state_path)
+    runtime = EngineeringRuntime(root, state_path)
     try:
         result = runtime.sync(dry_run=dry_run)
-    except WorkflowRuntimeError as exc:
+    except EngineeringRuntimeError as exc:
         console.print(f"[red]Sync failed:[/red] {exc}")
         raise typer.Exit(1) from exc
 

@@ -1,4 +1,4 @@
-"""Workflow runtime — State→Planner→Scheduler→Executor→Validator→StateUpdate."""
+"""Engineering runtime — Schedule, Validate, Update State (ADR-0025, MB2 D9/D10)."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from builder_engine.checks import run_packet_checks
+from builder_engine.events import BuildEventBus, event_now
 from builder_engine.executor import build_dispatch_entry
 from builder_engine.graph import BuilderGraph
 from builder_engine.planner import next_wave_from_raw, plan_ready, wave_complete_raw
@@ -22,8 +23,12 @@ from builder_engine.state_machine import (
 from builder_engine.validate import validate_graph
 
 
-class WorkflowRuntimeError(Exception):
+class EngineeringRuntimeError(Exception):
     """Runtime orchestration failure."""
+
+
+# Deprecated alias — remove after external callers migrate.
+WorkflowRuntimeError = EngineeringRuntimeError
 
 
 @dataclass
@@ -40,13 +45,19 @@ class SyncResult:
     advanced_to_wave: int | None = None
 
 
-class WorkflowRuntime:
-    """Deterministic build workflow engine core (ADR-0025)."""
+class EngineeringRuntime:
+    """Deterministic engineering cycle executor (ADR-0025, ADR-0026)."""
 
-    def __init__(self, repo_root: Path, state_path: Path | None = None):
+    def __init__(
+        self,
+        repo_root: Path,
+        state_path: Path | None = None,
+        bus: BuildEventBus | None = None,
+    ):
         self.repo_root = repo_root.resolve()
         self.state_path = (state_path or self.repo_root / "plans" / "builder" / "STATE.yaml").resolve()
         self.engine_dir = self.repo_root / ".builder-engine"
+        self.bus = bus or BuildEventBus(self.repo_root)
 
     def load_graph(self) -> BuilderGraph:
         return BuilderGraph.load(self.state_path)
@@ -54,7 +65,7 @@ class WorkflowRuntime:
     def _require_valid_graph(self, graph: BuilderGraph) -> None:
         result = validate_graph(graph)
         if not result.ok:
-            raise WorkflowRuntimeError(f"graph invalid: {'; '.join(result.errors)}")
+            raise EngineeringRuntimeError(f"graph invalid: {'; '.join(result.errors)}")
 
     def _load_raw(self) -> dict[str, Any]:
         return load_raw_state(self.state_path)
@@ -69,28 +80,31 @@ class WorkflowRuntime:
             allowed = set(packet_ids)
             ready = [p for p in ready if p.id in allowed]
         if not ready:
-            raise WorkflowRuntimeError("no ready packets to schedule")
+            raise EngineeringRuntimeError("no ready packets to schedule")
 
         in_flight = in_flight_packets(graph)
         if in_flight:
             ids = ", ".join(p.id for p in in_flight)
-            raise WorkflowRuntimeError(f"packets already in progress: {ids}")
+            raise EngineeringRuntimeError(f"packets already in progress: {ids}")
 
         raw = self._load_raw()
         locks: dict[str, str] = dict(raw.get("file_locks") or {})
         entries: list[dict[str, Any]] = []
         scheduled_ids: list[str] = []
+        new_locks: dict[str, str] = {}
 
         for packet in ready:
             if packet.agent_type == "implementer" and not packet.checks:
-                raise WorkflowRuntimeError(
+                raise EngineeringRuntimeError(
                     f"{packet.id}: implementer packet requires checks before schedule"
                 )
 
             state = execution_from_yaml_status(packet.status)
             state = schedule_packet(graph, packet.id, current=state)
 
-            locks.update(file_locks_for_packet(packet))
+            packet_locks = file_locks_for_packet(packet)
+            locks.update(packet_locks)
+            new_locks.update(packet_locks)
 
             raw["packets"][packet.id]["status"] = yaml_status_from_execution(state)
             scheduled_ids.append(packet.id)
@@ -108,6 +122,17 @@ class WorkflowRuntime:
             json.dumps({"epic": graph.epic, "wave": graph.wave, "entries": entries}, indent=2),
             encoding="utf-8",
         )
+
+        for pid in scheduled_ids:
+            self.bus.publish(
+                event_now("TaskScheduled", {"packet_id": pid, "epic": graph.epic, "wave": graph.wave})
+            )
+            self.bus.publish(
+                event_now("WorkerDispatched", {"packet_id": pid, "manifest": str(manifest_path)})
+            )
+        for path, owner in new_locks.items():
+            self.bus.publish(event_now("LockAcquired", {"path": path, "owner": owner}))
+
         return ScheduleResult(manifest_path=manifest_path, entries=entries, packet_ids=scheduled_ids)
 
     def sync(self, *, dry_run: bool = False) -> SyncResult:
@@ -117,7 +142,7 @@ class WorkflowRuntime:
 
         in_progress = [p for p in graph.packets.values() if p.status == "in_progress"]
         if not in_progress:
-            raise WorkflowRuntimeError("no in_progress packets to sync")
+            raise EngineeringRuntimeError("no in_progress packets to sync")
 
         raw = self._load_raw()
         result = SyncResult()
@@ -156,4 +181,21 @@ class WorkflowRuntime:
             check_raw_state(raw, self.state_path)
             save_raw_state(self.state_path, raw)
 
+            for pid in result.completed:
+                self.bus.publish(event_now("ValidationPassed", {"packet_id": pid}))
+            for pid in result.failed:
+                self.bus.publish(event_now("ValidationFailed", {"packet_id": pid}))
+            if result.completed or result.failed:
+                self.bus.publish(
+                    event_now(
+                        "StateUpdated",
+                        {"completed": result.completed, "failed": result.failed},
+                    )
+                )
+            if result.advanced_to_wave is not None:
+                self.bus.publish(
+                    event_now("WaveAdvanced", {"wave": result.advanced_to_wave})
+                )
+
         return result
+

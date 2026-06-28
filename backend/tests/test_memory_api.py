@@ -175,22 +175,6 @@ def test_openapi_has_no_context_or_search_routes():
 # --- Integration (real MemoryService + Postgres) --------------------------------
 
 @pytest.fixture
-async def db_session():
-    from sqlalchemy import text
-
-    from app.db.session_async import AsyncSessionLocal
-
-    try:
-        async with AsyncSessionLocal() as session:
-            await session.execute(text("SELECT 1"))
-    except Exception as exc:
-        pytest.skip(f"async DB not reachable: {exc}")
-    async with AsyncSessionLocal() as session:
-        yield session
-        await session.rollback()
-
-
-@pytest.fixture
 def integration_client(db_session):
     from app.main import app
 
@@ -237,8 +221,6 @@ async def test_integration_write_conflict_returns_409(integration_client, db_ses
 
 async def test_integration_singleton_duplicate_returns_409(integration_client, db_session):
     r1 = integration_client.post("/memory", json={"kind": "editable", "content": "Rules"})
-    if r1.status_code == 409:
-        pytest.skip("editable singleton already exists from prior run")
     assert r1.status_code == 201
     r2 = integration_client.post("/memory", json={"kind": "editable", "content": "Again"})
     assert r2.status_code == 409

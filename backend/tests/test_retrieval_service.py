@@ -52,20 +52,6 @@ class CountingLLM:
 
 
 @pytest.fixture
-async def db_session():
-    from app.db.session_async import AsyncSessionLocal
-
-    try:
-        async with AsyncSessionLocal() as session:
-            await session.execute(text("SELECT 1"))
-    except Exception as exc:
-        pytest.skip(f"async DB not reachable: {exc}")
-    async with AsyncSessionLocal() as session:
-        yield session
-        await session.rollback()
-
-
-@pytest.fixture
 def svc(tmp_path) -> DocumentService:
     return DocumentService(storage=LocalStorageAdapter(tmp_path))
 

@@ -1,7 +1,5 @@
 import pytest
-from sqlalchemy import text
 
-from app.db.session_async import AsyncSessionLocal
 from app.schemas.document import DocumentListFilters, DocumentUpdate, DocumentUploadMetadata
 from app.services.document import (
     DocumentNotFoundError,
@@ -24,18 +22,6 @@ class FakeParser:
         if self._error is not None:
             raise self._error
         return self._result
-
-
-@pytest.fixture
-async def db_session():
-    try:
-        async with AsyncSessionLocal() as session:
-            await session.execute(text("SELECT 1"))
-    except Exception as exc:
-        pytest.skip(f"async DB not reachable: {exc}")
-    async with AsyncSessionLocal() as session:
-        yield session
-        await session.rollback()
 
 
 @pytest.fixture

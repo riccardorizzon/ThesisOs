@@ -1,0 +1,28 @@
+# ASEP declarative policies — Build Control Plane (tunable, not L1 invariants).
+# Structural graph errors are enforced by validate_graph / invariants.py.
+# PolicyEngine evaluates warnings + these rules after Observe (MB2 D2).
+
+version: 1
+
+require_files:
+  builder-safety:
+    path: docs/safety.md
+    message: "docs/safety.md required for unattended builder loops"
+    action: block
+
+  loop-config:
+    path: LOOP.md
+    message: "LOOP.md documents active builder loops"
+    action: escalate
+
+  agents-conventions:
+    path: AGENTS.md
+    message: "AGENTS.md documents build/test conventions for execution workers"
+    action: escalate
+
+rules:
+  closed-epic-schedule-hint:
+    when:
+      epic_status: closed
+    action: escalate
+    message: "Epic is closed — confirm intent before scheduling new work"

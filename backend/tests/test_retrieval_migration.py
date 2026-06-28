@@ -19,17 +19,6 @@ def test_chunks_table_has_content_tsv_index():
     assert "idx_chunks_content_tsv" in indexes
 
 
-@pytest.fixture
-async def db_available():
-    from app.db.session_async import AsyncSessionLocal
-
-    try:
-        async with AsyncSessionLocal() as session:
-            await session.execute(text("SELECT 1"))
-    except Exception as exc:
-        pytest.skip(f"async DB not reachable: {exc}")
-
-
 @pytest.mark.asyncio
 async def test_retrieval_migration_partition_and_indexes(db_available):
     from app.db.session_async import AsyncSessionLocal
@@ -50,9 +39,13 @@ async def test_retrieval_migration_partition_and_indexes(db_available):
         hnsw = await session.execute(
             text(
                 """
-                SELECT 1 FROM pg_indexes
-                WHERE tablename = 'embeddings_part_text_multilingual_embedding_002'
-                  AND indexname LIKE '%hnsw%'
+                SELECT 1
+                FROM pg_class t
+                JOIN pg_index ix ON t.oid = ix.indrelid
+                JOIN pg_class i ON i.oid = ix.indexrelid
+                JOIN pg_am am ON i.relam = am.oid
+                WHERE t.relname = 'embeddings_part_text_multilingual_embedding_002'
+                  AND am.amname = 'hnsw'
                 """
             )
         )

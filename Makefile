@@ -5,13 +5,14 @@
 # ADR:  decisions/ADR-0023-build-workflow-engine.md
 
 SHELL    := /bin/bash
+PYTHON   ?= python3
 BACKEND  := backend
 FRONTEND := frontend
 RUFF     := $(BACKEND)/.venv/bin/ruff
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install lint format format-fix typecheck unit unit-frontend unit-builder-engine test \
+.PHONY: help install ensure-test-db lint format format-fix typecheck unit unit-frontend unit-builder-engine test \
         drift scope isolation check ci up down status unit-m4-recovery dogfood-m4
 
 help: ## Show available targets
@@ -20,8 +21,11 @@ help: ## Show available targets
 
 # --- setup -------------------------------------------------------------------
 install: ## Install backend (editable, dev) + frontend deps
-	cd $(BACKEND) && python -m venv .venv && .venv/bin/pip install -e ".[dev]"
+	cd $(BACKEND) && $(PYTHON) -m venv .venv && .venv/bin/pip install -e ".[dev]"
 	cd $(FRONTEND) && npm ci
+
+ensure-test-db: ## Create thesisos_test and run Alembic migrations
+	bash bin/ensure-test-db.sh
 
 # --- validation stages (reuse existing commands) -----------------------------
 lint: ## ruff lint (backend app)
@@ -36,7 +40,7 @@ format-fix: ## Apply ruff formatting to the backend (adoption step)
 typecheck: ## tsc --noEmit (frontend)
 	cd $(FRONTEND) && npx tsc --noEmit
 
-unit: ## backend pytest (DB integration tests self-skip without Postgres)
+unit: ensure-test-db ## backend pytest (isolated thesisos_test DB)
 	cd $(BACKEND) && .venv/bin/python -m pytest -q
 
 unit-frontend: ## frontend vitest

@@ -446,7 +446,7 @@ M5 MUST NOT implement re-entry loops or conditional return to Supervisor — tha
 - [x] Product Plane terminology (ADR-0026)
 - [x] Critic conditions: no writer/critic nodes; no M12 re-entry loop; `/chat` seam preserved
 
-- [ ] Critic sign-off: _pending_
+- [x] Critic sign-off: 2026-06-28 — ADR-0027 topology matches spec §3; contracts `{supervisor,planner,router}.json` align with §4.1 reads/writes; GraphState frozen (no new fields); M4 `retriever` path preserved on `grounded_chat`; writer/critic/M12 re-entry explicitly forbidden; `/chat` seam unchanged; planner plan `plans/m5-tool-router-plan.md` phased and gate-aligned. See `docs/m5-critic-signoff.md`.
 - [x] Planner plan: `plans/m5-tool-router-plan.md` (2026-06-25)
 
 **Implementation authorized after:** Critic sign-off line above marked complete.

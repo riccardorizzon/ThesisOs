@@ -15,18 +15,6 @@ from app.services.memory.exceptions import (
 
 
 @pytest.fixture
-async def db_session():
-    try:
-        async with AsyncSessionLocal() as session:
-            await session.execute(text("SELECT 1"))
-    except Exception as exc:
-        pytest.skip(f"async DB not reachable: {exc}")
-    async with AsyncSessionLocal() as session:
-        yield session
-        await session.rollback()
-
-
-@pytest.fixture
 def memory_svc() -> MemoryService:
     return MemoryService()
 
