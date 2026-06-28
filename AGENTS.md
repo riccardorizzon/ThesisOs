@@ -42,8 +42,25 @@ Contract-first → TDD red/green → evidence-backed gates. See `knowledge/devel
 - Safety: `docs/safety.md`
 - Audit: `npx @cobusgreyling/loop-audit . --suggest`
 
+## Governance hierarchy
+
+ASEP (ADR-0026) is the overall governance framework. Within it, the **Runtime Platform**
+is governed by:
+
+1. **Runtime Constitution** (`docs/runtime-constitution.md`) — architectural invariants of the Runtime Platform (C1–C8); ADRs + plans must stay consistent; changes only via ADR + version bump
+2. **ADRs** (`decisions/`) — architectural decisions; must remain consistent with the Constitution
+3. **Runtime contract** (`docs/runtime-contract.md`) — onboarding + extension points
+4. **Plans / work orders** (`plans/`) — delivery scope
+5. **Architecture Decision Checklist** (`docs/architecture-decision-checklist.md`) — per-PR review gate
+
+**Taxonomy (ADR-0026 unchanged):** ASEP is the whole ecosystem. The **Runtime Platform**
+(Event Bus, contracts, lifecycle, observability) is the M5 subsystem of ASEP governed by
+the Constitution + ADR-0030 (§0).
+
 ## Review norms
 
+- **Review order (Constitution C7):** Constitution → Layer → Contracts → Events → Feature → Performance → Code
+- Every PR touching `backend/app/` declares its layer: Business | Runtime | Infrastructure (ADR-0030 §4)
 - Smallest correct diff; match surrounding style
 - Never claim tests pass without running them
 - Respect `decisions` in STATE.yaml verbatim

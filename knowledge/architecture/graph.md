@@ -59,9 +59,22 @@ state — `messages` is the source of truth (M1 spec §5).
 ## Execution metadata (ADR-0014)
 
 `RunContext { conversation_id, agent_run_id, trace_id, request_id, user_id=None,
-metadata }` is **runtime-only**: passed alongside the invocation, **never**
-persisted into the checkpoint and **never** merged into `GraphState`. Domain fields
-never enter `RunContext`; execution fields never enter `GraphState`.
+metadata }` is **runtime-only**: passed via LangGraph config alongside the invocation,
+**never** persisted into the checkpoint and **never** merged into `GraphState`.
+Domain fields never enter `RunContext`; execution fields never enter `GraphState`.
+Layer boundaries: ADR-0030.
+
+## M5 topology (ADR-0027)
+
+```text
+START → supervisor → planner → router → memory_context
+         → route_after_router
+            conversation → END
+            grounded_chat → retriever → conversation → END
+```
+
+Task persistence: planner hook → `TaskService` wired in `build_graph` (ADR-0030).
+Runtime: **Event Bus** + subscribers — not telemetry-first (M5.4, ADR-0030 §6). Onboarding: `docs/runtime-contract.md`.
 
 ## Concurrency / safety
 

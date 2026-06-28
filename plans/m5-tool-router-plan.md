@@ -2,14 +2,15 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans. Each phase has explicit promotion criteria — do not start the next phase until the current phase gate passes. **Critic + QA mandatory every phase.**
 
-**Goal:** Wire Product Plane orchestration — `supervisor` → `planner` → `router` LangGraph nodes, conditional routing by `GraphState.route`, `tasks` persistence, and `agent_steps` telemetry — **without** writer/critic agents, M12 multi-agent loop, GraphState schema changes, or new REST endpoints.
+**Goal:** Wire Product Plane orchestration and **deliver a qualified Agent Runtime** — graph topology, task persistence, Runtime Event Bus, subscribers, and runtime contract — **without** writer/critic agents, M12 multi-agent loop, GraphState schema changes, or new REST endpoints.
 
-**Architecture:** Prepend orchestration chain to existing M4 graph; `route=conversation` skips retriever; `route=grounded_chat` preserves M4 retrieval path; TaskService upserts from `TaskRef`; OrchestrationTelemetry records `agent_steps` per node (ADR-0027).
+**Architecture:** Business agents (supervisor → planner → router) + conditional execution subgraph; TaskService via composition-root hook; **Runtime Event Bus** with subscriber pattern for observability (ADR-0027, ADR-0030). Telemetry is a subscriber, not the core abstraction.
 
 **Tech Stack:** FastAPI, LangGraph, SQLAlchemy 2 async, pytest/httpx, fake LLMClient.
 
 **Spec:** `docs/superpowers/specs/2026-06-25-thesisos-m5-tool-router-orchestration-design.md` (Frozen 2026-06-25)  
-**ADRs:** 0027 (graph topology), 0007 (GraphState frozen), 0014 (RunContext), 0009 (interface pattern for telemetry)
+**ADRs:** 0027 (graph topology), 0030 (runtime layer boundaries + Event Bus), 0007 (GraphState frozen), 0014 (RunContext)  
+**Runtime contract (onboarding):** `docs/runtime-contract.md` (draft → frozen at M5.6)
 
 **Branch:** `m5-tool-router` (from `main` @ `143f429`).  
 **Conventions:** TDD where practical, additive changes only, M0–M4 + builder_engine tests green after every phase.
@@ -18,7 +19,11 @@
 1. **Shippable phases** — after each step: `make ci` green, M4 regression green, branch merge-ready (no half-wired graph).
 2. **No dead code** — every module shipped in a step is fully tested and contract-complete even if not yet wired to `build_graph()`.
 
-**Phase order (11 steps):** supervisor → planner → router → **M5.2A routing infrastructure** → **M5.2B graph wiring** → TaskService → telemetry → `/chat` → eval → dogfood/benchmark → promotion.
+**Phase order:** supervisor → planner → router → **M5.2A routing** → **M5.2B graph wiring** → **M5.3 TaskService** → **ADR-0030** → **M5.4 Runtime Event Bus** → **M5.5 Runtime Qualification** → **M5.6 Promotion**.
+
+> **Gate before M5.4:** ADR-0030 accepted. M5.4 delivers the **Event Bus**, not telemetry-first wiring.
+
+**PR discipline (ADR-0030 §4):** Every PR touching `backend/app/` declares **Layer: Business | Runtime | Infrastructure**. Review order: (1) layer placement, (2) contracts, (3) event model, (4) feature.
 
 **Milestone cadence (every sub-milestone):**
 
@@ -33,7 +38,12 @@
 
 | Tag | Commit | Scope |
 |-----|--------|-------|
-| M5.1 | `9e2aa9b` | supervisor, planner, router, orchestration helpers — **do not reopen except demonstrable bugs** |
+| M5.1 | `9e2aa9b` | supervisor, planner, router, orchestration helpers |
+| M5.2A | `c3097ea` | `routing.py`, `route_after_router()` |
+| M5.2B | `c1075d1` | `build_graph()` orchestration + conditional routing |
+| M5.3 | *(pending commit)* | TaskService, planner hook, lifecycle behavior tests |
+
+Frozen scopes **do not reopen** except demonstrable bugs.
 
 **M5.2 baseline:** branch `m5-tool-router` @ `9e2aa9b`. M5.2A and M5.2B are separate ASEP cycles with separate commits.
 
@@ -222,19 +232,22 @@ m0_m1_m2_m3_m4_tests: green
 
 ---
 
-## Phase 6 — TaskService + tasks table wiring
+## Phase 6 — M5.3: TaskService + tasks table wiring
 
 ### Objective
-Persist planner output to `tasks` table; mark done on successful turn finalize.
+Persist planner output to `tasks` table; mark done on successful turn finalize. Planner uses `PlannerTaskPersistHook` only — **no** concrete `TaskService` import in `planner.py` (ADR-0030).
 
 ### Files affected
 | Action | Path |
 |--------|------|
 | Create | `backend/app/services/task/__init__.py` |
 | Create | `backend/app/services/task/service.py` |
-| Modify | `backend/app/graph/planner.py` — inject TaskService |
-| Modify | `backend/app/services/conversation/service.py` — `mark_done` on finalize |
+| Create | `backend/app/graph/orchestration/task_persistence.py` — `PlannerTaskPersistHook` |
+| Modify | `backend/app/graph/planner.py` — optional `on_task_ref` hook |
+| Modify | `backend/app/graph/conversation.py` — wire hook → `TaskService` in `build_graph` |
+| Modify | `backend/app/services/conversation/service.py` — `mark_done` on finalize; injectable `task_service` |
 | Create | `backend/tests/test_task_service.py` |
+| Create | `backend/tests/test_conversation_task_lifecycle.py` — stream behavior gate |
 
 ### Public API (service)
 | Method | Notes |
@@ -242,69 +255,126 @@ Persist planner output to `tasks` table; mark done on successful turn finalize.
 | `upsert_from_task_ref(task_ref, *, owner_agent, plan_steps)` | INSERT ON CONFLICT UPDATE by id |
 | `mark_done(task_id)` | status → `done` |
 
-### Tests
-- Planner sets `TaskRef` → row exists in `tasks` with matching id/title
-- Successful chat finalize → task status `done`
-- Task upsert failure → logged, turn continues
+### Behavior tests (freeze gate)
+| Scenario | Expected |
+|----------|----------|
+| Turn completes | task `done`, run `done` |
+| Mid-stream exception | task `in_progress`, run `error`, no `mark_done` |
+| Client disconnect | task not `done`, run `cancelled` |
+| `mark_done` failure | turn still completes, task `in_progress` |
 
-### Critic checklist (Phase 6)
+### Critic checklist (Phase 6 / M5.3)
 - [ ] No new tables/migrations
 - [ ] TaskService is sole writer for `tasks` in M5 scope
+- [ ] Planner does not import `TaskService` or `app.db`
 
 ### Promotion criteria
 ```yaml
 task_service_unit: green
 planner_task_upsert: green
+task_lifecycle_behavior: green
 m0_m1_m2_m3_m4_tests: green
 ```
 
 ---
 
-## Phase 7 — agent_steps telemetry
+## Phase 6b — ADR-0030: Agent Runtime Layer Boundaries
 
 ### Objective
-Record one `agent_step` per node execution; pass `RunContext` via LangGraph config.
+Formalize Business / Runtime / Infrastructure layers, dependency rules, and canonical event model **before** M5.4. No product code changes required unless a violation is found during review.
+
+### Deliverable
+| Action | Path |
+|--------|------|
+| Create | `decisions/ADR-0030-agent-runtime-layer-boundaries.md` |
+| Modify | `plans/m5-tool-router-plan.md` — M5.4–M5.6 roadmap |
+| Modify | `decisions/ADR-0027-multi-agent-graph-topology.md` — §4.1 hook wording |
+
+### Promotion criteria
+```yaml
+adr_0030: accepted
+layer_violations_in_m5_scope: none_or_documented
+m5_4_blocked_until: adr_0030_accepted
+```
+
+---
+
+## Phase 7 — M5.4: Runtime Event Bus
+
+> **Prerequisite:** M5.3 committed + ADR-0030 accepted.
+
+### Objective
+Deliver the **Runtime Event Bus** — canonical event emission at the composition root, with pluggable subscribers. Telemetry, logging, and future tracing/UI are subscribers; the Event Bus does not know what subscribers do with events (ADR-0030 R6, R8).
+
+### Architecture
+
+```text
+Runtime composition  →  emit(event)  →  Event Bus  →  Subscriber (interface)
+                                                          ├── AgentStepsSubscriber
+                                                          ├── LoggingSubscriber
+                                                          └── (future) OpenTelemetrySubscriber
+```
+
+### Hard rule (M5.4 invariant)
+
+> **The Event Bus MUST NOT know any concrete subscriber.** It depends only on a
+> subscriber **interface/Protocol**. Concrete subscribers (`AgentStepsSubscriber`,
+> `LoggingSubscriber`, future `OpenTelemetrySubscriber`) are constructed and
+> **registered at the composition root** — never imported by the bus itself.
+> Removing all subscribers MUST leave a valid (silent) runtime. (Constitution C4; ADR-0030 R6/R8.)
+
+### Canonical events (ADR-0030 §6)
+
+```text
+RunStarted → NodeStarted → RouteSelected → TaskPersisted → NodeCompleted → RunCompleted
+```
+
+(`NodeFailed` on error paths.)
 
 ### Files affected
 | Action | Path |
 |--------|------|
-| Create | `backend/app/services/telemetry/orchestration.py` — step recorder |
-| Modify | orchestration + execution nodes — call recorder start/finish |
-| Modify | `backend/app/services/conversation/service.py` — pass RunContext in config |
-| Create | `backend/tests/test_agent_steps.py` |
-
-### Step schema (per turn)
-| agent | phase | When |
-|-------|-------|------|
-| supervisor | plan | orchestration |
-| planner | plan | orchestration |
-| router | plan | orchestration |
-| memory_context | implement | execution |
-| retriever | implement | execution (grounded only) |
-| conversation | implement | execution |
+| Create | `backend/app/runtime/__init__.py` |
+| Create | `backend/app/runtime/events.py` — event types + payload shapes |
+| Create | `backend/app/runtime/event_bus.py` — `RuntimeEventBus`, subscriber protocol |
+| Create | `backend/app/runtime/subscribers/agent_steps.py` — maps node events → `agent_steps` |
+| Create | `backend/app/runtime/subscribers/logging.py` — structured log subscriber |
+| Modify | `build_graph` / `ConversationService` — emit events at lifecycle boundaries; node wrappers |
+| Modify | `backend/app/services/conversation/service.py` — pass `RunContext` in LangGraph config |
+| Create | `backend/tests/test_runtime_event_bus.py` |
+| Create | `backend/tests/test_runtime_events.py` |
 
 ### Tests
-- Full turn → N agent_steps linked to agent_run_id
-- Step write failure → non-blocking, run still finalizes
-- Input/output snapshots truncated (no full message dump)
+- Event sequence order valid for a full turn
+- Subscriber failure → non-blocking, run still finalizes (R6)
+- Business nodes do not import Event Bus or subscribers (R8)
+- `agent_steps` rows produced via subscriber, linked to `agent_run_id`
+- Input/output snapshots truncated
+- RunContext NOT in GraphState checkpoint
 
-### Critic checklist (Phase 7)
-- [ ] RunContext NOT in GraphState checkpoint
-- [ ] agent_run still one per turn
+### Critic checklist (M5.4)
+- [ ] Primary deliverable is Event Bus, not scattered telemetry calls
+- [ ] Event Bus imports no concrete subscriber (depends only on interface/Protocol)
+- [ ] Runtime with zero subscribers still completes a turn (silent, valid)
+- [ ] ADR-0030 R1–R8 satisfied
+- [ ] Event enum stable — new subscribers do not require Business changes
 
 ### Promotion criteria
 ```yaml
-agent_steps: green
-runcontext_boundary: green
+runtime_event_bus: green
+runtime_events: green
+agent_steps_subscriber: green
+runcontext_in_config: green
+r8_no_business_telemetry: green
 m0_m1_m2_m3_m4_tests: green
 ```
 
 ---
 
-## Phase 8 — Integration + ConversationService polish
+## Phase 8 — M5.5: Runtime Qualification
 
 ### Objective
-End-to-end `/chat` with orchestration; update `agent_runs.graph` name; error contract integration tests.
+**Qualify the runtime** end-to-end — not validate a single feature. HTTP integration, error contracts, eval harness, dogfood, latency/token benchmarks, full regression suite.
 
 ### Files affected
 | Action | Path |
@@ -312,76 +382,45 @@ End-to-end `/chat` with orchestration; update `agent_runs.graph` name; error con
 | Modify | `backend/app/services/conversation/service.py` — graph name `orchestrated_conversation` |
 | Create | `backend/tests/test_m5_chat_integration.py` |
 | Modify | `backend/tests/test_chat_api.py` if needed |
+| Create | `backend/tests/fixtures/m5_routing_eval.yaml` |
+| Create | `backend/tests/test_m5_routing_eval.py` |
+| Create | `bin/dogfood-m5-conversation-run.sh` (or extend dogfood scripts) |
 
-### Tests
+### Qualification gates
 - `no_objective`, `unplannable`, `no_route` → user still receives reply
 - SSE stream shape unchanged (token + done events)
 - Both routes exercised through HTTP layer (fake LLM)
-
-### Critic checklist (Phase 8)
-- [ ] External `/chat` contract unchanged
-- [ ] 409 conversation_busy still works (M1)
+- Event Bus sequence valid under qualification load
+- Eval harness KPIs (`docs/m5-phase1-investigation-report.md` § Quantitative KPIs)
+- Dogfood conversation + grounded paths; record B_lat / B_ground
+- `make ci` + `make unit-m4-recovery` green
 
 ### Promotion criteria
 ```yaml
+runtime_qualification: green
 chat_integration: green
 error_contracts: green
+eval_harness: green
+dogfood_conversation: green
+dogfood_grounded: green
+benchmarks_recorded: true
 m0_m1_m2_m3_m4_tests: green
 ```
 
 ---
 
-## Phase 9 — Evaluation dataset + routing benchmark
+## Phase 9 — M5.6: Promotion + runtime contract
 
 ### Objective
-Labeled eval set and KPI harness (`docs/m5-phase1-investigation-report.md` § Quantitative KPIs).
-
-### Files affected
-| Action | Path |
-|--------|------|
-| Create | `backend/tests/fixtures/m5_routing_eval.yaml` |
-| Create | `backend/tests/test_m5_routing_eval.py` |
-
-### Promotion criteria
-```yaml
-eval_harness: green
-make_ci: green
-unit_m4_recovery: green
-```
-
----
-
-## Phase 10 — Dogfood + latency/token benchmark
-
-### Objective
-Conversation-path smoke + existing `make dogfood-m4`; record B_lat / B_ground.
-
-### Files affected
-| Action | Path |
-|--------|------|
-| Create | `bin/dogfood-m5-conversation-run.sh` (or extend dogfood scripts) |
-| Modify | benchmark notes in promotion doc |
-
-### Promotion criteria
-```yaml
-dogfood_conversation: green
-dogfood_grounded: green
-benchmarks_recorded: true
-```
-
----
-
-## Phase 11 — Promotion gate + tag
-
-### Objective
-`docs/m5-promotion.md`, knowledge mirror, tag `m5-complete`.
+Freeze M5 runtime, publish promotion doc and **runtime contract**, update knowledge mirror, tag `m5-complete`.
 
 ### Files affected
 | Action | Path |
 |--------|------|
 | Create | `docs/m5-promotion.md` |
+| Modify | `docs/runtime-contract.md` — draft → **frozen** (event model, Runtime API, layers, extension points, stability) |
 | Modify | `knowledge/contracts/graphstate.md` — M5 ownership notes if needed |
-| Modify | `knowledge/architecture/graph.md` — topology update |
+| Modify | `knowledge/architecture/graph.md` — topology + Event Bus |
 | Modify | `knowledge/agents/README.md` — M5 status |
 | Modify | `knowledge/project/roadmap.md` — M5 status |
 
@@ -394,7 +433,8 @@ graph_topology: green
 routing_state_machine: green
 error_contracts: green
 tasks_table: green
-agent_steps: green
+runtime_event_bus: green
+runtime_contract: frozen
 graphstate: unchanged
 retriever_unchanged: green
 conversation_seam: green
@@ -409,7 +449,7 @@ m5_tag: m5-complete
 
 ## Wave / builder integration
 
-After Phase 5+, optional `plans/builder/STATE.yaml` epic `m5-tool-router` with packets mirroring phases 1–11.
+After M5.2B+, optional `plans/builder/STATE.yaml` epic `m5-tool-router` with packets mirroring phases 1–9.
 
 **Prerequisite:** M4 tag `m4-complete` on branch base.
 
@@ -418,6 +458,8 @@ After Phase 5+, optional `plans/builder/STATE.yaml` epic `m5-tool-router` with p
 ## References
 
 - `decisions/ADR-0027-multi-agent-graph-topology.md`
+- `decisions/ADR-0030-agent-runtime-layer-boundaries.md`
+- `docs/runtime-contract.md`
 - `docs/superpowers/specs/2026-06-25-thesisos-m5-tool-router-orchestration-design.md`
 - `contracts/agents/{supervisor,planner,router,retriever}.json`
 - `plans/m4-retrieval-system-plan.md` (format reference)

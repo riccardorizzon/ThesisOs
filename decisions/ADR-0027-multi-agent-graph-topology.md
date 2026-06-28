@@ -51,7 +51,7 @@
 
   ### 4. Persistence wiring
 
-  1. **`tasks` table:** `TaskService.upsert_from_task_ref()` called from `planner_node` when `GraphState.task` is set. `tasks.id` MUST equal `TaskRef.id`.
+  1. **`tasks` table:** `TaskService.upsert_from_task_ref()` invoked via planner persist hook wired in `build_graph` when `GraphState.task` is set (ADR-0030 — planner MUST NOT import `TaskService` directly). `tasks.id` MUST equal `TaskRef.id`.
   2. **`agent_runs`:** unchanged — one row per `/chat` turn (ConversationService).
   3. **`agent_steps`:** one row per graph node execution per turn, linked to `agent_run_id` via `RunContext` passed through LangGraph config (not GraphState).
 
@@ -74,4 +74,4 @@
   - **Add `orchestration` GraphState sub-model** — rejected; violates ADR-0007 freeze.
   - **Implement full M12 loop in M5** — rejected; scope creep; breaks milestone gates.
 
-- References: ADR-0007, ADR-0009, ADR-0014, ADR-0024, ADR-0026; `docs/superpowers/specs/2026-06-25-thesisos-m5-tool-router-orchestration-design.md`; `contracts/agents/{supervisor,planner,router}.json`; `knowledge/architecture/graph.md`.
+- References: ADR-0007, ADR-0009, ADR-0014, ADR-0024, ADR-0026, ADR-0030; `docs/superpowers/specs/2026-06-25-thesisos-m5-tool-router-orchestration-design.md`; `contracts/agents/{supervisor,planner,router}.json`; `knowledge/architecture/graph.md`.
