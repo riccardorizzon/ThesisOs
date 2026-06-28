@@ -88,13 +88,15 @@ The primary M5.4 deliverable is the **Event Bus**, not telemetry.
 Runtime composition  →  emit(event)  →  Event Bus  →  subscribers
 ```
 
-| Component | Layer | Role |
-|-----------|-------|------|
-| `RuntimeEventBus` | Runtime | Fan-out to subscribers; no storage logic |
-| `AgentStepsSubscriber` | Runtime | Maps node events → `agent_steps` table |
-| `LoggingSubscriber` | Runtime | Structured logs |
-| *(future)* `OpenTelemetrySubscriber` | Runtime | OTel export |
-| *(future)* `TracingUISubscriber` | Runtime | Debug / replay UI |
+| Component | Layer | Role | Status |
+|-----------|-------|------|--------|
+| `RuntimeEvent` / `EventType` | Runtime | Event contract + vocabulary | M5.4A ✅ |
+| `RuntimeSubscriber` / `RuntimeEventEmitter` | Runtime | Consumer/producer Protocols | M5.4A ✅ |
+| `RuntimeEventBus` | Runtime | Fan-out to subscribers; no storage logic | M5.4B ✅ |
+| `AgentStepsSubscriber` | Runtime | Maps node events → `agent_steps` table | M5.4C |
+| `LoggingSubscriber` | Runtime | Structured logs | M5.4C |
+| *(future)* `OpenTelemetrySubscriber` | Runtime | OTel export | — |
+| *(future)* `TracingUISubscriber` | Runtime | Debug / replay UI | — |
 
 The Event Bus **does not know** what subscribers do with events.
 

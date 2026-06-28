@@ -43,10 +43,12 @@
 | M5.2B | `c1075d1` | `build_graph()` orchestration + conditional routing |
 | M5.3 | `c4d5e68` | TaskService, planner hook, lifecycle behavior tests |
 | Governance baseline | `05a1249` | Runtime Constitution v1, ADR-0030, runtime contract, ADC checklist |
+| M5.4A | `0339643` | Runtime Event Contract (RuntimeEvent, EventType, Protocols) |
+| M5.4B | `520d3bb` | Runtime Event Bus (fan-out, non-blocking, zero-subscriber valid) |
 
 Frozen scopes **do not reopen** except demonstrable bugs.
 
-**Logical baseline before M5.4:** `05a1249` (clean tree, `make ci` green). M5.4 builds the Runtime Event Bus on top of this; any Event Bus rework stays isolated to the runtime, not governance.
+**Logical baseline before M5.4:** `05a1249` (clean tree, `make ci` green). M5.4 splits into A (contract), B (bus), C (subscribers + lifecycle); each ships on the prior, isolated to the runtime.
 
 **M5.2 baseline:** branch `m5-tool-router` @ `9e2aa9b`. M5.2A and M5.2B are separate ASEP cycles with separate commits.
 
@@ -302,12 +304,27 @@ m5_4_blocked_until: adr_0030_accepted
 
 ---
 
-## Phase 7 — M5.4: Runtime Event Bus
+## Phase 7 — M5.4 Runtime Observability (split A/B/C)
 
-> **Prerequisite:** M5.3 committed + ADR-0030 accepted.
+> **Prerequisite:** M5.3 committed + ADR-0030 accepted. Split into shippable sub-milestones:
+> **M5.4A** Event Contract (`0339643`, done) · **M5.4B** Event Bus (`520d3bb`, done) ·
+> **M5.4C** Observability subscribers + lifecycle emission (next).
 
-### Objective
-Deliver the **Runtime Event Bus** — canonical event emission at the composition root, with pluggable subscribers. Telemetry, logging, and future tracing/UI are subscribers; the Event Bus does not know what subscribers do with events (ADR-0030 R6, R8).
+### M5.4A — Runtime Event Contract — DONE (`0339643`)
+`app/runtime/events.py` (RuntimeEvent + EventType vocabulary) and `app/runtime/contracts.py`
+(RuntimeSubscriber, RuntimeEventEmitter Protocols). Contract only — no bus, no wiring.
+
+### M5.4B — Runtime Event Bus — DONE (`520d3bb`)
+`app/runtime/event_bus.py` — `RuntimeEventBus` fans out to subscribers, implements
+`RuntimeEventEmitter`, depends only on the contracts (no concrete subscriber), zero-subscriber
+runtime stays valid/silent, subscriber failure non-blocking (R6). Bus only — no subscribers, no wiring.
+
+### M5.4C — Observability subscribers + lifecycle emission — NEXT
+Concrete subscribers (`agent_steps`, logging), RunContext in LangGraph config, and event
+emission at composition-root/node wrappers. Scope below.
+
+### Objective (M5.4C)
+Wire the Event Bus into the runtime: emit canonical events at lifecycle boundaries with pluggable subscribers. Telemetry, logging, and future tracing/UI are subscribers; the Event Bus does not know what subscribers do with events (ADR-0030 R6, R8).
 
 ### Architecture
 
@@ -334,18 +351,16 @@ RunStarted → NodeStarted → RouteSelected → TaskPersisted → NodeCompleted
 
 (`NodeFailed` on error paths.)
 
-### Files affected
+### Files affected (M5.4C)
 | Action | Path |
 |--------|------|
-| Create | `backend/app/runtime/__init__.py` |
-| Create | `backend/app/runtime/events.py` — event types + payload shapes |
-| Create | `backend/app/runtime/event_bus.py` — `RuntimeEventBus`, subscriber protocol |
+| Done (M5.4A) | `backend/app/runtime/__init__.py`, `events.py`, `contracts.py` |
+| Done (M5.4B) | `backend/app/runtime/event_bus.py` |
 | Create | `backend/app/runtime/subscribers/agent_steps.py` — maps node events → `agent_steps` |
 | Create | `backend/app/runtime/subscribers/logging.py` — structured log subscriber |
 | Modify | `build_graph` / `ConversationService` — emit events at lifecycle boundaries; node wrappers |
 | Modify | `backend/app/services/conversation/service.py` — pass `RunContext` in LangGraph config |
-| Create | `backend/tests/test_runtime_event_bus.py` |
-| Create | `backend/tests/test_runtime_events.py` |
+| Create | `backend/tests/test_agent_steps.py` |
 
 ### Tests
 - Event sequence order valid for a full turn

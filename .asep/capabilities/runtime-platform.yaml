@@ -35,7 +35,8 @@ capabilities:
     title: Runtime Event Bus
     aliases: [event bus, runtime bus, dispatch]
     phase: M5.4B
-    status: ready
+    status: done
+    baseline: "520d3bb"
     depends_on: [event-contract]
     requires: [runtime-constitution, ADR-0030]
     invariant: >-
