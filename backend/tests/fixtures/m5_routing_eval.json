@@ -1,0 +1,14 @@
+{
+  "description": "Labeled routing eval for the M5 router (coerce + dispatch). Deterministic: each case feeds the router node a raw LLM route and asserts the final wired dispatch key. JSON (not YAML) to avoid a new backend dependency.",
+  "threshold": 1.0,
+  "cases": [
+    {"name": "wired_conversation", "user_message": "Summarize what we discussed", "llm_route": "conversation", "expected": "conversation"},
+    {"name": "wired_grounded", "user_message": "What do my documents say about craftsmanship", "llm_route": "grounded_chat", "expected": "grounded_chat"},
+    {"name": "reserved_route_to_default", "user_message": "Write me a short poem about the sea", "llm_route": "writer", "expected": "conversation"},
+    {"name": "reserved_route_with_retrieval_keyword", "user_message": "According to my sources, summarize the argument", "llm_route": "critic", "expected": "grounded_chat"},
+    {"name": "unknown_route_to_default", "user_message": "hello there, how are you", "llm_route": "banana", "expected": "conversation"},
+    {"name": "unknown_route_with_retrieval_keyword", "user_message": "search my library for the citation", "llm_route": "banana", "expected": "grounded_chat"},
+    {"name": "no_route_null", "user_message": "hi", "llm_route": null, "expected": "conversation"},
+    {"name": "malformed_json", "user_message": "hi", "llm_route": "__malformed__", "expected": "conversation"}
+  ]
+}

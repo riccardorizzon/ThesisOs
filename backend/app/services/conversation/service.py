@@ -100,7 +100,7 @@ class ConversationService:
                 run = models.AgentRun(
                     id=run_id,
                     conversation_id=conv_id,
-                    graph="conversation",
+                    graph="orchestrated_conversation",
                     trigger="chat",
                     status="running",
                     started_at=datetime.now(timezone.utc),

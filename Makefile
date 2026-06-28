@@ -13,7 +13,7 @@ RUFF     := $(BACKEND)/.venv/bin/ruff
 .DEFAULT_GOAL := help
 
 .PHONY: help install ensure-test-db lint format format-fix typecheck unit unit-frontend unit-builder-engine test \
-        drift scope isolation check ci up down status unit-m4-recovery dogfood-m4
+        drift scope isolation check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -89,6 +89,19 @@ unit-m4-recovery: ## M4 recovery regression suite (53 tests; needs Postgres for 
 
 dogfood-m4: ## End-to-end M4 product smoke (requires: make up, Vertex ADC)
 	@bash bin/dogfood-m4-run.sh
+
+qualify-m5: ensure-test-db ## M5 Runtime Qualification suite (runtime + integration + routing eval)
+	cd $(BACKEND) && .venv/bin/python -m pytest -q \
+		tests/test_runtime_event_contract.py \
+		tests/test_runtime_event_bus.py \
+		tests/test_runtime_subscribers.py \
+		tests/test_runtime_observability.py \
+		tests/test_conversation_task_lifecycle.py \
+		tests/test_m5_chat_integration.py \
+		tests/test_m5_routing_eval.py
+
+dogfood-m5: ## End-to-end M5 orchestrated chat smoke (requires: make up, Vertex ADC)
+	@bash bin/dogfood-m5-conversation-run.sh
 
 # --- developer cockpit -------------------------------------------------------
 status: ## "Where are we?" — read-only product/ASEP/infra snapshot
