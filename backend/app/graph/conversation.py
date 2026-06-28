@@ -10,7 +10,11 @@ from app.graph.router import make_router_node
 from app.graph.routing import route_after_router
 from app.graph.supervisor import make_supervisor_node
 from app.llm.base import LLMClient
+from app.runtime.contracts import RuntimeEventEmitter
+from app.runtime.events import EventType
+from app.runtime.instrumentation import emit_safely, instrument_node, make_event
 from app.schemas.graph_state import CitationRef, GraphState, Message, TaskRef
+from app.schemas.run_context import RunContext
 from app.services.memory.service import MemoryService
 from app.services.retrieval.service import RetrievalService
 from app.services.task.service import TaskService
@@ -70,8 +74,29 @@ def build_graph(
     memory_service: MemoryService | None = None,
     retrieval_service: RetrievalService | None = None,
     task_service: TaskService | None = None,
+    emitter: RuntimeEventEmitter | None = None,
+    run_context: RunContext | None = None,
 ):
-    """M5 graph (ADR-0027): orchestration chain + conditional execution subgraph."""
+    """M5 graph (ADR-0027): orchestration chain + conditional execution subgraph.
+
+    When an `emitter` + `run_context` are supplied, the Runtime wraps each Business
+    node to emit canonical events (M5.4C). Node bodies are untouched (R8/C3); with no
+    emitter the graph is byte-for-byte the M5.2B topology."""
+    instrument = emitter is not None and run_context is not None
+
+    def node(name: str, fn, phase: str, *, route_event: bool = False):
+        if not instrument:
+            return fn
+        return instrument_node(
+            fn,
+            emitter=emitter,
+            run_id=run_context.agent_run_id,
+            correlation_id=run_context.trace_id,
+            agent=name,
+            phase=phase,
+            route_event=route_event,
+        )
+
     on_task_ref = None
     if task_service is not None:
 
@@ -81,14 +106,26 @@ def build_graph(
                 owner_agent="planner",
                 plan_steps=plan_steps,
             )
+            if instrument:
+                await emit_safely(
+                    emitter,
+                    make_event(
+                        EventType.TASK_PERSISTED,
+                        run_id=run_context.agent_run_id,
+                        correlation_id=run_context.trace_id,
+                        task_id=task.id,
+                        title=task.title,
+                        status="in_progress",
+                    ),
+                )
 
     g = StateGraph(GraphState)
-    g.add_node("supervisor_node", make_supervisor_node(llm))
-    g.add_node("planner_node", make_planner_node(llm, on_task_ref=on_task_ref))
-    g.add_node("router_node", make_router_node(llm))
-    g.add_node("memory_context_node", make_memory_context_node(memory_service))
-    g.add_node("retriever_node", make_retriever_node(retrieval_service))
-    g.add_node("conversation_node", make_conversation_node(llm))
+    g.add_node("supervisor_node", node("supervisor", make_supervisor_node(llm), "plan"))
+    g.add_node("planner_node", node("planner", make_planner_node(llm, on_task_ref=on_task_ref), "plan"))
+    g.add_node("router_node", node("router", make_router_node(llm), "plan", route_event=True))
+    g.add_node("memory_context_node", node("memory_context", make_memory_context_node(memory_service), "implement"))
+    g.add_node("retriever_node", node("retriever", make_retriever_node(retrieval_service), "implement"))
+    g.add_node("conversation_node", node("conversation", make_conversation_node(llm), "implement"))
 
     g.add_edge(START, "supervisor_node")
     g.add_edge("supervisor_node", "planner_node")

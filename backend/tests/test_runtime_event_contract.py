@@ -4,13 +4,11 @@ serialization, contract conformance, and absence of concrete dependencies."""
 from __future__ import annotations
 
 import inspect
-import os
 from datetime import datetime, timezone
 
 import pytest
 from pydantic import ValidationError
 
-import app
 from app.runtime import contracts as contracts_module
 from app.runtime import events as events_module
 from app.runtime import (
@@ -150,21 +148,3 @@ def test_contract_modules_have_no_concrete_dependencies(module):
     source = inspect.getsource(module)
     for marker in FORBIDDEN_IMPORT_MARKERS:
         assert marker not in source, f"{module.__name__} must not depend on {marker}"
-
-
-def test_no_app_code_depends_on_runtime_contract_yet():
-    """Acceptance: the contract exists but nothing wires to it yet (M5.4A)."""
-    app_root = os.path.dirname(app.__file__)
-    runtime_dir = os.path.join(app_root, "runtime")
-    offenders: list[str] = []
-    for dirpath, _dirs, files in os.walk(app_root):
-        if dirpath.startswith(runtime_dir):
-            continue
-        for name in files:
-            if not name.endswith(".py"):
-                continue
-            path = os.path.join(dirpath, name)
-            with open(path, encoding="utf-8") as fh:
-                if "app.runtime" in fh.read():
-                    offenders.append(os.path.relpath(path, app_root))
-    assert offenders == [], f"unexpected dependents on app.runtime: {offenders}"
