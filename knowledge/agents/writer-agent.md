@@ -1,6 +1,12 @@
 # Writer Agent (Runtime)
 
-> Type: Runtime LangGraph node. Milestone: **M6**. Status: designed (contract frozen), not implemented. Sources: `contracts/agents/writer.json`, M0 spec §10, `contracts/openapi/openapi.yaml` (`/chapters`), ADR-0002/0007.
+> Type: Runtime LangGraph node (Business). Milestone: **M6**. Status: **implemented & qualified** (M6.1–M6.5; promotion M6.6). Sources: `contracts/agents/writer.json`, `backend/app/graph/writer.py`, `backend/app/schemas/draft.py`, ADR-0031 (capability & topology), ADR-0032/0033 (chapter store), `docs/m6-promotion.md`.
+
+## Implementation (M6, ADR-0031)
+- **Capability, not a special node:** `WriterCapability.write_grounded(brief) -> DraftResult` (port). `LLMWriter` is the default impl; `make_writer_node(writer)` is a thin adapter. Future `writer-v2/fast/reasoning/local` swap at the composition root with no topology change.
+- **`DraftResult`** (`draft`, `citations`, `metadata`, `reasoning?`, `metrics`) is pure — isolated from `ChapterService`/REST/DB/Event Bus. The node maps only `draft`/`citations` to GraphState (writer.json); the rest rides the stream.
+- **Route:** `writer` activated (ADR-0027 reserved) — `memory_context → retriever → writer → END`; selected on thesis-drafting intent (`coerce`).
+- **Persistence boundary:** the writer never writes chapters; durable saves go through `ChapterService` (ADR-0032) via `/chapters`. Citations restricted to retrieved sources (no invented ids; full hallucination gating is the Critic, M9).
 
 ## Mission
 Draft thesis prose — chapters/sections — grounded in the plan and retrieved

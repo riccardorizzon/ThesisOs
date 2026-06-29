@@ -134,6 +134,30 @@ Passed via LangGraph `configurable`. **Never** in `GraphState` checkpoint.
 4. Add Event Bus wrappers for `NodeStarted` / `NodeCompleted` at composition root.
 5. Do **not** change `GraphState` fields without ADR-0007 amendment.
 
+#### Worked example — the writer agent (M6, ADR-0031)
+
+A reference implementation of the steps above; copy this shape for future agents
+(critic M9, citation M7):
+
+- **Capability over node (C8/R1).** The writer is a port —
+  `WriterCapability.write_grounded(brief) -> DraftResult` — not hard-coded logic.
+  `LLMWriter` is today's implementation; `make_writer_node(writer, *, stream_writer_factory=…)`
+  is a thin **adapter** that maps `DraftResult` → the frozen `GraphState` partial
+  (`draft`, `citations` only — exactly `contracts/agents/writer.json`). Future
+  `writer-v2`/`writer-fast` swap at the composition root with no topology change.
+- **Purity (C3/R1/R3/R8).** The capability imports no `app.db`, `app.runtime`,
+  `app.services.*`, telemetry, or LangGraph. Streaming is delivered via an injected
+  `emit` callback; the LangGraph stream writer is supplied by the Runtime
+  (`build_graph` passes `stream_writer_factory=get_stream_writer`).
+- **Route activation.** A reserved route (ADR-0027) is wired only in its milestone:
+  `build_graph` adds the node + a conditional edge; the route vocabulary grows
+  additively (`WIRED_ROUTES`). Existing routes stay byte-for-byte (C6).
+- **Persistence stays out of the graph.** The writer yields an ephemeral
+  `DraftResult`; durable writes go through a Business domain service
+  (`ChapterService`, ADR-0032) called from the REST layer — never from the node.
+- **Events are automatic.** `build_graph` wraps the node, so it emits
+  `NodeStarted`/`NodeCompleted`/`NodeFailed` with no Business telemetry (R8).
+
 ### Adding a new Event Bus subscriber
 
 1. Implement subscriber interface in `backend/app/runtime/subscribers/`.

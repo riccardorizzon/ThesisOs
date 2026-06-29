@@ -19,7 +19,7 @@ usable capability end-to-end against frozen contracts and passes a promotion gat
 | **M3** | Ingestion | ✅ | Document upload → parse → chunks + events; tag `m3-complete` | `/upload`, `/documents`, events |
 | **M4** | Retrieval | ✅ | Embed + hybrid search + retriever; promoted tag `m4-complete` | `/search`, `retriever`, ADR-0024 |
 | **M5** | Tool Router / Orchestration | ✅ | Orchestrated runtime: supervisor/planner/router + conditional routing + TaskService + Runtime Event Bus/observability. Promoted — `m5-complete` @ `bf12c13`, live dogfood B_lat=9.89s/B_ground=6.54s | ADR-0027/0030, `contracts/agents/*`, `docs/runtime-contract.md` (Frozen v1) |
-| **M6** | Writing Workspace | 🟡 | Writer agent drafts grounded chapters/sections from plan + retrieved context; versioned chapter store. **Planning:** spec drafted, ADR-0031/0032/0033 proposed | `/chapters`, `writer` agent; `docs/superpowers/specs/2026-06-29-thesisos-m6-writing-workspace-design.md` |
+| **M6** | Writing Workspace | 🟢 | Writer capability drafts grounded chapters/sections; versioned chapter store + `/chapters` + Workspace UI. Impl complete & qualified (qualify-m6 44; live dogfood B_write=63.6s); `m6-complete` tag pending go-ahead | ADR-0031/0032/0033, `writer` route, `/chapters`, `docs/m6-promotion.md` |
 | **M7** | Citations | ⬜ | CSL-JSON → APA7/MLA/Chicago; bibliography | `/citations`, `/bibliography`, `citation` agent |
 | **M8** | Outline | ⬜ | Outline/chapter tree management | `/outline`, `ChapterCreated` event |
 | **M9** | Critic | ⬜ | Critic agent reviews drafts (hallucination/redundancy) | `critic` agent, `CritiqueCompleted` event |

@@ -68,6 +68,10 @@ AgentError(agent: str, message: str)
    emits canonical events and writes `agent_steps` via subscribers; `RunContext`
    flows through LangGraph config, never `GraphState`. Adding observability did not
    add a field. (Tested: `"run_context" not in GraphState.model_fields`.)
+7. **Writer is out-of-state-shape (M6, ADR-0031).** The writer agent populates the
+   existing `draft`/`citations` fields; its richer `DraftResult` (`metadata`,
+   `reasoning`, `metrics`) rides the stream / Event Bus, never `GraphState`. M6 added
+   a node + route with **no** GraphState change. (Tested: `model_fields` unchanged.)
 
 ## Why frozen
 Freezing `GraphState` early lets M2–M18 add nodes that read/write existing fields

@@ -76,6 +76,26 @@ START → supervisor → planner → router → memory_context
 Task persistence: planner hook → `TaskService` wired in `build_graph` (ADR-0030).
 Runtime: **Event Bus** + subscribers — not telemetry-first (M5.4, ADR-0030 §6). Onboarding: `docs/runtime-contract.md`.
 
+## M6 topology (ADR-0031) — writer route
+
+```text
+START → supervisor → planner → router → memory_context
+         → route_after_router
+            conversation → END                                  (M5)
+            grounded_chat → retriever → route_after_retriever → conversation → END   (M5)
+            writer        → retriever → route_after_retriever → writer → END          (M6)
+```
+
+The `writer` route (reserved in ADR-0027) is activated in M6: it shares the
+retriever (grounded by construction), then dispatches to `writer_node` via a second
+conditional (`route_after_retriever`). The **writer is a capability** —
+`WriterCapability.write_grounded(brief) -> DraftResult` (`LLMWriter` default,
+swappable at the composition root); `make_writer_node` adapts `DraftResult` →
+`draft`/`citations` only (writer.json). It is pure (no db/runtime/persistence/LangGraph
+imports); streaming is injected via `stream_writer_factory`. Drafts persist through
+`ChapterService` (ADR-0032), never from the node. M5 conversation/grounded paths are
+byte-for-byte unchanged (C6).
+
 ## Concurrency / safety
 
 - **One active run per conversation** (M1 spec §8/§11): `ConversationLocks`

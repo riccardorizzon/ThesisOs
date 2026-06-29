@@ -63,18 +63,21 @@ Reads `task`; writes `errors`; errors `parse_failed, unsupported_format`; mutati
 `errors=append`. Drives ingestion/parsing; the contract exists in M0 though
 implemented in M3.
 
-## Status today (M5)
+## Status today (M6)
 The orchestrated graph is wired (`backend/app/graph/conversation.py`):
-`supervisor → planner → router → [conditional] → memory_context → (retriever) →
-conversation`. Supervisor/Planner/Router (M5.1), conditional routing (M5.2),
-TaskService persistence via planner hook (M5.3), and the Runtime Event Bus +
-observability subscribers (M5.4) are implemented and qualified (M5.5).
+`supervisor → planner → router → memory_context → [conditional]`, dispatching
+`conversation` (M5), `grounded_chat` (M5: → retriever → conversation), and
+**`writer` (M6: → retriever → writer)**. Supervisor/Planner/Router (M5.1),
+conditional routing (M5.2), TaskService persistence via planner hook (M5.3), the
+Runtime Event Bus + observability subscribers (M5.4), and the **Writer capability +
+chapter store** (M6) are implemented and qualified.
 
 The runtime is **observable**: each node execution emits canonical events
 (`app/runtime/events.py`) through the Event Bus to subscribers — `AgentStepsSubscriber`
 writes `agent_steps`, `LoggingSubscriber` logs. Business agents never emit
-(ADR-0030 R8); emission is wrapped at the composition root. Writer/Critic/Citation
-remain **designed (contract frozen), not yet implemented** (M6/M9/M7).
+(ADR-0030 R8); emission is wrapped at the composition root. **Writer** is a swappable
+`WriterCapability` returning a pure `DraftResult` (M6, ADR-0031); **Critic** and
+**Citation** remain **designed (contract frozen), not yet implemented** (M9/M7).
 
 ## Standard agent doc shape
 Every per-agent file defines: **Mission · Responsibilities · Inputs · Outputs ·
