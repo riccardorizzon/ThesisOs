@@ -125,12 +125,34 @@ class Chapter(Base):
     parent_id: Mapped[str | None] = mapped_column(ForeignKey("chapters.id"), nullable=True)
     order_index: Mapped[int] = mapped_column(Integer, default=0)
     title: Mapped[str] = mapped_column(Text)
-    status: Mapped[str] = mapped_column(String(16), default="planned")
+    status: Mapped[str] = mapped_column(String(16), default="draft")
     content_md: Mapped[str | None] = mapped_column(Text, nullable=True)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     word_count: Mapped[int] = mapped_column(Integer, default=0)
+    version: Mapped[int] = mapped_column(Integer, default=1)  # M6 (ADR-0033): optimistic-lock token
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
     updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
+
+
+class ChapterVersion(Base):
+    """Append-only change stream for chapters (M6, ADR-0033)."""
+
+    __tablename__ = "chapter_versions"
+    __table_args__ = (
+        UniqueConstraint("chapter_id", "version", name="uq_chapter_versions_chapter_id_version"),
+    )
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
+    chapter_id: Mapped[str] = mapped_column(ForeignKey("chapters.id", ondelete="CASCADE"))
+    version: Mapped[int] = mapped_column(Integer)
+    change_kind: Mapped[str] = mapped_column(String(16))  # WRITE|EDIT|PROMOTE|MERGE|RESTORE
+    title: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(16))
+    content_md: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    word_count: Mapped[int] = mapped_column(Integer, default=0)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, server_default=text("'{}'::jsonb"))
+    changed_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
 
 
 class Note(Base):

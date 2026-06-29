@@ -9,6 +9,7 @@ CREATE TABLE chapters (
 	content_md TEXT, 
 	summary TEXT, 
 	word_count INTEGER NOT NULL, 
+	version INTEGER NOT NULL, 
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
 	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
 	PRIMARY KEY (id), 
@@ -111,6 +112,23 @@ CREATE TABLE agent_runs (
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(conversation_id) REFERENCES conversations (id)
+);
+
+CREATE TABLE chapter_versions (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	chapter_id UUID NOT NULL, 
+	version INTEGER NOT NULL, 
+	change_kind VARCHAR(16) NOT NULL, 
+	title TEXT NOT NULL, 
+	status VARCHAR(16) NOT NULL, 
+	content_md TEXT, 
+	summary TEXT, 
+	word_count INTEGER NOT NULL, 
+	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	changed_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT uq_chapter_versions_chapter_id_version UNIQUE (chapter_id, version), 
+	FOREIGN KEY(chapter_id) REFERENCES chapters (id) ON DELETE CASCADE
 );
 
 CREATE TABLE chunks (

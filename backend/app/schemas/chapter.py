@@ -1,0 +1,73 @@
+"""Chapter domain DTOs (M6). Maps to tables `chapters`, `chapter_versions`.
+
+No retrieval/embedding fields — chapters are authored prose, not a RAG surface
+(ADR-0032 §6).
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from pydantic import BaseModel, Field
+
+# Chapter lifecycle (ADR-0032 §3). M6 wires draft/review; approved (M9 Critic) and
+# published (M8) are reserved values the API accepts but does not auto-transition.
+VALID_CHAPTER_STATUSES = frozenset({"draft", "review", "approved", "published"})
+
+# Change-stream kinds (ADR-0033 §2). M6 emits WRITE/EDIT/PROMOTE; MERGE/RESTORE reserved.
+CHANGE_KINDS = frozenset({"WRITE", "EDIT", "PROMOTE", "MERGE", "RESTORE"})
+
+
+class ChapterRecord(BaseModel):
+    id: str
+    parent_id: str | None = None
+    order_index: int
+    title: str
+    status: str
+    content_md: str | None = None
+    summary: str | None = None
+    word_count: int
+    version: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class ChapterVersionRecord(BaseModel):
+    chapter_id: str
+    version: int
+    change_kind: str
+    title: str
+    status: str
+    content_md: str | None = None
+    summary: str | None = None
+    word_count: int
+    metadata: dict = Field(default_factory=dict)
+    changed_at: datetime
+
+
+class ChapterCreate(BaseModel):
+    title: str
+    parent_id: str | None = None
+    order_index: int = 0
+    status: str = "draft"
+    content_md: str | None = None
+    summary: str | None = None
+
+
+class ChapterContentUpdate(BaseModel):
+    content_md: str
+    expected_version: int
+
+
+class ChapterMetadataUpdate(BaseModel):
+    title: str | None = None
+    summary: str | None = None
+    status: str | None = None
+    expected_version: int
+
+
+class ChapterListFilters(BaseModel):
+    parent_id: str | None = None
+    q: str | None = None
+    limit: int = Field(default=100, ge=1, le=500)
+    offset: int = Field(default=0, ge=0)
