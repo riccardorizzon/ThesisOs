@@ -190,7 +190,8 @@ capabilities:
     title: Chapters REST API + Workspace UI
     aliases: [chapters api, /chapters, workspace ui]
     phase: M6.4
-    status: ready            # deps done (chapter-store @ 0387929, writer-route @ 5ad34bf)
+    status: done             # /chapters REST + Workspace UI
+    baseline: 648d563        # M6.4
     depends_on: [chapter-store, writer-route]
     requires: [ADR-0032]
     invariant: >-
@@ -207,7 +208,7 @@ capabilities:
     title: Writing Qualification
     aliases: [qualify-m6, writing eval, dogfood-m6]
     phase: M6.5
-    status: planned
+    status: ready            # deps done (writer-route @ 5ad34bf, chapter-api @ 648d563)
     depends_on: [writer-route, chapter-api]
     requires: [ADR-0031, ADR-0032]
     gates: [make ci, make unit-m4-recovery, make qualify-m5, qualify-m6, dogfood-m6]
