@@ -15,7 +15,7 @@ load_order:
     path: docs/architecture-decision-checklist.md
     authority: per-PR review gate
   - id: plan
-    path: plans/m5-tool-router-plan.md
+    path: plans/m6-writing-workspace-plan.md   # active milestone (M6); M5 plan frozen/historical
     authority: authoritative milestone scope + promotion criteria
 
 # Live context the loader must read from the repo (not files here):

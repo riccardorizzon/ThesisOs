@@ -9,7 +9,7 @@ usable capability end-to-end against frozen contracts and passes a promotion gat
 (ADR-0010) before the next begins.
 
 ## Status legend
-- ✅ complete & promoted   🟢 functionally complete, gate partially open   ⬜ not started
+- ✅ complete & promoted   🟢 functionally complete, gate partially open   🟡 planning (spec/ADRs drafted, no implementation)   ⬜ not started
 
 | M | Name | Status | Headline deliverable | Key contracts wired |
 |---|------|--------|----------------------|---------------------|
@@ -18,8 +18,8 @@ usable capability end-to-end against frozen contracts and passes a promotion gat
 | **M2** | Memory | ✅ | Memory foundation: DB, Service, API, Admin UI, `memory_context_node` | `/memory`, ADR-0015/0017/0018; tag `m2-complete` |
 | **M3** | Ingestion | ✅ | Document upload → parse → chunks + events; tag `m3-complete` | `/upload`, `/documents`, events |
 | **M4** | Retrieval | ✅ | Embed + hybrid search + retriever; promoted tag `m4-complete` | `/search`, `retriever`, ADR-0024 |
-| **M5** | Tool Router / Orchestration | 🟢 | Orchestrated runtime: supervisor/planner/router + conditional routing + TaskService + Runtime Event Bus/observability. Impl complete & qualified; live dogfood benchmarks + `m5-complete` tag pending | ADR-0027/0030, `contracts/agents/*`, `docs/runtime-contract.md` |
-| **M6** | Writing | ⬜ | Writer agent drafts chapters from plan + context | `/chapters`, `writer` agent |
+| **M5** | Tool Router / Orchestration | ✅ | Orchestrated runtime: supervisor/planner/router + conditional routing + TaskService + Runtime Event Bus/observability. Promoted — `m5-complete` @ `bf12c13`, live dogfood B_lat=9.89s/B_ground=6.54s | ADR-0027/0030, `contracts/agents/*`, `docs/runtime-contract.md` (Frozen v1) |
+| **M6** | Writing Workspace | 🟡 | Writer agent drafts grounded chapters/sections from plan + retrieved context; versioned chapter store. **Planning:** spec drafted, ADR-0031/0032/0033 proposed | `/chapters`, `writer` agent; `docs/superpowers/specs/2026-06-29-thesisos-m6-writing-workspace-design.md` |
 | **M7** | Citations | ⬜ | CSL-JSON → APA7/MLA/Chicago; bibliography | `/citations`, `/bibliography`, `citation` agent |
 | **M8** | Outline | ⬜ | Outline/chapter tree management | `/outline`, `ChapterCreated` event |
 | **M9** | Critic | ⬜ | Critic agent reviews drafts (hallucination/redundancy) | `critic` agent, `CritiqueCompleted` event |

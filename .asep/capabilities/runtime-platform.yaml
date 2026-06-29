@@ -4,9 +4,11 @@
 # "implementa l'Event Bus" resolves to a node here; the node carries deps,
 # required ADRs, baseline, tests, and promotion target.
 #
-# Source-of-truth note: the PLAN (plans/m5-tool-router-plan.md) remains
-# authoritative for exact scope. This graph is the navigation layer (what is
-# ready, what it depends on, what it needs). Phases map nodes to plan sections.
+# Source-of-truth note: the PLAN remains authoritative for exact scope —
+# plans/m5-tool-router-plan.md for the M5 Runtime Platform nodes, and
+# plans/m6-writing-workspace-plan.md for the M6 Writing Workspace nodes. This
+# graph is the navigation layer (what is ready, what it depends on, what it
+# needs). Phases map nodes to plan sections.
 
 platform: Runtime Platform
 
@@ -15,7 +17,7 @@ governance:
   layer_rules: decisions/ADR-0030-agent-runtime-layer-boundaries.md
   contract: docs/runtime-contract.md
   checklist: docs/architecture-decision-checklist.md
-  plan: plans/m5-tool-router-plan.md
+  plan: plans/m6-writing-workspace-plan.md   # active milestone (M6); M5 plan frozen/historical
 
 # status: done | ready | planned | blocked
 capabilities:
@@ -106,3 +108,127 @@ capabilities:
       - live dogfood benchmarks          # done (B_lat=9.89s, B_ground=6.54s, 2026-06-29)
     pending_manual:
       - tag m5-complete (awaiting explicit go-ahead)
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # M6 — Writing Workspace (Product Plane feature on top of the Runtime Platform)
+  #
+  # Product Plane (Business) capabilities, governed by the SAME Runtime
+  # Constitution (C1–C8) + ADR-0030 (R1–R8) as the Runtime Platform above. They
+  # build on the promoted M5 runtime (baseline m5-complete @ bf12c13).
+  # ADR-0031/0032/0033 ACCEPTED 2026-06-29 (M6.0, with the four design-review
+  # recommendations). `writer-agent` + `chapter-store` are now `ready` (deps done
+  # + ADRs accepted); downstream nodes are `planned` until their deps complete.
+  #   spec: docs/superpowers/specs/2026-06-29-thesisos-m6-writing-workspace-design.md
+  #   plan: plans/m6-writing-workspace-plan.md
+  # ─────────────────────────────────────────────────────────────────────────
+
+  writer-agent:
+    title: Writer Capability (write_grounded → DraftResult)
+    aliases: [writer, writer agent, writer node, writer capability, drafting, draft prose, write_grounded]
+    phase: M6.1
+    status: ready            # ADR-0031 Accepted 2026-06-29; deps (promotion) done
+    baseline: bf12c13        # m5-complete
+    depends_on: [promotion]
+    requires: [runtime-constitution, ADR-0030, ADR-0027, ADR-0031]
+    invariant: >-
+      Writer is a CAPABILITY/port — WriterCapability.write_grounded(brief) -> DraftResult —
+      with swappable implementations (writer-v2/fast/reasoning/local) at the composition root,
+      no topology change (C8; R1/R2). DraftResult{draft, citations, metadata, reasoning?, metrics}
+      is pure: the writer imports no app.db, app.runtime, app.services.chapter, REST, or telemetry
+      (R1/R3/R8/C3). make_writer_node is an adapter mapping DraftResult → draft/citations only
+      (contracts/agents/writer.json); metadata/reasoning/metrics ride the stream/Event Bus, never
+      GraphState. citations.source_id ⊆ retrieved_context (no invented ids). GraphState unchanged.
+    artifacts:
+      - backend/app/schemas/draft.py
+      - backend/app/graph/writer.py
+      - backend/app/graph/orchestration/writer_prompt.py
+    tests: [writer_capability_unit, draft_result_mapping, writer_isolation, writer_swappable, make ci, make unit-m4-recovery, make qualify-m5]
+
+  writer-route:
+    title: Writer route wiring
+    aliases: [writer route, drafting route, route writer]
+    phase: M6.2
+    status: planned          # ready once writer-agent (M6.1) is done
+    depends_on: [writer-agent]
+    requires: [ADR-0027, ADR-0031]
+    invariant: >-
+      Activates the ADR-0027 reserved `writer` route: memory_context → retriever → writer →
+      END. conversation/grounded_chat routes byte-for-byte unchanged (C6); retriever_node
+      reused unchanged. Writer node instrumented at build_graph (NodeStarted/Completed/Failed,
+      phase implement); zero-subscriber runtime stays valid (C4/R6/R8). Additive route vocab only.
+    artifacts:
+      - backend/app/graph/conversation.py
+      - backend/app/graph/routing.py
+      - backend/app/graph/orchestration/constants.py
+      - backend/app/graph/orchestration/coerce.py
+    tests: [writer_route, conditional_routing, existing_routes_unchanged, make ci, make qualify-m5]
+
+  chapter-store:
+    title: Chapter store (ChapterService + change stream)
+    aliases: [chapter service, workspace service, chapters, chapter versioning, change stream, draft persistence]
+    phase: M6.3
+    status: ready            # ADR-0032/0033 Accepted 2026-06-29; deps (promotion) done
+    baseline: bf12c13
+    depends_on: [promotion]
+    requires: [ADR-0015, ADR-0020, ADR-0030, ADR-0032, ADR-0033]
+    invariant: >-
+      ChapterService is the sole writer for chapters + chapter_versions (ADR-0032; R4).
+      Lifecycle draft→review→approved→published (M6 wires draft/review; approved=M9, published=M8).
+      Versioning is an append-only CHANGE STREAM: change_kind ∈ {WRITE,EDIT,PROMOTE,MERGE,RESTORE}
+      (M6 emits WRITE/EDIT/PROMOTE). Optimistic lock (expected_version → 409). Additive migration
+      only (chapters.version + chapter_versions); M0 chapters preserved; schema.sql regenerated.
+      No retrieval/embeddings over chapters, no tree ops, no ChapterCreated event (M8).
+    artifacts:
+      - backend/app/services/chapter/service.py
+      - backend/app/schemas/chapter.py
+      - backend/app/db/models
+      - contracts/db/schema.sql
+    tests: [chapter_service_unit, chapter_versioning, optimistic_lock, migration_additive, make ci]
+
+  chapter-api:
+    title: Chapters REST API + Workspace UI
+    aliases: [chapters api, /chapters, workspace ui]
+    phase: M6.4
+    status: planned          # ready once chapter-store + writer-route are done
+    depends_on: [chapter-store, writer-route]
+    requires: [ADR-0032]
+    invariant: >-
+      /chapters create/list/get/patch/versions backed only by ChapterService; replaces the 501
+      stub. /outline stays 501 (M8). HTTP handler never writes chapters directly. /chat SSE seam
+      unchanged.
+    artifacts:
+      - backend/app/api/chapters.py
+      - contracts/openapi/openapi.yaml
+      - frontend/app/workspace/
+    tests: [chapters_api, openapi_valid, outline_still_stub, conversation_seam, make ci]
+
+  writing-qualification:
+    title: Writing Qualification
+    aliases: [qualify-m6, writing eval, dogfood-m6]
+    phase: M6.5
+    status: planned
+    depends_on: [writer-route, chapter-api]
+    requires: [ADR-0031, ADR-0032]
+    gates: [make ci, make unit-m4-recovery, make qualify-m5, qualify-m6, dogfood-m6]
+    benchmarks:
+      b_write_s: TBD         # live writer turn: orchestration + retrieval + generation
+    artifacts:
+      - backend/tests/test_m6_writing_integration.py
+      - backend/tests/test_m6_writing_eval.py
+      - backend/tests/fixtures/m6_writing_eval.json
+      - bin/dogfood-m6-writing-run.sh
+    tests: [writing_integration, writing_eval, error_contracts, dogfood_writer, dogfood_chapter_save]
+
+  writing-promotion:
+    title: Writing Promotion
+    aliases: [promote m6, m6 freeze, tag m6]
+    phase: M6.6
+    status: planned
+    depends_on: [writing-qualification]
+    deliverables:
+      - docs/m6-promotion.md
+      - runtime-contract §5 writer example (additive)
+      - knowledge mirror (roadmap, agents/README, writer-agent, graph.md, graphstate)
+      - live dogfood benchmarks (B_write)
+    pending_manual:
+      - tag m6-complete (awaiting explicit go-ahead)
