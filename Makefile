@@ -13,7 +13,7 @@ RUFF     := $(BACKEND)/.venv/bin/ruff
 .DEFAULT_GOAL := help
 
 .PHONY: help install ensure-test-db lint format format-fix typecheck unit unit-frontend unit-builder-engine test \
-        drift scope isolation check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5
+        drift scope isolation check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5 qualify-m6 dogfood-m6
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -102,6 +102,18 @@ qualify-m5: ensure-test-db ## M5 Runtime Qualification suite (runtime + integrat
 
 dogfood-m5: ## End-to-end M5 orchestrated chat smoke (requires: make up, Vertex ADC)
 	@bash bin/dogfood-m5-conversation-run.sh
+
+qualify-m6: ensure-test-db ## M6 Writing Qualification suite (writer route + chapter store + eval)
+	cd $(BACKEND) && .venv/bin/python -m pytest -q \
+		tests/test_writer_node.py \
+		tests/test_m6_writer_route.py \
+		tests/test_chapter_service.py \
+		tests/test_chapters_api.py \
+		tests/test_m6_writing_integration.py \
+		tests/test_m6_writing_eval.py
+
+dogfood-m6: ## End-to-end M6 writing smoke: draft a chapter + save (requires: make up, Vertex ADC)
+	@bash bin/dogfood-m6-writing-run.sh
 
 # --- developer cockpit -------------------------------------------------------
 status: ## "Where are we?" — read-only product/ASEP/infra snapshot

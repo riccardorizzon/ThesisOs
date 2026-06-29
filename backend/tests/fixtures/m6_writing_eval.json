@@ -1,0 +1,12 @@
+{
+  "description": "Labeled writing-route eval (M6). Each case feeds the router node a raw LLM route + user message and asserts the final wired dispatch key. The writer route activates on thesis-drafting intent (ADR-0031 §4); an LLM 'writer' on a non-drafting turn still normalizes (M5 §6.2). JSON (not YAML) to avoid a backend dependency.",
+  "threshold": 1.0,
+  "cases": [
+    {"name": "writer_explicit_chapter", "user_message": "Write the chapter on craftsmanship", "llm_route": "writer", "expected": "writer"},
+    {"name": "writer_phrase_from_reserved", "user_message": "Draft the section on methodology", "llm_route": "critic", "expected": "writer"},
+    {"name": "writer_llm_plus_structure_token", "user_message": "Please compose this chapter for me", "llm_route": "writer", "expected": "writer"},
+    {"name": "writer_route_non_drafting_to_conversation", "user_message": "Write me a short poem about the sea", "llm_route": "writer", "expected": "conversation"},
+    {"name": "grounded_unaffected", "user_message": "What do my documents say about craftsmanship", "llm_route": "grounded_chat", "expected": "grounded_chat"},
+    {"name": "conversation_unaffected", "user_message": "Summarize what we discussed", "llm_route": "conversation", "expected": "conversation"}
+  ]
+}
