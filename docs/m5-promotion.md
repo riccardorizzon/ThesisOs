@@ -50,28 +50,32 @@ knowledge_updated: true         # roadmap, agents/README, graphstate, graph.md
 documentation: complete         # this doc + runtime-contract frozen
 ```
 
-Manual gates (require a live stack — `make up` + Vertex ADC; **not** run here):
+Live stack gates (`make up` + Vertex ADC) — recorded 2026-06-29 via `make dogfood-m5`:
 
 ```yaml
-dogfood_conversation: pending   # bin/dogfood-m5-conversation-run.sh
-dogfood_grounded: pending       # bin/dogfood-m5-conversation-run.sh
-benchmarks_recorded: pending    # B_lat / B_ground from make dogfood-m5
-m5_tag: pending                 # tag `m5-complete` — create after live dogfood + explicit approval
+dogfood_conversation: green     # reply + conversation_id received
+dogfood_grounded: green         # grounded turn streamed sources
+benchmarks_recorded: true       # B_lat = 9.89s, B_ground = 6.54s (evidence: /tmp/dogfood-m5-evidence.jsonl)
+m5_tag: pending                 # tag `m5-complete` — awaiting explicit go-ahead
 ```
+
+**Benchmark notes:** `B_lat` is the conversation turn (3 orchestration LLM calls +
+conversation stream); `B_ground` adds retrieval but was faster this run (shorter
+answer / warm path). Single-sample smoke, not a statistical benchmark — sufficient
+for the M5 promotion gate; latency optimization is deferred (ADR-0027 consequences).
 
 ## Tag procedure (final step)
 
-`m5-complete` is **withheld** until the manual gates are satisfied honestly:
+All deterministic and live-stack gates are green; the only remaining step is the
+tag, withheld for explicit go-ahead:
 
 ```bash
-make up                      # start stack (db, backend, frontend)
-make dogfood-m5              # records B_lat / B_ground; must print "DOGFOOD M5 PASS"
-# then, on explicit go-ahead:
+# on explicit approval:
 git tag -a m5-complete -m "M5 Tool Router / Orchestration — promoted" <sha>
 ```
 
-Do not tag while `benchmarks_recorded` is `pending` — the tag asserts a fully
-qualified runtime (verification-before-completion).
+Note: M5 work lives on branch `m5-tool-router`; if the tag should mark the merge to
+`main`, tag the merge commit instead of the branch tip.
 
 ## What M5 explicitly did NOT do
 

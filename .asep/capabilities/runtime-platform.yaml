@@ -84,6 +84,9 @@ capabilities:
     baseline: "82c3dd3"
     depends_on: [observability, lifecycle-instrumentation]
     gates: [make ci, make unit-m4-recovery, qualify-m5, dogfood-m5]
+    benchmarks:           # live, 2026-06-29 (single-sample smoke)
+      b_lat_s: 9.89       # conversation turn
+      b_ground_s: 6.54    # grounded turn
     artifacts:
       - backend/tests/test_m5_chat_integration.py
       - backend/tests/test_m5_routing_eval.py
@@ -100,6 +103,6 @@ capabilities:
       - docs/m5-promotion.md            # done
       - runtime-contract frozen          # done (Frozen v1)
       - knowledge mirror updated         # done (roadmap, agents/README, graphstate)
+      - live dogfood benchmarks          # done (B_lat=9.89s, B_ground=6.54s, 2026-06-29)
     pending_manual:
-      - dogfood benchmarks (make dogfood-m5 — live stack)
-      - tag m5-complete (after benchmarks + explicit approval)
+      - tag m5-complete (awaiting explicit go-ahead)
