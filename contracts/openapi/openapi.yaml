@@ -178,11 +178,73 @@ paths:
       responses:
         "501": { description: not implemented yet }
   /chapters:
+    get:
+      summary: List chapters (structural, not retrieval)
+      x-milestone: M6
+      parameters:
+        - { name: parent_id, in: query, required: false, schema: { type: string, format: uuid }, description: "Filter by parent chapter (sections)" }
+        - { name: q, in: query, required: false, schema: { type: string }, description: "Case-insensitive substring filter on title (not semantic search)" }
+        - { name: limit, in: query, required: false, schema: { type: integer, default: 100, minimum: 1, maximum: 500 } }
+        - { name: offset, in: query, required: false, schema: { type: integer, default: 0, minimum: 0 } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Chapter" } }
     post:
       summary: Create a chapter
       x-milestone: M6
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChapterCreate" }
       responses:
-        "501": { description: not implemented yet }
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Chapter" }
+        "422": { description: Invalid status, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /chapters/{id}:
+    get:
+      summary: Get chapter by id (includes content_md — workspace editor surface)
+      x-milestone: M6
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Chapter" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    patch:
+      summary: Update chapter content and/or metadata (optimistic lock)
+      x-milestone: M6
+      description: "content_md present → content edit; otherwise a metadata/status edit. expected_version required."
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChapterUpdate" }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Chapter" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "409": { description: write_conflict, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "422": { description: Invalid status / missing expected_version, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /chapters/{id}/versions:
+    get:
+      summary: List chapter change-stream history (read-only)
+      x-milestone: M6
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ChapterVersion" } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
   /memory:
     get:
       summary: List memories
@@ -343,6 +405,55 @@ components:
         content: { type: string }
         metadata: { type: object }
         source: { type: string }
+        changed_at: { type: string, format: date-time }
+    Chapter:
+      type: object
+      required: [id, order_index, title, status, word_count, version, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        parent_id: { type: string, format: uuid, nullable: true }
+        order_index: { type: integer }
+        title: { type: string }
+        status: { type: string, enum: [draft, review, approved, published] }
+        content_md: { type: string, nullable: true }
+        summary: { type: string, nullable: true }
+        word_count: { type: integer }
+        version: { type: integer, minimum: 1 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    ChapterCreate:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string }
+        parent_id: { type: string, format: uuid, nullable: true }
+        order_index: { type: integer, default: 0 }
+        status: { type: string, enum: [draft, review, approved, published], default: draft }
+        content_md: { type: string, nullable: true }
+        summary: { type: string, nullable: true }
+    ChapterUpdate:
+      type: object
+      required: [expected_version]
+      description: "content_md present → content edit; else metadata/status edit."
+      properties:
+        content_md: { type: string }
+        title: { type: string, nullable: true }
+        summary: { type: string, nullable: true }
+        status: { type: string, enum: [draft, review, approved, published], nullable: true }
+        expected_version: { type: integer, minimum: 1 }
+    ChapterVersion:
+      type: object
+      required: [chapter_id, version, change_kind, title, status, word_count, changed_at]
+      properties:
+        chapter_id: { type: string, format: uuid }
+        version: { type: integer }
+        change_kind: { type: string, enum: [WRITE, EDIT, PROMOTE, MERGE, RESTORE] }
+        title: { type: string }
+        status: { type: string }
+        content_md: { type: string, nullable: true }
+        summary: { type: string, nullable: true }
+        word_count: { type: integer }
+        metadata: { type: object }
         changed_at: { type: string, format: date-time }
     Document:
       type: object

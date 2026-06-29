@@ -22,6 +22,7 @@ from app.schemas.chapter import (
     ChapterContentUpdate,
     ChapterCreate,
     ChapterListFilters,
+    ChapterMetadataUpdate,
     ChapterRecord,
     ChapterVersionRecord,
 )
@@ -87,7 +88,7 @@ class ChapterService:
                 raise
 
     async def update_metadata(
-        self, chapter_id: str, data, *, session: AsyncSession | None = None
+        self, chapter_id: str, data: ChapterMetadataUpdate, *, session: AsyncSession | None = None
     ) -> ChapterRecord:
         if session is not None:
             return await self._update_metadata(session, chapter_id, data)
@@ -169,7 +170,7 @@ class ChapterService:
         return self._to_record(row)
 
     async def _update_metadata(
-        self, session: AsyncSession, chapter_id: str, data
+        self, session: AsyncSession, chapter_id: str, data: ChapterMetadataUpdate
     ) -> ChapterRecord:
         row = self._require_version(await session.get(models.Chapter, chapter_id), chapter_id, data.expected_version)
         status_change = False
