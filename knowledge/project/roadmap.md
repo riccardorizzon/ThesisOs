@@ -18,7 +18,7 @@ usable capability end-to-end against frozen contracts and passes a promotion gat
 | **M2** | Memory | ✅ | Memory foundation: DB, Service, API, Admin UI, `memory_context_node` | `/memory`, ADR-0015/0017/0018; tag `m2-complete` |
 | **M3** | Ingestion | ✅ | Document upload → parse → chunks + events; tag `m3-complete` | `/upload`, `/documents`, events |
 | **M4** | Retrieval | ✅ | Embed + hybrid search + retriever; promoted tag `m4-complete` | `/search`, `retriever`, ADR-0024 |
-| **M5** | Tool Router / Orchestration | 🟡 | **Spec frozen 2026-06-25** — supervisor/planner/router; impl pending Critic §12 | ADR-0027, `contracts/agents/*` |
+| **M5** | Tool Router / Orchestration | 🟢 | Orchestrated runtime: supervisor/planner/router + conditional routing + TaskService + Runtime Event Bus/observability. Impl complete & qualified; live dogfood benchmarks + `m5-complete` tag pending | ADR-0027/0030, `contracts/agents/*`, `docs/runtime-contract.md` |
 | **M6** | Writing | ⬜ | Writer agent drafts chapters from plan + context | `/chapters`, `writer` agent |
 | **M7** | Citations | ⬜ | CSL-JSON → APA7/MLA/Chicago; bibliography | `/citations`, `/bibliography`, `citation` agent |
 | **M8** | Outline | ⬜ | Outline/chapter tree management | `/outline`, `ChapterCreated` event |

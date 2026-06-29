@@ -1,10 +1,11 @@
 # ThesisOS Agent Runtime Contract
 
-> **Status:** Draft — scaffold for M5.6 promotion. Architectural invariants of the
-> Runtime Platform live in `docs/runtime-constitution.md` (C1–C8); normative
-> enforcement rules in `decisions/ADR-0030-agent-runtime-layer-boundaries.md`. This
-> document is the **onboarding contract** for anyone adding agents, subscribers, or
-> runtime extensions. Complete and freeze at **M5.6 — Promotion**.
+> **Status:** Frozen v1 (M5.6, 2026-06-29). Architectural invariants of the Runtime
+> Platform live in `docs/runtime-constitution.md` (C1–C8); normative enforcement
+> rules in `decisions/ADR-0030-agent-runtime-layer-boundaries.md`. This document is
+> the **onboarding contract** for anyone adding agents, subscribers, or runtime
+> extensions. Changes to the frozen surfaces (§3 event model, §4 Runtime API, §6
+> stability guarantees) require an ADR + version bump.
 
 ---
 

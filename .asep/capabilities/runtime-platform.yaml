@@ -94,9 +94,12 @@ capabilities:
     title: Promotion
     aliases: [promote, promotion, freeze, tag]
     phase: M5.6
-    status: planned
+    status: done            # promotion docs + freeze + knowledge mirror shipped
     depends_on: [qualification]
     deliverables:
-      - docs/m5-promotion.md
-      - runtime-contract frozen
-      - tag m5-complete
+      - docs/m5-promotion.md            # done
+      - runtime-contract frozen          # done (Frozen v1)
+      - knowledge mirror updated         # done (roadmap, agents/README, graphstate)
+    pending_manual:
+      - dogfood benchmarks (make dogfood-m5 — live stack)
+      - tag m5-complete (after benchmarks + explicit approval)

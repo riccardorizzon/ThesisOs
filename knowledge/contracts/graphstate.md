@@ -64,6 +64,10 @@ AgentError(agent: str, message: str)
    record); nodes use replace semantics on `messages`.
 5. **Usage is not a GraphState field.** Token usage is carried via the custom
    stream and recorded on `agent_runs` (ADR-0014).
+6. **Runtime observability is out-of-state (M5.4, ADR-0030).** The Runtime Event Bus
+   emits canonical events and writes `agent_steps` via subscribers; `RunContext`
+   flows through LangGraph config, never `GraphState`. Adding observability did not
+   add a field. (Tested: `"run_context" not in GraphState.model_fields`.)
 
 ## Why frozen
 Freezing `GraphState` early lets M2–M18 add nodes that read/write existing fields

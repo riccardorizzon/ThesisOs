@@ -47,6 +47,7 @@
 | M5.4B | `520d3bb` | Runtime Event Bus (fan-out, non-blocking, zero-subscriber valid) |
 | M5.4C | `630d647` | Observability subscribers + lifecycle emission (agent_steps, logging, RunContext-in-config) |
 | M5.5 | `82c3dd3` | Runtime Qualification (integration, error contracts, routing eval, dogfood-m5) |
+| M5.6 | *(this commit)* | Promotion docs + runtime-contract Frozen v1 + knowledge mirror (tag pending live benchmarks) |
 
 Frozen scopes **do not reopen** except demonstrable bugs.
 
@@ -437,7 +438,13 @@ m0_m1_m2_m3_m4_tests: green
 
 ---
 
-## Phase 9 — M5.6: Promotion + runtime contract
+## Phase 9 — M5.6: Promotion + runtime contract — DONE (docs; tag pending)
+
+> `docs/m5-promotion.md` published; `docs/runtime-contract.md` **Frozen v1**; knowledge
+> mirror updated (roadmap, agents/README, graphstate). Deterministic promotion gates
+> green. **Pending manual:** live dogfood benchmarks (`make dogfood-m5`) and the
+> `m5-complete` tag (created only after benchmarks + explicit approval —
+> verification-before-completion).
 
 ### Objective
 Freeze M5 runtime, publish promotion doc and **runtime contract**, update knowledge mirror, tag `m5-complete`.
