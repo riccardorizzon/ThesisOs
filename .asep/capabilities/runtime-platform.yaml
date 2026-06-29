@@ -208,12 +208,13 @@ capabilities:
     title: Writing Qualification
     aliases: [qualify-m6, writing eval, dogfood-m6]
     phase: M6.5
-    status: ready            # deps done (writer-route @ 5ad34bf, chapter-api @ 648d563)
+    status: done             # qualify-m6 (44) + live dogfood-m6
+    baseline: 2bd6ba6        # M6.5
     depends_on: [writer-route, chapter-api]
     requires: [ADR-0031, ADR-0032]
     gates: [make ci, make unit-m4-recovery, make qualify-m5, qualify-m6, dogfood-m6]
-    benchmarks:
-      b_write_s: TBD         # live writer turn: orchestration + retrieval + generation
+    benchmarks:           # live, 2026-06-29 (single-sample smoke)
+      b_write_s: 63.59    # writer turn: orchestration + retrieval + 6620-char draft
     artifacts:
       - backend/tests/test_m6_writing_integration.py
       - backend/tests/test_m6_writing_eval.py
@@ -225,7 +226,7 @@ capabilities:
     title: Writing Promotion
     aliases: [promote m6, m6 freeze, tag m6]
     phase: M6.6
-    status: planned
+    status: ready            # deps done (writing-qualification @ 2bd6ba6)
     depends_on: [writing-qualification]
     deliverables:
       - docs/m6-promotion.md
