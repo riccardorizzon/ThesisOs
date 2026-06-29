@@ -18,10 +18,10 @@
 
 | Sub | Capability node | Commit | Scope |
 |-----|-----------------|--------|-------|
-| M6.0 | (governance) | _pending_ | spec + ADR-0031/0032/0033 frozen |
-| M6.1 | `writer-agent` | _pending_ | `make_writer_node` (pure, unwired) |
-| M6.2 | `writer-route` | _pending_ | activate `writer` route + instrumentation |
-| M6.3 | `chapter-store` | _pending_ | `ChapterService` + `chapter_versions` migration |
+| M6.0 | (governance) | `cfebe01` | spec + ADR-0031/0032/0033 frozen |
+| M6.1 | `writer-agent` | `b8e3b20` | writer capability + DraftResult + node (pure, unwired) |
+| M6.2 | `writer-route` | `5ad34bf` | activate `writer` route + instrumentation |
+| M6.3 | `chapter-store` | `0387929` | `ChapterService` + `chapter_versions` change stream + migration 0005 |
 | M6.4 | `chapter-api` | _pending_ | `/chapters` REST + minimal `/workspace` |
 | M6.5 | `writing-qualification` | _pending_ | `qualify-m6` + `dogfood-m6` + `B_write` |
 | M6.6 | `writing-promotion` | _pending_ | promotion doc + freeze + tag `m6-complete` |

@@ -126,8 +126,8 @@ capabilities:
     title: Writer Capability (write_grounded → DraftResult)
     aliases: [writer, writer agent, writer node, writer capability, drafting, draft prose, write_grounded]
     phase: M6.1
-    status: ready            # ADR-0031 Accepted 2026-06-29; deps (promotion) done
-    baseline: bf12c13        # m5-complete
+    status: done             # writer capability + node (unwired)
+    baseline: b8e3b20        # M6.1
     depends_on: [promotion]
     requires: [runtime-constitution, ADR-0030, ADR-0027, ADR-0031]
     invariant: >-
@@ -148,7 +148,8 @@ capabilities:
     title: Writer route wiring
     aliases: [writer route, drafting route, route writer]
     phase: M6.2
-    status: planned          # ready once writer-agent (M6.1) is done
+    status: done             # writer route wired (memory_context → retriever → writer → END)
+    baseline: 5ad34bf        # M6.2
     depends_on: [writer-agent]
     requires: [ADR-0027, ADR-0031]
     invariant: >-
@@ -167,8 +168,8 @@ capabilities:
     title: Chapter store (ChapterService + change stream)
     aliases: [chapter service, workspace service, chapters, chapter versioning, change stream, draft persistence]
     phase: M6.3
-    status: ready            # ADR-0032/0033 Accepted 2026-06-29; deps (promotion) done
-    baseline: bf12c13
+    status: done             # ChapterService + chapter_versions change stream + migration 0005
+    baseline: 0387929        # M6.3
     depends_on: [promotion]
     requires: [ADR-0015, ADR-0020, ADR-0030, ADR-0032, ADR-0033]
     invariant: >-
@@ -189,7 +190,7 @@ capabilities:
     title: Chapters REST API + Workspace UI
     aliases: [chapters api, /chapters, workspace ui]
     phase: M6.4
-    status: planned          # ready once chapter-store + writer-route are done
+    status: ready            # deps done (chapter-store @ 0387929, writer-route @ 5ad34bf)
     depends_on: [chapter-store, writer-route]
     requires: [ADR-0032]
     invariant: >-
