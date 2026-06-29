@@ -118,9 +118,9 @@ def test_patch_metadata_status(client):
 
 
 def test_patch_requires_expected_version(client):
+    # FastAPI request validation (ChapterUpdate.expected_version required) → 422.
     r = client.patch("/chapters/ch-9", json={"content_md": "x"})
     assert r.status_code == 422
-    assert r.json()["code"] == "expected_version_required"
 
 
 def test_patch_conflict_409(client):

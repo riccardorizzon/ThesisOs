@@ -66,6 +66,19 @@ class ChapterMetadataUpdate(BaseModel):
     expected_version: int
 
 
+class ChapterUpdate(BaseModel):
+    """Unified PATCH body (matches OpenAPI `ChapterUpdate`).
+
+    `content_md` present (non-null) → content edit; otherwise a metadata/status edit.
+    """
+
+    content_md: str | None = None
+    title: str | None = None
+    summary: str | None = None
+    status: str | None = None
+    expected_version: int
+
+
 class ChapterListFilters(BaseModel):
     parent_id: str | None = None
     q: str | None = None

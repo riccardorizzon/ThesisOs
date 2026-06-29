@@ -12,6 +12,7 @@ from app.schemas.chapter import (
     ChapterCreate,
     ChapterListFilters,
     ChapterMetadataUpdate,
+    ChapterUpdate,
 )
 from app.services.chapter import (
     ChapterNotFoundError,
@@ -56,26 +57,25 @@ async def get_chapter(chapter_id: str):
 
 
 @router.patch("/chapters/{chapter_id}")
-async def update_chapter(chapter_id: str, body: dict):
-    """Update content and/or metadata. `content_md` present → content edit;
-    otherwise a metadata/status edit. Both require `expected_version` (409 on stale)."""
-    if "expected_version" not in body:
-        return _err(422, "expected_version_required", "expected_version is required")
+async def update_chapter(chapter_id: str, body: ChapterUpdate):
+    """Update content and/or metadata. A non-null `content_md` → content edit;
+    otherwise a metadata/status edit. `expected_version` required (FastAPI 422);
+    stale → 409 (ADR-0033)."""
     try:
-        if "content_md" in body:
+        if body.content_md is not None:
             return await _service.update_content(
                 chapter_id,
                 ChapterContentUpdate(
-                    content_md=body["content_md"], expected_version=body["expected_version"]
+                    content_md=body.content_md, expected_version=body.expected_version
                 ),
             )
         return await _service.update_metadata(
             chapter_id,
             ChapterMetadataUpdate(
-                title=body.get("title"),
-                summary=body.get("summary"),
-                status=body.get("status"),
-                expected_version=body["expected_version"],
+                title=body.title,
+                summary=body.summary,
+                status=body.status,
+                expected_version=body.expected_version,
             ),
         )
     except ChapterNotFoundError as exc:
