@@ -226,12 +226,13 @@ capabilities:
     title: Writing Promotion
     aliases: [promote m6, m6 freeze, tag m6]
     phase: M6.6
-    status: ready            # deps done (writing-qualification @ 2bd6ba6)
+    status: done             # promotion doc + runtime-contract writer example + knowledge mirror
+    baseline: 14baec3        # M6.6
     depends_on: [writing-qualification]
     deliverables:
-      - docs/m6-promotion.md
-      - runtime-contract §5 writer example (additive)
-      - knowledge mirror (roadmap, agents/README, writer-agent, graph.md, graphstate)
-      - live dogfood benchmarks (B_write)
+      - docs/m6-promotion.md            # done
+      - runtime-contract §5 writer example  # done (additive; frozen surfaces unchanged)
+      - knowledge mirror updated        # done (roadmap, agents/README, writer-agent, graph.md, graphstate)
+      - live dogfood benchmarks         # done (B_write=63.6s, 2026-06-29)
     pending_manual:
       - tag m6-complete (awaiting explicit go-ahead)

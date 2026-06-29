@@ -24,7 +24,7 @@
 | M6.3 | `chapter-store` | `0387929` | `ChapterService` + `chapter_versions` change stream + migration 0005 |
 | M6.4 | `chapter-api` | `648d563` | `/chapters` REST + Workspace UI |
 | M6.5 | `writing-qualification` | `2bd6ba6` | `qualify-m6` (44) + live `dogfood-m6` (B_write=63.6s) |
-| M6.6 | `writing-promotion` | _pending_ | promotion doc + freeze + tag `m6-complete` |
+| M6.6 | `writing-promotion` | `14baec3` | promotion doc + knowledge mirror (tag `m6-complete` pending go-ahead) |
 
 Frozen scopes **do not reopen** except demonstrable bugs (Constitution C6).
 
