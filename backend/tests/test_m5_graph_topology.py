@@ -55,17 +55,19 @@ def test_structural_orchestration_chain(in_memory_checkpointer):
     assert ("router_node", "memory_context_node") in edges
 
 
-def test_structural_single_conditional_dispatch_point(in_memory_checkpointer):
+def test_structural_conditional_dispatch_points(in_memory_checkpointer):
     graph = build_graph(OrchestrationLLM(), checkpointer=in_memory_checkpointer).get_graph()
     conditional = _conditional_sources(graph)
-    assert conditional == {"memory_context_node"}
+    # M6 (ADR-0031): a second dispatch after the retriever splits grounded vs writer.
+    assert conditional == {"memory_context_node", "retriever_node"}
 
 
 def test_structural_conditional_edge_targets(in_memory_checkpointer):
     graph = build_graph(OrchestrationLLM(), checkpointer=in_memory_checkpointer).get_graph()
     conditional_edges = [e for e in graph.edges if e.conditional]
     targets = {e.target for e in conditional_edges}
-    assert targets == {"conversation_node", "retriever_node"}
+    # M6 adds writer_node as a conditional target (after the retriever).
+    assert targets == {"conversation_node", "retriever_node", "writer_node"}
 
 
 def test_structural_grounded_path_through_retriever(in_memory_checkpointer):

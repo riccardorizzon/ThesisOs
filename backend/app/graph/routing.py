@@ -7,10 +7,11 @@ module is graph dispatch only — no ``build_graph()`` wiring here.
 
 from __future__ import annotations
 
-from app.graph.orchestration.constants import DEFAULT_ROUTE, WIRED_ROUTES
+from app.graph.orchestration.constants import DEFAULT_ROUTE, WIRED_ROUTES, WRITER_ROUTE
 from app.schemas.graph_state import GraphState
 
-# LangGraph conditional edge keys (ADR-0027) — identical to wired route strings.
+# LangGraph conditional edge keys (ADR-0027; M6 adds `writer`) — identical to
+# wired route strings.
 M5_ROUTE_EDGE_KEYS: frozenset[str] = WIRED_ROUTES
 
 
@@ -31,5 +32,18 @@ def resolve_route(state: GraphState) -> str:
 
 
 def route_after_router(state: GraphState) -> str:
-    """Conditional edge selector after ``router_node`` (spec §4.2, ADR-0027)."""
+    """Conditional edge selector after ``memory_context_node`` (ADR-0027 §1; M6 §1).
+
+    Dispatches the resolved route. Both ``grounded_chat`` and ``writer`` flow
+    through the retriever first; ``conversation`` skips it.
+    """
     return resolve_route(state)
+
+
+def route_after_retriever(state: GraphState) -> str:
+    """Conditional edge selector after ``retriever_node`` (M6, ADR-0031 §1).
+
+    The grounded path continues to ``conversation_node`` (M5, unchanged); the
+    writer path continues to ``writer_node``.
+    """
+    return WRITER_ROUTE if resolve_route(state) == WRITER_ROUTE else DEFAULT_ROUTE

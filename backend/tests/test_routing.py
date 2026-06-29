@@ -9,8 +9,11 @@ from app.schemas.graph_state import GraphState, Message, Plan
 
 
 def test_m5_route_edge_keys_match_wired_vocabulary():
+    from app.graph.orchestration.constants import WRITER_ROUTE
+
     assert M5_ROUTE_EDGE_KEYS is WIRED_ROUTES
-    assert M5_ROUTE_EDGE_KEYS == frozenset({DEFAULT_ROUTE, GROUNDED_ROUTE})
+    # M6 (ADR-0031) activated the reserved `writer` route additively.
+    assert M5_ROUTE_EDGE_KEYS == frozenset({DEFAULT_ROUTE, GROUNDED_ROUTE, WRITER_ROUTE})
 
 
 def test_resolve_route_conversation():
@@ -35,8 +38,24 @@ def test_resolve_route_empty_string_defaults_to_conversation():
 
 
 def test_resolve_route_unknown_defaults_to_conversation():
-    state = GraphState(messages=[], route="writer")
+    # `writer` is wired in M6; use a still-reserved route for the unknown case.
+    state = GraphState(messages=[], route="critic")
     assert resolve_route(state) == DEFAULT_ROUTE
+
+
+def test_resolve_route_writer_is_wired():
+    state = GraphState(messages=[], route="writer")
+    assert resolve_route(state) == "writer"
+
+
+def test_route_after_retriever_grounded_to_conversation():
+    state = GraphState(messages=[], route=GROUNDED_ROUTE)
+    assert routing.route_after_retriever(state) == DEFAULT_ROUTE
+
+
+def test_route_after_retriever_writer_to_writer():
+    state = GraphState(messages=[], route="writer")
+    assert routing.route_after_retriever(state) == "writer"
 
 
 def test_resolve_route_normalizes_case():

@@ -2,13 +2,14 @@ from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 
 from app.graph.memory_context import make_memory_context_node
-from app.graph.orchestration.constants import DEFAULT_ROUTE, GROUNDED_ROUTE
+from app.graph.orchestration.constants import DEFAULT_ROUTE, GROUNDED_ROUTE, WRITER_ROUTE
 from app.graph.planner import make_planner_node
 from app.graph.prompt_wire import compose_prompt_wire, format_grounding_sources
 from app.graph.retriever import make_retriever_node
 from app.graph.router import make_router_node
-from app.graph.routing import route_after_router
+from app.graph.routing import route_after_retriever, route_after_router
 from app.graph.supervisor import make_supervisor_node
+from app.graph.writer import LLMWriter, make_writer_node
 from app.llm.base import LLMClient
 from app.runtime.contracts import RuntimeEventEmitter
 from app.runtime.events import EventType
@@ -77,11 +78,14 @@ def build_graph(
     emitter: RuntimeEventEmitter | None = None,
     run_context: RunContext | None = None,
 ):
-    """M5 graph (ADR-0027): orchestration chain + conditional execution subgraph.
+    """Orchestrated graph (ADR-0027 + M6 writer route, ADR-0031).
+
+    Topology: supervisor → planner → router → memory_context → [route]:
+    conversation → END · grounded_chat → retriever → conversation → END (M5) ·
+    writer → retriever → writer → END (M6). M5 paths are byte-for-byte unchanged.
 
     When an `emitter` + `run_context` are supplied, the Runtime wraps each Business
-    node to emit canonical events (M5.4C). Node bodies are untouched (R8/C3); with no
-    emitter the graph is byte-for-byte the M5.2B topology."""
+    node to emit canonical events (M5.4C). Node bodies are untouched (R8/C3)."""
     instrument = emitter is not None and run_context is not None
 
     def node(name: str, fn, phase: str, *, route_event: bool = False):
@@ -126,19 +130,42 @@ def build_graph(
     g.add_node("memory_context_node", node("memory_context", make_memory_context_node(memory_service), "implement"))
     g.add_node("retriever_node", node("retriever", make_retriever_node(retrieval_service), "implement"))
     g.add_node("conversation_node", node("conversation", make_conversation_node(llm), "implement"))
+    # M6 (ADR-0031): writer is a capability behind a port; LLMWriter is the default
+    # impl, swappable at this composition root. Streaming is injected via the
+    # LangGraph stream writer factory (writer.py imports no LangGraph — C3).
+    g.add_node(
+        "writer_node",
+        node(
+            "writer",
+            make_writer_node(LLMWriter(llm), stream_writer_factory=get_stream_writer),
+            "implement",
+        ),
+    )
 
     g.add_edge(START, "supervisor_node")
     g.add_edge("supervisor_node", "planner_node")
     g.add_edge("planner_node", "router_node")
     g.add_edge("router_node", "memory_context_node")
+    # Dispatch after memory: conversation skips retrieval; grounded_chat and writer
+    # both retrieve first (M5 conversation/grounded paths unchanged — C6).
     g.add_conditional_edges(
         "memory_context_node",
         route_after_router,
         {
             DEFAULT_ROUTE: "conversation_node",
             GROUNDED_ROUTE: "retriever_node",
+            WRITER_ROUTE: "retriever_node",
         },
     )
-    g.add_edge("retriever_node", "conversation_node")
+    # After retrieval: grounded_chat → conversation (M5, unchanged); writer → writer.
+    g.add_conditional_edges(
+        "retriever_node",
+        route_after_retriever,
+        {
+            DEFAULT_ROUTE: "conversation_node",
+            WRITER_ROUTE: "writer_node",
+        },
+    )
     g.add_edge("conversation_node", END)
+    g.add_edge("writer_node", END)
     return g.compile(checkpointer=checkpointer)

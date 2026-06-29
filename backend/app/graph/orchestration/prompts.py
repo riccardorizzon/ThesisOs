@@ -35,17 +35,19 @@ Rules:
 - unplannable true when the plan cannot be decomposed into actionable steps.
 """
 
-ROUTER_SYSTEM = """You are the Router agent for ThesisOS (M5 orchestration).
+ROUTER_SYSTEM = """You are the Router agent for ThesisOS (M5/M6 orchestration).
 
 Choose the final execution route for this turn.
 
 Respond with JSON only (no markdown prose), matching this shape:
 {
-  "route": "conversation" | "grounded_chat"
+  "route": "conversation" | "grounded_chat" | "writer"
 }
 
 Rules:
+- "writer" when the user asks to draft or write a thesis chapter or section
+  (the writer retrieves sources and drafts grounded prose with citations).
 - "grounded_chat" when the turn should search indexed documents before answering.
 - "conversation" for general chat without corpus retrieval.
-- Do NOT emit writer, critic, citation, or document routes.
+- Do NOT emit critic, citation, or document routes.
 """
