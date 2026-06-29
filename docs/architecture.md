@@ -1,192 +1,137 @@
 # ThesisOS — Architecture Overview
 
-> Human-readable mirror of the frozen M0 design spec
-> (`superpowers/specs/2026-06-23-thesisos-m0-foundations-design.md`). This is an
-> overview, not a re-derivation. The spec is the source of truth; if they ever
-> disagree, the spec wins.
+> **Living architecture document** for the Product Plane runtime.
+> Baseline: **`m6-main`** @ `79fb52a` (integrated on `main`, 2026-06-29).
+>
+> This is the human-readable overview. Authoritative detail lives in:
+> - [`architecture/invariants.md`](architecture/invariants.md) — numbered invariants (grows per milestone)
+> - [`architecture/capability-inventory.md`](architecture/capability-inventory.md) — capability status table
+> - [`runtime-constitution.md`](runtime-constitution.md) — Runtime Platform invariants C1–C8
+> - [`runtime-contract.md`](runtime-contract.md) — onboarding + extension points (Frozen v1)
+> - [`../knowledge/architecture/graph.md`](../knowledge/architecture/graph.md) — graph topology mirror
+>
+> M0 design spec remains the historical origin (`superpowers/specs/2026-06-23-thesisos-m0-foundations-design.md`).
 
-ThesisOS is a **single-user** research and thesis-writing AgentOS: chat,
-long-term editable memory, document ingestion (PDF/EPUB/DOCX/**Markdown/Text**),
-Retrieval-Augmented Generation, citation management, outline/chapter management,
-and multi-agent orchestration — built to run on Google Cloud from day one.
-
-This milestone, **M0 "Foundations,"** is *Contract First*: it establishes the
-architecture, contracts, repository skeleton, and infrastructure so every later
-milestone (M1–M18) adds one vertical slice against stable contracts. **M0
-contains no product feature code.**
+ThesisOS is a **single-user** research and thesis-writing AgentOS built on **ASEP**
+(Adaptive Software Engineering Platform). As of M6 it delivers: streaming chat,
+editable memory, document ingestion, hybrid retrieval, multi-agent orchestration
+with conditional routing, grounded drafting, and a versioned chapter workspace.
 
 ---
 
-## 1. System Overview
+## Architecture at a glance
 
-The runtime is a linear stack from a Next.js frontend down to Vertex AI and
-Postgres. The LangGraph orchestrator is *designed* in M0 and *wired* in later
-milestones. The ASCII diagram below is reproduced verbatim from spec §4.
+End-to-end flow from client to persistence:
 
 ```text
-Next.js (App Router, Tailwind, Zustand)         frontend, ChatGPT-style UI
+Client (Next.js)
+      │  HTTPS / SSE
+      ▼
+POST /chat ───────────────────────────── POST /chapters
+      │                                        │
+      ▼                                        ▼
+ConversationService                    ChapterService (sole writer)
+      │                                        │
+      ▼                                        ▼
+LangGraph build_graph()                chapters + chapter_versions
+      │
+      ▼
+┌─────────────────────────────────────────────────────────────┐
+│  ORCHESTRATION PIPELINE (every turn)                        │
+│                                                             │
+│  Supervisor → Planner → Router → memory_context_node        │
+│       │          │         │                                │
+│       │          │         └── route_after_router           │
+│       │          │                  │                         │
+│       │          │     ┌────────────┼────────────┐           │
+│       │          │     ▼            ▼            ▼           │
+│       │          │ conversation  grounded_chat   writer      │
+│       │          │     │            │            │           │
+│       │          │     │            ▼            ▼           │
+│       │          │     │       retriever     retriever       │
+│       │          │     │            │            │           │
+│       │          │     ▼            ▼            ▼           │
+│       │          │ conversation  conversation   writer_node  │
+│       │          │     │            │            │           │
+│       │          │     └────────────┴────────────┘           │
+│       │          │                  │                         │
+│       ▼          ▼                  ▼                         │
+│   plan/route   TaskService    DraftResult / messages         │
+└───────────────────────────────┬─────────────────────────────┘
+                                │
+                                ▼
+                    Runtime Event Bus → subscribers
+                    (agent_steps, structured logging)
+                                │
+                                ▼
+                    Postgres + pgvector · Vertex AI (Gemini + embeddings)
+```
+
+**Key separation:** graph nodes produce ephemeral results (`DraftResult`, assistant
+messages). Durable chapter content is written only through `ChapterService`.
+
+---
+
+## 1. System stack
+
+```text
+Next.js (App Router, Tailwind, Zustand)         Chat + Workspace UI
         │  HTTPS / SSE
         ▼
-FastAPI (backend, Python, no auth — single user) API contracts
+FastAPI (backend, Python, single user, no auth)
         ▼
-LangGraph Orchestrator (designed in M0,          Supervisor→Planner→Router→{agents}
-  wired in later milestones)
+LangGraph Orchestrator                          Supervisor → Planner → Router → agents
         ▼
-Services: ingestion · retrieval · memory ·       business logic (Python)
-  citation · events · jobs · telemetry
+Services (Business layer)                       memory · retrieval · document ·
+                                                  task · chapter · conversation
         ▼
-LLM abstraction (LiteLLM): generate/embed/vision provider-swappable
+Runtime layer                                   Event Bus · instrumentation · lifecycle
         ▼
-Vertex AI: Gemini + multilingual-embedding       single runtime vendor
+LLM abstraction (LiteLLM → Vertex AI)           generate() · embed() · vision()
         ▼
-Postgres + pgvector (Cloud SQL) · Cloud Storage · Secret Manager · Cloud Logging/OTel
+Postgres + pgvector · Cloud Storage · Secret Manager · Cloud Logging/OTel
 ```
 
-Cursor agents sit **outside** this runtime: they are the team that builds
-ThesisOS (see §2).
+Cursor agents sit **outside** this runtime — build-time only (ADR-0002).
 
 ---
 
-## 2. Runtime vs Builder
+## 2. ASEP taxonomy
 
-ThesisOS draws a hard line between the system that *runs* and the team that
-*builds* it (spec §1, §6; ADR-0002):
-
-- **Runtime LLM = Vertex AI.** A single vendor serves generation and vision
-  (Gemini, multimodal) and embeddings (`text-multilingual-embedding-002`, strong
-  Italian support). The product talks only to Vertex through the LiteLLM
-  abstraction.
-- **Builder = Cursor agents (Cursor API).** These are build-time only — they
-  write the code, contracts, and infra. They are **not** a runtime dependency:
-  no deployed ThesisOS code path calls Cursor. Cursor-as-runtime-generator was
-  evaluated and rejected (agent/coding-oriented, no embeddings).
-
-This separation keeps the deployed system dependent on exactly one external LLM
-vendor, swappable via configuration without touching callers.
-
----
-
-## 3. Repository Map
-
-Monorepo; the workspace root is the project root. Reproduced from spec §5.
+**ASEP** is the whole ecosystem (ADR-0026). ThesisOS Product Plane is one
+instance; the **Runtime Platform** (M5) is an ASEP subsystem:
 
 ```text
-docs/
-  architecture.md
-  superpowers/specs/                 # this spec lives here
-contracts/
-  openapi/openapi.yaml               # REST contract (curated)
-  agents/                            # per-agent I/O contracts
-    supervisor.json  planner.json  router.json
-    retriever.json   writer.json    critic.json
-    citation.json    memory.json    document.json
-  db/schema.sql                      # canonical schema snapshot
-  events/events.json                 # event catalog
-decisions/
-  ADR-0001-contract-first.md         ADR-0002-vertex-runtime-only.md
-  ADR-0003-custom-memory.md          ADR-0004-cloud-day-one.md
-  ADR-0005-python-backend.md         ADR-0006-event-driven.md
-  ADR-0007-state-contract.md         ADR-0008-dev-equals-prod.md
-  ADR-0009-async-jobs.md             ADR-0010-promotion-gates.md
-backend/                             # Python only
-  app/
-    api/            # FastAPI routers (health/ready/metrics + jobs stub in M0)
-    core/           # config, settings, logging bootstrap
-    llm/            # LiteLLM→Vertex abstraction: generate() / embed() / vision()
-    schemas/        # Pydantic models incl. GraphState
-    db/             # SQLAlchemy models, Alembic migrations, session
-    agents/         # graph definition + node stubs (contracts only in M0)
-    services/
-      events/       # in-process event bus (functions now; Pub/Sub later)
-      jobs/         # background job interface (worker stub; Cloud Run Jobs/Tasks later)
-      telemetry/    # OpenTelemetry + structured logs + traces
-      ingestion/    # docling / marker / pymupdf / ocr   (stubs in M0)
-      retrieval/    # rag / hybrid search                (stubs in M0)
-      memory/       # user/thesis/concept/citation/decision/editable (stubs in M0)
-      citation/     # CSL-JSON → APA7/MLA/Chicago          (stubs in M0)
-  tests/
-  pyproject.toml
-frontend/
-  app/
-    chat/  workspace/  library/  memory/  outline/  settings/   # placeholder routes
-  components/  lib/ (zustand store, api client)
-  package.json
-infra/
-  terraform/        # cloud run, cloud sql, buckets, secret manager, artifact registry
-  ci/               # build & deploy pipeline (Cloud Build or GitHub Actions)
-docker/
-  backend.Dockerfile  frontend.Dockerfile
-docker-compose.yml  .env.example  README.md
+ASEP
+├── Governance ............... Constitution, ADRs, promotion gates
+├── Runtime Platform ......... Event Bus, contracts, lifecycle, observability (M5)
+├── Product capabilities ..... memory, retrieval, writing, … (M2–M6)
+└── Engineering Runtime ...... builder_engine/ (build-time; ADR-0023)
 ```
 
----
-
-## 4. Data Model Summary
-
-Postgres + pgvector is the single source of truth (spec §7). The full canonical
-schema lives at [`../contracts/db/schema.sql`](../contracts/db/schema.sql)
-*(forward-looking — created in a later M0 task)*; Alembic ships the initial
-migration that creates all tables plus the pgvector extension. No feature writes
-rows in M0.
-
-Core tables:
-
-- **`documents`** — uploaded source files (PDF/EPUB/DOCX) with ingestion
-  `status`, GCS URI, and metadata.
-- **`chunks`** — ordered text segments of a document; carry no embedding column.
-- **`embeddings`** — a dedicated, **model-agnostic** table with a polymorphic
-  owner (`chunk|note|memory|chapter`). Each row tags its `model` and `dimension`
-  so the embedding provider can be swapped without a painful migration.
-- **`sources` / `citations`** — canonical CSL-JSON sources driving
-  APA7/MLA/Chicago, plus per-chapter citation references with locators.
-- **`chapters`** — self-referencing tree (sections/subsections) with status and
-  Markdown content; **`notes`** — notes/highlights anchored to documents or
-  chapters.
-- **`memories`** — six-kind editable, versioned memory
-  (`user|thesis|concept|citation|decision|editable`).
-- **`conversations` / `messages`** — chat history.
-- **`tasks`** — the AgentOS work loop (self-referencing, status, owner agent).
-- **`events`** — persisted event log / outbox.
-- **`agent_runs` / `agent_steps`** — orchestration run + step tracing.
-- **`checkpoints`** — *reserved* for the LangGraph Postgres checkpointer; the
-  library manages its schema when orchestration is wired (not M0).
+After M6, ASEP is evolving toward a **general agentic runtime** reusable beyond
+ThesisOS (ResearchOS, LegalOS, …). A physical repo split (`asep/` vs `thesis-os/`)
+is a medium-term goal (M10–M12 horizon), not current scope.
 
 ---
 
-## 5. LLM Abstraction
+## 3. Core Runtime
 
-A thin module `backend/app/llm/` exposes three provider-agnostic async functions,
-implemented via LiteLLM and configured to Vertex AI (spec §6, ADR-0002):
-
-```python
-async def generate(messages, *, model=..., params=...) -> Completion
-async def embed(texts: list[str], *, model=...) -> list[Vector]
-async def vision(messages_with_images, *, model=...) -> Completion
-```
-
-- **Generation / vision** → Gemini on Vertex (the same multimodal vendor covers
-  `vision()`).
-- **Embeddings** → `text-multilingual-embedding-002`. Dimension is recorded
-  per row (see §4), never hardcoded.
-- **Single credential** — a GCP **service account** (Vertex AI User); no
-  separate API keys.
-- **Provider-swap policy** — the provider is swappable later by reconfiguring
-  LiteLLM; callers never know or depend on the underlying provider.
-
----
-
-## 6. Agent Hierarchy & GraphState
-
-The orchestration is a Supervisor-led hierarchy (spec §10, ADR-0007). Designed in
-M0, wired later.
+### 3.1 Three layers (ADR-0030)
 
 ```text
-Supervisor → Planner → Router → { Retriever · Writer · Critic · Citation · Memory · Document }
+Business   : graph nodes, orchestration/, services/{task,memory,retrieval,document,chapter}/
+Runtime    : graph/conversation.py, routing.py, checkpointer.py, services/conversation/,
+             runtime/* (events, event_bus, instrumentation, subscribers)
+Infrastructure : db/, llm/, core/config.py
 ```
 
-The **Document Agent** contract exists in M0 though it is implemented in M3.
+Dependencies flow **downward only** (Constitution C1). The composition root
+(`build_graph()`, `ConversationService`) binds layers.
 
-A single shared Pydantic object, `GraphState`, is passed through the graph:
+### 3.2 GraphState (frozen — ADR-0007)
+
+Single Pydantic object threaded through LangGraph. **No field changes since M0.**
 
 ```python
 class GraphState(BaseModel):
@@ -202,112 +147,253 @@ class GraphState(BaseModel):
     errors: list[AgentError] = []
 ```
 
-Each per-agent contract under [`../contracts/agents/`](../contracts/agents/)
-*(forward-looking — created in a later M0 task)* declares **input**, **output**,
-**errors**, and **state mutations** (which `GraphState` fields the node
-reads/writes). No node logic exists in M0.
+Full field ownership: [`../knowledge/contracts/graphstate.md`](../knowledge/contracts/graphstate.md).
 
-### 6.1 M4 runtime graph (implemented; recovery-hardened 2026-06-26)
+### 3.3 RunContext (ADR-0014)
 
-As of M4 + recovery sprint, the **chat seam** is a linear graph (M5 will extend
-this to Supervisor→Planner→Router):
+Execution metadata rides LangGraph `config.configurable.run_context` — **never**
+GraphState. Includes `conversation_id`, `agent_run_id`, `trace_id`, `request_id`.
+
+### 3.4 Checkpointer (ADR-0012)
+
+`AsyncPostgresSaver` in schema `langgraph`. `thread_id = conversation_id`.
+Checkpoint is derived working state; DB messages are system of record.
+
+---
+
+## 4. Orchestrated graph (M5 + M6)
+
+Wired in `backend/app/graph/conversation.py::build_graph`.
+
+### 4.1 Fixed pipeline (every turn)
 
 ```text
-START → memory_context_node → retriever_node → conversation_node → END
+START → supervisor_node → planner_node → router_node → memory_context_node
 ```
 
-| Node | Reads | Writes (GraphState) | Wire effect |
-|------|-------|---------------------|-------------|
-| `memory_context_node` | `messages`, thread config | prepends transient system prefix to `messages` | M2 memory in prompt |
-| `retriever_node` | last user message | `retrieved_context` | — |
-| `conversation_node` | `messages`, `retrieved_context` | `messages` (+ assistant), `draft`, `citations` | `compose_prompt_wire()` injects memory + grounding **transiently** |
+### 4.2 Conditional routes (`route_after_router`)
+
+| Route | After router | After retriever | Terminal |
+|-------|--------------|-----------------|----------|
+| `conversation` | `conversation_node` | — | END |
+| `grounded_chat` | `retriever_node` | `conversation_node` | END |
+| `writer` | `retriever_node` | `writer_node` | END |
+
+```text
+memory_context_node
+        │
+        ▼
+ route_after_router(state.route)
+        │
+        ├─ conversation ──────► conversation_node ──► END
+        │
+        ├─ grounded_chat ─────► retriever_node ──► route_after_retriever ──► conversation_node ──► END
+        │
+        └─ writer ────────────► retriever_node ──► route_after_retriever ──► writer_node ──► END
+```
+
+M5 conversation and grounded_chat paths are **byte-for-byte unchanged** since M6
+(Constitution C6). Route vocabulary is additive (ADR-0027).
+
+### 4.3 Node I/O summary
+
+| Node | Reads | Writes (GraphState) |
+|------|-------|---------------------|
+| `supervisor_node` | `messages` | `plan`, `route` |
+| `planner_node` | `messages`, `plan` | `plan`, `task` |
+| `router_node` | `messages`, `plan`, `route` | `route` (normalized) |
+| `memory_context_node` | `messages`, thread config | transient prefix on `messages` |
+| `retriever_node` | last user message | `retrieved_context` |
+| `conversation_node` | `messages`, `retrieved_context` | `messages`, `draft`, `citations` |
+| `writer_node` | `messages`, `retrieved_context`, `plan`, `task` | `draft`, `citations`, `errors` |
 
 **Grounding rule (ADR-0024):** chunk text enters the LLM only via
-`retrieved_context` → `compose_prompt_wire()` — never persisted in DB messages.
-The client receives reference metadata via SSE `sources` events.
+`retrieved_context` → prompt wire — never persisted in DB messages.
 
-**Ingestion → index path:**
+---
+
+## 5. Tool Router & Planner
+
+### Supervisor
+
+Reads user intent, produces initial `plan` and suggested `route`.
+
+### Planner
+
+Refines `plan`, emits `TaskRef`. Persists task via **`PlannerTaskPersistHook`**
+wired at composition root — planner does **not** import `TaskService` directly.
+
+### Router
+
+Normalizes route string to closed vocabulary (`conversation`, `grounded_chat`,
+`writer`, …). Silent normalization (no error on unknown → fallback).
+
+### TaskService
+
+`upsert_from_task_ref` + `mark_done`. Tasks table mirrors planner output for the
+AgentOS work loop.
+
+---
+
+## 6. Writer route & capability (M6)
+
+The writer is a **port**, not a monolithic node (Constitution C8, ADR-0031):
 
 ```text
-upload → parse (Docling primary / PyMuPDF PDF fallback / MarkdownParser for .md)
-       → chunks → embed (batched Vertex calls) → status=indexed
+WriterCapability.write_grounded(brief: WriterBrief) → DraftResult
+        │
+        ▼
+make_writer_node(writer, stream_writer_factory=…)  ← adapter
+        │
+        ▼
+GraphState partial: { draft, citations, errors }   ← writer.json contract only
 ```
 
-See `docs/m4-freeze.md` — this pipeline is **frozen**; changes require reproducible
-bugs + regression tests.
+`DraftResult` fields:
+
+| Field | GraphState | Stream / Event Bus |
+|-------|------------|-------------------|
+| `draft` | ✓ | ✓ |
+| `citations` | ✓ | ✓ |
+| `metadata` | — | ✓ |
+| `reasoning` | — | ✓ |
+| `metrics` | — | ✓ |
+
+**Citation discipline:** `citations.source_id ⊆ retrieved_context` (no invented sources).
+
+Default implementation: `LLMWriter` in `backend/app/graph/writer.py`. Swappable at
+`build_graph()` without topology change.
 
 ---
 
-## 7. Event-Driven Design, Jobs & Telemetry
+## 7. Chapter store (M6)
 
-**Event bus (spec §11, ADR-0006).** `services/events/` defines a typed event
-catalog and an in-process dispatcher (simple functions now, swappable to Cloud
-Pub/Sub later); events are persisted to the `events` table as an outbox. Initial
-catalog (`contracts/events/events.json`):
+`ChapterService` is the **sole writer** for chapters (ADR-0032, ADR-0033):
+
+- Lifecycle: `draft` → `review` → `approved` → `published` (M6 wires draft/review)
+- Versioning: append-only `chapter_versions` change stream
+- `change_kind ∈ {WRITE, EDIT, PROMOTE, MERGE, RESTORE}`
+- Optimistic lock: `expected_version` mismatch → HTTP 409
+
+**REST:** `POST/GET/PATCH /chapters`, version history endpoints.
+**UI:** `frontend/app/workspace/` — save/edit flow.
+**Not in M6:** `/outline` (M8), auto-persist from graph, chapter embeddings.
+
+---
+
+## 8. Event flow (Runtime Platform — M5)
 
 ```text
-DocumentUploaded · ChunkCreated · MemoryUpdated · ChapterCreated · CritiqueCompleted
+Composition root / instrumentation wrappers
+        │
+        emit(RuntimeEvent)
+        ▼
+RuntimeEventBus (fan-out, registration order)
+        │
+        ├── AgentStepsSubscriber → agent_steps table
+        └── LoggingSubscriber → structured logs
 ```
 
-M0 ships the interface, the catalog, and the `events` table — no producers or
-consumers are wired.
+- **7-event vocabulary** in `backend/app/runtime/events.py`
+- Business nodes **never emit** (ADR-0030 R8)
+- Subscriber failure is **non-blocking** (R6)
+- Zero subscribers = valid silent runtime (C4)
 
-**Background jobs (spec §12, ADR-0009).** `services/jobs/` defines a job
-interface so heavy work (ingestion, embedding, OCR, summarize) never runs in the
-FastAPI request path. M0 ships the interface, the `POST /jobs` + `GET /jobs/{id}`
-contracts, and a no-op worker stub. Production target: Cloud Run Jobs / Cloud
-Tasks; locally the same interface is backed by an in-process worker.
+Lifecycle events: `RunStarted`, `RunCompleted`, node `NodeStarted`/`NodeCompleted`/`NodeFailed`, route events.
 
-**Observability (spec §13).** In M0, `services/telemetry/` installs the
-OpenTelemetry FastAPI **instrumentation hook** (`FastAPIInstrumentor.instrument_app`)
-and `core/logging.py` configures structured JSON logging; `GET /metrics` is served
-by `prometheus_client`. A full `TracerProvider` + exporter to Cloud Trace/Logging
-(and tracing of the LLM abstraction) is wired in **M1/M11**, not M0 — so that, once agents arrive,
-every run/step is traced.
+Onboarding detail: [`runtime-contract.md`](runtime-contract.md).
 
 ---
 
-## 8. Infrastructure Topology
+## 9. Data model (summary)
 
-GCP from day one with dev/prod parity (spec §14; ADR-0004 Cloud Day One,
-ADR-0008 Dev = Prod). Provisioned via Terraform (`infra/terraform/`).
+Postgres + pgvector. Canonical schema: [`../contracts/db/schema.sql`](../contracts/db/schema.sql).
 
-**GCP resources:**
+| Domain | Key tables | Milestone |
+|--------|------------|-----------|
+| Documents | `documents`, `chunks`, `embeddings` | M3/M4 |
+| Memory | `memories` | M2 |
+| Chat | `conversations`, `messages` | M1 |
+| Orchestration | `tasks`, `agent_runs`, `agent_steps` | M5 |
+| Writing | `chapters`, `chapter_versions` | M6 |
+| Sources (deferred) | `sources`, `citations` | M7 |
+| Events | `events` (outbox) | M0+ |
 
-- **APIs enabled:** run, sqladmin, secretmanager, storage, artifactregistry,
-  aiplatform.
-- **Artifact Registry** — Docker image repository.
-- **Cloud SQL** — Postgres on **`db-f1-micro`** (cheapest shared-core tier; not
-  optimized yet) + database + `pgvector` extension.
-- **Secret Manager** — Vertex service-account / config secrets.
-- **Cloud Storage** — buckets `documents`, `exports`, `temp`, `logs`.
-- **Cloud Run** — services `backend` and `frontend`.
-- **Service account** for Cloud Run: Vertex AI User + Cloud SQL Client + Storage
-  access.
-- **CI/CD** (`infra/ci/`) — build images → Artifact Registry → deploy Cloud Run.
-
-**Dev/prod parity.** `docker-compose.yml` runs the *same* container images as
-prod: `pgvector/pgvector:pg16`, the FastAPI backend, and the Next.js frontend,
-with Vertex access via Application Default Credentials. A cheaper single-VM
-`e2-small` + docker-compose path remains a documented fallback, not chosen.
+Embeddings are model-agnostic (polymorphic owner: `chunk|note|memory|chapter`).
 
 ---
 
-## 9. ADR Index
+## 10. External seams
 
-The ten architecture decisions are frozen in M0 (spec §15). Each links to its
-record under `decisions/` *(forward-looking — the ADR files are created in a
-later M0 task)*.
+| Seam | Contract | Status |
+|------|----------|--------|
+| `POST /chat` | SSE streaming, M1 shape | Frozen |
+| `POST /chapters` | OpenAPI + ChapterService | M6 stable |
+| `/citations`, `/bibliography` | OpenAPI deferred | M7 planned |
+| `/outline` | OpenAPI deferred | M8 planned |
 
-| ADR | Title | Record |
-|-----|-------|--------|
-| ADR-0001 | Contract First — architecture + contracts before any product code | [`../decisions/ADR-0001-contract-first.md`](../decisions/ADR-0001-contract-first.md) |
-| ADR-0002 | Vertex Runtime Only — Gemini + multilingual embeddings via LiteLLM; Cursor build-time only | [`../decisions/ADR-0002-vertex-runtime-only.md`](../decisions/ADR-0002-vertex-runtime-only.md) |
-| ADR-0003 | Custom Memory — Postgres+pgvector memory layer; no Mem0 in core (defer M15–M16) | [`../decisions/ADR-0003-custom-memory.md`](../decisions/ADR-0003-custom-memory.md) |
-| ADR-0004 | Cloud Day One — GCP from the start (Cloud Run, Cloud SQL, Storage, Secret Manager, Artifact Registry) | [`../decisions/ADR-0004-cloud-day-one.md`](../decisions/ADR-0004-cloud-day-one.md) |
-| ADR-0005 | Python Backend — Python everywhere server-side; TS only in the Next.js frontend | [`../decisions/ADR-0005-python-backend.md`](../decisions/ADR-0005-python-backend.md) |
-| ADR-0006 | Event Driven — typed event catalog + in-process bus + `events` outbox; Pub/Sub-pluggable later | [`../decisions/ADR-0006-event-driven.md`](../decisions/ADR-0006-event-driven.md) |
-| ADR-0007 | State Contract — shared Pydantic `GraphState` is the single graph state object | [`../decisions/ADR-0007-state-contract.md`](../decisions/ADR-0007-state-contract.md) |
-| ADR-0008 | Dev = Prod — dev/prod parity via identical containers (docker-compose ≈ Cloud Run) | [`../decisions/ADR-0008-dev-equals-prod.md`](../decisions/ADR-0008-dev-equals-prod.md) |
-| ADR-0009 | Async Jobs — heavy work out of the request path; worker stub now, Cloud Run Jobs/Tasks later | [`../decisions/ADR-0009-async-jobs.md`](../decisions/ADR-0009-async-jobs.md) |
-| ADR-0010 | Promotion Gates — explicit, machine-checkable criteria gate each milestone transition | [`../decisions/ADR-0010-promotion-gates.md`](../decisions/ADR-0010-promotion-gates.md) |
+---
+
+## 11. Repository map
+
+```text
+backend/app/
+  api/              FastAPI routers (/chat, /chapters, /memory, …)
+  graph/            LangGraph nodes, routing, orchestration helpers
+  runtime/          Event Bus, events, instrumentation, subscribers
+  services/         Business services (chapter, task, memory, retrieval, …)
+  schemas/          GraphState, DraftResult, chapter DTOs
+contracts/          OpenAPI, agent JSON contracts, schema.sql, events.json
+docs/
+  architecture.md           ← this file
+  architecture/invariants.md
+  architecture/capability-inventory.md
+  runtime-constitution.md
+  runtime-contract.md
+decisions/          ADRs
+.asep/              ASEP milestone-runner (capability graph, pipeline)
+builder_engine/     Engineering Runtime (isolated from backend.app)
+frontend/           Next.js UI (chat, workspace, library, memory, …)
+knowledge/          Human mirrors (agents, contracts, roadmap)
+```
+
+---
+
+## 12. Promotion baselines & tags
+
+| Milestone | Qualified tag | Main tag | Notes |
+|-----------|---------------|----------|-------|
+| M4 Retrieval | `m4-complete` | — | Pipeline frozen (`docs/m4-freeze.md`) |
+| M5 Runtime Platform | `m5-complete` @ `bf12c13` | — | `runtime-contract.md` Frozen v1 |
+| M6 Writing Workspace | `m6-complete` @ `79fb52a` | `m6-main` @ `79fb52a` | Tags immutable; same SHA after FF merge |
+
+Promotion docs: [`m5-promotion.md`](m5-promotion.md), [`m6-promotion.md`](m6-promotion.md).
+
+---
+
+## 13. ADR index (M0–M6 active set)
+
+| ADR | Topic |
+|-----|-------|
+| 0001 | Contract first |
+| 0002 | Vertex runtime only |
+| 0007 | GraphState frozen |
+| 0011–0014 | Conversation seam, checkpointer, RunContext |
+| 0024 | Grounding wire |
+| 0027 | Multi-agent graph topology |
+| 0030 | Layer boundaries + Event Bus model |
+| 0031 | Writer capability & drafting topology |
+| 0032 | Chapter ownership & query model |
+| 0033 | Chapter versioning as change stream |
+
+Full list under `decisions/`. Per-PR gate: [`architecture-decision-checklist.md`](architecture-decision-checklist.md).
+
+---
+
+## 14. What's next
+
+**M7 — Grounding Engine** (design phase): provenance, evidence, confidence,
+validation hooks, and bibliography — citations as one output of a general
+traceability system, not a standalone formatter milestone.
+
+See [`../knowledge/project/roadmap.md`](../knowledge/project/roadmap.md).

@@ -17,7 +17,7 @@ governance:
   layer_rules: decisions/ADR-0030-agent-runtime-layer-boundaries.md
   contract: docs/runtime-contract.md
   checklist: docs/architecture-decision-checklist.md
-  plan: plans/m6-writing-workspace-plan.md   # active milestone (M6); M5 plan frozen/historical
+  plan: plans/m6-writing-workspace-plan.md   # M6 complete; next: M7 Grounding Engine (design)
 
 # status: done | ready | planned | blocked
 capabilities:
@@ -106,8 +106,8 @@ capabilities:
       - runtime-contract frozen          # done (Frozen v1)
       - knowledge mirror updated         # done (roadmap, agents/README, graphstate)
       - live dogfood benchmarks          # done (B_lat=9.89s, B_ground=6.54s, 2026-06-29)
-    pending_manual:
-      - tag m5-complete (awaiting explicit go-ahead)
+    tags:
+      m5-complete: bf12c13
 
   # ─────────────────────────────────────────────────────────────────────────
   # M6 — Writing Workspace (Product Plane feature on top of the Runtime Platform)
@@ -234,5 +234,6 @@ capabilities:
       - runtime-contract §5 writer example  # done (additive; frozen surfaces unchanged)
       - knowledge mirror updated        # done (roadmap, agents/README, writer-agent, graph.md, graphstate)
       - live dogfood benchmarks         # done (B_write=63.6s, 2026-06-29)
-    pending_manual:
-      - tag m6-complete (awaiting explicit go-ahead)
+    tags:
+      m6-complete: 79fb52a   # qualified (immutable)
+      m6-main: 79fb52a       # integrated on main

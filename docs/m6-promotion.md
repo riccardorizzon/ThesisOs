@@ -64,7 +64,7 @@ Live stack gates (`make up` + Vertex ADC) — recorded 2026-06-29 via `make dogf
 dogfood_writer: green           # writer turn streamed a grounded draft (6620 chars)
 dogfood_chapter_save: green     # POST /chapters → PATCH content → versions [WRITE, EDIT]
 benchmarks_recorded: true       # B_write = 63.6s (evidence: /tmp/dogfood-m6-evidence.jsonl)
-m6_tag: pending                 # tag `m6-complete` — awaiting explicit go-ahead
+m6_tag: green                   # `m6-complete` @ 79fb52a (qualified); `m6-main` @ 79fb52a (integrated on main)
 ```
 
 **Benchmark notes:** `B_write` is a full writer turn (3 orchestration LLM calls +
@@ -72,19 +72,15 @@ retrieval + a 6620-char chapter draft). Single-sample smoke, not a statistical
 benchmark — sufficient for the promotion gate; latency optimization is deferred
 (ADR-0027 / M11 consequence).
 
-## Tag procedure (final step)
+## Tags (applied 2026-06-29)
 
-All deterministic and live-stack gates are green; the only remaining step is the
-tag, withheld for explicit go-ahead:
+| Tag | SHA | Meaning |
+|-----|-----|---------|
+| `m6-complete` | `79fb52a` | Qualified baseline on `m6-writing-workspace` (**immutable**) |
+| `m6-main` | `79fb52a` | Integrated baseline on `main` (fast-forward merge) |
 
-```bash
-# on explicit approval:
-git tag -a m6-complete -m "M6 Writing Workspace — promoted" <sha>
-```
-
-Note: M6 work lives on branch `m6-writing-workspace`; if the tag should mark the
-merge to `main`, tag the merge commit instead of the branch tip. Post-tag bugs →
-a new tag (`m6.0.1`), never move `m6-complete` (same policy as `m5-complete`).
+Both tags point to the same commit after FF merge; semantic distinction is preserved.
+Post-tag bugs → a new tag (`m6.0.1`), never move `m6-complete` (same policy as `m5-complete`).
 
 ## What M6 explicitly did NOT do
 
