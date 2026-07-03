@@ -256,16 +256,17 @@ When done, output:
 | EWO | Status | Ready |
 |-----|--------|-------|
 | 001–005 | implemented | — |
-| **006** | **implemented** | Wave A — merge **#1** |
-| **008** | **implemented** | Wave A — merge **#3** |
-| **009** | **implemented** | Wave A — merge **#2** |
-| 007 | specified | **Wave B** — after 009 merged |
-| 010 | specified | **Wave B** — after 006 merged |
-| 011 | specified | **Wave B** — parallel with 007/010 |
-| 012 | specified | blocked until 006–011 merged |
+| **006** | **merged** | Wave A |
+| **008** | **merged** | Wave A |
+| **009** | **merged** | Wave A |
+| **007** | **merged** | Wave B @ `543d870` |
+| **010** | **merged** | Wave B @ `c99f7db` |
+| **011** | **merged** | Wave B @ `89c0824` |
+| **012** | **ready** | **Wave C** — dispatch Sub-agent G |
 | QWO-PX1-001 | blocked | blocked until 012 |
 
-**Wave A handoff:** `.asep/reports/PX1-WAVE-A-handoff.md` (2026-07-03, `make ci` PASS)
+**Wave A handoff:** `.asep/reports/PX1-WAVE-A-handoff.md` (2026-07-03)  
+**Wave B handoff:** `.asep/reports/PX1-WAVE-B-handoff.md` — **barrier PASS** @ `89c0824`, `make ci` PASS (2026-07-03)
 
 ---
 
