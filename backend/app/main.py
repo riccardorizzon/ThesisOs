@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api import chapters, chat, documents, jobs, memory, search, system
+from app.api import chapters, chat, documents, jobs, memory, projects, search, system
 from app.core.logging import configure_logging
 from app.graph.checkpointer import ensure_langgraph_schema
 from app.services.telemetry.setup import init_telemetry
@@ -30,4 +30,5 @@ app.include_router(memory.router)
 app.include_router(documents.router)
 app.include_router(search.router)
 app.include_router(chapters.router)
+app.include_router(projects.router)
 init_telemetry(app)
