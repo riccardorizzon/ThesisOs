@@ -1,0 +1,330 @@
+# Capability Graph — ThesisOS Product v2 (Product Experience)
+#
+# Navigation layer for PX-1…PX-6 milestones.
+# lifecycle: draft | specified | approved | implemented | qualified | operational | frozen
+# status: done | ready | in_progress | planned | blocked
+
+platform: ThesisOS Product v2
+program: .asep/programs/thesisos-product-v2.yaml
+run: px-product-v2-2026-07
+
+governance:
+  engineering_program: docs/engineering-program.md
+  product_constitution: docs/product/PRODUCT-CONSTITUTION.md
+  execution_authorization: docs/product/EXECUTION-AUTHORIZATION.md
+  product_spec: docs/product/specs/thesisos-product-ux-v1.md
+  runtime_baseline: thesisos-v1.0-operational
+
+regression:
+  or_baseline: OR-1…OR-7 qualified
+  release: docs/RELEASE-MANIFEST-v1.0.yaml
+
+capabilities:
+
+  px-1-foundation:
+    title: PX-1 Foundation
+    aliases: [px-1, foundation, product foundation]
+    workorder_id: PX-1
+    milestone: PX-1
+    lifecycle: approved
+    status: in_progress
+    depends_on: []
+    adr_refs: [ADR-0034, ADR-0035, ADR-0036, ADR-0038, ADR-0040]
+    artifacts:
+      - docs/product/EXECUTION-AUTHORIZATION.md
+      - docs/product/specs/thesisos-product-ux-v1.md
+    unblocks: [px-2-writing]
+    blocked_until: QWO-PX1-001 PASS
+
+  px1-ewo-001-appshell:
+    title: AppShell and primary navigation
+    aliases: [px1-ewo-001, appshell]
+    workorder_id: PX1-EWO-001
+    workorder_type: EWO
+    ewo_category: Infrastructure
+    proposal: .asep/proposals/PX1-EWO-001-appshell-navigation.md
+    lifecycle: implemented
+    status: done
+    depends_on: [px-1-foundation]
+    report: .asep/reports/PX1-EWO-001-appshell-navigation.md
+    certificate: .asep/certificates/PX1-EWO-001-20260703.yaml
+    unblocks: [px1-ewo-002-design-system, px1-ewo-004-routing, px1-ewo-005-context-v0, px1-ewo-006-project-scope]
+    adr_refs: [ADR-0036, ADR-0035]
+    layer: Business
+    artifacts:
+      - frontend/components/AppShell.tsx
+      - frontend/lib/nav.ts
+    acceptance:
+      - Sidebar matches ADR-0036 primary modules + Settings
+      - AppShell supports optional right panel slot
+      - Root layout uses AppShell
+
+  px1-ewo-002-design-system:
+    title: Design system tokens and core components
+    workorder_id: PX1-EWO-002
+    workorder_type: EWO
+    ewo_category: Infrastructure
+    proposal: .asep/proposals/PX1-EWO-002-design-system.md
+    report: .asep/reports/PX1-EWO-002-design-system.md
+    certificate: .asep/certificates/PX1-EWO-002-20260703.yaml
+    lifecycle: implemented
+    status: done
+    depends_on: [px1-ewo-001-appshell]
+    adr_refs: [ADR-0034]
+    artifacts:
+      - docs/product/design-system-v1.md
+      - frontend/styles/tokens.css
+      - frontend/components/ProgressRing.tsx
+      - frontend/components/EntityCard.tsx
+
+  px1-ewo-003-home:
+    title: Home page
+    workorder_id: PX1-EWO-003
+    workorder_type: EWO
+    ewo_category: Alignment
+    proposal: .asep/proposals/PX1-EWO-003-home.md
+    report: .asep/reports/PX1-EWO-003-home.md
+    certificate: .asep/certificates/PX1-EWO-003-20260703.yaml
+    lifecycle: implemented
+    status: done
+    depends_on: [px1-ewo-001-appshell, px1-ewo-002-design-system]
+    adr_refs: [ADR-0040, ADR-0036]
+    artifacts:
+      - frontend/app/page.tsx
+      - frontend/components/HomeView.tsx
+      - frontend/lib/progress.ts
+
+  px1-ewo-004-routing:
+    title: Product routing
+    workorder_id: PX1-EWO-004
+    workorder_type: EWO
+    ewo_category: Infrastructure
+    proposal: .asep/proposals/PX1-EWO-004-routing.md
+    report: .asep/reports/PX1-EWO-004-routing.md
+    certificate: .asep/certificates/PX1-EWO-004-20260703.yaml
+    lifecycle: implemented
+    status: done
+    depends_on: [px1-ewo-001-appshell]
+    adr_refs: [ADR-0036]
+    artifacts:
+      - frontend/lib/routes.ts
+      - frontend/next.config.ts
+      - frontend/app/ai/page.tsx
+
+  px1-ewo-005-context-v0:
+    title: Context Engine v0
+    workorder_id: PX1-EWO-005
+    workorder_type: EWO
+    ewo_category: Grounding
+    proposal: .asep/proposals/PX1-EWO-005-context-v0.md
+    report: .asep/reports/PX1-EWO-005-context-v0.md
+    certificate: .asep/certificates/PX1-EWO-005-20260703.yaml
+    lifecycle: implemented
+    status: done
+    depends_on: [px1-ewo-001-appshell]
+    adr_refs: [ADR-0038, ADR-0040]
+    artifacts:
+      - backend/app/api/projects.py
+      - backend/app/schemas/context.py
+      - backend/app/services/context/graph.py
+      - backend/app/services/context/present.py
+      - backend/app/services/context/service.py
+      - frontend/components/ContextBar.tsx
+      - frontend/lib/contextClient.ts
+
+  px1-ewo-006-project-scope:
+    title: Project scope scaffolding
+    workorder_id: PX1-EWO-006
+    workorder_type: EWO
+    ewo_category: Infrastructure
+    proposal: .asep/proposals/PX1-EWO-006-project-scope.md
+    report: .asep/reports/PX1-EWO-006-project-scope.md
+    lifecycle: implemented
+    status: done
+    wave: px1-parallel/wave_a
+    sub_agent: A
+    depends_on: [px1-ewo-001-appshell, px1-ewo-005-context-v0]
+    adr_refs: [ADR-0040]
+    ownership:
+      - backend/app/schemas/context.py
+      - backend/app/api/projects.py
+      - backend/app/services/context/
+      - frontend/lib/projectContext.ts
+      - frontend/lib/contextClient.ts
+      - frontend/lib/contextLoad.ts
+    forbidden:
+      - frontend/components/**
+      - frontend/app/**
+
+  px1-ewo-007-writing-workspace:
+    title: Writing workspace layout shell
+    workorder_id: PX1-EWO-007
+    workorder_type: EWO
+    ewo_category: Alignment
+    proposal: .asep/proposals/PX1-EWO-007-writing-workspace.md
+    lifecycle: specified
+    status: blocked
+    wave: px1-parallel/wave_b
+    sub_agent: B
+    depends_on: [px1-ewo-009-context-visualization]
+    adr_refs: [ADR-0036, ADR-0038, ADR-0039]
+    ownership:
+      - frontend/app/writing/**
+      - frontend/components/writing/**
+    forbidden:
+      - backend/**
+      - frontend/components/context/**
+
+  px1-ewo-008-library-experience:
+    title: Library experience (Sources + Knowledge)
+    workorder_id: PX1-EWO-008
+    workorder_type: EWO
+    ewo_category: Alignment
+    proposal: .asep/proposals/PX1-EWO-008-library-experience.md
+    report: .asep/reports/PX1-EWO-008-library-experience.md
+    lifecycle: implemented
+    status: done
+    wave: px1-parallel/wave_a
+    sub_agent: C
+    depends_on: [px1-ewo-002-design-system]
+    adr_refs: [ADR-0036, ADR-0037]
+    ownership:
+      - frontend/app/sources/**
+      - frontend/app/knowledge/**
+      - frontend/components/library/**
+      - frontend/lib/libraryStub.ts
+    forbidden:
+      - backend/**
+      - frontend/components/context/**
+
+  px1-ewo-009-context-visualization:
+    title: Context visualization UI
+    workorder_id: PX1-EWO-009
+    workorder_type: EWO
+    ewo_category: Alignment
+    proposal: .asep/proposals/PX1-EWO-009-context-visualization.md
+    report: .asep/reports/PX1-EWO-009-context-visualization.md
+    lifecycle: implemented
+    status: done
+    wave: px1-parallel/wave_a
+    sub_agent: D
+    depends_on: [px1-ewo-005-context-v0]
+    adr_refs: [ADR-0038]
+    ownership:
+      - frontend/components/context/**
+    forbidden:
+      - backend/**
+    unblocks: [px1-ewo-007-writing-workspace]
+
+  px1-ewo-010-navigation-experience:
+    title: Navigation experience
+    workorder_id: PX1-EWO-010
+    workorder_type: EWO
+    ewo_category: Infrastructure
+    proposal: .asep/proposals/PX1-EWO-010-navigation-experience.md
+    lifecycle: specified
+    status: blocked
+    wave: px1-parallel/wave_b
+    sub_agent: E
+    depends_on: [px1-ewo-006-project-scope]
+    adr_refs: [ADR-0036]
+    ownership:
+      - frontend/components/navigation/**
+      - frontend/lib/nav.ts
+      - frontend/components/AppShell.tsx
+    forbidden:
+      - backend/**
+
+  px1-ewo-011-review-experience:
+    title: Review experience shell
+    workorder_id: PX1-EWO-011
+    workorder_type: EWO
+    ewo_category: Alignment
+    proposal: .asep/proposals/PX1-EWO-011-review-experience.md
+    lifecycle: specified
+    status: ready
+    wave: px1-parallel/wave_b
+    sub_agent: F
+    depends_on: [px1-ewo-004-routing]
+    adr_refs: [ADR-0039]
+    ownership:
+      - frontend/app/review/**
+      - frontend/components/review/**
+    forbidden:
+      - backend/**
+
+  px1-ewo-012-qualification-integration:
+    title: Qualification and integration
+    workorder_id: PX1-EWO-012
+    workorder_type: EWO
+    ewo_category: Release
+    proposal: .asep/proposals/PX1-EWO-012-qualification-integration.md
+    lifecycle: specified
+    status: blocked
+    wave: px1-parallel/wave_c
+    sub_agent: G
+    depends_on:
+      - px1-ewo-006-project-scope
+      - px1-ewo-007-writing-workspace
+      - px1-ewo-008-library-experience
+      - px1-ewo-009-context-visualization
+      - px1-ewo-010-navigation-experience
+      - px1-ewo-011-review-experience
+    unblocks: [qwo-px1-001]
+
+  qwo-px1-001:
+    title: PX-1 Foundation qualification
+    workorder_id: QWO-PX1-001
+    workorder_type: QWO
+    lifecycle: specified
+    status: blocked
+    depends_on:
+      - px1-ewo-001-appshell
+      - px1-ewo-002-design-system
+      - px1-ewo-003-home
+      - px1-ewo-004-routing
+      - px1-ewo-005-context-v0
+      - px1-ewo-006-project-scope
+      - px1-ewo-007-writing-workspace
+      - px1-ewo-008-library-experience
+      - px1-ewo-009-context-visualization
+      - px1-ewo-010-navigation-experience
+      - px1-ewo-011-review-experience
+      - px1-ewo-012-qualification-integration
+    unblocks: [px-2-writing]
+
+  px-2-writing:
+    title: PX-2 Writing
+    milestone: PX-2
+    lifecycle: specified
+    status: blocked
+    depends_on: [qwo-px1-001]
+    authorization: excluded_until_gate_3_amendment
+
+  px-3-sources:
+    title: PX-3 Sources
+    milestone: PX-3
+    lifecycle: specified
+    status: blocked
+    authorization: excluded_until_gate_3_amendment
+
+  px-4-knowledge:
+    title: PX-4 Knowledge
+    milestone: PX-4
+    lifecycle: specified
+    status: blocked
+    authorization: excluded_until_gate_3_amendment
+
+  px-5-research:
+    title: PX-5 Research
+    milestone: PX-5
+    lifecycle: specified
+    status: blocked
+    authorization: excluded_until_gate_3_amendment
+
+  px-6-polish:
+    title: PX-6 Polish
+    milestone: PX-6
+    lifecycle: specified
+    status: blocked
+    authorization: excluded_until_gate_3_amendment
