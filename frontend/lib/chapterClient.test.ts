@@ -49,17 +49,24 @@ describe("chapterClient", () => {
     expect(JSON.parse(init.body as string).expected_version).toBe(1);
   });
 
-  it("maps 409 write_conflict", async () => {
+  it("handles write conflict helper via ChapterApiError", async () => {
     vi.spyOn(global, "fetch").mockResolvedValue({
       ok: false,
       status: 409,
       statusText: "Conflict",
-      json: async () => ({ code: "write_conflict", message: "stale" }),
+      json: async () => ({
+        code: "write_conflict",
+        message: "Capitolo modificato altrove",
+      }),
     } as Response);
 
     await expect(
       chapterClient.update("ch1", { content_md: "x", expected_version: 1 }),
-    ).rejects.toMatchObject({ status: 409, code: "write_conflict" });
+    ).rejects.toMatchObject({
+      status: 409,
+      code: "write_conflict",
+      message: "Capitolo modificato altrove",
+    });
   });
 
   it("maps 404 chapter_not_found", async () => {

@@ -1,0 +1,30 @@
+# QC Certificate — PX1-EWO-003
+certificate_version: "1.0"
+issued_at: "2026-07-03T17:30:00Z"
+issued_by: quality-controller
+
+proposal:
+  workorder_id: PX1-EWO-003
+  workorder_type: EWO
+  capability: px1-ewo-003-home
+  proposal_path: .asep/proposals/PX1-EWO-003-home.md
+  proposal_status: approved
+
+checks:
+  verdict: PASS
+  passed: 8
+  failed: 0
+
+readiness:
+  prior_ewo_implemented: PX1-EWO-002
+  pending_ewo: none
+  open_stop: none
+
+verification:
+  frontend_tests: "62/62 PASS"
+  frontend_build: PASS
+  adr_0036_inv_ia_2: home_default_route
+
+policy_evaluation:
+  automation_level: 2
+  auto_approval_eligible: yes

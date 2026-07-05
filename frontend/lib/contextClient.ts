@@ -48,6 +48,7 @@ export type ContextPacket = {
   presentation: PresentationHint;
   project: ProjectSummary;
   entity?: EntityScope | null;
+  selection_anchor?: string | null;
   relevant_sources: { id: string; title: string; kind?: string | null }[];
   concepts: { id: string; title: string; slug?: string | null }[];
   decisions: DecisionRef[];
@@ -64,6 +65,7 @@ export type ContextQuery = {
   surface?: string;
   entityType?: string;
   entityId?: string;
+  selectionAnchor?: string;
   productId?: string;
   workspaceId?: string;
   sessionId?: string;
@@ -87,6 +89,7 @@ function queryString(projectId: string, params?: ContextQuery): string {
   if (params?.surface) sp.set("surface", params.surface);
   if (params?.entityType) sp.set("entity_type", params.entityType);
   if (params?.entityId) sp.set("entity_id", params.entityId);
+  if (params?.selectionAnchor) sp.set("selection_anchor", params.selectionAnchor);
   if (params?.productId) sp.set("product_id", params.productId);
   if (params?.workspaceId) sp.set("workspace_id", params.workspaceId);
   if (params?.sessionId) sp.set("session_id", params.sessionId);
@@ -131,6 +134,7 @@ export const CONTEXT_STUB: ContextPacket = {
     progress_pct: 42,
   },
   entity: null,
+  selection_anchor: null,
   relevant_sources: [],
   concepts: [],
   decisions: [
@@ -179,5 +183,25 @@ export function contextBarCounts(packet: ContextPacket): ContextBarCounts {
 }
 
 export function formatContextBarLabel(counts: ContextBarCounts): string {
-  return `${counts.sources} fonti · ${counts.concepts} concetti · ${counts.decisions} decisioni · ${counts.citations} citazioni`;
+  return `${counts.sources} fonti · ${counts.decisions} decisioni · ${counts.concepts} voci · ${counts.citations} citazioni`;
+}
+
+export function formatScopeChipLabel(
+  packet: ContextPacket,
+  selectionAnchor?: string | null
+): string {
+  const anchor = selectionAnchor ?? packet.selection_anchor ?? null;
+  if (packet.entity) {
+    const chapterLabel = packet.entity.title;
+    return anchor ? `${chapterLabel} · ${anchor}` : chapterLabel;
+  }
+  return anchor ?? packet.project.phase;
+}
+
+export const CONTEXT_OPEN_CONTESTO_EVENT = "thesisos:open-contesto-tab";
+
+export function dispatchOpenContestoTab(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(CONTEXT_OPEN_CONTESTO_EVENT));
+  }
 }

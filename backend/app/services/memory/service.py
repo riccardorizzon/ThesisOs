@@ -15,6 +15,7 @@ from app.db import models
 from app.db.session_async import AsyncSessionLocal
 from app.schemas.graph_state import MemoryOp
 from app.schemas.memory import (
+    BINDING_DECISION_KEY,
     CANONICAL_KEYS,
     SINGLETON_KINDS,
     VALID_KINDS,
@@ -338,6 +339,11 @@ class MemoryService:
         # conversation_id reserved for future per-conversation scoping (M5+).
         ctx = PromptContext(conversation_id=conversation_id)
 
+        if filters.include_binding_decisions:
+            binding = await self._find_by_key(session, BINDING_DECISION_KEY)
+            if binding is not None:
+                ctx.decisions.append(self._to_prompt_item(binding))
+
         if filters.include_editable:
             editable = await self._find_singleton(session, "editable")
             if editable is not None:
@@ -409,6 +415,15 @@ class MemoryService:
                 source=row.source,
             )
         )
+
+    async def _find_by_key(
+        self,
+        session: AsyncSession,
+        key: str,
+    ) -> models.Memory | None:
+        return (
+            await session.execute(select(models.Memory).where(models.Memory.key == key))
+        ).scalar_one_or_none()
 
     async def _find_singleton(
         self,
@@ -495,6 +510,7 @@ class MemoryService:
             return out
 
         return PromptContext(
+            decisions=trim(ctx.decisions),
             editable=trim(ctx.editable),
             user=trim(ctx.user),
             thesis=trim(ctx.thesis),
@@ -505,6 +521,8 @@ class MemoryService:
 def prompt_context_kinds(ctx: PromptContext) -> set[str]:
     """Test helper — kinds present in a PromptContext."""
     kinds: set[str] = set()
+    if ctx.decisions:
+        kinds.add("decision")
     if ctx.editable:
         kinds.add("editable")
     if ctx.user:

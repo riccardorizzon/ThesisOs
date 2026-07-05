@@ -1,0 +1,187 @@
+# PX3 Parallel Engineering — Wave A/B complete; Wave C authorized (EWO-008)
+
+id: px3-parallel
+title: PX-3 Parallel Engineering
+parent_program: thesisos-product-v2
+status: active
+authorization: PX3-AUTHORIZATION-20260705
+wave_b_authorization: PX3-AUTHORIZATION-WAVE-B-20260705
+wave_c_authorization: PX3-AUTHORIZATION-WAVE-C-20260705
+authorized_at: "2026-07-05"
+wave_a_complete: true
+wave_a_integration: .asep/reports/PX3-INTEGRATION-A.md
+wave_b_complete: true
+wave_b_integration: .asep/reports/PX3-INTEGRATION-B.md
+wave_b_backlog: .asep/reports/PX3-WAVE-B-BACKLOG.md
+wave_b_first_executable_ewo: PX3-EWO-005
+wave_c_backlog: .asep/reports/PX3-WAVE-C-BACKLOG.md
+wave_c_first_executable_ewo: PX3-EWO-008
+backlog: .asep/reports/PX3-WAVE-A-BACKLOG.md
+
+runtime_contract:
+  sor: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+  sor_revision: "2026-07-05"
+  program_role: conformance
+
+supervisor:
+  role: Engineering Supervisor
+  conformance_rule: .cursor/rules/px3-conformance-program.mdc
+  mode: worktree_per_subagent
+
+wave_b_exit_criteria:
+  - all_wave_b_ewos_pass
+  - conformance_integration_b_pass
+  - conformance_log_no_n_class
+  - coverage_delta_min_one_yes_or_observable
+
+wave_c_exit_criteria:
+  - all_wave_c_ewos_pass
+  - conformance_integration_c_pass
+  - conformance_log_no_n_class
+  - coverage_delta_min_two_observable_s4_2_s5
+  - inv_r_12_reverified
+
+waves:
+  wave_a_foundation:
+    title: Knowledge Object Foundation
+    execute_in_parallel: false
+    workorders: [PX3-EWO-001]
+    sub_agents: { PX3-EWO-001: A }
+    unblocks: wave_a_core
+
+  wave_a_core:
+    title: Sources + Knowledge Explorer
+    execute_in_parallel: true
+    depends_on_wave: wave_a_foundation
+    merge_order: [PX3-EWO-002, PX3-EWO-003]
+    workorders: [PX3-EWO-002, PX3-EWO-003]
+    sub_agents: { PX3-EWO-002: B, PX3-EWO-003: C }
+    unblocks: wave_a_integration
+
+  wave_a_integration:
+    title: Wave A integration
+    type: integration
+    execute_in_parallel: false
+    depends_on_wave: wave_a_core
+    workorders: [PX3-EWO-004]
+    sub_agents: { PX3-EWO-004: supervisor }
+    status: complete
+    actions:
+      - merge worktrees in merge_order (002 → 003)
+      - wire Sources ↔ Knowledge cross-links per UI spec §4
+      - run make ci
+      - write .asep/reports/PX3-INTEGRATION-A.md
+
+  wave_b_projection:
+    title: Projection Conformance (§9)
+    execute_in_parallel: false
+    depends_on_wave: wave_a_integration
+    workorders: [PX3-EWO-005]
+    sub_agents: { PX3-EWO-005: A }
+    unblocks: wave_b_supervisor
+
+  wave_b_supervisor:
+    title: Supervisor Interaction Observation (§10)
+    execute_in_parallel: false
+    depends_on_wave: wave_b_projection
+    workorders: [PX3-EWO-006]
+    sub_agents: { PX3-EWO-006: B }
+    unblocks: wave_b_conformance_integration
+
+  wave_b_conformance_integration:
+    title: Conformance Integration B
+    type: conformance_integration
+    execute_in_parallel: false
+    depends_on_wave: wave_b_supervisor
+    workorders: [PX3-EWO-007]
+    sub_agents: { PX3-EWO-007: supervisor }
+    status: complete
+    actions:
+      - merge Wave B worktrees (005 → 006)
+      - wire Explorer ↔ Explain navigation
+      - run make ci
+      - update MB2-CONFORMANCE-COVERAGE.md
+      - write .asep/reports/PX3-INTEGRATION-B.md
+      - verify wave_b_exit_criteria
+
+  wave_c_execution_graph:
+    title: Execution Graph Observation (§4.2)
+    execute_in_parallel: false
+    depends_on_wave: wave_b_conformance_integration
+    workorders: [PX3-EWO-008]
+    sub_agents: { PX3-EWO-008: A }
+    unblocks: wave_c_job_fsm
+
+  wave_c_job_fsm:
+    title: Job FSM Observation (§5)
+    execute_in_parallel: false
+    depends_on_wave: wave_c_execution_graph
+    workorders: [PX3-EWO-009]
+    sub_agents: { PX3-EWO-009: B }
+    unblocks: wave_c_conformance_integration
+
+  wave_c_conformance_integration:
+    title: Conformance Integration C
+    type: conformance_integration
+    execute_in_parallel: false
+    depends_on_wave: wave_c_job_fsm
+    workorders: [PX3-EWO-010]
+    sub_agents: { PX3-EWO-010: supervisor }
+    actions:
+      - merge Wave C worktrees (008 → 009)
+      - wire Explorer / Explain → Knowledge Graph navigation
+      - run make ci
+      - update MB2-CONFORMANCE-COVERAGE.md
+      - write .asep/reports/PX3-INTEGRATION-C.md
+      - verify wave_c_exit_criteria
+
+merge_policy:
+  ci_required_after_each: make ci
+  ci_required_after_integration: make ci
+  conflict_resolution: supervisor_integrates
+  forbidden: cross_ownership_file_edits
+
+ownership_matrix:
+  PX3-EWO-001:
+    - backend/app/schemas/knowledge.py
+    - backend/app/api/knowledge.py
+    - backend/app/services/knowledge/**
+    - frontend/lib/knowledgeTypes.ts
+    - frontend/lib/knowledgeClient.ts
+    - frontend/components/knowledge/shared/**
+    - frontend/app/documents/**
+    - frontend/middleware.ts
+  PX3-EWO-002:
+    - frontend/components/sources/**
+    - frontend/app/sources/**
+    - backend/app/api/sources.py
+    - backend/app/services/sources/**
+  PX3-EWO-003:
+    - frontend/components/knowledge/explorer/**
+    - frontend/app/knowledge/page.tsx
+    - frontend/components/library/KnowledgeView.tsx
+  PX3-EWO-004:
+    - supervisor_only
+  PX3-EWO-005:
+    - frontend/app/knowledge/[conceptSlug]/**
+    - frontend/components/knowledge/explain/**
+    - backend/app/api/knowledge.py
+    - backend/app/schemas/knowledge.py
+  PX3-EWO-006:
+    - frontend/components/knowledge/explain/**
+    - frontend/lib/knowledgeClient.ts
+    - backend/app/api/knowledge.py
+  PX3-EWO-007:
+    - supervisor_only
+  PX3-EWO-008:
+    - backend/app/api/conformance.py
+    - backend/app/services/conformance/**
+    - frontend/components/conformance/**
+    - frontend/app/**/conformance/**
+  PX3-EWO-009:
+    - frontend/components/knowledge/graph/**
+    - frontend/app/knowledge/graph/**
+    - backend/app/api/knowledge.py
+    - backend/app/services/knowledge/**
+  PX3-EWO-010:
+    - supervisor_only

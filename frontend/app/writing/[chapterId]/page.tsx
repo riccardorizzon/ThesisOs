@@ -1,4 +1,5 @@
-import { ContextBar } from "@/components/context";
+import { Suspense } from "react";
+import { WritingContextBar } from "@/components/context";
 import { WritingWorkspace } from "@/components/writing";
 import { loadContext } from "@/lib/contextLoad";
 
@@ -13,8 +14,10 @@ export default async function WritingChapterPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <ContextBar packet={context} />
-      <WritingWorkspace chapterId={chapterId} />
+      <WritingContextBar packet={context} selectionAnchor={context.selection_anchor} />
+      <Suspense fallback={<p className="text-sm text-ink-muted">Caricamento workspace…</p>}>
+        <WritingWorkspace chapterId={chapterId} contextPacket={context} />
+      </Suspense>
     </div>
   );
 }

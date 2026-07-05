@@ -1,18 +1,61 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { AppShell } from "./AppShell";
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
+import {
+  _resetProposalQueueForTests,
+  addProposal,
+} from "@/lib/proposalQueue";
+import { chapterClient } from "@/lib/chapterClient";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/writing",
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
 }));
+
+vi.mock("@/lib/chapterClient", () => ({
+  chapterClient: {
+    list: vi.fn().mockResolvedValue([
+      {
+        id: "1",
+        parent_id: null,
+        order_index: 0,
+        title: "Cap. 1",
+        status: "review",
+        content_md: null,
+        summary: null,
+        word_count: 0,
+        version: 1,
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+    ]),
+  },
+}));
+
+beforeEach(() => {
+  _resetProposalQueueForTests();
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  });
+});
 
 afterEach(() => {
   cleanup();
+  _resetProposalQueueForTests();
 });
 
 describe("AppShell", () => {
-  it("renders primary navigation per ADR-0036", () => {
+  it("renders primary navigation per ADR-0036", async () => {
     render(
       <AppShell>
         <div>Content</div>
@@ -57,5 +100,39 @@ describe("AppShell", () => {
       </AppShell>
     );
     expect(screen.queryByRole("complementary", { name: "Panel" })).toBeNull();
+  });
+
+  it("shows command palette trigger with ⌘K hint", () => {
+    render(
+      <AppShell>
+        <div>Content</div>
+      </AppShell>
+    );
+    const trigger = screen.getByTestId("command-palette-trigger");
+    expect(trigger).toBeTruthy();
+    expect(trigger.textContent).toContain("⌘K");
+  });
+
+  it("shows writing status dot and review pending count", async () => {
+    addProposal({
+      actionId: "expand",
+      actionLabel: "Espandi",
+      chapterId: "1",
+      selectionText: null,
+      selectionAnchor: null,
+      preview: "Anteprima",
+    });
+
+    render(
+      <AppShell>
+        <div>Content</div>
+      </AppShell>
+    );
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId("nav-badge-writing")).toBeTruthy();
+      expect(screen.getByTestId("nav-review-pending")).toBeTruthy();
+    });
+    expect(vi.mocked(chapterClient.list)).toHaveBeenCalled();
   });
 });

@@ -17,6 +17,18 @@ load_order:
   - id: plan
     path: plans/m6-writing-workspace-plan.md   # active milestone (M6); M5 plan frozen/historical
     authority: authoritative milestone scope + promotion criteria
+  - id: engineering-program
+    path: docs/engineering-program.md
+    authority: WorkOrder types, QWO discipline, automation levels (migration track)
+  - id: auto-approval-policy
+    path: docs/auto-approval-policy.md
+    authority: conditional auto-approval + STOP triggers (Level 2 default)
+  - id: termination-policy
+    path: docs/termination-policy.md
+    authority: mandatory halt + no-progress detection for Supervisor
+  - id: sor-compatibility-policy
+    path: .asep/governance/sor-compatibility-policy.md
+    authority: SoR revision compatibility after MB2 Specification Freeze
 
 # Live context the loader must read from the repo (not files here):
 context:

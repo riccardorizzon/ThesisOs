@@ -1,6 +1,8 @@
 from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 
+from app.graph.inference_enforcement import generate_with_citation_enforcement
+from app.graph.academic_production import is_academic_writing_query, last_user_content
 from app.graph.memory_context import make_memory_context_node
 from app.graph.orchestration.constants import DEFAULT_ROUTE, GROUNDED_ROUTE, WRITER_ROUTE
 from app.graph.planner import make_planner_node
@@ -34,15 +36,19 @@ def make_conversation_node(llm: LLMClient):
                 }
             )
         wire = [{"role": m.role, "content": m.content} for m in wire_messages]
-        parts: list[str] = []
-        usage: dict = {}
-        async for chunk in llm.astream(wire):
-            if chunk.text:
-                parts.append(chunk.text)
-                writer({"type": "token", "text": chunk.text})
-            if chunk.metadata.get("usage"):
-                usage = chunk.metadata["usage"]
-        assistant = Message(role="assistant", content="".join(parts))
+        user_query = last_user_content(state.messages) or ""
+        academic = is_academic_writing_query(user_query)
+
+        def _emit(ev: dict) -> None:
+            writer(ev)
+
+        text, usage, _retried = await generate_with_citation_enforcement(
+            llm,
+            wire,
+            academic=academic,
+            emit=_emit,
+        )
+        assistant = Message(role="assistant", content=text)
         # Task 9 reads usage from the custom stream (not from GraphState),
         # which keeps GraphState frozen (ADR-0007) and avoids a Pydantic
         # unknown-key update error. "text" is included so every custom

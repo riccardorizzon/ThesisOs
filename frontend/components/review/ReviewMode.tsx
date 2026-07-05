@@ -1,119 +1,252 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ReviewActionBar } from "./ReviewActionBar";
+import { useRouter, useSearchParams } from "next/navigation";
+import { WritingContextBar } from "@/components/context";
+import { CONTEXT_STUB } from "@/lib/contextClient";
+import { chapterClient, type Chapter } from "@/lib/chapterClient";
+import {
+  getPendingProposals,
+  getPendingProposalsForChapter,
+  type WritingProposal,
+} from "@/lib/proposalQueue";
 import { ReviewComparePanel } from "./ReviewComparePanel";
 import { ReviewDocumentSelector } from "./ReviewDocumentSelector";
-import { REVIEW_CHAPTERS } from "./reviewStub";
+import {
+  OPEN_REVIEW_EVENT,
+  type OpenReviewDetail,
+} from "./reviewIntegration";
 import {
   ReviewWorkflowSteps,
   type ReviewWorkflowStep,
 } from "./ReviewWorkflowSteps";
+import type { ReviewChapter } from "./reviewStub";
+import { reviewStatusLabel } from "./reviewStub";
 
 export type ReviewModeProps = {
   className?: string;
+  contextPacket?: typeof CONTEXT_STUB;
 };
 
+function chapterToReviewItem(ch: Chapter, pendingCount: number): ReviewChapter {
+  const statusMap: Record<Chapter["status"], ReviewChapter["status"]> = {
+    draft: "bozza",
+    review: "revisione",
+    approved: "approvato",
+    published: "approvato",
+  };
+  return {
+    id: ch.id,
+    title: ch.title,
+    status: statusMap[ch.status] ?? "bozza",
+    pendingChanges: pendingCount,
+  };
+}
+
 /**
- * Review mode shell — revision workflow distinct from /ai power mode (ADR-0039).
- * Workflow: select → compare → accept.
+ * Review mode shell — full-width compare workspace with ContextBar (PX2-EWO-007).
+ * Distinct from /ai power mode (ADR-0039).
  * Layer: Business (Product Plane)
  */
-export function ReviewMode({ className }: ReviewModeProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [step, setStep] = useState<ReviewWorkflowStep>("select");
-  const [feedback, setFeedback] = useState<string | null>(null);
+export function ReviewMode({ className, contextPacket = CONTEXT_STUB }: ReviewModeProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const chapterParam = searchParams.get("chapter");
+  const proposalParam = searchParams.get("proposal");
 
-  const selectedChapter = useMemo(
-    () => REVIEW_CHAPTERS.find((c) => c.id === selectedId) ?? null,
-    [selectedId]
-  );
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [loadingChapters, setLoadingChapters] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(chapterParam);
+  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(proposalParam);
+  const [step, setStep] = useState<ReviewWorkflowStep>("select");
+  const [queueVersion, setQueueVersion] = useState(0);
+
+  const refreshQueue = useCallback(() => {
+    setQueueVersion((v) => v + 1);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingChapters(true);
+    chapterClient
+      .list()
+      .then((list) => {
+        if (!cancelled) setChapters(list);
+      })
+      .catch(() => {
+        if (!cancelled) setChapters([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingChapters(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<OpenReviewDetail>).detail;
+      const url = detail?.chapterId
+        ? `/review?chapter=${encodeURIComponent(detail.chapterId)}`
+        : "/review";
+      router.push(url);
+    };
+    window.addEventListener(OPEN_REVIEW_EVENT, handler);
+    return () => window.removeEventListener(OPEN_REVIEW_EVENT, handler);
+  }, [router]);
+
+  useEffect(() => {
+    if (chapterParam) {
+      setSelectedId(chapterParam);
+      setStep("compare");
+    }
+    if (proposalParam) setSelectedProposalId(proposalParam);
+  }, [chapterParam, proposalParam]);
+
+  const pendingProposals = useMemo(() => {
+    void queueVersion;
+    return getPendingProposals();
+  }, [queueVersion]);
+
+  const reviewChapters = useMemo((): ReviewChapter[] => {
+    const chapterIdsWithPending = new Set(pendingProposals.map((p) => p.chapterId));
+    const fromApi = chapters
+      .filter((ch) => chapterIdsWithPending.has(ch.id))
+      .map((ch) =>
+        chapterToReviewItem(ch, getPendingProposalsForChapter(ch.id).length)
+      );
+
+    if (fromApi.length > 0) return fromApi;
+
+    return [...chapterIdsWithPending].map((id) => ({
+      id,
+      title: `Capitolo ${id}`,
+      status: "revisione" as const,
+      pendingChanges: getPendingProposalsForChapter(id).length,
+    }));
+  }, [chapters, pendingProposals]);
+
+  const activeProposal = useMemo((): WritingProposal | null => {
+    if (!selectedId) return null;
+    const forChapter = getPendingProposalsForChapter(selectedId);
+    if (forChapter.length === 0) return null;
+    if (selectedProposalId) {
+      return forChapter.find((p) => p.id === selectedProposalId) ?? forChapter[0];
+    }
+    return forChapter[0];
+  }, [selectedId, selectedProposalId, queueVersion]);
 
   function handleSelect(id: string) {
     setSelectedId(id);
+    setSelectedProposalId(null);
     setStep("select");
-    setFeedback(null);
+    router.replace(`/review?chapter=${encodeURIComponent(id)}`, { scroll: false });
   }
 
   function handleCompare() {
-    if (!selectedChapter) return;
+    if (!selectedId || !activeProposal) return;
     setStep("compare");
-    setFeedback(null);
-  }
-
-  function handleAccept() {
-    if (!selectedChapter) return;
-    setStep("accept");
-    setFeedback(
-      `Revisione accettata per «${selectedChapter.title}» (stub — esecuzione PX-2+).`
+    router.replace(
+      `/review?chapter=${encodeURIComponent(selectedId)}&proposal=${encodeURIComponent(activeProposal.id)}`,
+      { scroll: false }
     );
   }
 
-  function handleReject() {
-    if (!selectedChapter) return;
+  function handleResolved(action: "accepted" | "rejected" | "partial") {
     setStep("accept");
-    setFeedback(
-      `Revisione rifiutata per «${selectedChapter.title}» (stub — esecuzione PX-2+).`
-    );
+    refreshQueue();
+    if (action !== "rejected") {
+      setSelectedProposalId(null);
+    }
   }
 
-  const actionsEnabled = step === "compare" || step === "accept";
+  const showCompare = step === "compare" || step === "accept";
+  const hasPending = reviewChapters.length > 0;
 
   return (
-    <div className={["mx-auto max-w-5xl", className].filter(Boolean).join(" ")}>
-      <header className="mb-8">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-          PX-1 · Revisione
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-gray-900">
-          Revisione
-        </h1>
-        <p className="mt-2 max-w-prose text-sm leading-relaxed text-gray-600">
-          Modalità revisione strutturata: seleziona un capitolo, confronta le
-          modifiche proposte e accetta o rifiuta. Distinta dalla chat AI in{" "}
-          <Link
-            href="/ai"
-            className="font-medium text-blue-800 underline-offset-2 hover:underline cursor-pointer"
+    <div className={["flex flex-col gap-6", className].filter(Boolean).join(" ")}>
+      <WritingContextBar packet={contextPacket} />
+
+      <div className="px-4 lg:px-6">
+        <header className="mb-6">
+          <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+            PX-2 · Revisione
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">
+            Revisione
+          </h1>
+          <p className="mt-2 max-w-prose text-sm leading-relaxed text-ink-muted">
+            Confronta le modifiche proposte e accetta o rifiuta con conferma operatore.
+            Distinta dalla chat AI in{" "}
+            <Link
+              href="/ai"
+              className="font-medium text-accent underline-offset-2 hover:underline cursor-pointer"
+            >
+              /ai
+            </Link>
+            .
+          </p>
+        </header>
+
+        <ReviewWorkflowSteps current={step} className="mb-8" />
+
+        {!hasPending && !loadingChapters ? (
+          <div
+            className="rounded-lg border border-dashed border-border bg-surface-muted p-12 text-center"
+            data-testid="review-empty-state"
           >
-            /ai
-          </Link>
-          .
-        </p>
-      </header>
+            <p className="text-sm text-ink-muted">Nessuna revisione in sospeso</p>
+            <Link
+              href="/writing"
+              className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 cursor-pointer"
+            >
+              Avvia revisione
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-8 xl:grid-cols-[minmax(0,16rem)_1fr]">
+            <ReviewDocumentSelector
+              chapters={reviewChapters}
+              selectedId={selectedId}
+              onSelect={handleSelect}
+            />
 
-      <ReviewWorkflowSteps current={step} className="mb-8" />
+            <div className="min-w-0 space-y-6">
+              {selectedId && step === "select" && activeProposal ? (
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleCompare}
+                    className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 cursor-pointer"
+                  >
+                    Confronta revisione
+                  </button>
+                </div>
+              ) : null}
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,16rem)_1fr]">
-        <ReviewDocumentSelector
-          chapters={REVIEW_CHAPTERS}
-          selectedId={selectedId}
-          onSelect={handleSelect}
-        />
+              {showCompare ? (
+                <ReviewComparePanel
+                  chapterId={selectedId}
+                  proposal={activeProposal}
+                  onResolved={handleResolved}
+                />
+              ) : (
+                <ReviewComparePanel chapterId={null} proposal={null} />
+              )}
 
-        <div className="space-y-6">
-          <ReviewComparePanel chapter={selectedChapter} />
-
-          {selectedChapter && step === "select" ? (
-            <div>
-              <button
-                type="button"
-                onClick={handleCompare}
-                className="rounded-md bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 cursor-pointer"
-              >
-                Confronta revisione
-              </button>
+              {activeProposal && step === "select" ? (
+                <p className="text-xs text-ink-muted">
+                  {reviewStatusLabel("revisione")} · {activeProposal.actionLabel}
+                </p>
+              ) : null}
             </div>
-          ) : null}
-
-          <ReviewActionBar
-            enabled={actionsEnabled}
-            onAccept={handleAccept}
-            onReject={handleReject}
-            feedback={feedback}
-          />
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+export { dispatchOpenReview } from "./reviewIntegration";

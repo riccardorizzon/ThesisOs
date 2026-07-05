@@ -16,6 +16,9 @@ export type ProjectContext = {
   session_id?: string | null;
 };
 
+/** localStorage key for PX-2 session continuity (PX2-EWO-006). */
+export const SESSION_STATE_STORAGE_KEY = "thesisos:session-state";
+
 export type ProjectSurface = "home" | "writing";
 
 export type ResolveProjectContextOptions = {
@@ -30,6 +33,7 @@ export type ContextQueryExtras = {
   surface?: string;
   entityType?: string;
   entityId?: string;
+  selectionAnchor?: string;
   userIntent?: string;
 };
 

@@ -25,6 +25,7 @@ async def get_project_context(
     surface: str = Query(default="writing", description="Presentation hint only"),
     entity_type: str | None = None,
     entity_id: str | None = None,
+    selection_anchor: str | None = None,
     product_id: str = Query(default=DEFAULT_PRODUCT_ID),
     workspace_id: str | None = None,
     session_id: str | None = None,
@@ -41,6 +42,7 @@ async def get_project_context(
         presentation=PresentationHint(surface=surface),
         entity_type=entity_type,
         entity_id=entity_id,
+        selection_anchor=selection_anchor,
         user_intent=user_intent,
     )
     try:

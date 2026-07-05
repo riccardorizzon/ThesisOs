@@ -132,6 +132,23 @@ def test_get_context_includes_chapter_entity(client):
     assert entity["title"] == "Capitolo ch-2"
 
 
+def test_get_context_with_selection_anchor(client):
+    r = client.get(
+        f"/projects/{DEFAULT_PROJECT_ID}/context"
+        "?surface=writing&entity_type=chapter&entity_id=ch-2&selection_anchor=%C2%A73.2"
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["selection_anchor"] == "§3.2"
+    assert body["entity"]["id"] == "ch-2"
+
+
+def test_get_context_without_selection_anchor_backward_compatible(client):
+    r = client.get(f"/projects/{DEFAULT_PROJECT_ID}/context?surface=writing")
+    assert r.status_code == 200
+    assert r.json().get("selection_anchor") is None
+
+
 def test_binding_decisions_precede_corpus_constraints(client):
     r = client.get(f"/projects/{DEFAULT_PROJECT_ID}/context?surface=writing")
     body = r.json()

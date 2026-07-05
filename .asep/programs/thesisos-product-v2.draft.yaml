@@ -1,0 +1,169 @@
+# Engineering Program — ThesisOS Product v2 (DRAFT)
+#
+# program_type: engineering — DRAFT ONLY
+# Activate only after Architect Program Review PASS
+# (docs/product/ARCHITECT-PROGRAM-REVIEW.md)
+#
+# Copy/promote to thesisos-product-v2.yaml on activation — do not edit active in place from draft.
+
+id: thesisos-product-v2
+title: ThesisOS Product v2 — Engineering (DRAFT)
+program_type: engineering
+status: draft
+
+milestone_authorized: PX-1
+milestones_planned_blocked: [PX-2, PX-3, PX-4, PX-5, PX-6]
+
+depends_on:
+  product_constitution: docs/product/PRODUCT-CONSTITUTION.md
+  constitution_lifecycle: frozen
+  execution_authorization: docs/product/EXECUTION-AUTHORIZATION.md
+  authorized_scope: PX-1
+
+activation:
+  requires: docs/product/ARCHITECT-PROGRAM-REVIEW.md
+  required_status: PASS
+  promotes_to: .asep/programs/thesisos-product-v2.yaml
+  forbidden: direct_edit_of_active_without_review
+
+architecture_binding:
+  product_constitution: docs/product/PRODUCT-CONSTITUTION.md
+  constitution_governance: docs/CONSTITUTION-GOVERNANCE.md
+  runtime_constitution: docs/runtime-constitution.md
+  product_spec: docs/product/specs/thesisos-product-ux-v1.md
+
+constraints:
+  code_mutation: true
+  allowed_paths:
+    - frontend/**
+    - backend/app/**   # Product plane only; Runtime ADR if cross-cutting
+    - docs/product/**
+    - .asep/reports/PX-1-*.md
+  regression:
+    - make ci
+    - OR-1…OR-7 qualification on live stack
+
+milestones:
+  PX-1:
+    title: Foundation
+    status: authorized
+    adr_refs: [ADR-0034, ADR-0035, ADR-0036, ADR-0038, ADR-0040]
+    deliverables:
+      - AppShell + navigation
+      - Design system v1
+      - Home page
+      - Routing (Home default)
+      - Context Engine v0
+      - project_id scaffolding
+  PX-2:
+    title: Writing
+    status: blocked
+    depends_on: [PX-1, future_execution_authorization]
+  PX-3:
+    title: Sources
+    status: blocked
+  PX-4:
+    title: Knowledge
+    status: blocked
+  PX-5:
+    title: Research
+    status: blocked
+  PX-6:
+    title: Polish
+    status: blocked
+
+workorder_backlog:
+  - id: PX1-EWO-001
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-1
+    title: AppShell and primary navigation
+    adr_refs: [ADR-0036, ADR-0035]
+    depends_on: []
+    acceptance:
+      - Sidebar matches ADR-0036 (Home, Research, Writing, Sources, Knowledge, Settings)
+      - AppShell layout supports right panel slot (future AI panel)
+      - Layer declaration on PR frontend
+    status: pending
+
+  - id: PX1-EWO-002
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-1
+    title: Design system tokens and core components
+    adr_refs: [ADR-0034]
+    depends_on: [PX1-EWO-001]
+    acceptance:
+      - Design tokens documented (color, type, spacing)
+      - Core components AppShell, ProgressRing, EntityCard stub
+    status: pending
+
+  - id: PX1-EWO-003
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-1
+    title: Home page
+    adr_refs: [ADR-0040, ADR-0036]
+    depends_on: [PX1-EWO-001, PX1-EWO-002]
+    acceptance:
+      - Default route / → Home not /chat (ADR-0036 INV-IA-2)
+      - Progress deterministic formula stub (ADR-0040 INV-PS-1)
+      - Continue deep link + quick actions + activity feed placeholders
+    status: pending
+
+  - id: PX1-EWO-004
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-1
+    title: Product routing
+    adr_refs: [ADR-0036]
+    depends_on: [PX1-EWO-001]
+    acceptance:
+      - Routes per Spec §4 stub pages for Research, Writing, Sources, Knowledge
+      - Legacy /chat → /ai redirect documented
+    status: pending
+
+  - id: PX1-EWO-005
+    type: EWO
+    ewo_category: Grounding
+    milestone: PX-1
+    title: Context Engine v0
+    adr_refs: [ADR-0038, ADR-0040]
+    depends_on: [PX1-EWO-001]
+    acceptance:
+      - GET /projects/{id}/context returns ContextPacket schema subset
+      - Precedence binding decisions + entity + corpus_constraints (ADR-0038)
+      - ContextBar component in Writing stub route
+    status: pending
+
+  - id: PX1-EWO-006
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-1
+    title: Project scope scaffolding
+    adr_refs: [ADR-0040]
+    depends_on: [PX1-EWO-001]
+    acceptance:
+      - project_id in API/session context
+      - Default project from promoted thesis-agent template
+    status: pending
+
+  - id: QWO-PX1-001
+    type: QWO
+    milestone: PX-1
+    title: PX-1 Foundation qualification
+    depends_on: [PX1-EWO-001, PX1-EWO-002, PX1-EWO-003, PX1-EWO-004, PX1-EWO-005, PX1-EWO-006]
+    acceptance:
+      - Home default route verified
+      - Sidebar IA matches ADR-0036
+      - Context v0 API returns valid packet
+      - make ci green
+      - OR-1…OR-7 regression green on live stack
+    status: pending
+
+completion_criteria:
+  PX-1: QWO-PX1-001 PASS
+
+post_px1:
+  next_authorization: Execution Authorization amendment for PX-2
+  note: PX-2 not in scope until re-authorized

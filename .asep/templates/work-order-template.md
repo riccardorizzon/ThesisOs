@@ -1,5 +1,11 @@
 # Work Order — <PHASE> <OBJECTIVE>
 
+## Identity
+- **WorkOrder id:** <EWO-n | META-n>
+- **Type:** EWO
+- **EWO category:** Alignment | Promotion | Refactoring | Normalization | Infrastructure | Release
+- **Capability:** `<node-id>`
+
 ## Baseline
 - Project: ThesisOS · Branch: `<branch>`
 - Baseline commit: `<sha>` (frozen milestones table)

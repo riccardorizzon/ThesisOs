@@ -1,0 +1,678 @@
+# Engineering Program — ThesisOS Product v2
+#
+# program_type: engineering — ACTIVE
+# Activated after Architect Program Review PASS (2026-07-03)
+# Source: .asep/programs/thesisos-product-v2.draft.yaml
+
+id: thesisos-product-v2
+title: ThesisOS Product v2 — Engineering
+program_type: engineering
+status: active
+
+milestone_authorized: null
+milestone_authorized_prior: PX-2
+milestone_frozen: PX-2
+milestones_planned_blocked: [PX-3, PX-4, PX-5, PX-6]
+
+depends_on:
+  product_constitution: docs/product/PRODUCT-CONSTITUTION.md
+  constitution_lifecycle: frozen
+  execution_authorization: docs/product/EXECUTION-AUTHORIZATION.md
+  architect_program_review: docs/product/ARCHITECT-PROGRAM-REVIEW.md
+  authorized_scope: PX-1
+
+activated_at: "2026-07-03"
+activated_from: .asep/programs/thesisos-product-v2.draft.yaml
+
+architecture_binding:
+  product_constitution: docs/product/PRODUCT-CONSTITUTION.md
+  constitution_governance: docs/CONSTITUTION-GOVERNANCE.md
+  runtime_constitution: docs/runtime-constitution.md
+  product_spec: docs/product/specs/thesisos-product-ux-v1.md
+  capability_graph: .asep/capabilities/thesisos-product-v2.yaml
+  parallel_program: .asep/programs/px1-parallel.yaml
+  parallel_supervisor: .asep/reports/PX1-PARALLEL-PROGRAM.md
+
+constraints:
+  code_mutation: true
+  allowed_paths:
+    - frontend/**
+    - backend/app/**
+    - docs/product/**
+    - .asep/reports/PX-1-*.md
+    - .asep/reports/PX-2-*.md
+    - .asep/reports/PX3-*.md
+    - .asep/proposals/PX3-EWO-*.md
+    - .asep/capabilities/thesisos-product-v2.yaml
+  regression:
+    - make ci
+    - OR-1…OR-7 qualification on live stack
+
+milestones:
+  PX-1:
+    title: Foundation
+    status: complete
+    qualified_at: "2026-07-03"
+    qwo: QWO-PX1-001-R1
+    qwo_report: .asep/reports/QWO-PX1-001-R1.md
+    qwo_certificate: .asep/certificates/QWO-PX1-001-R1-20260703.yaml
+    adr_refs: [ADR-0034, ADR-0035, ADR-0036, ADR-0038, ADR-0040]
+    deliverables:
+      - AppShell + navigation
+      - Design system v1
+      - Home page
+      - Routing (Home default)
+      - Context Engine v0
+      - ProjectContext scaffolding
+      - Writing / Library / Review UX shells
+      - Context visualization
+      - Navigation enhancements
+      - E2E qualification
+  PX-2:
+    title: Research Workspace Experience
+    status: complete
+    qualified_at: "2026-07-04"
+    frozen_at: "2026-07-05"
+    lifecycle: frozen
+    authorization: ratified
+    amendment: docs/product/EXECUTION-AUTHORIZATION-PX2-AMENDMENT.md
+    ratified_at: "2026-07-04"
+    product_spec: docs/product/specs/px2-research-workspace-experience.md
+    ui_spec: design-system/thesisos/px2-research-workspace-ui-spec.md
+    program_review: docs/product/ARCHITECT-PROGRAM-REVIEW-PX2.md
+    parallel_program: .asep/programs/px2-parallel.yaml
+    depends_on: [PX-1]
+    capabilities:
+      - PX-2.1 Context Awareness
+      - PX-2.2 Writing Flow
+      - PX-2.3 Source Interaction
+      - PX-2.4 Decision Visibility
+      - PX-2.5 Session Continuity
+    ewo_count: 8
+    qwo: QWO-PX2-001
+    qwo_run_id: QWO-PX2-001-R1
+    qwo_report: .asep/reports/QWO-PX2-001-R1.md
+    qwo_certificate: .asep/certificates/QWO-PX2-001-R1-20260705.yaml
+    reconfirmed_at: "2026-07-05"
+  PX-3:
+    title: Sources
+    status: in_progress
+    authorized_at: "2026-07-05"
+    authorization_receipt: .asep/reports/PX3-AUTHORIZATION-20260705.md
+    program_role: conformance  # first Runtime Conformance Program — not product-only
+    product_spec: docs/product/specs/px3-knowledge-experience-v2.md
+    ui_spec: design-system/thesisos/px3-knowledge-experience-ui-spec.md
+    wave_a_backlog: .asep/reports/PX3-WAVE-A-BACKLOG.md
+    wave_b_backlog: .asep/reports/PX3-WAVE-B-BACKLOG.md
+    wave_c_backlog: .asep/reports/PX3-WAVE-C-BACKLOG.md
+    parallel_program: .asep/programs/px3-parallel.yaml
+    first_executable_ewo: PX3-EWO-008
+    wave_b_first_executable_ewo: PX3-EWO-005
+    wave_c_first_executable_ewo: PX3-EWO-008
+    wave_b_authorization: .asep/reports/PX3-AUTHORIZATION-WAVE-B-20260705.md
+    wave_c_authorization: .asep/reports/PX3-AUTHORIZATION-WAVE-C-20260705.md
+    dual_purpose:
+      - Deliver ThesisOS Sources milestone (product)
+      - Stress-test MB2 SoR in a real program (platform)
+    runtime_contract:
+      sor: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+      sor_revision: "2026-07-05"
+      compatibility: .asep/governance/sor-compatibility-policy.md
+    conformance:
+      success_criterion: >-
+        SoR considered validated if PX-3 completes without substantial changes to
+        invariants (INV-R-*) or normative contracts. Clarifications and compatible
+        SoR amendments per sor-compatibility-policy do not invalidate validation.
+      exception_taxonomy:
+        - sor_defect
+        - ambiguous_requirement
+        - invariant_too_restrictive
+        - implementation_error
+      assessment_at_completion: .asep/reports/MB2-CONFORMANCE-ASSESSMENT.md
+    depends_on: [PX-2]
+  PX-4:
+    title: Knowledge
+    status: blocked
+  PX-5:
+    title: Research
+    status: blocked
+  PX-6:
+    title: Polish
+    status: blocked
+
+workorder_backlog:
+  - id: PX1-EWO-001
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-1
+    title: AppShell and primary navigation
+    adr_refs: [ADR-0036, ADR-0035]
+    depends_on: []
+    acceptance:
+      - Sidebar matches ADR-0036 (Home, Research, Writing, Sources, Knowledge, Settings)
+      - AppShell layout supports right panel slot (future AI panel)
+      - Layer declaration on PR frontend
+    status: implemented
+    report: .asep/reports/PX1-EWO-001-appshell-navigation.md
+
+  - id: PX1-EWO-002
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-1
+    title: Design system tokens and core components
+    adr_refs: [ADR-0034]
+    depends_on: [PX1-EWO-001]
+    acceptance:
+      - Design tokens documented (color, type, spacing)
+      - Core components AppShell, ProgressRing, EntityCard stub
+    status: implemented
+    report: .asep/reports/PX1-EWO-002-design-system.md
+
+  - id: PX1-EWO-003
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-1
+    title: Home page
+    adr_refs: [ADR-0040, ADR-0036]
+    depends_on: [PX1-EWO-001, PX1-EWO-002]
+    acceptance:
+      - Default route / → Home not /chat (ADR-0036 INV-IA-2)
+      - Progress deterministic formula stub (ADR-0040 INV-PS-1)
+      - Continue deep link + quick actions + activity feed placeholders
+    status: implemented
+    report: .asep/reports/PX1-EWO-003-home.md
+
+  - id: PX1-EWO-004
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-1
+    title: Product routing
+    adr_refs: [ADR-0036]
+    depends_on: [PX1-EWO-001]
+    acceptance:
+      - Routes per Spec §4 stub pages for Research, Writing, Sources, Knowledge
+      - Legacy /chat → /ai redirect documented
+    status: implemented
+    report: .asep/reports/PX1-EWO-004-routing.md
+
+  - id: PX1-EWO-005
+    type: EWO
+    ewo_category: Grounding
+    milestone: PX-1
+    title: Context Engine v0
+    adr_refs: [ADR-0038, ADR-0040]
+    depends_on: [PX1-EWO-001]
+    acceptance:
+      - GET /projects/{id}/context returns ContextPacket schema subset
+      - Precedence binding decisions + entity + corpus_constraints (ADR-0038)
+      - ContextBar component in Writing stub route
+    status: implemented
+    report: .asep/reports/PX1-EWO-005-context-v0.md
+
+  - id: PX1-EWO-006
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-1
+    title: Project scope scaffolding
+    adr_refs: [ADR-0040]
+    depends_on: [PX1-EWO-001]
+    acceptance:
+      - ProjectContext in API (project_id, product_id, workspace_id, session_id)
+      - Default project from promoted thesis-agent template
+      - Frontend shared project context helper
+    status: implemented
+    report: .asep/reports/PX1-EWO-006-project-scope.md
+
+  - id: PX1-EWO-007
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-1
+    title: Writing workspace layout shell
+    adr_refs: [ADR-0036, ADR-0038, ADR-0039]
+    depends_on: [PX1-EWO-009]
+    wave: px1-parallel/wave_b
+    status: implemented
+    report: .asep/reports/PX1-EWO-007-writing-workspace.md
+
+  - id: PX1-EWO-008
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-1
+    title: Library experience (Sources + Knowledge)
+    adr_refs: [ADR-0036, ADR-0037]
+    depends_on: [PX1-EWO-002]
+    wave: px1-parallel/wave_a
+    status: implemented
+    report: .asep/reports/PX1-EWO-008-library-experience.md
+
+  - id: PX1-EWO-009
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-1
+    title: Context visualization UI
+    adr_refs: [ADR-0038]
+    depends_on: [PX1-EWO-005]
+    wave: px1-parallel/wave_a
+    status: implemented
+    report: .asep/reports/PX1-EWO-009-context-visualization.md
+
+  - id: PX1-EWO-010
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-1
+    title: Navigation experience
+    adr_refs: [ADR-0036]
+    depends_on: [PX1-EWO-006]
+    wave: px1-parallel/wave_b
+    status: implemented
+    report: .asep/reports/PX1-EWO-010-navigation-experience.md
+
+  - id: PX1-EWO-011
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-1
+    title: Review experience shell
+    adr_refs: [ADR-0039]
+    depends_on: [PX1-EWO-004]
+    wave: px1-parallel/wave_b
+    status: implemented
+    report: .asep/reports/PX1-EWO-011-review-experience.md
+
+  - id: PX1-EWO-012
+    type: EWO
+    ewo_category: Release
+    milestone: PX-1
+    title: Qualification and integration
+    depends_on: [PX1-EWO-006, PX1-EWO-007, PX1-EWO-008, PX1-EWO-009, PX1-EWO-010, PX1-EWO-011]
+    wave: px1-parallel/wave_c
+    status: implemented
+    report: .asep/reports/PX1-EWO-012-qualification-integration.md
+
+  - id: QWO-PX1-001
+    type: QWO
+    milestone: PX-1
+    title: PX-1 Foundation qualification
+    depends_on: [PX1-EWO-001, PX1-EWO-002, PX1-EWO-003, PX1-EWO-004, PX1-EWO-005, PX1-EWO-006, PX1-EWO-007, PX1-EWO-008, PX1-EWO-009, PX1-EWO-010, PX1-EWO-011, PX1-EWO-012]
+    acceptance:
+      - Home default route verified
+      - Sidebar IA matches ADR-0036
+      - Context v0 API returns valid packet
+      - make ci green
+      - OR-1…OR-7 regression green on live stack
+    status: qualified
+    run_id: QWO-PX1-001-R1
+    report: .asep/reports/QWO-PX1-001-R1.md
+    certificate: .asep/certificates/QWO-PX1-001-R1-20260703.yaml
+    qualified_at: "2026-07-03"
+
+post_px1:
+  px1_status: complete_qualified
+  px1_frozen: true
+  meta1: frozen
+  meta2: not_open
+  architectural_backlog:
+    - Infrastructure Reliability Issue (IRI)
+    - Qualification Environment taxonomy
+  next_authorization: docs/product/EXECUTION-AUTHORIZATION-PX2-AMENDMENT.md
+  next_milestone: PX-2 Research Workspace Experience
+  note: PX-2 EWO proposals filed; dispatch blocked until amendment ratified
+
+px2_workorder_backlog:
+  - id: PX2-EWO-001
+    type: EWO
+    ewo_category: Grounding
+    milestone: PX-2
+    title: ContextBar live + Context Inspector
+    user_capability: PX-2.1
+    adr_refs: [ADR-0038, ADR-0040]
+    depends_on: [PX-1]
+    wave: px2-parallel/wave_a
+    proposal: .asep/proposals/PX2-EWO-001-contextbar-inspector.md
+    status: implemented
+    report: .asep/reports/PX2-EWO-001-contextbar-inspector.md
+
+  - id: PX2-EWO-002
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-2
+    title: Editor, autosave, chapter lifecycle
+    user_capability: PX-2.2
+    adr_refs: [ADR-0036, ADR-0040]
+    depends_on: [PX1-EWO-007]
+    wave: px2-parallel/wave_a
+    proposal: .asep/proposals/PX2-EWO-002-editor-lifecycle.md
+    status: implemented
+    report: .asep/reports/PX2-EWO-002-editor-lifecycle.md
+
+  - id: PX2-EWO-005
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-2
+    title: Decision cards + binding warnings
+    user_capability: PX-2.4
+    depends_on: [PX2-EWO-001]
+    wave: px2-parallel/wave_a
+    proposal: .asep/proposals/PX2-EWO-005-decision-cards.md
+    status: implemented
+    report: .asep/reports/PX2-EWO-005-decision-cards.md
+
+  - id: PX2-EWO-003
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-2
+    title: AI panel actions + proposal queue
+    user_capability: PX-2.2
+    adr_refs: [ADR-0039, ADR-0038]
+    depends_on: [PX2-EWO-001, PX2-EWO-002]
+    wave: px2-parallel/wave_b
+    proposal: .asep/proposals/PX2-EWO-003-ai-proposal-queue.md
+    status: implemented
+    report: .asep/reports/PX2-EWO-003-ai-proposal-queue.md
+
+  - id: PX2-EWO-004
+    type: EWO
+    ewo_category: Grounding
+    milestone: PX-2
+    title: Source reader, picker, cite flow
+    user_capability: PX-2.3
+    adr_refs: [ADR-0037]
+    depends_on: [PX2-EWO-002]
+    wave: px2-parallel/wave_b
+    proposal: .asep/proposals/PX2-EWO-004-source-reader-cite.md
+    status: implemented
+    report: .asep/reports/PX2-EWO-004-source-reader-cite.md
+
+  - id: PX2-EWO-006
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-2
+    title: Session persistence + Continua
+    user_capability: PX-2.5
+    adr_refs: [ADR-0040]
+    depends_on: [PX2-EWO-002, PX2-EWO-003]
+    wave: px2-parallel/wave_b
+    proposal: .asep/proposals/PX2-EWO-006-session-continuity.md
+    status: implemented
+    report: .asep/reports/PX2-EWO-006-session-continuity.md
+
+  - id: PX2-EWO-007
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-2
+    title: Review workspace activation
+    user_capability: PX-2.2
+    adr_refs: [ADR-0039]
+    depends_on: [PX2-EWO-002, PX2-EWO-003]
+    wave: px2-parallel/wave_c
+    proposal: .asep/proposals/PX2-EWO-007-review-workspace.md
+    status: implemented
+    report: .asep/reports/PX2-EWO-007-review-workspace.md
+
+  - id: PX2-EWO-008
+    type: EWO
+    ewo_category: Release
+    milestone: PX-2
+    title: Command palette, shortcuts, states, integration
+    depends_on: [PX2-EWO-001, PX2-EWO-002, PX2-EWO-003, PX2-EWO-004, PX2-EWO-005, PX2-EWO-006, PX2-EWO-007]
+    wave: px2-parallel/wave_d
+    proposal: .asep/proposals/PX2-EWO-008-chrome-states.md
+    status: implemented
+    report: .asep/reports/PX2-EWO-008-chrome-states.md
+
+  - id: QWO-PX2-001
+    type: QWO
+    milestone: PX-2
+    title: PX-2 Research Workspace qualification
+    depends_on: [PX2-EWO-001, PX2-EWO-002, PX2-EWO-003, PX2-EWO-004, PX2-EWO-005, PX2-EWO-006, PX2-EWO-007, PX2-EWO-008]
+    acceptance:
+      - AC-1…AC-14 per px2-research-workspace-experience.md §24
+      - make ci green
+      - OR-1…OR-7 regression green
+      - No PX-1 qualification regression
+    proposal: .asep/proposals/QWO-PX2-001.md
+    status: qualified
+    run_id: QWO-PX2-001-R1
+    report: .asep/reports/QWO-PX2-001-R1.md
+    certificate: .asep/certificates/QWO-PX2-001-R1-20260705.yaml
+    qualified_at: "2026-07-04"
+    reconfirmed_at: "2026-07-05"
+
+  - id: PX3-EWO-001
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-3
+    title: Knowledge Object Foundation
+    wave: px3-parallel/wave_a_foundation
+    depends_on: []
+    proposal: .asep/proposals/PX3-EWO-001-knowledge-object-foundation.md
+    adr_refs: [ADR-0036, ADR-0037]
+    acceptance:
+      - Knowledge envelope schema + API for concepts and sources
+      - Shared frontend envelope components (PP-09)
+      - /documents/* → /sources/* redirect (ADR-0036)
+      - make ci green; PX-2 regression preserved
+    status: implemented
+    report: .asep/reports/PX3-EWO-001-knowledge-object-foundation.md
+
+  - id: PX3-EWO-002
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-3
+    title: Sources Module Enrichment
+    wave: px3-parallel/wave_a_core
+    depends_on: [PX3-EWO-001]
+    proposal: .asep/proposals/PX3-EWO-002-sources-module-enrichment.md
+    user_capability: [PX-3.1, PX-3.5]
+    acceptance:
+      - Enriched /sources list with filter rail per UI spec §5.4
+      - Knowledge Object cards; relationship chips
+      - PX-2 cite flow preserved
+    status: implemented
+    report: .asep/reports/PX3-EWO-002-sources-module-enrichment.md
+
+  - id: PX3-EWO-003
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-3
+    title: Knowledge Explorer
+    wave: px3-parallel/wave_a_core
+    depends_on: [PX3-EWO-001]
+    proposal: .asep/proposals/PX3-EWO-003-knowledge-explorer.md
+    user_capability: PX-3.2
+    acceptance:
+      - /knowledge explorer with concept cards and filters per spec §8
+      - Deprecated hidden by default
+    status: implemented
+    report: .asep/reports/PX3-EWO-003-knowledge-explorer.md
+
+  - id: PX3-EWO-004
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-3
+    title: Wave A Integration
+    wave: px3-parallel/wave_a_integration
+    depends_on: [PX3-EWO-002, PX3-EWO-003]
+    proposal: .asep/proposals/PX3-EWO-004-wave-a-integration.md
+    acceptance:
+      - Merged tree; make ci green
+      - Sources ↔ Knowledge cross-links
+      - PX3-INTEGRATION-A.md PASS
+    status: implemented
+    report: .asep/reports/PX3-EWO-004-wave-a-integration.md
+
+  - id: PX3-EWO-005
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-3
+    title: Projection Conformance
+    wave: px3-parallel/wave_b_projection
+    wave_objective: Projection Conformance
+    depends_on: [PX3-EWO-004]
+    proposal: .asep/proposals/PX3-EWO-005-projection-conformance.md
+    sor_coverage:
+      covers:
+        sor_sections: ["§9 Projection"]
+        invariants: [INV-R-11]
+        mb2_gates: [MB2-Q5]
+        px3_exercisability: Yes
+        class: A
+    acceptance:
+      - Read-only §9 projection artifact; INV-R-11 evidenced
+      - Explain Page regions A–B with loading/ready/not-found
+      - make ci green; PX-2 regression preserved
+    status: implemented
+    authorization: .asep/reports/PX3-AUTHORIZATION-EWO-005-20260705.md
+    report: .asep/reports/PX3-EWO-005-projection-conformance.md
+
+  - id: PX3-EWO-006
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-3
+    title: Supervisor Interaction Observation
+    wave: px3-parallel/wave_b_supervisor
+    wave_objective: Projection Conformance
+    depends_on: [PX3-EWO-005]
+    proposal: .asep/proposals/PX3-EWO-006-supervisor-interaction-observation.md
+    sor_coverage:
+      covers:
+        sor_sections: ["§10 Supervisor interaction"]
+        invariants: [INV-R-16]
+        mb2_gates: []
+        px3_exercisability: Observable
+        class: B
+    acceptance:
+      - Supervisor Interaction Observation report (§10); INV-R-16 observation evidence
+      - Async Explain load; no forced §11 FAIL paths
+      - make ci green
+    status: implemented
+    authorization: .asep/reports/PX3-AUTHORIZATION-EWO-006-20260705.md
+    report: .asep/reports/PX3-EWO-006-supervisor-interaction-observation.md
+
+  - id: PX3-EWO-007
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-3
+    title: Conformance Integration B
+    wave: px3-parallel/wave_b_conformance_integration
+    wave_objective: Projection Conformance
+    depends_on: [PX3-EWO-006]
+    proposal: .asep/proposals/PX3-EWO-007-conformance-integration-b.md
+    sor_coverage:
+      covers:
+        sor_sections: ["§9 Projection"]
+        invariants: [INV-R-12]
+        mb2_gates: []
+        px3_exercisability: Yes
+        class: A
+    acceptance:
+      - PX3-INTEGRATION-B.md PASS with coverage delta ≥1 Yes/Observable row
+      - MB2-CONFORMANCE-COVERAGE.md updated
+      - Wave B exit criteria satisfied; no N-class in log
+    status: implemented
+    authorization: .asep/reports/PX3-AUTHORIZATION-EWO-007-20260705.md
+    report: .asep/reports/PX3-EWO-007-conformance-integration-b.md
+
+  - id: PX3-EWO-008
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-3
+    title: Execution Graph Observation
+    wave: px3-parallel/wave_c_execution_graph
+    wave_objective: Execution & Job State Observation
+    depends_on: [PX3-EWO-007]
+    proposal: .asep/proposals/PX3-EWO-008-execution-graph-observation.md
+    sor_coverage:
+      covers:
+        sor_sections: ["§4.2 Execution Graph"]
+        invariants: [INV-R-01]
+        mb2_gates: []
+        px3_exercisability: Observable
+        class: B
+    acceptance:
+      - Read-only Program Graph API; INV-R-01 audit table in report
+      - Program Trace UI; INV-R-12 boundary documented (no ReadySet)
+      - make ci green; Wave A/B regression preserved
+    status: authorized
+    authorization: .asep/reports/PX3-AUTHORIZATION-EWO-008-20260705.md
+
+  - id: PX3-EWO-009
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-3
+    title: Job FSM Observation
+    wave: px3-parallel/wave_c_job_fsm
+    wave_objective: Execution & Job State Observation
+    depends_on: [PX3-EWO-008]
+    proposal: .asep/proposals/PX3-EWO-009-job-fsm-observation.md
+    sor_coverage:
+      covers:
+        sor_sections: ["§5 Job FSM"]
+        invariants: [INV-R-11]
+        mb2_gates: []
+        px3_exercisability: Observable
+        class: B
+    acceptance:
+      - Job FSM vocabulary alignment report (§5.3 aggregate states)
+      - Knowledge Graph §10 with lifecycle badges; Explain → Graph nav
+      - make ci green; no forced §11 FAIL paths
+    status: pending
+    authorization: withheld_pending_ewo_008_pass
+
+  - id: PX3-EWO-010
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-3
+    title: Conformance Integration C
+    wave: px3-parallel/wave_c_conformance_integration
+    wave_objective: Execution & Job State Observation
+    depends_on: [PX3-EWO-009]
+    proposal: .asep/proposals/PX3-EWO-010-conformance-integration-c.md
+    sor_coverage:
+      covers:
+        sor_sections: ["§4.2 Execution Graph"]
+        invariants: [INV-R-12]
+        mb2_gates: []
+        px3_exercisability: Yes
+        class: A
+    acceptance:
+      - PX3-INTEGRATION-C.md PASS with coverage delta ≥2 Observable rows
+      - MB2-CONFORMANCE-COVERAGE.md updated; Wave C exit criteria satisfied
+      - no N-class in log; INV-R-12 re-verified
+    status: pending
+    authorization: withheld_pending_ewo_009_pass
+
+completion_criteria:
+  PX-1: QWO-PX1-001 PASS
+  PX-2: QWO-PX2-001 PASS
+
+post_px2:
+  px2_status: complete_qualified_frozen
+  px2_frozen: true
+  px2_frozen_at: "2026-07-05"
+  supervisor_state: WAIT
+  next_milestone: PX-3 Knowledge Experience
+  px3_wave_a_backlog: .asep/reports/PX3-WAVE-A-BACKLOG.md
+  px3_first_executable_ewo: PX3-EWO-001
+  px3_authorization: authorized_20260705
+  px3_authorization_receipt: .asep/reports/PX3-AUTHORIZATION-20260705.md
+  px3_wave_a_status: complete
+  px3_wave_a_integration: .asep/reports/PX3-INTEGRATION-A.md
+  px3_conformance_review: .asep/reports/PX3-CONFORMANCE-REVIEW-WAVE-A.md
+  px3_sor_coverage: .asep/reports/MB2-CONFORMANCE-COVERAGE.md
+  px3_architect_decision_wave_b: .asep/reports/PX3-ARCHITECT-DECISION-20260705-WAVE-B-FRAMEWORK.md
+  px3_wave_b_framework: .asep/reports/PX3-WAVE-B-DESIGN-FRAMEWORK.md
+  px3_wave_b_backlog: .asep/reports/PX3-WAVE-B-BACKLOG.md
+  px3_wave_b_status: complete
+  px3_wave_b_integration: .asep/reports/PX3-INTEGRATION-B.md
+  px3_conformance_review_wave_b: .asep/reports/PX3-CONFORMANCE-REVIEW-WAVE-B.md
+  px3_architect_review_wave_b: .asep/reports/PX3-ARCHITECT-REVIEW-WAVE-B-20260705.md
+  px3_wave_c_backlog: .asep/reports/PX3-WAVE-C-BACKLOG.md
+  px3_architect_decision_wave_c_backlog: .asep/reports/PX3-ARCHITECT-DECISION-20260705-WAVE-C-BACKLOG-REVIEW.md
+  px3_wave_c_status: dispatch_authorized_ewo_008
+  px3_wave_c_authorization: .asep/reports/PX3-AUTHORIZATION-WAVE-C-20260705.md
+  px3_wave_c_first_executable_ewo: PX3-EWO-008
+  px3_architect_review_ewo_006: .asep/reports/PX3-ARCHITECT-REVIEW-EWO-006-20260705.md
+  px4_authorization: not_authorized
+  runtime_engineering_authorization: not_authorized
+  next_artifact: .asep/reports/MB2-CONFORMANCE-ASSESSMENT.md
+  note: Wave C dispatch authorized — PX3-EWO-008 first executable — STOP after PASS

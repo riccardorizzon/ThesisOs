@@ -1,0 +1,43 @@
+# QC Certificate — PX1-EWO-012
+certificate_version: "1.0"
+issued_at: "2026-07-03T18:50:00Z"
+issued_by: quality-controller
+
+proposal:
+  workorder_id: PX1-EWO-012
+  capability: px1-ewo-012-qualification-integration
+  proposal_path: .asep/proposals/PX1-EWO-012-qualification-integration.md
+  proposal_status: approved
+
+repository:
+  head: "94df995625e3e9a35f87322ccf35c7a0ebaa74c0"
+  branch: "main"
+  working_tree: dirty
+
+checks:
+  verdict: PASS
+  passed: 7
+  failed: 0
+  skipped: 2
+  blockers: []
+
+verification:
+  e2e_ui_smoke: "5/5 PASS (Playwright @ui)"
+  e2e_context_api: "2/2 PASS (Playwright @api)"
+  e2e_visual_stubs: "2 skipped (PX-2 deferred)"
+  backend_tests: "327/327 PASS (1 skipped)"
+  frontend_tests: "132/132 PASS"
+  builder_engine: "65/65 PASS"
+  make_ci: PASS
+
+readiness:
+  qwo_preflight: tests/e2e/evidence/qwo-px1-001-preflight.md
+  leads_to: QWO-PX1-001
+  pending_ewo: none
+  open_stop: none
+
+evidence:
+  report: .asep/reports/PX1-EWO-012-qualification-integration.md
+  ci_log: tests/e2e/evidence/ci-log-20260703.txt
+  route_inventory: tests/e2e/evidence/route-inventory.json
+  or_baseline: tests/e2e/evidence/or-baseline-checklist.md

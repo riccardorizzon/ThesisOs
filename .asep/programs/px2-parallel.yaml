@@ -1,0 +1,116 @@
+# PX2 Parallel Engineering — Wave Plan
+#
+# Extends thesisos-product-v2 for concurrent sub-agent execution.
+# Supervisor: .asep/reports/PX2-PARALLEL-PROGRAM.md
+
+id: px2-parallel
+title: PX-2 Parallel Engineering Waves
+parent_program: thesisos-product-v2
+status: complete
+completed_at: "2026-07-05"
+qwo: QWO-PX2-001-R1
+qwo_verdict: PASS
+activated_at: "2026-07-04"
+authorization: docs/product/EXECUTION-AUTHORIZATION-PX2-AMENDMENT.md
+authorization_status: ratified
+
+supervisor:
+  role: Engineering Supervisor
+  document: .asep/reports/PX2-PARALLEL-PROGRAM.md
+  orchestration: .cursor/skills/orchestrate-builders/SKILL.md
+  mode: worktree_per_subagent
+
+waves:
+  wave_a:
+    title: Context + Editor foundation
+    execute_in_parallel: true
+    merge_order: [PX2-EWO-001, PX2-EWO-002, PX2-EWO-005]
+    workorders: [PX2-EWO-001, PX2-EWO-002, PX2-EWO-005]
+    sub_agents: { PX2-EWO-001: A, PX2-EWO-002: B, PX2-EWO-005: C }
+    notes: EWO-005 merges after EWO-001; DecisionInspectorSection plugs into ContextInspector at integration
+
+  integration_a:
+    title: Wave A integration review
+    type: integration
+    execute_in_parallel: false
+    depends_on_wave: wave_a
+    actions:
+      - merge worktrees in merge_order
+      - wire DecisionInspectorSection into ContextInspector
+      - wire ContextBar warningState from decision hook
+      - run make ci
+      - write .asep/reports/PX2-INTEGRATION-A.md
+    unblocks: wave_b
+
+  wave_b:
+    title: AI + Sources + Session
+    execute_in_parallel: true
+    depends_on_wave: integration_a
+    merge_order: [PX2-EWO-003, PX2-EWO-004, PX2-EWO-006]
+    workorders: [PX2-EWO-003, PX2-EWO-004, PX2-EWO-006]
+    sub_agents: { PX2-EWO-003: D, PX2-EWO-004: E, PX2-EWO-006: F }
+
+  integration_b:
+    title: Wave B integration review
+    type: integration
+    execute_in_parallel: false
+    depends_on_wave: wave_b
+    actions:
+      - merge worktrees in merge_order
+      - verify RightRail tabs wire ContextInspector + SourcePeek + AI panel
+      - verify cite flow + session Continua URL state
+      - run make ci
+      - write .asep/reports/PX2-INTEGRATION-B.md
+    unblocks: wave_c
+
+  wave_c:
+    title: Review activation
+    execute_in_parallel: false
+    depends_on_wave: integration_b
+    workorders: [PX2-EWO-007]
+    sub_agents: { PX2-EWO-007: G }
+
+  integration_c:
+    title: Wave C integration review
+    type: integration
+    execute_in_parallel: false
+    depends_on_wave: wave_c
+    actions:
+      - merge review workspace with writing + proposal queue
+      - run make ci
+      - write .asep/reports/PX2-INTEGRATION-C.md
+    unblocks: wave_d
+
+  wave_d:
+    title: Chrome + cross-cutting integration
+    execute_in_parallel: false
+    depends_on_wave: integration_c
+    workorders: [PX2-EWO-008]
+    sub_agents: { PX2-EWO-008: H }
+
+  gate:
+    workorder: QWO-PX2-001
+    type: qualification
+    depends_on: [PX2-EWO-008, integration_c]
+    note: QWO validates full milestone; integration reviews catch wave-level issues early
+
+merge_policy:
+  ci_required_after_each: make ci
+  ci_required_after_integration: make ci
+  conflict_resolution: supervisor_integrates
+  forbidden: cross_ownership_file_edits
+
+ownership_matrix:
+  PX2-EWO-001: [frontend/components/context/**, backend/app/services/context/**, backend/app/api/projects.py, backend/app/schemas/context.py]
+  PX2-EWO-002: [frontend/components/writing/MarkdownEditor.tsx, frontend/components/writing/WritingEditorShell.tsx, frontend/components/writing/WritingOutline.tsx, frontend/components/writing/WritingWorkspace.tsx, frontend/components/ui/StatusBadge.tsx, frontend/lib/chapterClient.ts, frontend/app/writing/**]
+  PX2-EWO-003: [frontend/components/writing/RightRail.tsx, frontend/components/writing/RailTabs.tsx, frontend/components/writing/WritingAiPanel.tsx]
+  PX2-EWO-004: [frontend/components/sources/**, frontend/lib/corpusClient.ts]
+  PX2-EWO-005: [frontend/components/decisions/**, frontend/components/context/DecisionBadge.tsx, frontend/lib/decisionClient.ts]
+  PX2-EWO-006: [frontend/components/chrome/SessionChip.tsx, frontend/components/memory/ProposalBundleModal.tsx, frontend/lib/sessionState.ts]
+  PX2-EWO-007: [frontend/components/review/ReviewCompare.tsx, frontend/app/review/**]
+  PX2-EWO-008: [frontend/components/chrome/CommandPalette.tsx, frontend/components/onboarding/**, frontend/hooks/useKeyboardShortcuts.ts]
+
+integration_ownership:
+  integration_a: supervisor_only
+  integration_b: supervisor_only
+  integration_c: supervisor_only

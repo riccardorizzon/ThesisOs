@@ -1,0 +1,73 @@
+schema_version: 1
+program_id: thesisos-product-v2
+derived_at: '2026-07-05T19:53:35.218765Z'
+cycle_id: null
+supervisor:
+  state: WAIT
+  reason: null
+waves:
+  wave_a_foundation:
+    status: pass
+    jobs:
+      PX3-EWO-001:
+        status: pass
+  wave_a_core:
+    status: pass
+    jobs:
+      PX3-EWO-002:
+        status: pass
+      PX3-EWO-003:
+        status: pass
+  wave_a_integration:
+    status: pass
+    jobs:
+      PX3-EWO-004:
+        status: pass
+  wave_b_projection:
+    status: pass
+    jobs:
+      PX3-EWO-005:
+        status: pass
+  wave_b_supervisor:
+    status: pass
+    jobs:
+      PX3-EWO-006:
+        status: pass
+  wave_b_conformance_integration:
+    status: pass
+    jobs:
+      PX3-EWO-007:
+        status: pass
+integrations:
+  PX3-INTEGRATION-A:
+    status: pass
+jobs:
+  PX3-EWO-001:
+    status: pass
+    ewo_id: PX3-EWO-001
+  PX3-EWO-002:
+    status: pass
+    ewo_id: PX3-EWO-002
+  PX3-EWO-003:
+    status: pass
+    ewo_id: PX3-EWO-003
+  PX3-EWO-004:
+    status: pass
+    ewo_id: PX3-EWO-004
+  PX3-EWO-005:
+    status: pass
+    ewo_id: PX3-EWO-005
+  PX3-EWO-006:
+    status: pass
+    ewo_id: PX3-EWO-006
+  PX3-EWO-007:
+    status: pass
+    ewo_id: PX3-EWO-007
+queue:
+  pending: 0
+  in_flight: 0
+  failed: 0
+qwo: {}
+gates:
+  ci: unknown
+  coverage: pass

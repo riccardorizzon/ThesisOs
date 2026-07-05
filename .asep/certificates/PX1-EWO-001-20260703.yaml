@@ -1,0 +1,47 @@
+# QC Certificate — PX1-EWO-001
+certificate_version: "1.0"
+issued_at: "2026-07-03T17:16:00Z"
+issued_by: quality-controller
+checklist: .asep/governance/quality-controller.md
+
+proposal:
+  workorder_id: PX1-EWO-001
+  workorder_type: EWO
+  capability: px1-ewo-001-appshell
+  proposal_path: .asep/proposals/PX1-EWO-001-appshell-navigation.md
+  proposal_status: approved
+
+repository:
+  head: "e64d327"
+  branch: "main"
+  working_tree: dirty
+
+ground_truth:
+  unchanged: true
+  note: No 03_PROJECT or Decisions.md edits
+
+checks:
+  verdict: PASS
+  passed: 6
+  failed: 0
+  blockers: []
+
+readiness:
+  capability_lifecycle: approved
+  pending_ewo: none
+  open_stop: none
+  execution_authorization: PX-1 ISSUED
+
+policy_evaluation:
+  automation_level: 2
+  auto_approval_eligible: yes
+  auto_approval_reason: "Operator handoff + Gate 3 PX-1; Infrastructure EWO within authorized scope; no GT/ADR/Constitution changes"
+
+verification:
+  frontend_tests: "47/47 PASS"
+  frontend_build: PASS
+
+termination:
+  iteration_count_session: 1
+  no_progress_streak: 0
+  oscillation_detected: false

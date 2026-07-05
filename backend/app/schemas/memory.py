@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
 VALID_KINDS = frozenset({"user", "thesis", "concept", "citation", "decision", "editable"})
 SINGLETON_KINDS = frozenset({"user", "thesis", "editable"})
 CANONICAL_KEYS: dict[str, str] = {"user": "user", "thesis": "thesis", "editable": "editable"}
-PROMPT_CONTEXT_KINDS = frozenset({"editable", "user", "thesis"})
+PROMPT_CONTEXT_KINDS = frozenset({"editable", "user", "thesis", "decision"})
+BINDING_DECISION_KEY = "decisions"
 
 
 class MemoryRecord(BaseModel):
@@ -65,6 +67,7 @@ class PromptContextFilters(BaseModel):
     include_editable: bool = True
     include_pinned_user: bool = True
     include_pinned_thesis: bool = True
+    include_binding_decisions: bool = True
 
 
 class PromptMemoryItem(BaseModel):
@@ -80,7 +83,30 @@ class PromptMemoryItem(BaseModel):
 class PromptContext(BaseModel):
     """Stable output contract for load_prompt_context — not a rendered string."""
 
+    decisions: list[PromptMemoryItem] = Field(default_factory=list)
     editable: list[PromptMemoryItem] = Field(default_factory=list)
     user: list[PromptMemoryItem] = Field(default_factory=list)
     thesis: list[PromptMemoryItem] = Field(default_factory=list)
     conversation_id: str | None = None
+
+
+class ProposalBundleItem(BaseModel):
+    """OR-7 session-close item — frontend queue until memory API bundle exists."""
+
+    id: str
+    title: str
+    summary: str | None = None
+    kind: str | None = None
+
+
+class ProposalBundle(BaseModel):
+    """Atomic session-close bundle (OR-7)."""
+
+    items: list[ProposalBundleItem] = Field(default_factory=list)
+    session_id: str | None = None
+
+
+class ProposalBundleAction(BaseModel):
+    """Approve or reject entire pending bundle — no partial apply."""
+
+    action: Literal["approve", "reject"]

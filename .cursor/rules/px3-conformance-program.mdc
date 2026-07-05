@@ -1,0 +1,93 @@
+---
+description: PX-3 Conformance Program — implement product under MB2 SoR contract. Enable in dedicated PX-3 sessions.
+alwaysApply: false
+---
+
+# PX-3 Conformance Program — Agent Operating Contract
+
+You are an **implementer under contract**, not a co-architect. This rule applies when
+PX-3 is authorized via `AUTHORIZE PX-3` (see `.asep/resolvers/authorize.md`).
+
+## Context
+
+- ASEP Era I complete. PX-1 and PX-2: QUALIFIED + FROZEN.
+- MB2 Engineering Runtime: ADR-0042, Runtime Model v2, PX-EXEC specified, **SoR frozen**, Architect sign-off complete.
+- **Engineering Runtime is NOT authorized for implementation.**
+- PX-3 is the first **Runtime Conformance Program** under `docs/superpowers/specs/mb2-engineering-runtime-spec.md`.
+
+## Session start
+
+Do not expect a long briefing. The operator authorizes with:
+
+```text
+AUTHORIZE PX-3
+```
+
+Your first action: read `.asep/resolvers/authorize.md` → pre-flight → first executable EWO.
+
+## Conformance EWO contract (Wave B+)
+
+Every PX-3 EWO MUST declare SoR coverage — not only product scope:
+
+| Field | Purpose |
+|-------|---------|
+| Primary objective (SoR) | What SoR contract this EWO **validates** (Conformance — not Runtime exercise) |
+| Secondary objective (Product) | User-visible deliverable |
+| `covers:` | Max **3 elements**: § section, invariant, MB2-Q gate |
+| `px3_exercisability` | Yes · Observable · No (Runtime) · No (Qualification) |
+
+Template: `.asep/templates/conformance-ewo-template.md`  
+Live matrix: `.asep/reports/MB2-CONFORMANCE-COVERAGE.md`  
+Architect decision: `.asep/reports/PX3-ARCHITECT-DECISION-20260705-WAVE-B-FRAMEWORK.md`  
+Wave B backlog (authorized): `.asep/reports/PX3-WAVE-B-BACKLOG.md`  
+Wave B dispatch: `.asep/reports/PX3-AUTHORIZATION-WAVE-B-20260705.md` — first EWO **PX3-EWO-005**  
+Wave C backlog (authorized): `.asep/reports/PX3-WAVE-C-BACKLOG.md`  
+Wave C dispatch: `.asep/reports/PX3-AUTHORIZATION-WAVE-C-20260705.md` — first EWO **PX3-EWO-008**
+
+Do not implement No (Runtime) / No (Qualification) primary objectives. Do not force §11 Failure paths.
+
+## Objective
+
+Implement **PX-3 product scope only**. Treat the SoR as a **normative, read-only contract**.
+
+- Do NOT evolve the Runtime, redesign MB2, or modify governance unless explicitly instructed.
+- Assume the SoR is **correct until proven otherwise** (burden of proof on deviation).
+
+## Before each task
+
+1. Read the relevant Program Graph (`.asep/programs/thesisos-product-v2.yaml`, proposals).
+2. Verify task compatibility with MB2 SoR (Program Graph, waves, merge patterns — not full SoR re-read every time).
+3. Implement **product code only** (`frontend/`, `backend/app/`, product docs).
+4. Choose the solution with **smallest deviation** from the contract. Conformance > elegance.
+
+## Frozen — do not implement or refactor
+
+- Event Bus, Scheduler, Queue, Plugin Registry, Runtime refactoring
+- `builder_engine/` extensions for MB2
+- Governance evolution, architecture redesign, SoR edits
+
+## Exception policy
+
+If inconsistency appears: **do not fix the SoR**. Classify, record, continue if possible.
+
+| Class | Meaning | Action |
+|-------|---------|--------|
+| **I** | Implementation issue | Fix product code |
+| **S** | Specification ambiguity | Record; clarify only on Architect instruction |
+| **A** | Architecture gap | Record; new ADR only on Architect instruction |
+| **N** | Normative contract error | Record; stop — implementation may be impossible |
+
+Steps: (1) Continue if possible → (2) Record in `.asep/reports/PX3-CONFORMANCE-LOG.md` → (3) Classify I/S/A/N → (4) Explain → (5) Wait for Architect on S/A/N.
+
+**Stop only** if N-class makes implementation impossible.
+
+## Success criteria
+
+PX-3 succeeds when product functionality is complete **and** no normative Runtime changes are required. If normative changes seem necessary: stop, classify, provide evidence, wait.
+
+## References (read-only)
+
+- SoR: `docs/superpowers/specs/mb2-engineering-runtime-spec.md`
+- Program: `.asep/programs/thesisos-product-v2.yaml`
+- Compatibility: `.asep/governance/sor-compatibility-policy.md`
+- Conformance log: `.asep/reports/PX3-CONFORMANCE-LOG.md`

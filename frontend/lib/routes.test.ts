@@ -41,6 +41,15 @@ describe("LEGACY_REDIRECTS", () => {
     );
   });
 
+  it("redirects /documents to /sources per PX3-EWO-001", () => {
+    expect(LEGACY_REDIRECTS.find((r) => r.source === "/documents")?.destination).toBe(
+      "/sources"
+    );
+    expect(
+      LEGACY_REDIRECTS.find((r) => r.source === "/documents/:path*")?.destination
+    ).toBe("/sources/:path*");
+  });
+
   it("produces valid Next.js redirect objects", () => {
     const next = toNextRedirects(LEGACY_REDIRECTS);
     expect(next.every((r) => r.source.startsWith("/"))).toBe(true);

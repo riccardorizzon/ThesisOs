@@ -1,9 +1,10 @@
-import { describe, expect, it, afterEach } from "vitest";
-import { render, screen, within, cleanup } from "@testing-library/react";
+import { describe, expect, it, afterEach, vi } from "vitest";
+import { fireEvent, render, screen, cleanup } from "@testing-library/react";
 import { ContextBar } from "@/components/context/ContextBar";
 import { ConstraintChip } from "@/components/context/ConstraintChip";
 import { DecisionBadge } from "@/components/context/DecisionBadge";
 import {
+  CONTEXT_OPEN_CONTESTO_EVENT,
   CONTEXT_STUB,
   contextBarCounts,
   formatContextBarLabel,
@@ -23,9 +24,9 @@ describe("contextBarCounts", () => {
 });
 
 describe("formatContextBarLabel", () => {
-  it("matches Spec §6.4 pattern", () => {
+  it("matches Spec §6.4 pattern with voci ordering", () => {
     expect(formatContextBarLabel(contextBarCounts(CONTEXT_STUB))).toBe(
-      "0 fonti · 0 concetti · 2 decisioni · 0 citazioni"
+      "0 fonti · 2 decisioni · 0 voci · 0 citazioni"
     );
   });
 });
@@ -62,15 +63,17 @@ describe("DecisionBadge", () => {
 });
 
 describe("ContextBar", () => {
-  it("renders summary label and entity phase", () => {
+  it("renders live counts and project phase when unscoped", () => {
     render(<ContextBar packet={CONTEXT_STUB} />);
     expect(
-      screen.getByText("0 fonti · 0 concetti · 2 decisioni · 0 citazioni")
+      screen.getByText("0 fonti · 2 decisioni · 0 voci · 0 citazioni")
     ).toBeInTheDocument();
-    expect(screen.getByText("Sviluppo argomentativo")).toBeInTheDocument();
+    expect(screen.getByTestId("context-scope-chip")).toHaveTextContent(
+      "Sviluppo argomentativo"
+    );
   });
 
-  it("shows entity title when scoped", () => {
+  it("shows entity title in scope chip when scoped", () => {
     render(
       <ContextBar
         packet={{
@@ -81,27 +84,79 @@ describe("ContextBar", () => {
             title: "Cap. 2 — Quadro teorico",
           },
         }}
+        selectionAnchor="§2.1"
       />
     );
-    expect(screen.getByText("Cap. 2 — Quadro teorico")).toBeInTheDocument();
-  });
-
-  it("renders corpus constraint chips from packet", () => {
-    render(<ContextBar packet={CONTEXT_STUB} />);
-    const indicators = screen.getByTestId("context-indicators");
-    expect(
-      within(indicators).getByTestId("constraint-chip-CORPUS-02")
-    ).toBeInTheDocument();
-    expect(
-      within(indicators).getByTestId("constraint-chip-CORPUS-03")
-    ).toBeInTheDocument();
-  });
-
-  it("renders decision badge for binding decisions", () => {
-    render(<ContextBar packet={CONTEXT_STUB} />);
-    const indicators = screen.getByTestId("context-indicators");
-    expect(within(indicators).getByTestId("decision-badge")).toHaveTextContent(
-      "2 decisioni vincolanti"
+    expect(screen.getByTestId("context-scope-chip")).toHaveTextContent(
+      "Cap. 2 — Quadro teorico · §2.1"
     );
+  });
+
+  it("shows skeleton while loading", () => {
+    render(<ContextBar loading />);
+    expect(screen.getByTestId("context-bar-skeleton")).toBeInTheDocument();
+    expect(screen.queryByTestId("context-bar-content")).not.toBeInTheDocument();
+  });
+
+  it("calls onScopeClick when scope chip clicked", () => {
+    const onScopeClick = vi.fn();
+    render(<ContextBar packet={CONTEXT_STUB} onScopeClick={onScopeClick} />);
+    fireEvent.click(screen.getByTestId("context-scope-chip"));
+    expect(onScopeClick).toHaveBeenCalledOnce();
+  });
+
+  it("calls onOpenContestoTab and emits custom event when counts clicked", () => {
+    const onOpenContestoTab = vi.fn();
+    const listener = vi.fn();
+    window.addEventListener(CONTEXT_OPEN_CONTESTO_EVENT, listener);
+
+    render(
+      <ContextBar packet={CONTEXT_STUB} onOpenContestoTab={onOpenContestoTab} />
+    );
+    fireEvent.click(screen.getByTestId("context-summary"));
+    expect(onOpenContestoTab).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledOnce();
+
+    window.removeEventListener(CONTEXT_OPEN_CONTESTO_EVENT, listener);
+  });
+
+  it("applies warning styling when warningState active", () => {
+    render(
+      <ContextBar
+        packet={CONTEXT_STUB}
+        warningState={{ active: true, message: "Decisione vincolante attiva" }}
+      />
+    );
+    expect(screen.getByTestId("context-bar")).toHaveClass("border-warning/30");
+    expect(screen.getByTestId("context-bar-warning-message")).toHaveTextContent(
+      "Decisione vincolante attiva"
+    );
+  });
+
+  it("renders live counts from populated packet fields", () => {
+    render(
+      <ContextBar
+        packet={{
+          ...CONTEXT_STUB,
+          relevant_sources: [{ id: "s1", title: "Benjamin" }],
+          concepts: Array.from({ length: 18 }, (_, i) => ({
+            id: `c${i}`,
+            title: `Concetto ${i}`,
+          })),
+          decisions: Array.from({ length: 4 }, (_, i) => ({
+            id: `d${i}`,
+            summary: `Decision ${i}`,
+            binding: true,
+          })),
+          citations_available: Array.from({ length: 34 }, (_, i) => ({
+            id: `cit${i}`,
+            label: `Cit ${i}`,
+          })),
+        }}
+      />
+    );
+    expect(
+      screen.getByText("1 fonti · 4 decisioni · 18 voci · 34 citazioni")
+    ).toBeInTheDocument();
   });
 });

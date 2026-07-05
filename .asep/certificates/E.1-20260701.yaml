@@ -1,0 +1,35 @@
+# QC Certificate — E.1 Release Baseline
+certificate_version: "1.0"
+issued_at: "2026-07-01T02:15:00Z"
+issued_by: quality-controller
+
+proposal:
+  workorder_id: E.1
+  workorder_type: EWO
+  capability: release-baseline
+
+repository:
+  head: "e64d32739db9c914948db84ed6905522d662c38c"
+  branch: main
+
+checks:
+  verdict: PASS
+  operational_readiness: achieved
+  e2e: PASS
+  release_artifacts: complete
+  blockers: []
+
+release:
+  id: thesisos-v1.0-operational
+  manifest: docs/RELEASE-MANIFEST-v1.0.yaml
+  known_limitations: docs/KNOWN_LIMITATIONS.md
+  notes: docs/RELEASE-NOTES-v1.0.md
+  runbook: docs/thesisos-operational-runbook.md
+  report: .asep/reports/E.1-release-baseline.md
+
+lifecycle:
+  release_baseline: frozen
+  program: complete
+
+post_baseline_policy: >
+  No capability, oracle, or governance changes without new engineering change process.

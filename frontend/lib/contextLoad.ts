@@ -25,6 +25,7 @@ export async function loadContext(
     surface: resolved.surface,
     entityType: params?.entityType,
     entityId: params?.entityId,
+    selectionAnchor: params?.selectionAnchor,
     userIntent: params?.userIntent,
   });
 
@@ -40,6 +41,7 @@ export async function loadContext(
         session_id: resolved.session_id,
       },
       presentation: { surface: resolved.surface },
+      selection_anchor: params?.selectionAnchor ?? null,
       entity:
         params?.entityType === "chapter" && params.entityId
           ? {

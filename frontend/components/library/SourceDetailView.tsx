@@ -1,5 +1,10 @@
+"use client";
+
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { EntityCard } from "@/components/EntityCard";
+import { SourceReader } from "@/components/sources/SourceReader";
+import { corpusClient } from "@/lib/corpusClient";
 import {
   getConceptById,
   sourceStatusMeta,
@@ -10,49 +15,105 @@ import { cn } from "@/lib/cn";
 
 export type SourceDetailViewProps = {
   source: LibrarySource;
+  chapterContext?: string;
   className?: string;
 };
 
 /**
- * Source detail stub — metadata + related concepts.
+ * Source detail — metadata, reader body, link-to-chapter.
  * Layer: Business (Product Plane)
  */
-export function SourceDetailView({ source, className }: SourceDetailViewProps) {
+export function SourceDetailView({
+  source,
+  chapterContext,
+  className,
+}: SourceDetailViewProps) {
+  const corpusSource = corpusClient.getById(source.id);
   const relatedConcepts = source.relatedConceptIds
     .map((id) => getConceptById(id))
     .filter((c): c is LibraryConcept => c != null);
 
+  const [linked, setLinked] = useState(
+    chapterContext
+      ? corpusClient.isLinkedToChapter(chapterContext, source.id)
+      : false
+  );
+  const [linkMessage, setLinkMessage] = useState<string | null>(null);
+
+  const handleLinkToChapter = useCallback(() => {
+    if (!chapterContext) return;
+    corpusClient.linkToChapter(chapterContext, source.id);
+    setLinked(true);
+    setLinkMessage("Fonte collegata al capitolo attivo.");
+  }, [chapterContext, source.id]);
+
+  const backHref = chapterContext
+    ? `/sources?chapter=${chapterContext}`
+    : "/sources";
+
+  if (!corpusSource) {
+    return (
+      <p className="text-sm text-ink-muted">Fonte non trovata o esclusa.</p>
+    );
+  }
+
   return (
     <div className={cn("mx-auto max-w-content", className)}>
-      <nav aria-label="Breadcrumb" className="mb-6">
+      <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-3">
         <Link
-          href="/sources"
+          href={backHref}
           className="text-sm font-medium text-accent underline-offset-2 hover:underline cursor-pointer"
         >
           ← Sources
         </Link>
+        {chapterContext && (
+          <Link
+            href={`/writing/${chapterContext}`}
+            className="rounded-full border border-accent bg-accent-subtle px-3 py-1 text-xs font-medium text-accent hover:bg-accent/10 cursor-pointer"
+            data-testid="return-to-writing-inline"
+          >
+            Torna a Scrittura
+          </Link>
+        )}
       </nav>
 
-      <header className="mb-8 rounded-lg border border-border bg-surface p-6 shadow-sm">
-        <p className="text-xs font-medium uppercase tracking-wide text-ink-subtle">
-          Fonte · {sourceStatusMeta(source.status)}
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
-          {source.title}
-        </h1>
-        {source.subtitle != null && (
-          <p className="mt-1 text-sm text-ink-muted">{source.subtitle}</p>
-        )}
-        {source.meta != null && (
-          <p className="mt-2 text-xs text-ink-subtle">{source.meta}</p>
-        )}
-        <p className="mt-4 text-sm leading-relaxed text-ink-muted">
-          Scheda fonte PX-1 — metadati completi, estratti e annotazioni arrivano
-          con PX-3.
-        </p>
-      </header>
+      {chapterContext && (
+        <section
+          aria-labelledby="link-chapter-heading"
+          className="mb-6 rounded-lg border border-border bg-surface-muted p-4"
+        >
+          <h2
+            id="link-chapter-heading"
+            className="text-sm font-semibold text-ink"
+          >
+            Collegamento capitolo
+          </h2>
+          <p className="mt-1 text-xs text-ink-muted">
+            Capitolo attivo: {chapterContext}
+          </p>
+          {linked ? (
+            <p className="mt-2 text-sm text-success" data-testid="link-success">
+              Fonte già collegata a questo capitolo.
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={handleLinkToChapter}
+              className="mt-3 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-muted cursor-pointer"
+              data-testid="link-to-chapter-btn"
+            >
+              Collega al capitolo
+            </button>
+          )}
+          {linkMessage && !linked && (
+            <p className="mt-2 text-sm text-success">{linkMessage}</p>
+          )}
+        </section>
+      )}
 
-      <section aria-labelledby="source-concepts-heading">
+      <SourceReader source={corpusSource} variant="full" chapterId={chapterContext} />
+
+      <section aria-labelledby="source-concepts-heading" className="mt-10">
         <h2
           id="source-concepts-heading"
           className="mb-4 text-sm font-semibold uppercase tracking-wide text-ink-subtle"
@@ -85,6 +146,7 @@ export function SourceDetailView({ source, className }: SourceDetailViewProps) {
         className="mt-10 rounded-lg border border-border bg-surface-muted p-4"
       >
         <p className="text-sm text-ink-muted">
+          Stato bibliografico: {sourceStatusMeta(source.status)}.
           Esplora tutti i concetti in{" "}
           <Link
             href="/knowledge"

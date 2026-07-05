@@ -1,0 +1,29 @@
+# QC Certificate — PX1-EWO-002
+certificate_version: "1.0"
+issued_at: "2026-07-03T17:20:00Z"
+issued_by: quality-controller
+
+proposal:
+  workorder_id: PX1-EWO-002
+  workorder_type: EWO
+  capability: px1-ewo-002-design-system
+  proposal_path: .asep/proposals/PX1-EWO-002-design-system.md
+  proposal_status: approved
+
+checks:
+  verdict: PASS
+  passed: 5
+  failed: 0
+
+readiness:
+  prior_ewo_implemented: PX1-EWO-001
+  pending_ewo: none
+  open_stop: none
+
+verification:
+  frontend_tests: "53/53 PASS"
+  frontend_build: PASS
+
+policy_evaluation:
+  automation_level: 2
+  auto_approval_eligible: yes

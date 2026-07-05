@@ -1,0 +1,46 @@
+# QC Certificate — C.6-R3
+certificate_version: "1.0"
+issued_at: "2026-07-01T01:40:07Z"
+issued_by: quality-controller
+checklist: .asep/governance/quality-controller.md
+
+proposal:
+  workorder_id: C.6-R3
+  workorder_type: QWO
+  capability: or-6-write-paragraph
+  proposal_path: .asep/proposals/C.6-or-6-academic-production.md
+  proposal_status: approved
+
+repository:
+  head: "e64d32739db9c914948db84ed6905522d662c38c"
+  branch: main
+  working_tree: dirty
+
+ground_truth:
+  unchanged: true
+
+checks:
+  verdict: PASS
+  note: "QWO execution + EWO-7C path verification completed; oracle evaluation in C.6-R3 report"
+  blockers: []
+
+readiness:
+  ewo_7b_implemented: true
+  ewo_7c_implemented: true
+  enforcement_path_verified: true
+  qwo_verdict: PASS*
+  operator_disposition: .asep/reports/C.6-R3-disposition.md
+  lifecycle: qualified
+
+runtime:
+  health: ok
+  backend_mode: "docker bind-mount (EWO-7B/7C hot-load)"
+  conversation_id: "27d1b8c2-258b-4e91-848a-61b3322206cb"
+
+failure_classification:
+  w06: Platform Limitation
+  capability_failure: false
+
+termination:
+  stop_closed: true
+  next: OR-7 QWO

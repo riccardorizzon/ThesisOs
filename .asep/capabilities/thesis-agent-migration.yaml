@@ -1,0 +1,569 @@
+# Capability Graph — Thesis Agent Migration Program
+#
+# Navigation layer for OR / E2E / release. Specs live in operational-readiness.md.
+# lifecycle: draft | specified | approved | implemented | qualified | operational | frozen
+# status: done | ready | planned | blocked
+
+platform: Thesis Agent Migration
+program: .asep/programs/thesis-agent-migration.yaml
+run: kimi-claw-2026-06
+
+governance:
+  engineering_program: docs/engineering-program.md
+  migration_runbook: docs/kimi-to-thesisos-migration-runbook.md
+  operational_runbook: docs/thesisos-operational-runbook.md
+  known_limitations: docs/KNOWN_LIMITATIONS.md
+  release_manifest: docs/RELEASE-MANIFEST-v1.0.yaml
+  or_spec: knowledge/thesis-agent/_migration/operational-readiness.md
+  or_log: knowledge/thesis-agent/_migration/operational-readiness-log.md
+
+release:
+  id: thesisos-v1.0-operational
+  date: 2026-07-01
+  workorder: E.1
+  status: frozen
+  report: .asep/reports/E.1-release-baseline.md
+  baseline_marker: knowledge/thesis-agent/RELEASE_BASELINE.md
+  post_baseline_policy: >
+    No capability, oracle, acceptance criteria, or governance changes without
+    new engineering change process.
+
+capabilities:
+
+  meta-0-program-binding:
+    title: Engineering Program binding
+    aliases: [meta-0, engineering program, program binding, META-0]
+    workorder_id: META-0
+    lifecycle: frozen
+    status: done
+    baseline: pending  # set on commit
+    depends_on: []
+    artifacts:
+      - docs/engineering-program.md
+      - .asep/programs/thesis-agent-migration.yaml
+      - .asep/capabilities/thesis-agent-migration.yaml
+    validation: documentation cross-links coherent; no rule duplication
+
+  phase-a-rules-validation:
+    title: Fase A — UNI-01 + REL-01 validation
+    aliases: [fase a, university rules, relatrice r1-r5]
+    lifecycle: frozen
+    status: done
+    depends_on: []
+    artifacts:
+      - knowledge/thesis-agent/03_PROJECT/University-Rules.md
+      - knowledge/thesis-agent/03_PROJECT/Relatrice-Rules.md
+    decisions: [UNI-01, REL-01]
+
+  phase-b-runtime-promotion:
+    title: Fase B — Runtime promotion (memories, documents, chapters)
+    aliases: [fase b, promote runtime, migration phase b]
+    lifecycle: implemented
+    status: done
+    depends_on: [phase-a-rules-validation]
+    artifacts:
+      - knowledge/thesis-agent/_migration/promote_runtime.py
+      - knowledge/thesis-agent/_migration/promotion-log.md
+    validation: live /memory, /documents, /chapters populated (2026-06-30)
+
+  ewo-1-runtime-knowledge-alignment:
+    title: Runtime Knowledge Alignment
+    aliases: [ewo-1, EWO-1, runtime knowledge alignment, outline promotion]
+    workorder_id: EWO-1
+    workorder_type: EWO
+    ewo_category: Alignment
+    proposal: .asep/proposals/EWO-1-runtime-knowledge-alignment.md
+    report: .asep/reports/EWO-1-runtime-knowledge-alignment.md
+    lifecycle: implemented
+    status: done
+    spawned_from: .asep/reports/C.1-or-1.md
+    depends_on: [phase-b-runtime-promotion]
+    unblocks: [or-1-thesis-structure]
+    artifacts:
+      - knowledge/thesis-agent/03_PROJECT/Outline-Master.md
+      - knowledge/thesis-agent/03_PROJECT/Thesis-State.md
+      - knowledge/thesis-agent/_migration/ewo1_runtime_alignment.py
+    validation: coherence audit PASS (2026-06-30); outline indexed 43 chunks; thesis memory v4
+
+  ewo-2-runtime-methodology-alignment:
+    title: Runtime Methodology Alignment (STIGMATA)
+    aliases: [ewo-2, EWO-2, runtime methodology alignment, stigmata framework promotion]
+    workorder_id: EWO-2
+    workorder_type: EWO
+    ewo_category: Alignment
+    proposal: .asep/proposals/EWO-2-runtime-methodology-alignment.md
+    report: .asep/reports/EWO-2-runtime-methodology-alignment.md
+    lifecycle: implemented
+    status: done
+    spawned_from: .asep/reports/C.2-R1.md
+    depends_on: [phase-b-runtime-promotion, ewo-1-runtime-knowledge-alignment]
+    unblocks: [or-2-stigmata-framework]
+    artifacts:
+      - knowledge/thesis-agent/03_PROJECT/Stigmata-Framework.md
+      - knowledge/thesis-agent/_migration/ewo2_runtime_methodology_alignment.py
+    validation: coherence audit PASS (2026-06-30); framework indexed 49 chunks; METH-02/04 OK
+
+  ewo-3-runtime-corpus-alignment:
+    title: Runtime Corpus Alignment
+    aliases: [ewo-3, EWO-3, runtime corpus alignment, bibliography master promotion]
+    workorder_id: EWO-3
+    workorder_type: EWO
+    ewo_category: Alignment
+    proposal: .asep/proposals/EWO-3-runtime-corpus-alignment.md
+    report: .asep/reports/EWO-3-runtime-corpus-alignment.md
+    lifecycle: implemented
+    status: done
+    spawned_from: .asep/reports/C.3-R1.md
+    depends_on: [phase-b-runtime-promotion, ewo-2-runtime-methodology-alignment]
+    unblocks: [or-3-corpus]
+    artifacts:
+      - knowledge/thesis-agent/03_PROJECT/Bibliography-Master.md
+      - knowledge/thesis-agent/03_PROJECT/Core-Theory-Map.md
+      - knowledge/thesis-agent/_migration/ewo3_runtime_corpus_alignment.py
+    validation: coherence audit PASS (2026-06-30); masters indexed 26+99 chunks; CORPUS OK
+
+  ewo-4-runtime-grounding-alignment:
+    title: Runtime Grounding Alignment
+    aliases: [ewo-4, EWO-4, runtime grounding, binding decisions]
+    workorder_id: EWO-4
+    workorder_type: EWO
+    ewo_category: Grounding
+    proposal: .asep/proposals/EWO-4-runtime-grounding-alignment.md
+    report: .asep/reports/EWO-4-runtime-grounding-alignment.md
+    lifecycle: implemented
+    status: done
+    spawned_from: .asep/reports/C.3-R2-investigation.md
+    depends_on: [ewo-3-runtime-corpus-alignment]
+    unblocks: [or-3-corpus]
+    artifacts:
+      - backend/app/graph/prompt_wire.py
+      - backend/app/graph/retriever.py
+      - backend/app/services/memory/render.py
+      - knowledge/thesis-agent/_migration/ewo4_runtime_grounding_alignment.py
+    validation: coherence audit PASS (2026-06-30); Grounding pipeline; unit tests green
+
+  ewo-4a-corpus-list-grounding:
+    title: Corpus-list Grounding Remediation
+    aliases: [ewo-4a, EWO-4A, corpus list grounding]
+    workorder_id: EWO-4A
+    workorder_type: EWO
+    ewo_category: Grounding
+    proposal: .asep/proposals/EWO-4A-corpus-list-grounding.md
+    report: .asep/reports/EWO-4A-corpus-list-grounding.md
+    lifecycle: implemented
+    status: done
+    spawned_from: .asep/reports/C.3-R3-disposition.md
+    depends_on: [ewo-4-runtime-grounding-alignment]
+    unblocks: [or-3-corpus]
+    artifacts:
+      - backend/app/graph/corpus_query.py
+      - backend/app/graph/retriever.py
+      - backend/app/graph/prompt_wire.py
+      - knowledge/thesis-agent/_migration/ewo4a_corpus_list_grounding.py
+    validation: OR-3 retrieval audit PASS; unit tests green
+
+  or-1-thesis-structure:
+    title: OR-1 — Thesis structure on live agent
+    aliases: [or-1, OR-1, operational readiness 1]
+    workorder_id: C.1
+    workorder_type: QWO
+    proposal: .asep/proposals/C.1-or-1-thesis-structure.md
+    lifecycle: qualified
+    status: done
+    qualification_runs:
+      - run_id: C.1-R1
+        verdict: FAIL
+        report: .asep/reports/C.1-or-1.md
+        conversation_id: f1700ff2-ce4f-4155-9c16-09205fbe9b8e
+        date: 2026-06-30
+        note: pre-EWO-1 promotion gap
+      - run_id: C.1-R2
+        verdict: PASS
+        accepted: true
+        report: .asep/reports/C.1-R2.md
+        conversation_id: d6673e25-0713-412e-b3e7-efc92f69216a
+        date: 2026-06-30
+        note: post-EWO-1 runtime alignment
+    last_qwo_run: C.1-R2
+    last_verdict: PASS
+    last_report: .asep/reports/C.1-R2.md
+    next_action: C.2 proposal → OR-2 QWO
+    depends_on: [phase-b-runtime-promotion, ewo-1-runtime-knowledge-alignment]
+    spec: knowledge/thesis-agent/_migration/operational-readiness.md  # OR-1 section
+    log_field: OR-1
+    validation: PASS on live agent; log updated
+    coverage:
+      ground_truth: "100%"
+      runtime: "100%"
+      qualification: "100%"
+      evidence: "100%"
+
+  or-2-stigmata-framework:
+    title: OR-2 — STIGMATA framework
+    aliases: [or-2, OR-2]
+    workorder_id: C.2
+    workorder_type: QWO
+    proposal: .asep/proposals/C.2-or-2-stigmata-framework.md
+    lifecycle: qualified
+    status: done
+    depends_on: [or-1-thesis-structure, ewo-2-runtime-methodology-alignment]
+    qualification_runs:
+      - run_id: C.2-R1
+        verdict: PARTIAL
+        accepted: true
+        report: .asep/reports/C.2-R1.md
+        conversation_id: e4b0c047-0851-494a-a9c2-d67eabf8332f
+        date: 2026-06-30
+        note: pre-EWO-2 promotion gap; conceptual model OK
+      - run_id: C.2-R2
+        verdict: PASS
+        report: .asep/reports/C.2-R2.md
+        conversation_id: 3c1ba5a4-0080-4b60-b787-d8f806ad5bbd
+        date: 2026-06-30
+        note: post-EWO-2 methodology alignment
+    last_qwo_run: C.2-R2
+    last_verdict: PASS
+    last_report: .asep/reports/C.2-R2.md
+    next_action: C.3 proposal → OR-3 QWO
+    spec: knowledge/thesis-agent/_migration/operational-readiness.md
+    log_field: OR-2
+    validation: PASS C.2-R2 live agent
+    coverage:
+      ground_truth: "100%"
+      runtime: "100%"
+      qualification: "100%"
+      evidence: "100%"
+
+  or-3-corpus:
+    title: OR-3 — Corpus and exclusions
+    aliases: [or-3, OR-3]
+    workorder_id: C.3
+    workorder_type: QWO
+    proposal: .asep/proposals/C.3-or-3-corpus.md
+    lifecycle: qualified
+    status: done
+    next_action: C.4 proposal (META-1 gate)
+    qwo_sensitivity: retrieval-sensitive
+    spec: knowledge/thesis-agent/_migration/operational-readiness.md
+    log_field: OR-3
+    depends_on: [or-2-stigmata-framework, ewo-3-runtime-corpus-alignment, ewo-4-runtime-grounding-alignment, ewo-4a-corpus-list-grounding]
+    preflight_audit: .asep/reports/C.3-preflight-runtime-audit.md
+    meta_gate: docs/asep-capability-model.md
+    investigation:
+      disposition: INVESTIGATE
+      accepted: true
+      report: .asep/reports/C.3-R2-investigation.md
+      cause_primary: grounding-gap
+      cause_secondary: [ranking-gap, model-variance]
+      remediation: EWO-4 Grounding
+    qualification_runs:
+      - run_id: C.3-R1
+        verdict: PARTIAL
+        accepted: true
+        report: .asep/reports/C.3-R1.md
+        conversation_id: 478cbcd5-0817-46f5-977c-07e085257ac9
+        date: 2026-06-30
+        note: promotion gap on masters; applicability OK — accepted Outer Loop
+      - run_id: C.3-R2
+        verdict: FAIL
+        report: .asep/reports/C.3-R2.md
+        conversation_id: fcc5b450-a33d-4130-8696-e3befedb1ca7
+        date: 2026-06-30
+        note: exclusions absent after EWO-3; applicability regression — investigation → EWO-4 Grounding
+      - run_id: C.3-R3
+        verdict: PARTIAL
+        accepted: false
+        disposition: .asep/reports/C.3-R3-disposition.md
+        report: .asep/reports/C.3-R3.md
+        conversation_id: 6867c597-5e1d-4ad0-bd17-d90a4b12607b
+        date: 2026-06-30
+        note: Grounding OK; 10/12 autori; REJECTED → C.3-R4
+      - run_id: C.3-R4
+        verdict: PASS
+        report: .asep/reports/C.3-R4.md
+        conversation_id: 818d5c0e-8a61-4c26-a32c-5b98084a4791
+        date: 2026-06-30
+        note: post-EWO-4A; 12/12 autori; A.1/A.2/A.3; exclusions OK
+    last_qwo_run: C.3-R4
+    last_verdict: PASS
+    last_report: .asep/reports/C.3-R4.md
+    knowledge_utilization:
+      c3_1_retrieval: qualified
+      c3_2_grounding: qualified
+      c3_3_reasoning: qualified
+      c3_4_attribution: partial
+    coverage:
+      ground_truth: "100%"
+      runtime: "~100%"
+      qualification: "100%"
+      evidence: "100%"
+      traceability: "~85%"
+
+  or-4-rules:
+    title: OR-4 — Constraint Compliance (normative rules)
+    aliases: [or-4, OR-4, constraint compliance]
+    workorder_id: C.4
+    workorder_type: QWO
+    proposal: .asep/proposals/C.4-or-4-constraint-compliance.md
+    knowledge_domain: normative
+    capability_class: constraint-compliance
+    qwo_sensitivity: deterministic
+    constraint_compliance:
+      c4_1_acquisition: qualified
+      c4_2_interpretation: qualified
+      c4_3_enforcement: qualified
+      c4_4_conflict_resolution: qualified
+    lifecycle: qualified
+    status: done
+    preflight_audit: .asep/reports/C.4-preflight-runtime-audit.md
+    meta_gate: docs/asep-capability-model.md
+    qualification_runs:
+      - run_id: C.4-R1
+        verdict: PASS
+        report: .asep/reports/C.4-R1.md
+        conversation_id: 6e7489ac-58bf-4617-ab99-6c6f57cbbc0e
+        date: 2026-06-30
+        note: normative rules UNI/REL; footnote ban; R1-R5; conflict table
+    last_qwo_run: C.4-R1
+    last_verdict: PASS
+    last_report: .asep/reports/C.4-R1.md
+    next_action: C.5 proposal (OR-5 decisions)
+    depends_on: [or-3-corpus]
+    spec: knowledge/thesis-agent/_migration/operational-readiness.md
+    log_field: OR-4
+    coverage:
+      ground_truth: "100%"
+      runtime: "90% (measured pre-flight)"
+      qualification: "100%"
+      evidence: "100%"
+      traceability: "~88%"
+
+  or-5-decisions:
+    title: OR-5 — Decision Lifecycle Integrity
+    aliases: [or-5, OR-5, decision lifecycle, organizational decisions]
+    workorder_id: C.5
+    workorder_type: QWO
+    knowledge_domain: organizational
+    capability_class: decision-lifecycle-integrity
+    qwo_sensitivity: deterministic
+    decision_lifecycle:
+      c5_1_acquisition: qualified
+      c5_2_state_recognition: qualified
+      c5_3_closure_integrity: qualified
+      c5_4_decision_consistency: qualified
+    lifecycle: qualified
+    status: done
+    proposal: .asep/proposals/C.5-or-5-decision-lifecycle.md
+    preflight_audit: .asep/reports/C.5-preflight-runtime-audit.md
+    meta_gate: docs/asep-capability-model.md
+    qualification_runs:
+      - run_id: C.5-R1
+        verdict: PASS
+        report: .asep/reports/C.5-R1.md
+        conversation_id: ed9226af-793c-4fef-9186-433c12ae01e9
+        date: 2026-06-30
+        note: Congelata/Aperta; CORPUS/REV/METH masters; decision consistency OK
+    last_qwo_run: C.5-R1
+    last_verdict: PASS
+    last_report: .asep/reports/C.5-R1.md
+    next_action: C.6 proposal (OR-6 write paragraph)
+    coverage:
+      ground_truth: "100%"
+      runtime: "80% (measured pre-flight)"
+      qualification: "100%"
+      evidence: "100%"
+      traceability: "~86%"
+    depends_on: [or-4-rules]
+    spec: knowledge/thesis-agent/_migration/operational-readiness.md
+    log_field: OR-5
+
+  or-6-write-paragraph:
+    title: OR-6 — Academic Artifact Production
+    aliases: [or-6, OR-6, write paragraph, academic production]
+    workorder_id: C.6
+    workorder_type: QWO
+    knowledge_domain: procedural
+    capability_class: academic-artifact-production
+    qwo_sensitivity: reasoning-sensitive
+    qualified_invariants: [or-3-corpus, or-4-rules, or-5-decisions]
+    lifecycle: qualified
+    status: ready
+    proposal: .asep/proposals/C.6-or-6-academic-production.md
+    preflight_audit: .asep/reports/C.6-preflight-runtime-audit.md
+    meta_gate: docs/asep-capability-model.md
+    qualification_verdict: PASS*
+    qualification_disposition: .asep/reports/C.6-R3-disposition.md
+    platform_limitation:
+      oracle_id: W-06
+      criterion: autore-date citation in academic prose
+      class: Platform Limitation
+      mitigation:
+        - model replacement
+        - post-generation validation layer
+      evidence: .asep/reports/C.6-R3.md
+    qualification_runs:
+      - run_id: C.6-R1
+        verdict: PARTIAL
+        accepted: false
+        disposition: REJECT → EWO-7B
+        report: .asep/reports/C.6-R1.md
+        conversation_id: f28c9067-e6ae-4f4b-b612-f0bff0c318f5
+        date: 2026-06-30
+        note: "11/12 oracle; W-06 autore-date missing; C.6.3 FAIL; IR clean; traceability 100%"
+      - run_id: C.6-R2
+        verdict: PARTIAL
+        report: .asep/reports/C.6-R2.md
+        conversation_id: 8290ba23-937a-4eee-9bb8-683cfef3928a
+        date: 2026-07-01
+        note: "11/12 oracle; prompt path verified post-EWO-7B; W-06 model non-compliance"
+      - run_id: C.6-R3
+        verdict: PASS*
+        accepted: true
+        disposition: .asep/reports/C.6-R3-disposition.md
+        report: .asep/reports/C.6-R3.md
+        conversation_id: 27d1b8c2-258b-4e91-848a-61b3322206cb
+        date: 2026-07-01
+        note: "11/12 oracle; capability qualified; W-06 Platform Limitation (external)"
+    last_qwo_run: C.6-R3
+    last_verdict: PASS*
+    last_report: .asep/reports/C.6-R3.md
+    next_action: "OR-7 QWO"
+    academic_production:
+      c6_1_production_mode: pass
+      c6_2_source_constrained_synthesis: pass
+      c6_3_normative_conformance_in_prose: pass*
+      c6_4_probative_labeling: pass
+    coverage:
+      ground_truth: "100%"
+      runtime: "85% (measured pre-flight 2026-06-30)"
+      qualification: PASS*
+      evidence: "100%"
+      traceability: "100% (paragraph-scoped C.6-R1)"
+    depends_on: [or-5-decisions, ewo-7b-academic-production-path, ewo-7c-inference-enforcement]
+    spec: knowledge/thesis-agent/_migration/operational-readiness.md
+    log_field: OR-6
+
+  ewo-7b-academic-production-path:
+    title: Academic Production Path (author-date citations)
+    aliases: [ewo-7b, EWO-7B, academic production path, citation discipline]
+    workorder_id: EWO-7B
+    workorder_type: EWO
+    ewo_category: Production Path
+    proposal: .asep/proposals/EWO-7B-academic-production-path.md
+    report: .asep/reports/EWO-7B-academic-production-path.md
+    lifecycle: implemented
+    status: done
+    spawned_from: .asep/reports/C.6-R1.md
+    depends_on: [or-5-decisions]
+    unblocks: [or-6-write-paragraph]
+    artifacts:
+      - backend/app/graph/academic_production.py
+      - backend/app/graph/prompt_wire.py
+      - backend/app/graph/orchestration/writer_prompt.py
+      - knowledge/thesis-agent/_migration/ewo7b_academic_production_path.py
+    validation: unit tests + audit PASS (2026-07-01)
+
+  ewo-7c-inference-enforcement:
+    title: Inference Enforcement Layer (model compliance)
+    aliases: [ewo-7c, EWO-7C, inference enforcement, model compliance]
+    workorder_id: EWO-7C
+    workorder_type: EWO
+    ewo_category: Inference Enforcement
+    proposal: .asep/proposals/EWO-7C-inference-enforcement.md
+    report: .asep/reports/EWO-7C-inference-enforcement.md
+    lifecycle: implemented
+    status: done
+    spawned_from: .asep/reports/C.6-R2.md
+    depends_on: [ewo-7b-academic-production-path]
+    unblocks: [or-6-write-paragraph]
+    artifacts:
+      - backend/app/graph/inference_enforcement.py
+      - backend/app/graph/academic_production.py
+      - backend/app/graph/conversation.py
+      - backend/app/graph/writer.py
+    validation: unit tests PASS (2026-07-01); single deterministic retry guard
+
+  or-7-memory-update:
+    title: OR-7 — Memory Runtime Integrity
+    aliases: [or-7, OR-7, memory runtime, memory update, session closure]
+    workorder_id: C.7
+    workorder_type: QWO
+    knowledge_domain: procedural
+    capability_class: memory-runtime-integrity
+    qwo_sensitivity: deterministic
+    qualified_invariants: [or-3-corpus, or-4-rules, or-5-decisions, or-6-write-paragraph]
+    lifecycle: qualified
+    status: ready
+    proposal: .asep/proposals/C.7-or-7-memory-runtime-integrity.md
+    preflight_audit: .asep/reports/C.7-preflight-runtime-audit.md
+    spec: knowledge/thesis-agent/_migration/operational-readiness.md
+    meta_gate: docs/asep-capability-model.md
+    log_field: OR-7
+    depends_on: [or-6-write-paragraph]
+    qualification_runs:
+      - run_id: C.7-R1
+        verdict: PASS
+        report: .asep/reports/C.7-R1.md
+        conversation_id: ffae54b0-625e-4d25-a0c5-e605db0d9685
+        date: 2026-07-01
+        note: "9/9 oracle M-01..M-09; state atomicity PASS; traceability 100%"
+    last_qwo_run: C.7-R1
+    last_verdict: PASS
+    last_report: .asep/reports/C.7-R1.md
+    next_action: "D.1 E2E session"
+    memory_runtime:
+      c7_1_state_update_integrity: pass
+      c7_2_change_log_integrity: pass
+      c7_3_memory_proposal_discipline: pass
+      c7_4_source_manifest_integrity: pass
+      c7_5_decision_lifecycle_preservation: pass
+      c7_6_session_traceability: pass
+      c7_7_state_atomicity: pass
+    coverage:
+      ground_truth: "100%"
+      runtime: "85% (pre-flight 2026-07-01)"
+      qualification: PASS
+      evidence: "100%"
+      traceability: "100% (session-scoped)"
+
+  e2e-session:
+    title: End-to-End project session
+    aliases: [e2e, E2E, end to end]
+    workorder_id: D.1
+    lifecycle: operational
+    status: done
+    depends_on: [or-7-memory-update]
+    spec: knowledge/thesis-agent/_migration/operational-readiness.md
+    report: .asep/reports/D.1-E2E.md
+    validation: E2E-1..E2E-6 + G1..G5 PASS; log updated
+    qualification_runs:
+      - run_id: e2e-2026-07-01
+        verdict: PASS
+        report: .asep/reports/D.1-E2E.md
+        conversation_id: 9e6762fb-c097-46b6-9905-6480ad7567f1
+        date: 2026-07-01
+        note: "6-step continuous session; G1..G5 PASS; no hidden operator intervention"
+    last_verdict: PASS
+    lifecycle: frozen
+    status: done
+    next_action: none — baseline frozen at E.1
+
+  release-baseline:
+    title: Release baseline — migration complete
+    aliases: [release, baseline, fase e, migration complete, v1.0 operational]
+    workorder_id: E.1
+    workorder_type: EWO
+    lifecycle: frozen
+    status: done
+    depends_on: [e2e-session]
+    spec: docs/kimi-to-thesisos-migration-runbook.md
+    report: .asep/reports/E.1-release-baseline.md
+    validation: commit + program completion_criteria satisfied
+    release_id: thesisos-v1.0-operational
+    artifacts:
+      - docs/KNOWN_LIMITATIONS.md
+      - docs/RELEASE-MANIFEST-v1.0.yaml
+      - docs/RELEASE-NOTES-v1.0.md
+      - docs/thesisos-operational-runbook.md
+      - knowledge/thesis-agent/RELEASE_BASELINE.md
+    date: 2026-07-01

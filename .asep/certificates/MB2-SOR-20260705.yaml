@@ -1,0 +1,49 @@
+# Architect Sign-off — MB2 Specification of Record (Specification Freeze)
+#
+# Not a QC Certificate. Attests normative authority of the Runtime contract.
+# Implementation remains NOT AUTHORIZED until MB2-Q gates PASS.
+
+certificate_version: "1.0"
+certificate_type: architect-sign-off
+issued_at: "2026-07-05T18:30:00Z"
+issued_by: architect
+
+capability:
+  id: mb2-engineering-runtime
+  platform_milestone: MB2
+  program: px-exec
+
+specification_of_record:
+  path: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+  adr: decisions/ADR-0042-engineering-runtime.md
+  structural_companion: docs/platform/runtime-model-v2.md
+
+repository:
+  head: "94df995625e3e9a35f87322ccf35c7a0ebaa74c0"
+  branch: main
+
+sign_off_statement: >
+  The Engineering Runtime contract is now considered normative.
+  Future implementations SHALL conform unless superseded by a newer
+  Specification of Record.
+
+lifecycle:
+  platform_capability: specified
+  specification: frozen
+  implementation: not_authorized
+
+freeze:
+  specification:
+    status: frozen
+    frozen_at: "2026-07-05"
+  implementation:
+    status: open
+    note: Reference Implementation authorized only after MB2-Q gate passage
+
+supervisor:
+  state: WAIT
+  next_authorized: PX-3 product program under Runtime contract
+
+compatibility_policy: .asep/governance/sor-compatibility-policy.md
+
+report: .asep/reports/MB2-SPECIFICATION-FREEZE.md

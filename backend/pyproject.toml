@@ -21,6 +21,7 @@ dependencies = [
   "google-cloud-aiplatform>=1.158",
   "sse-starlette>=3.4",
   "python-multipart>=0.0.9",
+  "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]

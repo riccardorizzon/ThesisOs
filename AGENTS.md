@@ -44,8 +44,14 @@ Contract-first → TDD red/green → evidence-backed gates. See `knowledge/devel
 
 ## Governance hierarchy
 
-ASEP (ADR-0026) is the overall governance framework. Within it, the **Runtime Platform**
-is governed by:
+ASEP (ADR-0026) is the overall governance framework.
+
+**Engineering Program** (`docs/engineering-program.md`, `.asep/programs/`) sits between
+ASEP and WorkOrders: it binds a domain track (e.g. thesis-agent migration) to capability
+roadmaps, OR/E2E done criteria, and release rules — without duplicating Constitution or
+runbook content.
+
+Within ASEP, the **Runtime Platform** is governed by:
 
 1. **Runtime Constitution** (`docs/runtime-constitution.md`) — architectural invariants of the Runtime Platform (C1–C8); ADRs + plans must stay consistent; changes only via ADR + version bump
 2. **ADRs** (`decisions/`) — architectural decisions; must remain consistent with the Constitution
@@ -57,10 +63,47 @@ is governed by:
 (Event Bus, contracts, lifecycle, observability) is the M5 subsystem of ASEP governed by
 the Constitution + ADR-0030 (§0).
 
-**Milestone execution:** Run Runtime Platform milestones via the `asep` skill
-(`.cursor/skills/asep/SKILL.md`) — e.g. `ASEP: implementa M5.4B`. It loads governance,
-builds the Work Order, runs Observe→…→Report, enforces the Constitution, and stops on any
-violation. Operational templates live in `.asep/`.
+**Milestone execution:** Run governed work via the `asep` skill
+(`.cursor/skills/asep/SKILL.md`):
+
+- Runtime Platform: e.g. `ASEP: implementa M5.4B` → `runtime-platform.yaml`
+- Thesis-agent migration: e.g. `ASEP: esegui OR-1 thesis-agent` → Engineering Program +
+  `thesis-agent-migration.yaml`
+
+The skill loads governance, builds the Work Order, runs Observe→…→Report, and stops on
+any violation. Pipeline templates live in `.asep/`.
+
+### Architect API
+
+The operator authorizes program execution with a single command — no briefing prompt:
+
+```text
+AUTHORIZE PX-3
+```
+
+Equivalent: `AUTHORIZE PROGRAM PX-3`, `ASEP: AUTHORIZE PX-3`, or a structured
+`# ARCHITECT AUTHORIZATION` block. ASEP interprets this as:
+
+1. Load Program Graph
+2. Run pre-flight validation
+3. Select first executable EWO
+4. Begin implementation (product-only for conformance programs)
+5. Update authorization receipt and Conformance Log
+
+Resolver: `.asep/resolvers/authorize.md`. Stable interface — today skill + agent;
+tomorrow Engineering Runtime.
+
+## PX-3 Conformance Program (product under SoR contract)
+
+PX-3 is the first **Runtime Conformance Program** — implement product only; MB2 Runtime
+is **not authorized**. Start a PX-3 session with:
+
+```text
+AUTHORIZE PX-3
+```
+
+Enable `.cursor/rules/px3-conformance-program.mdc` when the authorize pipeline selects
+PX-3. Record deviations (I/S/A/N) in `.asep/reports/PX3-CONFORMANCE-LOG.md`. Do not modify SoR or governance unless instructed.
 
 ## Review norms
 

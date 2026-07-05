@@ -2,10 +2,14 @@ import Link from "next/link";
 import { SourceDetailView } from "@/components/library/SourceDetailView";
 import { getSourceById } from "@/lib/libraryStub";
 
-type Props = { params: Promise<{ sourceId: string }> };
+type Props = {
+  params: Promise<{ sourceId: string }>;
+  searchParams: Promise<{ chapter?: string }>;
+};
 
-export default async function SourceDetailPage({ params }: Props) {
+export default async function SourceDetailPage({ params, searchParams }: Props) {
   const { sourceId } = await params;
+  const { chapter } = await searchParams;
   const source = getSourceById(sourceId);
 
   if (source == null) {
@@ -13,11 +17,11 @@ export default async function SourceDetailPage({ params }: Props) {
       <div className="mx-auto max-w-content">
         <h1 className="text-2xl font-semibold text-ink">Fonte non trovata</h1>
         <p className="mt-2 text-sm text-ink-muted">
-          Nessuna fonte con id{" "}
+          Fonte non trovata o esclusa — nessuna fonte con id{" "}
           <code className="font-mono text-xs">{sourceId}</code>.
         </p>
         <Link
-          href="/sources"
+          href={chapter ? `/sources?chapter=${chapter}` : "/sources"}
           className="mt-4 inline-block text-sm font-medium text-accent underline-offset-2 hover:underline cursor-pointer"
         >
           ← Torna a Sources
@@ -26,5 +30,5 @@ export default async function SourceDetailPage({ params }: Props) {
     );
   }
 
-  return <SourceDetailView source={source} />;
+  return <SourceDetailView source={source} chapterContext={chapter} />;
 }

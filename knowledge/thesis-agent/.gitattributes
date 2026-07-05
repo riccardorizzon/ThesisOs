@@ -1,0 +1,2 @@
+04_KNOWLEDGE/Relatrice/**/*.pdf filter=lfs diff=lfs merge=lfs -text
+04_KNOWLEDGE/Relatrice/**/*.png filter=lfs diff=lfs merge=lfs -text

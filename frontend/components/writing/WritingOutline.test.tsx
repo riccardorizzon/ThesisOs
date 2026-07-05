@@ -31,7 +31,6 @@ describe("WritingOutline", () => {
 
     expect(screen.getByRole("navigation", { name: "Outline capitoli" })).toBeTruthy();
     expect(screen.getByText("Cap. 1 — Introduzione")).toBeTruthy();
-    expect(screen.getByText("Cap. 5 — STIGMATA")).toBeTruthy();
     expect(
       screen.getByRole("link", { name: /Cap\. 2 — Quadro teorico/i })
     ).toHaveAttribute("href", "/writing/2");
@@ -45,11 +44,36 @@ describe("WritingOutline", () => {
     ).toHaveAttribute("aria-current", "page");
   });
 
-  it("shows status labels for chapters", () => {
+  it("shows StatusBadge for chapter lifecycle", () => {
     render(<WritingOutline chapters={WRITING_OUTLINE_STUB} />);
 
-    expect(screen.getByText("Approvato")).toBeTruthy();
-    expect(screen.getByText("In revisione")).toBeTruthy();
-    expect(screen.getAllByText("Bozza").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("status-badge-approved")).toBeTruthy();
+    expect(screen.getByTestId("status-badge-review")).toBeTruthy();
+    expect(screen.getAllByTestId("status-badge-draft").length).toBeGreaterThan(0);
+  });
+
+  it("filters chapters by status segment", () => {
+    render(<WritingOutline chapters={WRITING_OUTLINE_STUB} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Da revisionare" }));
+    expect(screen.getByText("Cap. 2 — Quadro teorico")).toBeTruthy();
+    expect(screen.queryByText("Cap. 1 — Introduzione")).toBeNull();
+  });
+
+  it("renders section links with ?section= query", () => {
+    render(
+      <WritingOutline
+        activeChapterId="3"
+        activeSectionId="metodo"
+        sections={[
+          { id: "metodo", label: "Metodo", level: 2, lineIndex: 2 },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("link", { name: "Metodo" })).toHaveAttribute(
+      "href",
+      "/writing/3?section=metodo"
+    );
   });
 });

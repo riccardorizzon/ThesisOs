@@ -1,0 +1,65 @@
+# QC Certificate — QWO-PX1-001-R1
+certificate_version: "1.0"
+issued_at: "2026-07-03T19:00:00Z"
+issued_by: quality-controller
+checklist: .asep/governance/quality-controller.md
+
+proposal:
+  workorder_id: QWO-PX1-001
+  workorder_type: QWO
+  capability: qwo-px1-001
+  milestone: PX-1
+  run_id: QWO-PX1-001-R1
+  program: .asep/programs/thesisos-product-v2.yaml
+  precondition: PX1-EWO-012 PASS
+
+repository:
+  head: "94df995625e3e9a35f87322ccf35c7a0ebaa74c0"
+  branch: main
+  working_tree: dirty
+
+ground_truth:
+  unchanged: true
+  note: QWO discipline — no mutations to 03_PROJECT/ or knowledge masters
+
+checks:
+  verdict: PASS
+  passed: 12
+  failed: 0
+  skipped: 2
+  blockers: []
+
+acceptance:
+  home_default_route: PASS
+  sidebar_ia_adr_0036: PASS
+  context_api_valid_packet: PASS
+  make_ci: PASS
+  or_1_through_or_7_regression: PASS
+
+verification:
+  make_ci: "327 backend + 132 frontend + 65 builder-engine PASS"
+  unit_m4_recovery: "45/45 PASS"
+  qualify_m5: "43/43 PASS"
+  qualify_m6: "44/44 PASS"
+  e2e_smoke: "7/7 PASS, 2 skipped (PX-2 visual stubs)"
+
+readiness:
+  px1_ewo_012: PASS
+  pending_ewo: none
+  open_stop: none
+  migration_or_baseline: "OR-1…OR-7 qualified (C.1-R2…C.7-R1); regression green"
+
+lifecycle:
+  qwo_px1_001: qualified
+  milestone_px1: COMPLETE
+  unblocks: px-2-writing
+  px2_authorization: excluded_until_gate_3_amendment
+
+evidence:
+  report: .asep/reports/QWO-PX1-001-R1.md
+  bundle: tests/e2e/evidence/qwo-px1-001-r1/
+  ewo_012_report: .asep/reports/PX1-EWO-012-qualification-integration.md
+
+recommended_next_action: >
+  Record PX-1 PASS; issue Execution Authorization amendment for PX-2 Writing
+  (docs/product/EXECUTION-AUTHORIZATION.md). Do not start PX-2 EWOs without amendment.

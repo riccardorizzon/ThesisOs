@@ -1,0 +1,40 @@
+{
+  "generated_for": "QWO-PX1-001",
+  "workorder": "PX1-EWO-012",
+  "adr": "ADR-0036",
+  "product_routes": [
+    { "path": "/", "module": "home", "milestone": "PX-1" },
+    { "path": "/research", "module": "research", "milestone": "PX-5" },
+    { "path": "/writing", "module": "writing", "milestone": "PX-2" },
+    { "path": "/sources", "module": "sources", "milestone": "PX-3" },
+    { "path": "/knowledge", "module": "knowledge", "milestone": "PX-4" },
+    { "path": "/review", "module": "review", "milestone": "PX-1" },
+    { "path": "/ai", "module": "ai", "milestone": "PX-2" },
+    { "path": "/settings", "module": "settings", "milestone": "PX-1" }
+  ],
+  "legacy_redirects": [
+    { "source": "/chat", "destination": "/ai" },
+    { "source": "/library", "destination": "/sources" },
+    { "source": "/workspace", "destination": "/writing" },
+    { "source": "/outline", "destination": "/writing" },
+    { "source": "/memory", "destination": "/knowledge" }
+  ],
+  "sidebar_primary_nav": [
+    "Home",
+    "Research",
+    "Writing",
+    "Sources",
+    "Knowledge",
+    "Settings"
+  ],
+  "e2e_smoke_coverage": [
+    "/",
+    "/writing",
+    "/sources",
+    "/workspace (redirect)"
+  ],
+  "context_api": {
+    "endpoint": "GET /projects/thesis-agent/context",
+    "surfaces_exercised": ["home", "writing"]
+  }
+}

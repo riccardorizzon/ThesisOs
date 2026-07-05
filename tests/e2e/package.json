@@ -1,0 +1,12 @@
+{
+  "name": "thesisos-e2e",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --grep @ui",
+    "test:api": "playwright test --grep @api"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.1"
+  }
+}

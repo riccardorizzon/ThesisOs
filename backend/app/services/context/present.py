@@ -19,6 +19,7 @@ def flatten_context_packet(request: ContextRequest, graph: ContextGraph) -> Cont
         presentation=request.presentation,
         project=graph.workspace.project,
         entity=graph.workspace.entity,
+        selection_anchor=request.selection_anchor,
         relevant_sources=list(graph.knowledge.sources),
         concepts=list(graph.knowledge.concepts),
         decisions=list(graph.decisions.binding),

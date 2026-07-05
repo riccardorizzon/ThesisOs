@@ -1,0 +1,85 @@
+# QC Certificate — QWO-PX2-001-R1
+certificate_version: "1.0"
+issued_at: "2026-07-04T18:50:00Z"
+issued_by: quality-controller
+checklist: .asep/governance/quality-controller.md
+
+proposal:
+  workorder_id: QWO-PX2-001
+  workorder_type: QWO
+  capability: px-2-research-workspace
+  milestone: PX-2
+  run_id: QWO-PX2-001-R1
+  program: .asep/programs/thesisos-product-v2.yaml
+  proposal_path: .asep/proposals/QWO-PX2-001.md
+  proposal_status: approved
+  operator_authorization: "2026-07-04 — explicit QWO authorization; Wave D PASS"
+
+repository:
+  head: "94df995625e3e9a35f87322ccf35c7a0ebaa74c0"
+  branch: main
+  working_tree: dirty
+
+ground_truth:
+  unchanged: true
+  note: QWO discipline — no mutations to 03_PROJECT/ or knowledge masters
+  paths:
+    - docs/product/specs/px2-research-workspace-experience.md
+    - decisions/ADR-0036
+    - decisions/ADR-0038
+    - decisions/ADR-0039
+    - decisions/ADR-0040
+
+checks:
+  verdict: PASS
+  passed: 14
+  failed: 0
+  skipped: 0
+  blockers: []
+
+acceptance:
+  AC-1_contextbar_live_counts: PASS
+  AC-2_binding_decision_inspector: PASS
+  AC-3_editor_autosave_lifecycle: PASS
+  AC-4_four_ai_actions_streaming: PASS
+  AC-5_ai_apply_creates_proposal: PASS
+  AC-6_source_picker_cite: PASS
+  AC-7_excluded_source_blocked: PASS
+  AC-8_decision_card_frozen: PASS
+  AC-9_continua_restores_state: PASS
+  AC-10_session_close_bundle: PASS
+  AC-11_review_accept_reject: PASS
+  AC-12_home_progress_deterministic: PASS
+  AC-13_or_regression_px1_surfaces: PASS
+  AC-14_make_ci: PASS
+
+verification:
+  make_ci: "327 backend + 229 frontend + 65 builder-engine PASS"
+  unit_m4_recovery: "45/45 PASS"
+  qualify_m5: "43/43 PASS"
+  qualify_m6: "44/44 PASS"
+  e2e_smoke: "6/7 PASS, 1 expected drift (writing placeholder → markdown-editor), 2 skipped"
+
+readiness:
+  px2_ewo_001_through_008: implemented
+  integration_d: PASS
+  pending_ewo: none
+  open_stop: none
+  migration_or_baseline: "OR-1…OR-7 qualified; regression green"
+  qwo_disposition_resolved: true
+
+lifecycle:
+  px_2_research_workspace: qualified
+  milestone_px2: COMPLETE
+  unblocks: px-3-sources
+  px3_authorization: excluded_until_gate_3_amendment
+
+evidence:
+  report: .asep/reports/QWO-PX2-001-R1.md
+  bundle: tests/e2e/evidence/qwo-px2-001-r1/
+  integration_d: .asep/reports/PX2-INTEGRATION-D.md
+  wave_d_ewo: .asep/reports/PX2-EWO-008-chrome-states.md
+
+recommended_next_action: >
+  Record PX-2 PASS in program state. PX-3 remains blocked until Gate 3 amendment —
+  do not auto-authorize PX-3.

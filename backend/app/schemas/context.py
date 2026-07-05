@@ -120,6 +120,7 @@ class ContextRequest(BaseModel):
     presentation: PresentationHint = Field(default_factory=PresentationHint)
     entity_type: str | None = None
     entity_id: str | None = None
+    selection_anchor: str | None = None
     user_intent: str | None = None
 
 
@@ -131,6 +132,7 @@ class ContextPacket(BaseModel):
     presentation: PresentationHint
     project: ProjectSummary
     entity: EntityScope | None = None
+    selection_anchor: str | None = None
     relevant_sources: list[SourceRef] = Field(default_factory=list)
     concepts: list[ConceptRef] = Field(default_factory=list)
     decisions: list[DecisionRef] = Field(default_factory=list)

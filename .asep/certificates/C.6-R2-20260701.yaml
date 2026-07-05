@@ -1,0 +1,38 @@
+# QC Certificate — C.6-R2
+certificate_version: "1.0"
+issued_at: "2026-07-01T01:30:00Z"
+issued_by: quality-controller
+checklist: .asep/governance/quality-controller.md
+
+proposal:
+  workorder_id: C.6-R2
+  workorder_type: QWO
+  capability: or-6-write-paragraph
+  proposal_path: .asep/proposals/C.6-or-6-academic-production.md
+  proposal_status: approved
+
+repository:
+  head: "e64d32739db9c914948db84ed6905522d662c38c"
+  branch: main
+  working_tree: dirty
+
+ground_truth:
+  unchanged: true
+
+checks:
+  verdict: PASS
+  note: "QWO execution + prompt path verification completed; oracle evaluation in C.6-R2 report"
+  blockers: []
+
+readiness:
+  ewo_7b_implemented: true
+  prompt_path_verified: true
+  qwo_verdict: PARTIAL
+
+runtime:
+  health: ok
+  backend_mode: "docker bind-mount (EWO-7B hot-load)"
+
+termination:
+  qwo_partial: true
+  recommended: "EWO-7C citation enforcement → C.6-R3"

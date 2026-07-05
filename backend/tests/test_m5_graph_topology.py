@@ -158,8 +158,9 @@ async def test_integration_route_after_router_drives_branch(in_memory_checkpoint
     )
     cfg = {"configurable": {"thread_id": "m5-branch"}}
     final_state = None
+    # Non-corpus query: branch routing only. Corpus multi-search is covered in test_retriever_exclusion.
     async for _ in graph.astream(
-        GraphState(messages=[Message(role="user", content="Find in corpus")]),
+        GraphState(messages=[Message(role="user", content="Search documents")]),
         cfg,
         stream_mode="values",
     ):

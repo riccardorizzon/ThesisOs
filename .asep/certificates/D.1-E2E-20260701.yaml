@@ -1,0 +1,36 @@
+# QC Certificate — D.1 E2E
+certificate_version: "1.0"
+issued_at: "2026-07-01T02:06:00Z"
+issued_by: quality-controller
+
+proposal:
+  workorder_id: D.1
+  workorder_type: QWO
+  capability: e2e-session
+  spec: knowledge/thesis-agent/_migration/operational-readiness.md
+
+repository:
+  head: "e64d32739db9c914948db84ed6905522d662c38c"
+  branch: main
+  working_tree: dirty
+
+checks:
+  verdict: PASS
+  e2e_steps: "E2E-1..E2E-6 PASS"
+  global: "G1..G5 PASS"
+  blockers: []
+
+execution:
+  run_id: e2e-2026-07-01
+  conversation_id: "9e6762fb-c097-46b6-9905-6480ad7567f1"
+  no_hidden_operator_intervention: true
+  continuous_session: true
+
+readiness:
+  or1_or7_qualified: true
+  lifecycle: operational
+  next: E.1 release baseline
+
+failure_policy:
+  integration_defects_only: true
+  auto_dequalify_or: false

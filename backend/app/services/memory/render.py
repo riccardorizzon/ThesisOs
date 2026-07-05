@@ -5,6 +5,15 @@ def render_prompt_context(ctx: PromptContext) -> str:
     """Render PromptContext to LLM wire text. Kept separate from load_prompt_context."""
     sections: list[str] = []
 
+    if ctx.decisions:
+        body = "\n\n".join(_item_text(m) for m in ctx.decisions)
+        sections.append(
+            "[BINDING DECISIONS]\n"
+            "These frozen project decisions override contradictory retrieved sources. "
+            "Always apply corpus exclusions (CORPUS-02/03) and closed decisions.\n\n"
+            f"{body}"
+        )
+
     if ctx.editable:
         body = "\n\n".join(_item_text(m) for m in ctx.editable)
         sections.append(f"[EDITABLE MEMORY]\n{body}")

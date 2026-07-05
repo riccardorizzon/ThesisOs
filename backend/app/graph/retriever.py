@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
+from app.graph.corpus_query import (
+    CORPUS_LIST_BOOST_QUERY,
+    CORPUS_RETRIEVAL_LIMIT,
+    EXCLUSION_BOOST_QUERY,
+    is_corpus_list_query,
+)
 from app.schemas.graph_state import AgentError, GraphState, Message, RetrievedChunk
+from app.schemas.retrieval import SearchResultItem
 from app.services.retrieval import EmbedFailedError, RetrievalService
 
 
@@ -11,6 +18,23 @@ def _last_user_message(messages: list[Message]) -> str | None:
         if message.role == "user" and message.content.strip():
             return message.content.strip()
     return None
+
+
+def _merge_results(
+    primary: list[SearchResultItem],
+    *extras: list[SearchResultItem],
+    limit: int,
+) -> list[SearchResultItem]:
+    seen: set[str] = set()
+    merged: list[SearchResultItem] = []
+    for item in [*(chunk for extra in extras for chunk in extra), *primary]:
+        if item.chunk_id in seen:
+            continue
+        seen.add(item.chunk_id)
+        merged.append(item)
+        if len(merged) >= limit:
+            break
+    return merged
 
 
 def make_retriever_node(retrieval_service: RetrievalService | None = None):
@@ -22,7 +46,17 @@ def make_retriever_node(retrieval_service: RetrievalService | None = None):
             return {"retrieved_context": [], "errors": list(state.errors)}
 
         try:
-            results, _model = await service.search(query, limit=10)
+            limit = CORPUS_RETRIEVAL_LIMIT if is_corpus_list_query(query) else 10
+            results, _model = await service.search(query, limit=limit)
+            if is_corpus_list_query(query):
+                exclusion_extra, _ = await service.search(EXCLUSION_BOOST_QUERY, limit=4)
+                corpus_extra, _ = await service.search(CORPUS_LIST_BOOST_QUERY, limit=6)
+                results = _merge_results(
+                    results,
+                    exclusion_extra,
+                    corpus_extra,
+                    limit=limit,
+                )
         except EmbedFailedError:
             return {
                 "retrieved_context": [],

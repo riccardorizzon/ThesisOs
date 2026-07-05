@@ -1,0 +1,262 @@
+# Engineering Program — PX-EXEC (Execution Orchestration Platform)
+#
+# program_type: platform — SPECIFICATION ONLY (design freeze 2026-07-05)
+# Does NOT mutate product code. Delivers Era II / MB2 architecture.
+#
+# Sequencing:
+#   PX-2 COMPLETE + FROZEN → PX-EXEC spec → MB2 freeze → PX-3 → Runtime implementation
+
+id: px-exec
+title: PX-EXEC — Execution Orchestration Platform
+program_type: platform
+status: specified
+phase: specified
+
+lifecycle: specified
+
+specification:
+  status: frozen
+  frozen_at: "2026-07-05"
+  sor: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+  sign_off: .asep/certificates/MB2-SOR-20260705.yaml
+  report: .asep/reports/MB2-SPECIFICATION-FREEZE.md
+
+implementation:
+  status: not_authorized
+  freeze: open
+  authorized_when:
+    - PX-3 completed
+    - MB2-CONFORMANCE-ASSESSMENT PASS
+    - no_normative_sor_changes_required
+    - MB2-Q1-pass
+  conformance:
+    program: PX-3
+    assessment_report: .asep/reports/MB2-CONFORMANCE-ASSESSMENT.md  # issued at PX-3 end — not before
+    success_criterion: >-
+      SoR validated if PX-3 completes without substantial changes to invariants
+      or normative contracts (clarifications via sor-compatibility-policy OK).
+  note: >-
+    PX-3 completion alone does not authorize implementation. Conformance Assessment
+    must confirm SoR stability before Reference Implementation investment.
+
+parent: asep-platform
+platform_milestone: MB2
+era_target: II  # Adaptive Workflow Intelligence — docs/platform/era-model.md
+
+activated_at: "2026-07-05"
+authorization: ADR-0042-engineering-runtime
+
+depends_on:
+  era_i_complete: true
+  evidence:
+    - PX-1 qualified + frozen
+    - PX-2 qualified + frozen
+    - Supervisor WAIT state demonstrated
+    - Wave / integration / QWO patterns validated (px1-parallel, px2-parallel)
+  architecture:
+    adr: decisions/ADR-0042-engineering-runtime.md
+    runtime_model_v2: docs/platform/runtime-model-v2.md
+    mb2_sor: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+    runtime_model_v1: docs/platform/runtime-model.md  # semantic cycle — still authoritative for phase names
+    global_state_machine: docs/platform/global-state-machine.md
+    engineering_supervisor: .asep/governance/engineering-supervisor.md
+
+sequencing:
+  before_product_milestone: PX-3
+  rationale: >-
+    PX-3 is the first product program designed with Runtime v2 model available.
+    Runtime code may lag PX-3 start; Program Graph contracts should not.
+  blocks_runtime_implementation_until: MB2-SoR-freeze
+
+constraints:
+  code_mutation: false  # until MB2 freeze + Phase 1 authorization
+  allowed_paths_when_active:
+    - builder_engine/**
+    - docs/platform/**
+    - docs/mb2-*.md
+    - .asep/programs/px-exec.yaml
+    - .asep/capabilities/px-exec.yaml
+    - .asep/reports/PX-EXEC-*.md
+    - decisions/ADR-0042-engineering-runtime.md
+  forbidden:
+    - backend/app/**
+    - frontend/**
+    - product milestone execution under px-exec scope
+
+architecture_binding:
+  governance_layer:
+    - docs/engineering-program.md
+    - .asep/governance/engineering-supervisor.md
+    - .asep/governance/quality-controller.md
+    - docs/auto-approval-policy.md
+    - docs/termination-policy.md
+  runtime_layer:
+    - docs/platform/runtime-model-v2.md
+    - builder_engine/  # Era I partial — extend, do not replace ad hoc
+  operator_surface_today:
+    - .cursor/skills/orchestrate-builders/SKILL.md
+    - .cursor/skills/asep/SKILL.md
+
+supervisor:
+  role: Engineering Supervisor
+  mode: WAIT-until-APPROVED
+  delegates_to_runtime: false  # until MB2 Phase 1 gate PASS
+  note: >-
+    During specification phase Supervisor remains manual.
+    Post MB2 Phase 1: Supervisor delegates execution scope; retains STOP/WAIT authority.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phases — specification deliverables first; implementation gated per phase
+# ─────────────────────────────────────────────────────────────────────────────
+
+phases:
+
+  phase_1:
+    id: PX-EXEC-P1
+    title: Runtime Foundation
+    status: specification
+    goal: >-
+      Freeze and implement the Runtime core: event bus, rule engine, dependency
+      engine, job queue, scheduler, state projection. No product impact.
+    capabilities:
+      - px-exec-1-event-model
+      - px-exec-2-rule-engine
+      - px-exec-3-dependency-engine
+      - px-exec-4-job-queue
+      - px-exec-5-scheduler
+      - px-exec-6-state-projection
+    specification_deliverables:
+      - docs/platform/runtime-model-v2.md
+      - decisions/ADR-0042-engineering-runtime.md
+      - docs/superpowers/specs/mb2-engineering-runtime-spec.md
+    implementation_gate: MB2-Q1-pass
+    acceptance:
+      - Event catalog extended; append-only bus operational
+      - Rule engine evaluates declarative rules from YAML
+      - Program Graph → Execution Graph derivation tested
+      - Job FSM transitions match ADR-0025 + L2 GSM
+      - Projection document rebuildable from event log
+      - make unit-builder-engine green + new MB2 test suite
+    does_not_include:
+      - Merge automation
+      - Integration review automation
+      - QWO auto-trigger
+      - Dashboard UI
+
+  phase_2:
+    id: PX-EXEC-P2
+    title: Execution Plugins
+    status: planned
+    depends_on_phase: phase_1
+    goal: >-
+      Register Merge, Integration, and Qualification engines as plugins driven by
+      rules — replacing manual orchestrate-builders steps for wave lifecycle.
+    capabilities:
+      - px-exec-7-merge-plugin
+      - px-exec-8-integration-plugin
+      - px-exec-9-qualification-plugin
+    specification_deliverables:
+      - Plugin interface contracts in mb2 spec
+      - Rule packs for px2-parallel replay (golden path)
+    implementation_gate: MB2-Q4-pass
+    acceptance:
+      - PX-2 parallel program replayable via Runtime (dry-run then live)
+      - Merge order enforced by Dependency Engine + MergePlugin
+      - Integration review spawned on MergeCompleted + CI green
+      - QWO spawn on IntegrationPassed + coverage gate
+      - Supervisor escalates on plugin failure → WAIT
+
+  phase_3:
+    id: PX-EXEC-P3
+    title: Observability
+    status: planned
+    depends_on_phase: phase_2
+    goal: >-
+      Program Dashboard and metrics as read-only projections. No duplicated logic.
+    capabilities:
+      - px-exec-10-dashboard-projection
+      - px-exec-11-metrics-plugin
+      - px-exec-12-notification-plugin
+    specification_deliverables:
+      - Projection schema v1 (YAML/JSON)
+      - Dashboard UX spec (view only)
+    implementation_gate: MB2-Q5-pass
+    acceptance:
+      - Single projection file reflects wave/integration/qwo status
+      - CLI `builder-engine status` reads projection only
+      - Optional web dashboard reads projection API — zero scheduling logic in UI
+
+  phase_4:
+    id: PX-EXEC-P4
+    title: Provider Abstraction & Scale
+    status: planned
+    depends_on_phase: phase_3
+    goal: >-
+      AgentProvider interface, multi-program queue, recovery and retry policies.
+    capabilities:
+      - px-exec-13-agent-provider
+      - px-exec-14-multi-program
+      - px-exec-15-recovery-policies
+    specification_deliverables:
+      - AgentProvider protocol + Cursor adapter spec
+      - Multi-program concurrency rules
+    implementation_gate: MB2-Q6-pass
+    acceptance:
+      - Second AgentProvider stub passes contract tests
+      - Two programs (e.g. px3-parallel + px-exec) schedulable without cross-contamination
+      - FAILED → READY recovery transition with audit event
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Capability graph (navigation — full node detail in px-exec capability file)
+# ─────────────────────────────────────────────────────────────────────────────
+
+capability_graph: .asep/capabilities/px-exec.yaml
+
+capabilities_summary:
+  phase_1: [event-model, rule-engine, dependency-engine, job-queue, scheduler, state-projection]
+  phase_2: [merge-plugin, integration-plugin, qualification-plugin]
+  phase_3: [dashboard-projection, metrics-plugin, notification-plugin]
+  phase_4: [agent-provider, multi-program, recovery-policies]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Relationship to product programs
+# ─────────────────────────────────────────────────────────────────────────────
+
+consumer_programs:
+  - id: thesisos-product-v2
+    relationship: first validated consumer; PX-1/PX-2 executed manually
+  - id: px3-parallel  # future
+    relationship: first product program with Runtime-aware Program Graph at design time
+
+non_goals:
+  - Replacing Product Plane LangGraph (M5+)
+  - Auto-editing ADRs or Constitution
+  - Removing human APPROVED gate at promotion/freeze
+  - Implementing before MB2 spec freeze
+
+roadmap:
+  - step: ADR-0042 accepted
+    status: done
+  - step: runtime-model-v2.md frozen
+    status: done
+  - step: px-exec.yaml specification
+    status: done
+  - step: MB2 SoR frozen
+    status: done
+  - step: Architect sign-off — Specification Freeze
+    status: done
+  - step: PX-3 authorization (Runtime Conformance Program)
+    status: next
+  - step: MB2-CONFORMANCE-ASSESSMENT (at PX-3 completion)
+    status: future
+  - step: Runtime Reference Implementation
+    status: blocked_until_conformance_pass
+
+workorder_backlog: []  # populated after MB2 freeze — EWOs for platform track only
+
+promotion:
+  target_tag: mb2-complete
+  gate_doc: docs/mb2-phase-gate.md  # to be authored at MB2 freeze
+  evidence:
+    - PX-2 parallel replay via Runtime
+    - Projection matches manual execution audit trail

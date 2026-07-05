@@ -1,0 +1,145 @@
+# Engineering Program — Thesis Agent Migration (Kimi Claw → ThesisOS)
+#
+# META-0: binds ASEP execution to the thesis-agent domain track.
+# Does NOT duplicate rules — only pointers and roadmap state.
+#
+# Run id: kimi-claw-2026-06
+
+id: thesis-agent-migration
+title: Thesis Agent Migration — Operational Readiness & Release
+status: active
+run: kimi-claw-2026-06
+
+scope: >-
+  Evolve ThesisOS until the thesis-agent knowledge migrated from Kimi Claw is
+  operationally equivalent on the live stack: OR-1…OR-7 PASS, E2E PASS, release
+  baseline frozen. Not a one-shot prompt — a capability-driven program.
+
+architecture_binding:
+  asep_platform: .asep/README.md
+  engineering_program_model: docs/engineering-program.md
+  thesisos_runtime: docs/runtime-constitution.md
+  thesis_agent_blueprint: knowledge/thesis-agent/README.md
+  migration_runbook: docs/kimi-to-thesisos-migration-runbook.md
+  operational_readiness: knowledge/thesis-agent/_migration/operational-readiness.md
+  operational_log: knowledge/thesis-agent/_migration/operational-readiness-log.md
+  promotion_script: knowledge/thesis-agent/_migration/promote_runtime.py
+  promotion_log: knowledge/thesis-agent/_migration/promotion-log.md
+  domain_decisions: knowledge/thesis-agent/03_PROJECT/Decisions.md
+
+capability_graph: .asep/capabilities/thesis-agent-migration.yaml
+
+outer_loop:
+  observe:
+    - git HEAD, branch, working tree
+    - .asep/reports/*
+    - knowledge/thesis-agent/_migration/operational-readiness-log.md
+    - .asep/capabilities/thesis-agent-migration.yaml  # lifecycle + status
+  prioritize: first capability with status=ready (topological on depends_on)
+  spawn: .asep/templates/work-order-template.md
+
+inner_loop: .asep/pipeline/executor.md  # → qualification → promotion
+
+validation_rules:
+  or_spec: knowledge/thesis-agent/_migration/operational-readiness.md
+  or_log: knowledge/thesis-agent/_migration/operational-readiness-log.md
+  asep_qualification: .asep/pipeline/qualification.md  # for code-touching WO only
+
+promotion_rules:
+  domain_freeze: knowledge/thesis-agent/03_PROJECT/Decisions.md
+  memory_changelog: knowledge/thesis-agent/05_MEMORY/Changelog.md
+  runtime_promotion: knowledge/thesis-agent/_migration/promote_runtime.py
+  release_commit: docs/kimi-to-thesisos-migration-runbook.md  # Fase E
+
+workorder_backlog:
+  - id: META-0
+    type: EWO
+    capability: meta-0-program-binding
+    title: Engineering Program binding (ASEP ↔ ThesisOS ↔ migration track)
+  - id: C.1
+    type: QWO
+    capability: or-1-thesis-structure
+    proposal: .asep/proposals/C.1-or-1-thesis-structure.md
+    title: OR-1 — executed FAIL 2026-06-30; re-QWO after EWO-1
+  - id: EWO-1
+    type: EWO
+    capability: ewo-1-runtime-knowledge-alignment
+    proposal: .asep/proposals/EWO-1-runtime-knowledge-alignment.md
+    report: .asep/reports/EWO-1-runtime-knowledge-alignment.md
+    title: Runtime Knowledge Alignment (Ground Truth → runtime) — implemented 2026-06-30
+    spawned_from: C.1-or-1 FAIL
+  - id: C.1-r
+    type: QWO
+    capability: or-1-thesis-structure
+    title: re-QWO C.1-R2 — OR-1 PASS 2026-06-30
+    report: .asep/reports/C.1-R2.md
+    depends_on: EWO-1
+  - id: C.2
+    type: QWO
+    capability: or-2-stigmata-framework
+    proposal: .asep/proposals/C.2-or-2-stigmata-framework.md
+    title: OR-2 — STIGMATA framework — approved 2026-06-30
+    depends_on: C.1-r
+  - id: C.2-r1
+    type: QWO
+    capability: or-2-stigmata-framework
+    report: .asep/reports/C.2-R1.md
+    title: C.2-R1 — OR-2 PARTIAL 2026-06-30 (promotion gap)
+    depends_on: C.2
+  - id: EWO-2
+    type: EWO
+    ewo_category: Alignment
+    capability: ewo-2-runtime-methodology-alignment
+    proposal: .asep/proposals/EWO-2-runtime-methodology-alignment.md
+    report: .asep/reports/EWO-2-runtime-methodology-alignment.md
+    title: Runtime Methodology Alignment — implemented 2026-06-30
+    spawned_from: C.2-R1
+  - id: C.2-r2
+    type: QWO
+    capability: or-2-stigmata-framework
+    report: .asep/reports/C.2-R2.md
+    title: re-QWO C.2-R2 — OR-2 PASS 2026-06-30
+    depends_on: EWO-2
+  - id: C.3
+    type: QWO
+    capability: or-3-corpus
+    proposal: .asep/proposals/C.3-or-3-corpus.md
+    title: OR-3 — corpus and exclusions (proposal awaiting approval)
+    depends_on: C.2-r2
+  - id: C.4
+    type: QWO
+    capability: or-4-rules
+    title: Operational Readiness OR-4 — university + relatrice rules
+  - id: C.5
+    type: QWO
+    capability: or-5-decisions
+    title: Operational Readiness OR-5 — closed vs open decisions
+  - id: C.6
+    type: QWO
+    capability: or-6-write-paragraph
+    title: Operational Readiness OR-6 — write paragraph under all rules
+  - id: C.7
+    type: QWO
+    capability: or-7-memory-update
+    proposal: .asep/proposals/C.7-or-7-memory-runtime-integrity.md
+    title: Operational Readiness OR-7 — Memory Runtime Integrity
+    depends_on: C.6-r3
+  - id: D.1
+    type: QWO
+    capability: e2e-session
+    title: End-to-End session (E2E-1…E2E-6)
+  - id: E.1
+    type: EWO
+    capability: release-baseline
+    title: Release baseline commit + freeze
+
+completion_criteria:
+  - all capabilities lifecycle=frozen in thesis-agent-migration.yaml
+  - operational-readiness-log.md OR-1..OR-7 PASS (zero FAIL)
+  - operational-readiness-log.md E2E PASS
+  - no blocking pending decisions in Decisions.md §Da decidere
+  - release baseline committed per runbook Fase E
+
+status: complete
+release: thesisos-v1.0-operational
+completed_at: 2026-07-01

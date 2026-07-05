@@ -1,0 +1,46 @@
+# QC Certificate — C.7-R1
+certificate_version: "1.0"
+issued_at: "2026-07-01T02:00:32Z"
+issued_by: quality-controller
+checklist: .asep/governance/quality-controller.md
+
+proposal:
+  workorder_id: C.7-R1
+  workorder_type: QWO
+  capability: or-7-memory-update
+  proposal_path: .asep/proposals/C.7-or-7-memory-runtime-integrity.md
+  proposal_status: approved
+
+repository:
+  head: "e64d32739db9c914948db84ed6905522d662c38c"
+  branch: main
+  working_tree: dirty
+
+ground_truth:
+  unchanged: true
+
+checks:
+  verdict: PASS
+  note: "QWO execution completed; oracle M-01..M-09 PASS in C.7-R1 report"
+  blockers: []
+
+readiness:
+  preflight_pass: true
+  runtime_coverage: "85%"
+  qwo_verdict: PASS
+  lifecycle: qualified
+
+runtime:
+  health: ok
+  conversation_id: "ffae54b0-625e-4d25-a0c5-e605db0d9685"
+
+oracle:
+  m01_m09: pass
+  memory_fail: none
+  invariant_regression: none
+  state_atomicity: pass
+  traceability: "100%"
+
+termination:
+  or7_qualified: true
+  next: D.1 E2E

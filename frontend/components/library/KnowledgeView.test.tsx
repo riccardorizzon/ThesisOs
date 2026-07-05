@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { KnowledgeView } from "./KnowledgeView";
-import type { LibraryConcept } from "@/lib/libraryStub";
+import type { KnowledgeObjectEnvelope } from "@/lib/knowledgeTypes";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -19,19 +19,48 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-const TEST_CONCEPTS: LibraryConcept[] = [
+const TEST_CONCEPTS: KnowledgeObjectEnvelope[] = [
   {
     id: "stigmata",
+    slug: "stigmata",
+    type: "concept",
     title: "STIGMATA",
     subtitle: "Framework centrale",
-    meta: "2 fonti",
-    relatedSourceIds: ["a", "b"],
+    summary: "Segno percettivo",
+    confidence: "alta",
+    knowledge_state: "linked",
+    linked_counts: {
+      sources: 2,
+      chapters: 0,
+      concepts: 0,
+      decisions: 0,
+      authors: 0,
+      citations: 0,
+    },
+    created_by: "operatore",
+    proposal_state: "nessuna",
+    is_core: true,
   },
   {
     id: "aura",
+    slug: "aura",
+    type: "concept",
     title: "Aura",
     subtitle: "Benjamin",
-    relatedSourceIds: ["a"],
+    summary: "Presenza unica",
+    confidence: "alta",
+    knowledge_state: "linked",
+    linked_counts: {
+      sources: 1,
+      chapters: 0,
+      concepts: 0,
+      decisions: 0,
+      authors: 0,
+      citations: 0,
+    },
+    created_by: "operatore",
+    proposal_state: "nessuna",
+    is_core: false,
   },
 ];
 

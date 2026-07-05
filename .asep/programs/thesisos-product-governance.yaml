@@ -1,0 +1,201 @@
+# Governance Program — PA-0 Product Constitution
+#
+# program_type: governance — EWO documentation-only; no product code.
+# Output: Product Constitution v1.0 (manifest + bundle). NOT engineering program.
+#
+# Frozen process: docs/product/CONSTITUTION-PROGRAM-charter.md
+# Meta rules: docs/CONSTITUTION-GOVERNANCE.md
+
+id: thesisos-product-governance
+title: PA-0 — Product Constitution (Governance Program)
+program_type: governance
+status: complete  # PA-0 COMPLETE 2026-07-01
+
+milestone: PA-0
+
+objective: >-
+  Ratify Product Constitution v1.0. ASEP validates compliance; Architect ratifies.
+  Does not authorize implementation or generate thesisos-product-v2.
+
+depends_on:
+  gate_1:
+    artifact: docs/product/ARCHITECTURE-REVIEW.md
+    required_status: PASS
+
+blocks:
+  - thesisos-product-v2
+  - PX-1
+  - PX-2
+  - PX-3
+  - PX-4
+  - PX-5
+  - PX-6
+
+constraints:
+  code_mutation: false
+  allowed_paths:
+    - docs/product/**
+    - docs/CONSTITUTION-GOVERNANCE.md
+    - decisions/ADR-0034-*.md
+    - decisions/ADR-0035-*.md
+    - decisions/ADR-0036-*.md
+    - decisions/ADR-0037-*.md
+    - decisions/ADR-0038-*.md
+    - decisions/ADR-0039-*.md
+    - decisions/ADR-0040-*.md
+    - decisions/ADR-0041-*.md
+    - .asep/programs/thesisos-product-governance.yaml
+    - .asep/reports/PA-0-*.md
+  forbidden_paths:
+    - frontend/**
+    - backend/app/**
+  forbidden_outputs:
+    - .asep/programs/thesisos-product-v2.yaml   # active program — Gate 3 + Program Review only
+
+allowed_outputs_post_complete:
+  - .asep/programs/thesisos-product-v2.draft.yaml
+
+architecture_binding:
+  constitution_governance: docs/CONSTITUTION-GOVERNANCE.md
+  runtime_constitution: docs/runtime-constitution.md
+  product_constitution_manifest: docs/product/PRODUCT-CONSTITUTION.md
+  charter: docs/product/CONSTITUTION-PROGRAM-charter.md
+  engineering_program_model: docs/engineering-program.md
+
+asep_objective: Validate Constitution
+
+gates:
+  gate_1:
+    name: Architecture Review
+    owner: architect
+    artifact: docs/product/ARCHITECTURE-REVIEW.md
+    status: PASS
+    date: "2026-07-01"
+  gate_2:
+    name: Ratification
+    asep_verdict: READY_FOR_RATIFICATION
+    asep_report: .asep/reports/PA-0-constitution-compliance.md
+    architect_artifact: docs/product/RATIFICATION.md
+    status: pending_signature
+  gate_3:
+    name: Execution Authorization
+    owner: architect
+    artifact: docs/product/EXECUTION-AUTHORIZATION.md
+    initial_scope: PX-1
+    excluded_until_authorized: [PX-2, PX-3, PX-4, PX-5, PX-6]
+    status: blocked_until_gate_2
+
+acceptance_criteria:
+  architecture_review: PASS
+  vision: docs/product/VISION.md
+  rfc: docs/product/rfc/RFC-001-research-os.md
+  specification: docs/product/specs/thesisos-product-ux-v1.md
+  adrs:
+    - decisions/ADR-0034-product-vision.md
+    - decisions/ADR-0035-product-architecture.md
+    - decisions/ADR-0036-information-architecture.md
+    - decisions/ADR-0037-knowledge-model.md
+    - decisions/ADR-0038-context-engine.md
+    - decisions/ADR-0039-ai-interaction-model.md
+    - decisions/ADR-0040-product-state.md
+    - decisions/ADR-0041-blueprint-runtime-sync.md
+  architecture_freeze: docs/product/ARCHITECTURE-FREEZE.md
+  asep_compliance: .asep/reports/PA-0-constitution-compliance.md
+  product_constitution_manifest: docs/product/PRODUCT-CONSTITUTION.md
+  ratification: docs/product/RATIFICATION.md
+
+workorder_backlog:
+  - id: PA0-EWO-001
+    type: EWO
+    ewo_category: Constitution
+    title: Product Vision
+    output: docs/product/VISION.md
+    status: complete
+    report: .asep/reports/PA0-EWO-001-vision.md
+  - id: PA0-EWO-002
+    type: EWO
+    ewo_category: Constitution
+    title: RFC-001 Research OS
+    output: docs/product/rfc/RFC-001-research-os.md
+    status: complete
+  - id: PA0-EWO-003
+    type: EWO
+    ewo_category: Constitution
+    title: Product Specification (freeze)
+    output: docs/product/specs/thesisos-product-ux-v1.md
+    status: complete
+  - id: PA0-EWO-004
+    type: EWO
+    ewo_category: Constitution
+    title: ADR-0034 Product Vision
+    output: decisions/ADR-0034-product-vision.md
+    status: complete
+  - id: PA0-EWO-005
+    type: EWO
+    ewo_category: Constitution
+    title: ADR-0035 Product Architecture
+    output: decisions/ADR-0035-product-architecture.md
+    status: complete
+  - id: PA0-EWO-006
+    type: EWO
+    ewo_category: Constitution
+    title: ADR-0036 Information Architecture
+    output: decisions/ADR-0036-information-architecture.md
+    status: complete
+  - id: PA0-EWO-007
+    type: EWO
+    ewo_category: Constitution
+    title: ADR-0037 Knowledge Model
+    output: decisions/ADR-0037-knowledge-model.md
+    status: complete
+  - id: PA0-EWO-008
+    type: EWO
+    ewo_category: Constitution
+    title: ADR-0038 Context Engine
+    output: decisions/ADR-0038-context-engine.md
+    status: complete
+  - id: PA0-EWO-009
+    type: EWO
+    ewo_category: Constitution
+    title: ADR-0039 AI Interaction Model
+    output: decisions/ADR-0039-ai-interaction-model.md
+    status: complete
+  - id: PA0-EWO-010
+    type: EWO
+    ewo_category: Constitution
+    title: ADR-0040 Product State
+    output: decisions/ADR-0040-product-state.md
+    status: complete
+  - id: PA0-EWO-011
+    type: EWO
+    ewo_category: Constitution
+    title: ADR-0041 Blueprint Runtime Sync
+    output: decisions/ADR-0041-blueprint-runtime-sync.md
+    status: complete
+    report: .asep/reports/PA0-EWO-004-011-adrs.md
+  - id: PA0-EWO-012
+    type: EWO
+    ewo_category: Constitution
+    title: Architecture Freeze marker
+    output: docs/product/ARCHITECTURE-FREEZE.md
+    status: complete
+  - id: PA0-EWO-013
+    type: EWO
+    ewo_category: Release
+    title: ASEP Constitution compliance report
+    output: .asep/reports/PA-0-constitution-compliance.md
+    status: complete
+    verdict: READY_FOR_RATIFICATION
+
+completion_criteria: >-
+  All acceptance_criteria artifacts exist with required status; PRODUCT-CONSTITUTION.md
+  lifecycle Ratified → Frozen; PA-0 COMPLETE. Active thesisos-product-v2.yaml NOT generated
+  (draft only until Architect Program Review).
+
+post_completion:
+  status: complete
+  date: "2026-07-01"
+  report: .asep/reports/PA-0-COMPLETE.md
+  next_gate: Architect Program Review
+  next_artifact: .asep/programs/thesisos-product-v2.draft.yaml
+  activation: docs/product/ARCHITECT-PROGRAM-REVIEW.md → thesisos-product-v2.yaml

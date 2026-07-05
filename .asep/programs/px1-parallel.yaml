@@ -1,0 +1,45 @@
+# PX1 Parallel Engineering — Wave Plan
+#
+# Extends thesisos-product-v2 for concurrent sub-agent execution.
+# Supervisor: .asep/reports/PX1-PARALLEL-PROGRAM.md
+
+id: px1-parallel
+title: PX-1 Parallel Engineering Waves
+parent_program: thesisos-product-v2
+status: active
+activated_at: "2026-07-03"
+
+supervisor:
+  role: Engineering Supervisor
+  document: .asep/reports/PX1-PARALLEL-PROGRAM.md
+  orchestration: .cursor/skills/orchestrate-builders/SKILL.md
+  mode: worktree_per_subagent
+
+waves:
+  wave_a:
+    title: Foundation parallel
+    execute_in_parallel: true
+    merge_order: [PX1-EWO-006, PX1-EWO-009, PX1-EWO-008]
+    workorders: [PX1-EWO-006, PX1-EWO-008, PX1-EWO-009]
+
+  wave_b:
+    title: Module UX parallel
+    execute_in_parallel: true
+    depends_on_wave: wave_a
+    merge_order: [PX1-EWO-007, PX1-EWO-010, PX1-EWO-011]
+    workorders: [PX1-EWO-007, PX1-EWO-010, PX1-EWO-011]
+
+  wave_c:
+    title: Integration
+    execute_in_parallel: false
+    depends_on_wave: wave_b
+    workorders: [PX1-EWO-012]
+
+  gate:
+    workorder: QWO-PX1-001
+    depends_on: [PX1-EWO-012]
+
+merge_policy:
+  ci_required_after_each: make ci
+  conflict_resolution: supervisor_integrates
+  forbidden: cross_ownership_file_edits

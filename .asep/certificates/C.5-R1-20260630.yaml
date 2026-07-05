@@ -1,0 +1,55 @@
+# QC Certificate — C.5-R1
+certificate_version: "1.0"
+issued_at: "2026-06-30T18:00:00Z"
+issued_by: quality-controller
+checklist: .asep/governance/quality-controller.md
+
+proposal:
+  workorder_id: C.5-R1
+  workorder_type: QWO
+  capability: or-5-decisions
+  proposal_path: .asep/proposals/C.5-or-5-decision-lifecycle.md
+  proposal_status: approved
+
+repository:
+  head: "e64d32739db9c914948db84ed6905522d662c38c"
+  branch: main
+  working_tree: dirty
+
+ground_truth:
+  hash: "sha256:fe9954390528609062a152224de8e76a657e8a106b478039f2df698e37711745"
+  unchanged: true
+  paths:
+    - knowledge/thesis-agent/03_PROJECT/Decisions.md
+    - knowledge/thesis-agent/03_PROJECT/Thesis-State.md
+    - knowledge/thesis-agent/05_MEMORY/Changelog.md
+
+checks:
+  verdict: PASS
+  passed: 22
+  failed: 0
+  skipped: 2
+  blockers: []
+
+readiness:
+  capability_lifecycle: approved
+  pending_ewo: none
+  open_stop: none
+  preflight_complete: .asep/reports/C.5-preflight-runtime-audit.md
+  measured_runtime_coverage: "80%"
+  qwo_disposition_resolved: true
+  qwo_auto_auth_ready: true
+
+policy_evaluation:
+  automation_level: 2
+  auto_approval_eligible: yes
+  auto_approval_reason: "C.5 approved with refinement; pre-flight 80%; operator disposition C.5-R1 AUTHORIZED"
+
+runtime:
+  health: ok
+  runtime_coverage: "80% (measured pre-flight)"
+
+termination:
+  iteration_count_session: 1
+  no_progress_streak: 0
+  oscillation_detected: false

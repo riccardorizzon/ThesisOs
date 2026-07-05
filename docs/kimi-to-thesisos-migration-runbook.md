@@ -124,6 +124,22 @@ Validazione finale: ogni artefatto master del `Thesis-State.md` risulta
 materializzato/promosso, e ogni file derivato è risalibile alla sua origine via
 manifest.
 
+### Fase 7 — Operational Readiness (OR-1 … OR-7)
+
+Dopo promozione runtime, eseguire i test OR-1 … OR-7 su agente ThesisOS vivo.
+Tutti devono essere PASS prima dell'E2E.
+
+→ `_migration/operational-readiness.md`
+
+### Fase 8 — End-to-End Project Test (E2E)
+
+Dopo OR PASS, simulare una **sessione continua** di lavoro tesi (leggere fonte → bib →
+memoria → outline → paragrafo → stato/changelog). E2E PASS certifica ThesisOS operativo.
+
+→ `_migration/operational-readiness.md` § E2E · log in `operational-readiness-log.md`
+
+**Migrazione conclusa** ⇔ OR tutti PASS **e** E2E PASS.
+
 ---
 
 ## 4. Tassonomia di mappatura (categoria → destinazione reale)
@@ -198,4 +214,13 @@ per ogni `migration_run`.
 - [ ] Fase 3: `mapping.md` con tassonomia reale
 - [ ] Fase 4: piano di migrazione → **approvazione utente**
 - [ ] Fase 5: migrazione applicata, manifest + provenienza compilati
-- [ ] Fase 6: memoria ricostruita e validazione finale superata
+- [ ] Fase 6: memoria ricostruita e validazione post-migrazione superata
+- [x] Fase 7: Operational Readiness (OR-1 … OR-7) tutti PASS su agente vivo
+- [x] Fase 8: End-to-End Project Test (E2E) PASS — ThesisOS operativo
+- [x] Fase E: Release baseline (E.1) — v1.0 Operational
+
+**Operational usage (post-migration):** `docs/thesisos-operational-runbook.md`  
+**Known limitations:** `docs/KNOWN_LIMITATIONS.md`
+
+**Governance (META-0):** capability-driven execution via
+`docs/engineering-program.md` + `.asep/programs/thesis-agent-migration.yaml` — not mega-prompts.

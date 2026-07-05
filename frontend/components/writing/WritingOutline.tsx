@@ -1,61 +1,145 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import type { MarkdownSection } from "@/components/writing/MarkdownEditor";
 import {
-  CHAPTER_STATUS_LABELS,
   WRITING_OUTLINE_STUB,
   type WritingOutlineChapter,
 } from "@/components/writing/writingStub";
 
+export type OutlineFilter = "all" | "in_progress" | "needs_review";
+
 export type WritingOutlineProps = {
   chapters?: WritingOutlineChapter[];
   activeChapterId?: string;
+  activeSectionId?: string;
+  sections?: MarkdownSection[];
   className?: string;
 };
 
+const FILTER_OPTIONS: { id: OutlineFilter; label: string }[] = [
+  { id: "all", label: "Tutti" },
+  { id: "in_progress", label: "In corso" },
+  { id: "needs_review", label: "Da revisionare" },
+];
+
+function filterChapters(
+  chapters: WritingOutlineChapter[],
+  filter: OutlineFilter
+): WritingOutlineChapter[] {
+  switch (filter) {
+    case "in_progress":
+      return chapters.filter((ch) => ch.status === "draft" || ch.status === "review");
+    case "needs_review":
+      return chapters.filter((ch) => ch.status === "review");
+    default:
+      return chapters;
+  }
+}
+
+function chapterHref(chapterId: string, sectionId?: string): string {
+  const base = `/writing/${chapterId}`;
+  if (!sectionId) return base;
+  return `${base}?section=${encodeURIComponent(sectionId)}`;
+}
+
 /**
- * Outline tree stub — left panel of Writing workspace (Spec §5.3).
+ * Outline tree — left panel with status badges and section nav (UI spec §5.2).
  * Layer: Business (Product Plane)
  */
 export function WritingOutline({
   chapters = WRITING_OUTLINE_STUB,
   activeChapterId,
+  activeSectionId,
+  sections = [],
   className,
 }: WritingOutlineProps) {
+  const [filter, setFilter] = useState<OutlineFilter>("all");
+  const visible = useMemo(
+    () => filterChapters(chapters, filter),
+    [chapters, filter]
+  );
+
   return (
     <nav
       aria-label="Outline capitoli"
       className={cn("flex h-full flex-col", className)}
     >
-      <header className="border-b border-border px-4 py-3">
+      <header className="border-b border-border px-3 py-2">
         <h2 className="text-sm font-semibold text-ink">Outline</h2>
-        <p className="mt-0.5 text-xs text-ink-muted">
-          Struttura tesi — drag reorder in PX-2
-        </p>
+        <div
+          className="mt-2 flex rounded-md border border-border bg-surface-muted p-0.5"
+          role="group"
+          aria-label="Filtra capitoli"
+        >
+          {FILTER_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              aria-pressed={filter === opt.id}
+              onClick={() => setFilter(opt.id)}
+              className={cn(
+                "flex-1 rounded px-2 py-1 text-xs font-medium transition-colors",
+                filter === opt.id
+                  ? "bg-surface text-ink shadow-sm"
+                  : "text-ink-muted hover:text-ink"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </header>
-      <ol className="flex-1 overflow-y-auto p-2">
-        {chapters.map((chapter) => {
+
+      <ol className="flex-1 overflow-y-auto p-1">
+        {visible.map((chapter) => {
           const selected = chapter.id === activeChapterId;
           return (
             <li key={chapter.id}>
               <Link
-                href={`/writing/${chapter.id}`}
+                href={chapterHref(chapter.id)}
                 aria-current={selected ? "page" : undefined}
                 className={cn(
-                  "flex flex-col rounded-md px-3 py-2 transition-colors duration-200",
+                  "flex h-row-dense items-center gap-2 rounded-md px-3 transition-colors duration-200",
                   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
                   "focus-visible:outline-accent cursor-pointer",
                   selected
-                    ? "border border-accent bg-accent-subtle"
-                    : "border border-transparent hover:bg-surface-muted"
+                    ? "bg-accent-subtle font-medium text-accent"
+                    : "text-ink hover:bg-surface-muted"
                 )}
               >
-                <span className="text-sm font-medium text-ink">{chapter.title}</span>
-                <span className="mt-0.5 text-xs text-ink-subtle">
-                  {CHAPTER_STATUS_LABELS[chapter.status]}
-                </span>
+                <span className="min-w-0 flex-1 truncate text-sm">{chapter.title}</span>
+                <StatusBadge status={chapter.status} />
               </Link>
+
+              {selected && sections.length > 0 && (
+                <ul className="mb-1 ml-3 border-l border-border pl-3">
+                  {sections.map((section) => {
+                    const sectionActive = section.id === activeSectionId;
+                    return (
+                      <li key={section.id}>
+                        <Link
+                          href={chapterHref(chapter.id, section.id)}
+                          className={cn(
+                            "flex h-row-dense items-center truncate pl-2 text-xs transition-colors",
+                            "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+                            "focus-visible:outline-accent",
+                            sectionActive
+                              ? "border-l-2 border-accent font-medium text-accent"
+                              : "border-l-2 border-transparent text-ink-muted hover:text-ink"
+                          )}
+                          style={{ paddingLeft: `${(section.level - 1) * 12 + 8}px` }}
+                        >
+                          {section.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </li>
           );
         })}

@@ -130,6 +130,20 @@ def test_render_grounding_prompt_numbers_and_cites():
     assert "Alpha." in out and "Beta." in out
 
 
+def test_render_grounding_prompt_binding_decisions_clause():
+    out = render_grounding_prompt([], has_binding_decisions=True)
+    assert "BINDING DECISIONS" in out
+    assert "CORPUS-02" in out
+    assert "outside knowledge" not in out
+
+
+def test_render_grounding_prompt_corpus_list_taxonomy_clause():
+    out = render_grounding_prompt([], is_corpus_list_query=True)
+    assert "A.1 (FONDAMENTALE)" in out
+    assert "A.3 (PERIFERICO)" in out
+    assert "CORPUS-01" in out
+
+
 async def test_citations_propagated_to_graph_state():
     llm = CapturingLLM()
     results = [

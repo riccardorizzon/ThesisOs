@@ -1,5 +1,10 @@
 # ASEP — MB2 Adaptive Runtime Design Spec (L4)
 
+> **Normative authority superseded (2026-07-05):** Runtime contract is now
+> `docs/superpowers/specs/mb2-engineering-runtime-spec.md` (MB2 Specification of Record).
+> This document remains a **historical reference implementation roadmap** for Era I
+> cycle head/tail (Observe → Replan, D1–D11). Do not use for conformance decisions.
+
 - **Date:** 2026-06-25 (rebased 2026-06-25)
 - **Status:** **Architect Approved 2026-06-25** — spec frozen; L4 Phase 0 authorized; MB2 D1–D11 after Phase 0 gate.
 - **Milestone:** Platform Track **MB2** — L4 implementation of frozen constitution (not a redesign).

@@ -4,6 +4,8 @@ import { cn } from "@/lib/cn";
 export type DecisionBadgeProps = {
   decisions: DecisionRef[];
   className?: string;
+  /** Amber emphasis when binding decision conflicts with selection — wired by Integration A */
+  conflict?: boolean;
 };
 
 export function bindingDecisions(decisions: DecisionRef[]): DecisionRef[] {
@@ -14,7 +16,11 @@ export function bindingDecisions(decisions: DecisionRef[]): DecisionRef[] {
  * Binding decision count/summary from ContextPacket.
  * Layer: Business (Product Plane)
  */
-export function DecisionBadge({ decisions, className }: DecisionBadgeProps) {
+export function DecisionBadge({
+  decisions,
+  className,
+  conflict = false,
+}: DecisionBadgeProps) {
   const binding = bindingDecisions(decisions);
   if (binding.length === 0) {
     return null;
@@ -28,13 +34,26 @@ export function DecisionBadge({ decisions, className }: DecisionBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent tabular-nums",
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium tabular-nums",
+        conflict
+          ? "border border-warning/30 bg-warning/10 text-warning"
+          : "bg-accent-subtle text-accent",
         className
       )}
       title={summaries}
       data-testid="decision-badge"
-      aria-label={`${binding.length} ${label}: ${titles}`}
+      data-conflict={conflict ? "true" : "false"}
+      aria-label={
+        conflict
+          ? `Attenzione: ${binding.length} ${label}: ${titles}`
+          : `${binding.length} ${label}: ${titles}`
+      }
     >
+      {conflict && (
+        <span aria-hidden="true" data-testid="decision-badge-warning-icon">
+          ⚠
+        </span>
+      )}
       {binding.length} {label}
     </span>
   );

@@ -1,0 +1,18 @@
+# QC Certificate — PX1-EWO-005
+certificate_version: "1.0"
+issued_at: "2026-07-03T17:40:00Z"
+issued_by: quality-controller
+
+proposal:
+  workorder_id: PX1-EWO-005
+  capability: px1-ewo-005-context-v0
+  proposal_status: approved
+
+checks:
+  verdict: PASS
+
+verification:
+  backend_tests: "326/326 PASS (1 skipped)"
+  frontend_tests: "70/70 PASS"
+  frontend_build: PASS
+  make_ci: PASS

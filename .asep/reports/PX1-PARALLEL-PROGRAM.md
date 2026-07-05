@@ -253,20 +253,20 @@ When done, output:
 
 ## Current state (Supervisor OBSERVE)
 
-| EWO | Status | Ready |
-|-----|--------|-------|
-| 001–005 | implemented | — |
-| **006** | **merged** | Wave A |
-| **008** | **merged** | Wave A |
-| **009** | **merged** | Wave A |
-| **007** | **merged** | Wave B @ `543d870` |
-| **010** | **merged** | Wave B @ `c99f7db` |
-| **011** | **merged** | Wave B @ `89c0824` |
-| **012** | **ready** | **Wave C** — dispatch Sub-agent G |
-| QWO-PX1-001 | blocked | blocked until 012 |
+> **Updated:** 2026-07-03 — **PX-1 COMPLETE** (QWO-PX1-001-R1 PASS)
+
+| EWO / QWO | Status |
+|-----------|--------|
+| PX1-EWO-001…012 | **implemented** |
+| **QWO-PX1-001-R1** | **qualified — PASS** |
+| **PX-1 Foundation** | **COMPLETE** |
+| PX-2 | **EXCLUDED** — amendment proposed: `docs/product/EXECUTION-AUTHORIZATION-PX2-AMENDMENT.md` |
+
+**Qualification:** `.asep/reports/QWO-PX1-001-R1.md`  
+**Program disposition:** `.asep/reports/PX1-COMPLETE.md`
 
 **Wave A handoff:** `.asep/reports/PX1-WAVE-A-handoff.md` (2026-07-03)  
-**Wave B handoff:** `.asep/reports/PX1-WAVE-B-handoff.md` — **barrier PASS** @ `89c0824`, `make ci` PASS (2026-07-03)
+**Wave B handoff:** `.asep/reports/PX1-WAVE-B-handoff.md` — barrier PASS @ `89c0824`
 
 ---
 

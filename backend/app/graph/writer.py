@@ -17,16 +17,18 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Protocol
 
+from app.graph.inference_enforcement import generate_with_citation_enforcement
 from app.graph.orchestration.writer_prompt import (
     allowed_citation_source_ids,
     build_citations,
     compose_writer_wire,
+    compose_writing_panel_wire,
     filter_citations,
 )
 from app.graph.prompt_wire import format_grounding_sources
 from app.llm.base import LLMClient
 from app.schemas.draft import DraftResult, WriterBrief
-from app.schemas.graph_state import AgentError, GraphState, Message
+from app.schemas.graph_state import AgentError, GraphState, Message, RetrievedChunk
 
 Emit = Callable[[dict], None]
 
@@ -53,20 +55,20 @@ class LLMWriter:
         self, brief: WriterBrief, *, emit: Emit | None = None
     ) -> DraftResult:
         wire = [{"role": m.role, "content": m.content} for m in compose_writer_wire(brief)]
-        parts: list[str] = []
-        usage: dict = {}
+
+        def _emit(ev: dict) -> None:
+            if emit is not None:
+                emit(ev)
+
         try:
-            async for chunk in self._llm.astream(wire):
-                if chunk.text:
-                    parts.append(chunk.text)
-                    if emit is not None:
-                        emit({"type": "token", "text": chunk.text})
-                if chunk.metadata.get("usage"):
-                    usage = chunk.metadata["usage"]
+            draft, usage, _retried = await generate_with_citation_enforcement(
+                self._llm,
+                wire,
+                academic=True,
+                emit=_emit if emit is not None else None,
+            )
         except Exception as exc:  # noqa: BLE001 — surfaced as generation_failed by the node
             raise WriterGenerationError(str(exc)) from exc
-
-        draft = "".join(parts)
         citations = build_citations(brief.retrieved_context)
         metrics: dict = {
             "draft_chars": len(draft),
@@ -80,6 +82,77 @@ class LLMWriter:
             metadata={"writer": "llm"},
             metrics=metrics,
         )
+
+    async def run_panel_action(
+        self,
+        *,
+        action: str,
+        selection_text: str | None,
+        chapter_content: str,
+        context_summary: str | None,
+        retrieved_context: list[RetrievedChunk],
+        emit: Emit | None = None,
+    ) -> DraftResult:
+        """Lateral writing-panel action with context packet (PX2-EWO-003)."""
+        wire = [
+            {"role": m.role, "content": m.content}
+            for m in compose_writing_panel_wire(
+                action=action,
+                selection_text=selection_text,
+                chapter_content=chapter_content,
+                context_summary=context_summary,
+                retrieved_context=retrieved_context,
+            )
+        ]
+
+        def _emit(ev: dict) -> None:
+            if emit is not None:
+                emit(ev)
+
+        try:
+            draft, usage, _retried = await generate_with_citation_enforcement(
+                self._llm,
+                wire,
+                academic=True,
+                emit=_emit if emit is not None else None,
+            )
+        except Exception as exc:  # noqa: BLE001
+            raise WriterGenerationError(str(exc)) from exc
+
+        citations = build_citations(retrieved_context)
+        metrics: dict = {
+            "draft_chars": len(draft),
+            "source_count": len(retrieved_context),
+        }
+        if usage:
+            metrics["usage"] = usage
+        return DraftResult(
+            draft=draft,
+            citations=citations,
+            metadata={"writer": "llm", "writing_panel_action": action},
+            metrics=metrics,
+        )
+
+
+async def run_writing_panel_action(
+    writer: LLMWriter,
+    *,
+    action: str,
+    selection_text: str | None,
+    chapter_content: str,
+    context_summary: str | None,
+    retrieved_context: list[RetrievedChunk],
+    emit: Emit | None = None,
+) -> DraftResult:
+    """Writing-panel entry — delegates to `LLMWriter.run_panel_action`."""
+    return await writer.run_panel_action(
+        action=action,
+        selection_text=selection_text,
+        chapter_content=chapter_content,
+        context_summary=context_summary,
+        retrieved_context=retrieved_context,
+        emit=emit,
+    )
 
 
 def make_writer_node(

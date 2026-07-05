@@ -1,0 +1,227 @@
+# Capability Graph — PX-EXEC (Execution Orchestration Platform)
+#
+# Platform track — Era II / MB2.
+# Platform lifecycle: proposed → specified → implementing → qualified → promoted → maintenance → deprecated
+# Navigation status: specified | ready | in_progress | done | blocked
+# program: .asep/programs/px-exec.yaml
+
+platform: ASEP Platform Track
+
+governance:
+  adr: decisions/ADR-0042-engineering-runtime.md
+  sor: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+  sor_compatibility: .asep/governance/sor-compatibility-policy.md
+  runtime_model: docs/platform/runtime-model-v2.md
+  program: .asep/programs/px-exec.yaml
+  supervisor: .asep/governance/engineering-supervisor.md
+  specification_freeze: .asep/certificates/MB2-SOR-20260705.yaml
+
+capabilities:
+
+  mb2-engineering-runtime:
+    title: MB2 — Engineering Runtime
+    aliases: [engineering runtime, mb2, px-exec, platform runtime]
+    milestone: MB2
+    program: px-exec
+    lifecycle: specified
+    status: specified
+    specification:
+      freeze: frozen
+      frozen_at: "2026-07-05"
+      sor: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+      certificate: .asep/certificates/MB2-SOR-20260705.yaml
+      report: .asep/reports/MB2-SPECIFICATION-FREEZE.md
+    implementation:
+      freeze: open
+      status: not_authorized
+    depends_on: []
+    children:
+      - px-exec-1-event-model
+      - px-exec-2-rule-engine
+      - px-exec-3-dependency-engine
+      - px-exec-4-job-queue
+      - px-exec-5-scheduler
+      - px-exec-6-state-projection
+      - px-exec-7-merge-plugin
+      - px-exec-8-integration-plugin
+      - px-exec-9-qualification-plugin
+      - px-exec-10-dashboard-projection
+      - px-exec-11-metrics-plugin
+      - px-exec-12-notification-plugin
+      - px-exec-13-agent-provider
+      - px-exec-14-multi-program
+      - px-exec-15-recovery-policies
+
+  px-exec-1-event-model:
+    title: Event Model & Bus
+    aliases: [event bus, build events, event catalog]
+    phase: PX-EXEC-P1
+    lifecycle: specified
+    status: specified
+    depends_on: []
+    requires: [ADR-0042, runtime-model-v2 §6]
+    artifacts: [builder_engine/events.py]
+    acceptance:
+      - v2 catalog events defined
+      - append-only log durable
+      - idempotent handlers
+
+  px-exec-2-rule-engine:
+    title: Rule Engine
+    aliases: [rules, reactive workflow, event rules]
+    phase: PX-EXEC-P1
+    lifecycle: specified
+    status: specified
+    depends_on: [px-exec-1-event-model]
+    requires: [runtime-model-v2 §6.3]
+    acceptance:
+      - declarative rule packs from YAML
+      - no Governance policy evaluation in engine
+
+  px-exec-3-dependency-engine:
+    title: Dependency Engine
+    aliases: [dependency resolver, program graph derivation, execution graph]
+    phase: PX-EXEC-P1
+    lifecycle: specified
+    status: specified
+    depends_on: []
+    requires: [runtime-model-v2 §3, §4]
+    acceptance:
+      - Program Graph → Execution Graph derivation
+      - merge_order as tie-breaker only
+
+  px-exec-4-job-queue:
+    title: Job Queue
+    aliases: [queue, job lifecycle, ewo jobs]
+    phase: PX-EXEC-P1
+    lifecycle: specified
+    status: specified
+    depends_on: [px-exec-3-dependency-engine]
+    requires: [runtime-model-v2 §8, ADR-0025]
+    acceptance:
+      - Job FSM matches L2 Task transitions
+      - recoverable from event log
+
+  px-exec-5-scheduler:
+    title: Scheduler
+    aliases: [agent scheduler, dispatch, wave scheduler]
+    phase: PX-EXEC-P1
+    lifecycle: specified
+    status: specified
+    depends_on: [px-exec-4-job-queue, px-exec-2-rule-engine]
+    requires: [runtime-model-v2 §8.2]
+    artifacts: [builder_engine/scheduler.py]
+    acceptance:
+      - respects locks, parallel limits, Supervisor WAIT
+
+  px-exec-6-state-projection:
+    title: State Projection
+    aliases: [projection, status model, derived state]
+    phase: PX-EXEC-P1
+    lifecycle: specified
+    status: specified
+    depends_on: [px-exec-1-event-model]
+    requires: [runtime-model-v2 §9]
+    acceptance:
+      - schema v1 rebuildable from events
+      - CLI reads projection only
+
+  px-exec-7-merge-plugin:
+    title: Merge Plugin
+    aliases: [merge engine, merge manager, merge planner]
+    phase: PX-EXEC-P2
+    lifecycle: specified
+    status: blocked
+    depends_on: [px-exec-5-scheduler, px-exec-2-rule-engine]
+    requires: [runtime-model-v2 §7]
+    artifacts: [builder_engine/merge.py]
+    acceptance:
+      - merge_order from Program Graph enforced
+      - MergeCompleted / MergeFailed events emitted
+
+  px-exec-8-integration-plugin:
+    title: Integration Plugin
+    aliases: [integration manager, integration review]
+    phase: PX-EXEC-P2
+    lifecycle: specified
+    status: blocked
+    depends_on: [px-exec-7-merge-plugin]
+    requires: [runtime-model-v2 §7]
+    acceptance:
+      - spawned on MergeCompleted + CI green rule
+      - IntegrationPassed unlocks downstream wave
+
+  px-exec-9-qualification-plugin:
+    title: Qualification Plugin
+    aliases: [qwo trigger, qualification engine]
+    phase: PX-EXEC-P2
+    lifecycle: specified
+    status: blocked
+    depends_on: [px-exec-8-integration-plugin]
+    requires: [runtime-model-v2 §7]
+    acceptance:
+      - QwoSpawned on IntegrationPassed + coverage rule
+      - failure escalates to Supervisor WAIT
+
+  px-exec-10-dashboard-projection:
+    title: Program Dashboard (view)
+    aliases: [program dashboard, observability ui]
+    phase: PX-EXEC-P3
+    lifecycle: specified
+    status: blocked
+    depends_on: [px-exec-6-state-projection]
+    requires: [runtime-model-v2 §9.3]
+    acceptance:
+      - zero scheduling logic in UI
+      - reads projection API only
+
+  px-exec-11-metrics-plugin:
+    title: Metrics Plugin
+    aliases: [metrics, observability]
+    phase: PX-EXEC-P3
+    lifecycle: specified
+    status: blocked
+    depends_on: [px-exec-1-event-model]
+    requires: [runtime-model-v2 §7]
+
+  px-exec-12-notification-plugin:
+    title: Notification Plugin
+    aliases: [notifications, alerts]
+    phase: PX-EXEC-P3
+    lifecycle: specified
+    status: blocked
+    depends_on: [px-exec-1-event-model]
+    requires: [runtime-model-v2 §7]
+
+  px-exec-13-agent-provider:
+    title: Agent Provider Abstraction
+    aliases: [agent provider, multi-provider runtime]
+    phase: PX-EXEC-P4
+    lifecycle: specified
+    status: blocked
+    depends_on: [px-exec-5-scheduler]
+    requires: [runtime-model-v2 §10]
+    acceptance:
+      - CursorTaskProvider reference
+      - second stub provider passes contract tests
+
+  px-exec-14-multi-program:
+    title: Multi-Program Execution
+    aliases: [parallel programs, concurrent queues]
+    phase: PX-EXEC-P4
+    lifecycle: specified
+    status: blocked
+    depends_on: [px-exec-4-job-queue, px-exec-13-agent-provider]
+    requires: [runtime-model-v2 §8]
+
+  px-exec-15-recovery-policies:
+    title: Recovery Policies
+    aliases: [retry, failed job recovery]
+    phase: PX-EXEC-P4
+    lifecycle: specified
+    status: blocked
+    depends_on: [px-exec-4-job-queue, px-exec-2-rule-engine]
+    requires: [runtime-model-v2 §8.1]
+    acceptance:
+      - FAILED → READY via explicit rule or operator
+      - audit event on every recovery

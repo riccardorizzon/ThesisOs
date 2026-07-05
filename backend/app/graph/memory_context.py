@@ -1,6 +1,6 @@
 """Pre-turn memory loader — operational kinds only (M2 spec §9.2).
 
-Loads editable + pinned user/thesis from MemoryService, renders a system
+Loads editable, binding decisions, and pinned user/thesis from MemoryService, renders a system
 prefix, and prepends it to wire messages for this turn. Transient only:
 no GraphState fields added; ConversationService persists user/assistant only.
 """

@@ -1,0 +1,49 @@
+# ThesisOS v1.0 Operational — Release Manifest (FROZEN)
+# E.1 Release Baseline — do not edit after issuance; new baseline = new manifest
+manifest_version: "1.0"
+release: thesisos-v1.0-operational
+issued_at: "2026-07-01T02:15:00Z"
+workorder: E.1
+repository_head: "e64d32739db9c914948db84ed6905522d662c38c"
+migration_run: kimi-claw-2026-06
+program: thesis-agent-migration
+
+status:
+  operational_readiness: achieved
+  integration_e2e: PASS
+  release_baseline: frozen
+
+qualification_summary:
+  or-1-thesis-structure: { run: C.1-R2, verdict: PASS, lifecycle: qualified }
+  or-2-stigmata-framework: { run: C.2-R2, verdict: PASS, lifecycle: qualified }
+  or-3-corpus: { run: C.3-R4, verdict: PASS, lifecycle: qualified }
+  or-4-rules: { run: C.4-R1, verdict: PASS, lifecycle: qualified }
+  or-5-decisions: { run: C.5-R1, verdict: PASS, lifecycle: qualified }
+  or-6-write-paragraph: { run: C.6-R3, verdict: PASS*, lifecycle: qualified, platform_limitation: W-06 }
+  or-7-memory-update: { run: C.7-R1, verdict: PASS, lifecycle: qualified }
+  e2e-session: { run: e2e-2026-07-01, verdict: PASS, lifecycle: operational }
+
+known_limitations: docs/KNOWN_LIMITATIONS.md
+capability_registry: .asep/capabilities/thesis-agent-migration.yaml
+operational_log: knowledge/thesis-agent/_migration/operational-readiness-log.md
+operational_spec: knowledge/thesis-agent/_migration/operational-readiness.md
+
+reports:
+  e2e: .asep/reports/D.1-E2E.md
+  or6_disposition: .asep/reports/C.6-R3-disposition.md
+  e1: .asep/reports/E.1-release-baseline.md
+
+ewo_implemented:
+  - EWO-1
+  - EWO-2
+  - EWO-3
+  - EWO-4
+  - EWO-4A
+  - EWO-7B
+  - EWO-7C
+
+post_baseline_policy: >
+  No capability, oracle, acceptance criteria, or governance changes without
+  new engineering change process (WorkOrder + operator authorization).
+
+recommended_git_tag: thesisos-v1.0-operational

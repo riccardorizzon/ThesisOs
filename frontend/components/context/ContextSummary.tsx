@@ -8,14 +8,36 @@ import { cn } from "@/lib/cn";
 export type ContextSummaryProps = {
   packet: ContextPacket;
   className?: string;
+  onCountsClick?: () => void;
 };
 
 /**
- * Composable context counts — Spec §6.4 (fonti · concetti · decisioni · citazioni).
+ * Composable context counts — Spec §6.4 (fonti · decisioni · voci · citazioni).
  * Layer: Business (Product Plane)
  */
-export function ContextSummary({ packet, className }: ContextSummaryProps) {
+export function ContextSummary({
+  packet,
+  className,
+  onCountsClick,
+}: ContextSummaryProps) {
   const label = formatContextBarLabel(contextBarCounts(packet));
+
+  if (onCountsClick) {
+    return (
+      <button
+        type="button"
+        className={cn(
+          "text-sm tabular-nums text-ink-muted transition-colors hover:text-ink",
+          className
+        )}
+        aria-label={`Riepilogo contesto: ${label}. Apri scheda Contesto`}
+        data-testid="context-summary"
+        onClick={onCountsClick}
+      >
+        {label}
+      </button>
+    );
+  }
 
   return (
     <p

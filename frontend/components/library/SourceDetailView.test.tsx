@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { SourceDetailView } from "./SourceDetailView";
 import type { LibrarySource } from "@/lib/libraryStub";
 
@@ -36,11 +36,15 @@ describe("SourceDetailView", () => {
   it("renders source metadata and related concepts", () => {
     render(<SourceDetailView source={TEST_SOURCE} />);
 
-    expect(screen.getByRole("heading", { name: "L'opera d'arte" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", {
+        name: /L'opera d'arte/i,
+      })
+    ).toBeTruthy();
     expect(screen.getByText("Walter Benjamin")).toBeTruthy();
-    expect(screen.getByText(/Approvata/)).toBeTruthy();
-    expect(screen.getByText("Aura")).toBeTruthy();
-    expect(screen.getByText("Riproducibilità tecnica")).toBeTruthy();
+    expect(screen.getAllByText(/Approvata/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Aura").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Riproducibilità tecnica").length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /← Sources/i })).toHaveAttribute(
       "href",
       "/sources"
@@ -54,5 +58,16 @@ describe("SourceDetailView", () => {
       "href",
       "/knowledge/aura"
     );
+  });
+
+  it("shows Collega al capitolo when chapter context provided", () => {
+    localStorage.clear();
+    render(<SourceDetailView source={TEST_SOURCE} chapterContext="cap-2" />);
+
+    expect(screen.getByTestId("link-to-chapter-btn")).toHaveTextContent(
+      "Collega al capitolo"
+    );
+    fireEvent.click(screen.getByTestId("link-to-chapter-btn"));
+    expect(screen.getByTestId("link-success")).toBeTruthy();
   });
 });

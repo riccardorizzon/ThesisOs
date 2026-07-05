@@ -1,0 +1,96 @@
+backend/.venv/bin/ruff check backend/app
+[1;32mAll checks passed![0m
+cd frontend && npx tsc --noEmit
+bash bin/ensure-test-db.sh
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+cd backend && .venv/bin/python -m pytest -q
+........................................................................ [ 21%]
+........................................................................ [ 43%]
+........................................s............................... [ 65%]
+........................................................................ [ 87%]
+........................................                                 [100%]
+=============================== warnings summary ===============================
+../../../../app/tests/test_async_session.py:6
+  /app/tests/test_async_session.py:6: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /home/ricky/agent thesis/backend/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+327 passed, 1 skipped, 2 warnings in 36.83s
+cd frontend && npm run test
+
+> thesisos-frontend@0.0.0 test
+> vitest run
+
+
+ RUN  v3.2.6 /home/ricky/agent thesis/frontend
+
+ ✓ components/writing/WritingAiPanel.test.tsx (2 tests) 360ms
+   ✓ WritingAiPanel > renders disabled AI action buttons  328ms
+ ✓ components/library/SourcesView.test.tsx (4 tests) 493ms
+ ✓ components/writing/WritingWorkspace.test.tsx (4 tests) 483ms
+ ✓ components/writing/WritingOutline.test.tsx (3 tests) 317ms
+ ✓ components/AppShell.test.tsx (4 tests) 403ms
+ ✓ components/review/ReviewMode.test.tsx (4 tests) 532ms
+ ✓ components/HomeView.test.tsx (2 tests) 347ms
+   ✓ HomeView > renders progress, continue, quick actions, and activity  306ms
+ ✓ components/library/SourceDetailView.test.tsx (2 tests) 289ms
+ ✓ components/library/KnowledgeDetailView.test.tsx (2 tests) 261ms
+ ✓ components/review/ReviewActionBar.test.tsx (3 tests) 242ms
+ ✓ components/review/ReviewWorkflowSteps.test.tsx (3 tests) 225ms
+ ✓ components/library/KnowledgeView.test.tsx (2 tests) 310ms
+ ✓ components/navigation/Breadcrumbs.test.tsx (3 tests) 229ms
+ ✓ components/EntityCard.test.tsx (3 tests) 235ms
+ ✓ components/writing/WritingEditorShell.test.tsx (2 tests) 245ms
+ ✓ components/navigation/ProjectSwitcher.test.tsx (1 test) 168ms
+ ✓ components/MemoryList.test.tsx (2 tests) 137ms
+ ✓ components/DocumentList.test.tsx (2 tests) 134ms
+ ✓ components/MemoryVersionList.test.tsx (1 test) 68ms
+ ✓ components/ProgressRing.test.tsx (3 tests) 97ms
+ ✓ components/context/ContextBar.test.tsx (9 tests) 137ms
+ ✓ components/review/ReviewDocumentSelector.test.tsx (2 tests) 199ms
+ ✓ components/DocumentChunkList.test.tsx (2 tests) 88ms
+ ✓ components/MemoryKindBadge.test.tsx (2 tests) 86ms
+ ✓ components/review/ReviewComparePanel.test.tsx (2 tests) 59ms
+ ✓ components/DocumentStatusBadge.test.tsx (4 tests) 73ms
+ ✓ components/navigation/WorkspaceNav.test.tsx (2 tests) 59ms
+ ✓ lib/memoryClient.test.ts (7 tests) 36ms
+ ✓ lib/documentClient.test.ts (8 tests) 26ms
+ ✓ lib/nav.test.ts (12 tests) 16ms
+ ✓ lib/memoryStore.test.ts (3 tests) 9ms
+ ✓ lib/chapterClient.test.ts (7 tests) 20ms
+ ✓ lib/routes.test.ts (5 tests) 13ms
+ ✓ lib/projectContext.test.ts (6 tests) 11ms
+ ✓ lib/progress.test.ts (7 tests) 10ms
+ ✓ lib/documentStore.test.ts (2 tests) 10ms
+
+ Test Files  36 passed (36)
+      Tests  132 passed (132)
+   Start at  18:48:46
+   Duration  22.66s (transform 1.26s, setup 4.10s, collect 6.87s, tests 6.43s, environment 33.57s, prepare 6.08s)
+
+cd builder_engine && (test -d .venv || python3 -m venv .venv) \
+	&& .venv/bin/pip install -q -e ".[dev]" \
+	&& .venv/bin/pytest -q
+.................................................................        [100%]
+65 passed in 0.29s
+cd backend && .venv/bin/python -m pytest -q tests/test_schema_snapshot.py
+.                                                                        [100%]
+1 passed in 0.51s
+Scope-creep scan (review any matches — must be intentional milestone stubs):
+backend/app/llm/base.py:25:        raise NotImplementedError("LLM wired in M1")
+backend/app/llm/base.py:28:        raise NotImplementedError("LLM wired in M1")
+backend/app/llm/base.py:32:        raise NotImplementedError("LLM wired in M1")
+backend/app/llm/base.py:35:        raise NotImplementedError("LLM wired in M1")
+backend/app/llm/litellm_client.py:58:            raise NotImplementedError(f"embed failed: {exc}") from exc
+backend/app/llm/litellm_client.py:63:        raise NotImplementedError("vision wired in a later milestone")
+backend/app/services/conversation/service.py:154:            except NotImplementedError:
+backend/app/api/jobs.py:14:    raise HTTPException(status_code=501, detail="job execution wired post-M0 (ADR-0009)")
+backend/app/api/jobs.py:19:    raise HTTPException(status_code=501, detail="job execution wired post-M0 (ADR-0009)")
+backend/app/services/jobs/queue.py:2:    """ADR-0009. Returns job id. Worker wired post-M0."""
+backend/app/services/jobs/queue.py:3:    raise NotImplementedError("job queue wired post-M0")
+backend/app/services/retrieval/service.py:237:            except NotImplementedError as exc:
+backend/app/services/retrieval/service.py:259:        except NotImplementedError as exc:
