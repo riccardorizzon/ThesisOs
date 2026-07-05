@@ -84,6 +84,42 @@ export type ConformanceProjection = {
   gates: { ci: string; coverage: string };
 };
 
+export type ProgramGraphNode = {
+  node_id: string;
+  node_type: "ewo" | "integration";
+  wave_id: string;
+};
+
+export type ProgramGraphWave = {
+  wave_id: string;
+  title: string;
+  depends_on_wave?: string | null;
+  execute_in_parallel: boolean;
+  merge_order: string[];
+  workorders: string[];
+  unblocks?: string | null;
+  wave_type?: string | null;
+  status?: string | null;
+  sub_agents: Record<string, string>;
+  nodes: ProgramGraphNode[];
+};
+
+export type ProgramGraphEdge = {
+  source: string;
+  target: string;
+  edge_type: "depends_on_wave" | "merge_order";
+  wave_id?: string | null;
+};
+
+export type ProgramGraphObservation = {
+  schema_version: 1;
+  program_id: string;
+  parent_program: string;
+  source: string;
+  waves: ProgramGraphWave[];
+  edges: ProgramGraphEdge[];
+};
+
 export const KNOWLEDGE_STATE_LABELS: Record<KnowledgeState, string> = {
   candidate: "Candidato",
   validated: "Validato",

@@ -6,6 +6,7 @@ import type {
   KnowledgeObjectEnvelope,
   KnowledgeObjectListResponse,
   KnowledgeObjectType,
+  ProgramGraphObservation,
 } from "@/lib/knowledgeTypes";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -108,4 +109,17 @@ export async function getConformanceProjection(
     throw new Error(`Projection fetch failed: ${res.status}`);
   }
   return res.json() as Promise<ConformanceProjection>;
+}
+
+export async function getProgramGraphObservation(
+  projectId: string = DEFAULT_PROJECT
+): Promise<ProgramGraphObservation> {
+  const res = await fetch(
+    `${BASE}/projects/${projectId}/conformance/program-graph`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) {
+    throw new Error(`Program graph fetch failed: ${res.status}`);
+  }
+  return res.json() as Promise<ProgramGraphObservation>;
 }
