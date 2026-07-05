@@ -29,14 +29,13 @@ Record each deviation as it occurs. Do not batch. Do not modify SoR from this lo
 
 ---
 
-## Summary (Wave A snapshot — 2026-07-05)
+## Summary (PX-3 complete — 2026-07-05)
 
 - Total entries: **0**
 - By class: I **0** / S **0** / A **0** / N **0**
 - Normative changes required: **no**
-- Conformance Review: `.asep/reports/PX3-CONFORMANCE-REVIEW-WAVE-A.md` — **PASS** (YES / NO / NO / NO)
-- SoR coverage matrix: `.asep/reports/MB2-CONFORMANCE-COVERAGE.md`
-- SoR sections exercised (partial+): Program Graph, layer invariants, conformance discipline
-- SoR sections untested (theoretical): Execution Graph, Event/Rule/Plugin, Projection, Failure, Recovery, MB2-Q*
-
-**Fill at PX-3 completion:** full milestone assessment → `.asep/reports/MB2-CONFORMANCE-ASSESSMENT.md`
+- Waves A/B/C: all **PASS** (Integrations A, B, C)
+- Conformance Assessment: `.asep/reports/MB2-CONFORMANCE-ASSESSMENT.md` — **PASS** (pending Architect ratification)
+- SoR coverage matrix: `.asep/reports/MB2-CONFORMANCE-COVERAGE.md` — **9/15 evidenced**
+- Class C deferred: §4.3–4.4, §6, §7, §8, §12, §13 → px-exec + MB2-Q*
+- §11 Failure (optional Observable): not evidenced — no artificial failure

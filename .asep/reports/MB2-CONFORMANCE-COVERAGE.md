@@ -72,7 +72,7 @@ PX-3 validates SoR **sufficiency for product development** — not Runtime imple
 | Architect Review Wave B | `.asep/reports/PX3-ARCHITECT-REVIEW-WAVE-B-20260705.md` |
 | Runtime Engineering | **NOT AUTHORIZED** |
 | PX-4 | **NOT AUTHORIZED** |
-| Next artifact (post Wave C) | `MB2-CONFORMANCE-ASSESSMENT.md` (Architect gate) |
+| Conformance Assessment | `.asep/reports/MB2-CONFORMANCE-ASSESSMENT.md` — **PASS** (pending Architect ratification) |
 
 ---
 
@@ -175,7 +175,7 @@ Class **C** and **No (Runtime)** rows transfer to **px-exec** + MB2-Q* — not f
 Wave A     COMPLETE · 4 EWO · N=0
 Wave B     COMPLETE · 3 EWO · Integration B PASS · N=0
 Wave C     COMPLETE · 3 EWO · Integration C PASS · N=0
-Target     MB2-CONFORMANCE-ASSESSMENT.md (Architect gate)
+Assessment MB2-CONFORMANCE-ASSESSMENT.md PASS — pending Architect ratification
 ```
 
 ---
