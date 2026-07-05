@@ -120,6 +120,64 @@ export type ProgramGraphObservation = {
   edges: ProgramGraphEdge[];
 };
 
+export type KnowledgeGraphNode = {
+  id: string;
+  slug: string;
+  title: string;
+  knowledge_state: KnowledgeState;
+  is_core: boolean;
+  degree: number;
+};
+
+export type KnowledgeGraphEdge = {
+  source: string;
+  target: string;
+  relation: "related" | "supports" | "extends" | "contradicts";
+};
+
+export type KnowledgeGraphResponse = {
+  schema_version: 1;
+  focus_slug?: string | null;
+  depth: number;
+  view_mode: "graph" | "list";
+  nodes: KnowledgeGraphNode[];
+  edges: KnowledgeGraphEdge[];
+  limits: {
+    default_visible: number;
+    soft_limit: number;
+    hard_limit: number;
+    visible_count: number;
+    total_in_scope: number;
+    truncated: boolean;
+    force_list_view: boolean;
+    show_performance_banner: boolean;
+  };
+};
+
+export type JobFsmObservation = {
+  schema_version: 1;
+  read_only: true;
+  source: string;
+  vocabulary_domains: Array<{
+    domain: string;
+    vocabulary: string;
+    values: string[];
+    notes: string;
+  }>;
+  aggregate_to_job_fsm: Array<{
+    aggregate_status: string;
+    job_fsm_subset: string;
+    display_label: string;
+  }>;
+  projection_jobs: Array<{
+    ewo_id: string;
+    aggregate_status: string;
+    job_fsm_subset: string;
+    wave_id?: string | null;
+  }>;
+  inv_r_11_note: string;
+};
+
 export const KNOWLEDGE_STATE_LABELS: Record<KnowledgeState, string> = {
   candidate: "Candidato",
   validated: "Validato",

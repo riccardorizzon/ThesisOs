@@ -3,6 +3,8 @@ import type {
   ConceptDetailEnvelope,
   ConceptHeaderEnvelope,
   ConformanceProjection,
+  JobFsmObservation,
+  KnowledgeGraphResponse,
   KnowledgeObjectEnvelope,
   KnowledgeObjectListResponse,
   KnowledgeObjectType,
@@ -122,4 +124,42 @@ export async function getProgramGraphObservation(
     throw new Error(`Program graph fetch failed: ${res.status}`);
   }
   return res.json() as Promise<ProgramGraphObservation>;
+}
+
+export async function getKnowledgeGraph(
+  options: {
+    projectId?: string;
+    focus?: string;
+    depth?: number;
+    maxNodes?: number;
+    view?: "graph" | "list";
+  } = {}
+): Promise<KnowledgeGraphResponse> {
+  const projectId = options.projectId ?? DEFAULT_PROJECT;
+  const params = new URLSearchParams();
+  if (options.focus != null) params.set("focus", options.focus);
+  if (options.depth != null) params.set("depth", String(options.depth));
+  if (options.maxNodes != null) params.set("max_nodes", String(options.maxNodes));
+  if (options.view != null) params.set("view", options.view);
+
+  const qs = params.toString();
+  const url = `${BASE}/projects/${projectId}/knowledge/graph${qs ? `?${qs}` : ""}`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`Knowledge graph fetch failed: ${res.status}`);
+  }
+  return res.json() as Promise<KnowledgeGraphResponse>;
+}
+
+export async function getJobFsmObservation(
+  projectId: string = DEFAULT_PROJECT
+): Promise<JobFsmObservation> {
+  const res = await fetch(
+    `${BASE}/projects/${projectId}/conformance/job-fsm`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) {
+    throw new Error(`Job FSM observation fetch failed: ${res.status}`);
+  }
+  return res.json() as Promise<JobFsmObservation>;
 }

@@ -1,9 +1,11 @@
-"""Knowledge Object API (PX3-EWO-001)."""
+"""Knowledge Object API (PX3-EWO-001, PX3-EWO-009 §10)."""
 
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
+from app.schemas.knowledge_graph import DEFAULT_VISIBLE_NODES, HARD_NODE_LIMIT
 from app.services.knowledge import KnowledgeObjectNotFoundError, KnowledgeService
+from app.services.knowledge.graph import build_knowledge_graph
 
 router = APIRouter()
 _service = KnowledgeService()
@@ -61,3 +63,22 @@ async def get_concept_definition(project_id: str, slug: str):
         return _service.get_concept_definition(slug)
     except KnowledgeObjectNotFoundError:
         return _err(404, "concept_not_found", f"Unknown concept: {slug}")
+
+
+@router.get("/projects/{project_id}/knowledge/graph")
+async def get_knowledge_graph(
+    project_id: str,
+    focus: str | None = Query(default=None),
+    depth: int = Query(default=1, ge=0, le=4),
+    max_nodes: int = Query(default=DEFAULT_VISIBLE_NODES, ge=1, le=HARD_NODE_LIMIT),
+    view: str | None = Query(default=None),
+):
+    """Knowledge Graph §10 — bounded concept navigation (read-only)."""
+    del project_id
+    graph = build_knowledge_graph(
+        focus_slug=focus,
+        depth=depth,
+        max_nodes=max_nodes,
+        force_list=view == "list",
+    )
+    return graph.model_dump(mode="json")

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   KnowledgeConfidenceChip,
   KnowledgeLifecycleBadge,
@@ -12,6 +14,8 @@ export type ExplainHeaderBarProps = {
 
 /** Explain Page region A — header bar (PX3-EWO-005/006). */
 export function ExplainHeaderBar({ header, className }: ExplainHeaderBarProps) {
+  const graphHref = `/knowledge/graph?focus=${encodeURIComponent(header.slug)}&depth=1`;
+
   return (
     <header
       className={cn(
@@ -29,12 +33,25 @@ export function ExplainHeaderBar({ header, className }: ExplainHeaderBarProps) {
         <KnowledgeLifecycleBadge state={header.knowledge_state} />
         <KnowledgeConfidenceChip level={header.confidence} />
       </div>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
-        {header.title}
-      </h1>
-      {header.subtitle != null && header.subtitle !== "" && (
-        <p className="mt-1 text-sm text-ink-muted">{header.subtitle}</p>
-      )}
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+            {header.title}
+          </h1>
+          {header.subtitle != null && header.subtitle !== "" && (
+            <p className="mt-1 text-sm text-ink-muted">{header.subtitle}</p>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={graphHref}
+            className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:border-accent hover:text-accent"
+            data-testid="explain-grafo-link"
+          >
+            Grafo
+          </Link>
+        </div>
+      </div>
     </header>
   );
 }

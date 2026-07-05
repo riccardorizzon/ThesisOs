@@ -28,12 +28,13 @@ export function KnowledgeConceptCard({
         >
           Apri
         </Link>
-        <span
-          className="rounded-md border border-dashed border-border px-3 py-1.5 text-xs text-ink-subtle"
-          title="Grafo completo — wave successiva"
+        <Link
+          href={`/knowledge/graph?focus=${encodeURIComponent(concept.slug)}&depth=1`}
+          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:border-accent hover:text-accent"
+          data-testid={`concept-grafo-link-${concept.slug}`}
         >
-          Grafo (PX-3+)
-        </span>
+          Grafo
+        </Link>
         {sourceCount > 0 && (
           <Link
             href="/sources"
