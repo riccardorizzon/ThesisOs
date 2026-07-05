@@ -3,7 +3,7 @@
 > **Metric:** Specification coverage — not code coverage, not test count.  
 > **SoR:** `docs/superpowers/specs/mb2-engineering-runtime-spec.md` (2026-07-05)  
 > **Program:** PX-3 Knowledge Experience (first Runtime Conformance Program)  
-> **Updated:** 2026-07-05 — Architect ratification; Yes/Observable column; Conformance framing
+> **Updated:** 2026-07-05 — Wave C complete (Integration C PASS)
 
 ---
 
@@ -61,18 +61,18 @@ PX-3 validates SoR **sufficiency for product development** — not Runtime imple
 
 | Metric | Value |
 |--------|-------|
-| EWOs complete | 7 (Wave A: 4 · Wave B: 3) |
-| Integrations | 2 (A + B) |
+| EWOs complete | **10** (Wave A: 4 · Wave B: 3 · Wave C: 3) |
+| Integrations | **3** (A + B + C) |
 | Conformance Log entries | **0** |
 | N-class | **0** |
-| Rows with evidence (✅ or ⏳) | **7 / 15** |
-| Yes/Observable rows still open | **2** (Execution Graph, Failure — optional) |
+| Rows with evidence (✅ or ⏳) | **9 / 15** |
+| Yes/Observable rows still open | **1** (Failure §11 — optional) |
 | Wave B status | **COMPLETE** |
-| Wave C status | **DISPATCH AUTHORIZED — EWO-008 first** |
+| Wave C status | **COMPLETE** — `.asep/reports/PX3-INTEGRATION-C.md` |
 | Architect Review Wave B | `.asep/reports/PX3-ARCHITECT-REVIEW-WAVE-B-20260705.md` |
 | Runtime Engineering | **NOT AUTHORIZED** |
 | PX-4 | **NOT AUTHORIZED** |
-| Next artifact (post Wave C) | `MB2-CONFORMANCE-ASSESSMENT.md` |
+| Next artifact (post Wave C) | `MB2-CONFORMANCE-ASSESSMENT.md` (Architect gate) |
 
 ---
 
@@ -81,30 +81,31 @@ PX-3 validates SoR **sufficiency for product development** — not Runtime imple
 Legend: **Status** — ✅ evidenced · ⏳ partial evidence · ❌ not evidenced  
 **PX-3?** — Yes · Observable · No (Runtime) · No (Qualification)
 
-| SoR area | § | Status | PX-3 exercisability | Class | Wave A / union evidence |
-|----------|---|--------|---------------------|-------|-------------------------|
+| SoR area | § | Status | PX-3 exercisability | Class | Wave / union evidence |
+|----------|---|--------|---------------------|-------|------------------------|
 | **Program Graph** | 4.1 | ✅ | Yes | A | EWO-001…004 backlog, `px3-parallel.yaml`, merge_order |
-| **Execution Graph** | 4.2 | ❌ | Observable | B | ReadySet not derived; effects visible in program yaml only |
+| **Execution Graph** | 4.2 | ✅ | Observable | B | EWO-008 — program-graph API, Program Trace; `.asep/reports/PX3-EXECUTION-GRAPH-OBSERVATION-20260705.md` |
 | **Job / Checkpoint** | 4.3–4.4 | ❌ | No (Runtime) | C | Awaits Reference Implementation |
 | **Projection document** | 4.5, §9 | ✅ | Yes | A | PX3-PROJECTION-SNAPSHOT; API + Explain consumer |
-| **Job FSM** | 5 | ❌ | Observable | B | Program `status:` — not JobState enum proof |
+| **Job FSM** | 5 | ✅ | Observable | B | EWO-009 — job-fsm API, Knowledge Graph strip; `.asep/reports/PX3-JOB-FSM-OBSERVATION-20260705.md` |
 | **Event model** | 6 | ❌ | No (Runtime) | C | Event catalog / emission — px-exec |
 | **Rule model** | 7 | ❌ | No (Runtime) | C | Event→Action engine — Reference Implementation |
 | **Plugin contracts** | 8 | ❌ | No (Runtime) | C | PluginRegistry — not before Runtime |
 | **Projection model** | 9 | ✅ | Yes | A | EWO-005 PASS — schema v1 API + snapshot |
 | **Supervisor interaction** | 10 | ✅ | Observable | B | EWO-006 observation — WAIT halts region B; PX3-SUPERVISOR-OBSERVATION |
-| **Failure semantics** | 11 | ❌ | Observable | B | Optional Wave B; natural paths only — not forced |
+| **Failure semantics** | 11 | ❌ | Observable | B | Optional — natural paths only; not forced in Wave C |
 | **Recovery semantics** | 12 | ❌ | No (Qualification) | C | MB2-Q6 — not before Runtime |
 | **Qualification MB2-Q*** | 13 | ❌ | No (Qualification) | C | Reference Implementation gates |
-| **Layer invariants** | 3 | ✅ | Yes | A | INV-R-05/06 — Wave A; INV-R-12 Integration B |
+| **Layer invariants** | 3 | ✅ | Yes | A | INV-R-05/06 — Wave A; INV-R-12 Integration B + C |
 | **Non-goals (boundary)** | 2 | ✅ | Yes | A | NG-2 observed |
 
-### Integration evidence (Architect Wave B review)
+### Integration evidence (Architect Wave C review)
 
 | Cross-cutting area | Status | Evidence |
 |--------------------|--------|----------|
 | Integration Constraints | ✅ | EWO-004, EWO-007; INV-R-03 merge_order |
-| Explorer → Explain Chain | ✅ | Integration B; progressive header/definition API |
+| Explorer → Explain Chain | ✅ | Integration B; Integration C adds Graph entry |
+| INV-R-12 (no ready-set in consumer) | ✅ | Integration B projection; Integration C program-graph re-check |
 
 ---
 
@@ -133,17 +134,29 @@ Wave B+ proposals **must** include explicit `covers:` yaml (max 3 elements).
 
 **Wave B:** **COMPLETE** — `.asep/reports/PX3-CONFORMANCE-REVIEW-WAVE-B.md`
 
-### Wave C (DISPATCH AUTHORIZED — EWO-008 first)
+---
 
-| EWO | covers (proposed) | Status |
-|-----|-------------------|--------|
-| PX3-EWO-008 | §4.2; INV-R-01 | **AUTHORIZED** — `.asep/reports/PX3-AUTHORIZATION-EWO-008-20260705.md` |
-| PX3-EWO-009 | §5; INV-R-11 | **PENDING** (await EWO-008 PASS) |
-| PX3-EWO-010 | §4.2; INV-R-12 | **PENDING** (await EWO-009 PASS) |
+## Wave C — union(EWO.covers)
+
+| EWO | covers | Status |
+|-----|--------|--------|
+| PX3-EWO-008 | §4.2; INV-R-01 | **PASS** — `.asep/reports/PX3-EWO-008-execution-graph-observation.md` |
+| PX3-EWO-009 | §5; INV-R-11 | **PASS** — `.asep/reports/PX3-EWO-009-job-fsm-observation.md` |
+| PX3-EWO-010 | §4.2; INV-R-12 | **PASS** — `.asep/reports/PX3-INTEGRATION-C.md` |
+
+**Wave C:** **COMPLETE** — Integration C PASS 2026-07-05
 
 Backlog: `.asep/reports/PX3-WAVE-C-BACKLOG.md`  
 Review: `.asep/reports/PX3-ARCHITECT-DECISION-20260705-WAVE-C-BACKLOG-REVIEW.md`  
 Dispatch: `.asep/reports/PX3-AUTHORIZATION-WAVE-C-20260705.md`
+
+### Wave C coverage delta (vs post–Wave B)
+
+| Row | Pre Wave C | Post Wave C |
+|-----|------------|-------------|
+| §4.2 Execution Graph | ❌ | **✅ Observable** |
+| §5 Job FSM | ❌ | **✅ Observable** |
+| Rows evidenced | 7/15 | **9/15** |
 
 ---
 
@@ -161,8 +174,8 @@ Class **C** and **No (Runtime)** rows transfer to **px-exec** + MB2-Q* — not f
 ```text
 Wave A     COMPLETE · 4 EWO · N=0
 Wave B     COMPLETE · 3 EWO · Integration B PASS · N=0
-Wave C     DISPATCH AUTHORIZED · EWO-008 first executable
-Target     Assessment after Wave C
+Wave C     COMPLETE · 3 EWO · Integration C PASS · N=0
+Target     MB2-CONFORMANCE-ASSESSMENT.md (Architect gate)
 ```
 
 ---
@@ -175,4 +188,5 @@ Target     Assessment after Wave C
 - EWO template: `.asep/templates/conformance-ewo-template.md`
 - Wave B framework: `.asep/reports/PX3-WAVE-B-DESIGN-FRAMEWORK.md`
 - Wave B backlog: `.asep/reports/PX3-WAVE-B-BACKLOG.md`
+- Wave C integration: `.asep/reports/PX3-INTEGRATION-C.md`
 - SoR: `docs/superpowers/specs/mb2-engineering-runtime-spec.md`
