@@ -5,6 +5,7 @@
 
 ```yaml
 platform_contract:
+  classification_schema: platform-contract-v1
   category: C
   hypothesis_id: H-01
   success_metric: "≥3 policy rules evaluated in builder-engine cycle; zero manual policy overrides in audit log for 5 consecutive cycles"

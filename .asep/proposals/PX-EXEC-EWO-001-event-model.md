@@ -4,6 +4,10 @@
 
 ```yaml
 platform_contract:
+  classification_schema: platform-contract-v1
+  classification_mode: retrospective
+  classification_pass: px-exec-20260706-v1
+  classified_on: 2026-07-06
   category: B
   hypothesis_id: H-03
   success_metric: "≥20 engineering cycles logged in 90 days with program_id attribution"

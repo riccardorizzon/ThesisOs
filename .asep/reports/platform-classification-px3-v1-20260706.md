@@ -13,7 +13,7 @@ new scope → new pass id — do not extend an existing pass silently.
 | Pass id | Date | Scope | Report |
 |---------|------|-------|--------|
 | `px3-20260706-v1` | 2026-07-06 | PX3-EWO-001…010 | This document § PX-3 |
-| `px-exec-20260706-v1` | 2026-07-06 | PX-EXEC-EWO-001 only | This document § PX-EXEC |
+| `px-exec-20260706-v1` | 2026-07-06 | PX-EXEC-EWO-001…003 | This document § PX-EXEC |
 
 **Planned (not executed):**
 
@@ -69,8 +69,10 @@ EWO-006 also cites `exit_id: X-08` (supervisor gating in product UI).
 | EWO | category | hypothesis_id | Notes |
 |-----|----------|---------------|-------|
 | PX-EXEC-EWO-001 | B | H-03 | Implemented; hypothesis not satisfied |
+| PX-EXEC-EWO-002 | B | H-03 | Implemented; enables rule engine evidence |
+| PX-EXEC-EWO-003 | B | H-03 | Implemented; enables dependency engine evidence |
 
-PX-EXEC-EWO-002+ retain **native** blocks at filing (no `classification_mode`).
+PX-EXEC-EWO-004+ retain **native** blocks at filing (no `classification_mode`).
 
 ---
 
@@ -78,4 +80,4 @@ PX-EXEC-EWO-002+ retain **native** blocks at filing (no `classification_mode`).
 
 - PX-1, PX-2 proposals (except future `px1-multi-product-v1`)
 - thesis-agent EWOs
-- Open PX-EXEC proposals (002–009)
+- Open PX-EXEC proposals (004–009)

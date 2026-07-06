@@ -5,6 +5,7 @@
 
 ```yaml
 platform_contract:
+  classification_schema: platform-contract-v1
   category: C
   hypothesis_id: H-02
   success_metric: "Dry-run replay of PX-2 wave shows merge ordering enforced without human merge script"
