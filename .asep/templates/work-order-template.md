@@ -1,5 +1,19 @@
 # Work Order — <PHASE> <OBJECTIVE>
 
+> **Platform contract (required):** copy block from `.asep/templates/platform-contract-block.md`  
+> Binding: `docs/platform-justification.md` §5
+
+## Platform contract
+
+```yaml
+platform_contract:
+  category: A | B | C
+  hypothesis_id: H-0N | n/a
+  success_metric: "<measurable>"
+  exit_id: X-0N | n/a
+  program_mode: core | product | rd
+```
+
 ## Identity
 - **WorkOrder id:** <EWO-n | META-n>
 - **Type:** EWO

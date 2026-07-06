@@ -3,6 +3,22 @@
 > Use for **Runtime Conformance Program** Work Orders (PX-3+).  
 > Product specs define *what* to build; this block defines *what SoR surface the EWO validates*.
 
+> **Platform contract (required):** `.asep/templates/platform-contract-block.md`  
+> Conformance EWOs are typically **Category B** (Observable) unless extending §1 Validated surfaces.
+
+---
+
+## Platform contract
+
+```yaml
+platform_contract:
+  category: B
+  hypothesis_id: H-06
+  success_metric: "<SoR section promoted Observable → evidenced in report>"
+  exit_id: n/a
+  program_mode: product
+```
+
 ---
 
 ## Identity

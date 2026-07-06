@@ -10,7 +10,7 @@ id: px-exec
 title: PX-EXEC — Execution Orchestration Platform
 program_type: platform
 status: implementing
-phase: phase_1
+phase: phase_2
 
 lifecycle: implementing
 
@@ -35,9 +35,14 @@ implementation:
     - no_normative_sor_changes_required
   not_authorized:
     - PX-4
-    - phase_2_execution_plugins
     - phase_3_observability
     - phase_4_provider_abstraction
+  phase_2_dispatch:
+    status: authorized
+    authorized_at: "2026-07-06"
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-PHASE-2-DISPATCH-20260706.md
+    backlog: .asep/reports/PX-EXEC-PHASE-2-BACKLOG.md
+    first_executable_ewo: PX-EXEC-EWO-007
   phase_1_exit_gate: MB2-Q1-pass  # SATISFIED @ .asep/reports/MB2-Q1-RUNTIME-GRAPH-20260706.md
   qualification:
     mb2_q1:
@@ -167,7 +172,7 @@ phases:
   phase_1:
     id: PX-EXEC-P1
     title: Runtime Foundation
-    status: implementing
+    status: complete
     wave: wave_a
     goal: >-
       Freeze and implement the Runtime core: event bus, rule engine, dependency
@@ -200,7 +205,7 @@ phases:
   phase_2:
     id: PX-EXEC-P2
     title: Execution Plugins
-    status: planned
+    status: dispatch_authorized
     depends_on_phase: phase_1
     goal: >-
       Register Merge, Integration, and Qualification engines as plugins driven by
@@ -326,6 +331,18 @@ wave_a:
   architect_decision_005_006: .asep/reports/PX-EXEC-ARCHITECT-DECISION-20260706-EWO-005-006.md
   status: wave_a_pass  # all EWO-001…006 implemented; Integration Wave A PASS 2026-07-06
 
+phase_2:
+  backlog: .asep/reports/PX-EXEC-PHASE-2-BACKLOG.md
+  phase: PX-EXEC-P2
+  first_executable_ewo: PX-EXEC-EWO-007
+  proposals:
+    - .asep/proposals/PX-EXEC-EWO-007-merge-plugin.md
+    - .asep/proposals/PX-EXEC-EWO-008-integration-plugin.md
+    - .asep/proposals/PX-EXEC-EWO-009-qualification-plugin.md
+  status: dispatch_authorized
+  authorized_at: "2026-07-06"
+  authorization: .asep/reports/PX-EXEC-AUTHORIZATION-PHASE-2-DISPATCH-20260706.md
+
 workorder_backlog:
   - id: PX-EXEC-EWO-001
     type: EWO
@@ -429,6 +446,44 @@ workorder_backlog:
     status: implemented
     report: .asep/reports/PX-EXEC-EWO-006-state-projection.md
     implemented_at: "2026-07-06"
+
+  - id: PX-EXEC-EWO-007
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: MB2
+    phase: PX-EXEC-P2
+    capability: px-exec-7-merge-plugin
+    title: Merge Plugin
+    sor_sections: ["§8.2 merge"]
+    depends_on: [PX-EXEC-EWO-001, PX-EXEC-EWO-002, PX-EXEC-EWO-003, PX-EXEC-EWO-005]
+    proposal: .asep/proposals/PX-EXEC-EWO-007-merge-plugin.md
+    dispatch: approved_for_registration
+    status: ready
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-PHASE-2-DISPATCH-20260706.md
+
+  - id: PX-EXEC-EWO-008
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: MB2
+    phase: PX-EXEC-P2
+    capability: px-exec-8-integration-plugin
+    title: Integration Plugin
+    sor_sections: ["§8.2 integration"]
+    depends_on: [PX-EXEC-EWO-007]
+    proposal: .asep/proposals/PX-EXEC-EWO-008-integration-plugin.md
+    status: blocked
+
+  - id: PX-EXEC-EWO-009
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: MB2
+    phase: PX-EXEC-P2
+    capability: px-exec-9-qualification-plugin
+    title: Qualification Plugin
+    sor_sections: ["§8.2 qualification"]
+    depends_on: [PX-EXEC-EWO-008]
+    proposal: .asep/proposals/PX-EXEC-EWO-009-qualification-plugin.md
+    status: blocked
 
 promotion:
   target_tag: mb2-complete

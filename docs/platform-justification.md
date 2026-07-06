@@ -271,11 +271,15 @@ no user-facing behavior, no CI expansion unless explicitly authorized.
 
 ### EWO proposal header (required)
 
+Template: `.asep/templates/platform-contract-block.md`
+
 ```yaml
-platform_category: A | B | C
-hypothesis_id: H-0N   # required for B and C
-success_metric: "<measurable>"
-exit_id: X-0N         # required for B and C
+platform_contract:
+  category: A | B | C
+  hypothesis_id: H-0N | n/a
+  success_metric: "<measurable>"
+  exit_id: X-0N | n/a
+  program_mode: core | product | rd
 ```
 
 **Promotion path:** C → B (implementation + evidence) → A (metric satisfied + gate pass

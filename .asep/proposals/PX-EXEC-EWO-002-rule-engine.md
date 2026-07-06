@@ -3,6 +3,15 @@
 > **Status:** PROPOSED — pending Architect authorization for dispatch  
 > **Prerequisite:** PX-EXEC-EWO-001 **IMPLEMENTED** @ 2026-07-06
 
+```yaml
+platform_contract:
+  category: C
+  hypothesis_id: H-01
+  success_metric: "≥3 policy rules evaluated in builder-engine cycle; zero manual policy overrides in audit log for 5 consecutive cycles"
+  exit_id: X-01
+  program_mode: rd
+```
+
 | Field | Value |
 |-------|-------|
 | **Program** | `.asep/programs/px-exec.yaml` |
