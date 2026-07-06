@@ -1,0 +1,29 @@
+schema_version: 1
+program_id: px-exec
+derived_at: '2026-07-06T10:03:00+00:00'
+cycle_id: cycle-1
+supervisor:
+  state: unknown
+  reason: null
+waves:
+  wave-a:
+    status: pass
+    jobs:
+      EWO-001:
+        status: pass
+integrations: {}
+jobs:
+  EWO-001:
+    status: pass
+    ewo_id: EWO-001
+  EWO-002:
+    status: waiting
+    ewo_id: EWO-002
+queue:
+  pending: 0
+  in_flight: 0
+  failed: 0
+qwo: {}
+gates:
+  ci: unknown
+  coverage: unknown

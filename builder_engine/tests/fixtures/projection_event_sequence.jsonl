@@ -1,0 +1,4 @@
+{"type":"ExecutionGraphDerived","timestamp":"2026-07-06T10:00:00+00:00","program_id":"px-exec","payload":{"program_id":"px-exec","graph_hash":"abc123def456","ready_count":1,"node_ids":["EWO-001","EWO-002"]},"cycle_id":"cycle-1"}
+{"type":"JobReady","timestamp":"2026-07-06T10:01:00+00:00","program_id":"px-exec","payload":{"job_id":"EWO-001","ewo_id":"EWO-001","state":"ready","wave_id":"wave-a","checkpoint_ref":null},"cycle_id":"cycle-1"}
+{"type":"JobClaimed","timestamp":"2026-07-06T10:02:00+00:00","program_id":"px-exec","payload":{"job_id":"EWO-001","ewo_id":"EWO-001","state":"claimed","wave_id":"wave-a","checkpoint_ref":null},"cycle_id":"cycle-1"}
+{"type":"EwoCompleted","timestamp":"2026-07-06T10:03:00+00:00","program_id":"px-exec","payload":{"ewo_id":"EWO-001","job_id":"EWO-001"},"cycle_id":"cycle-1"}

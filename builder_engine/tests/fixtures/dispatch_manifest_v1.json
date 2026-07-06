@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "program_id": "px-exec-test",
+  "generated_at": "2026-07-06T00:00:00+00:00",
+  "manifest_path": ".builder-engine/last-dispatch-manifest.json",
+  "entries": [
+    {
+      "job_id": "PX-EXEC-EWO-002",
+      "ewo_id": "PX-EXEC-EWO-002",
+      "state": "ready",
+      "wave_id": "wave_a",
+      "checkpoint_ref": null
+    },
+    {
+      "job_id": "PX-EXEC-EWO-003",
+      "ewo_id": "PX-EXEC-EWO-003",
+      "state": "ready",
+      "wave_id": "wave_a",
+      "checkpoint_ref": null
+    }
+  ]
+}
