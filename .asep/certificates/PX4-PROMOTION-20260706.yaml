@@ -10,7 +10,7 @@ milestone:
   title: Knowledge
   product_milestone: px4-complete
   tag_status: applied
-  tag_commit: pending
+  tag_commit: 3efe42ea
   baseline: 67acbc5e
 
 program:
