@@ -1,0 +1,17 @@
+# QWO spawn fixtures — MB2 §7.3 coverage gate (test only)
+qwo_spawns:
+  wave-a-integration:
+    coverage_gate: passed
+    spawn_outcome: success
+    qwo_id: QWO-PX2-001
+    evidence_paths:
+      - .asep/certificates/qwo-px2-001-stub.yaml
+
+  wave-b-integration:
+    coverage_gate: failed
+
+  wave-c-integration:
+    coverage_gate: passed
+    spawn_outcome: failed
+    qwo_id: QWO-PX2-FAIL
+    failure_reason: qualification spawn blocked by policy
