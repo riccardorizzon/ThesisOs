@@ -23,12 +23,20 @@ capabilities:
     aliases: [engineering runtime, mb2, px-exec, platform runtime]
     milestone: MB2
     program: px-exec
-    lifecycle: qualified
-    status: in_progress
+    lifecycle: promoted
+    status: done
+    baseline: dbf5243
+    promoted_at: "2026-07-06"
+    promotion_doc: docs/mb2-promotion.md
+    promotion_certificate: .asep/certificates/MB2-PROMOTION-20260706.yaml
     qualification_bundle:
       status: pass
       review: .asep/reports/MB2-PROMOTION-REVIEW-20260706.md
       reviewed_at: "2026-07-06"
+    golden_path:
+      status: pass
+      certificate: .asep/certificates/MB2-GOLDEN-PATH-20260706.yaml
+      report: .asep/reports/MB2-GOLDEN-PATH-REPLAY-AUDIT-20260706.md
     specification:
       freeze: frozen
       frozen_at: "2026-07-05"
@@ -36,8 +44,10 @@ capabilities:
       certificate: .asep/certificates/MB2-SOR-20260705.yaml
       report: .asep/reports/MB2-SPECIFICATION-FREEZE.md
     implementation:
-      freeze: open
-      status: authorized
+      freeze: frozen
+      frozen_at: "2026-07-06"
+      status: promoted
+      baseline: dbf5243
       authorized_at: "2026-07-05T21:26:00+02:00"
       authorization_receipt: .asep/reports/PX-EXEC-AUTHORIZATION-20260705.md
       wave_a_backlog: .asep/reports/PX-EXEC-WAVE-A-BACKLOG.md
@@ -193,7 +203,7 @@ capabilities:
     title: Merge Plugin
     aliases: [merge engine, merge manager, merge planner]
     phase: PX-EXEC-P2
-    lifecycle: implementing
+    lifecycle: done
     status: done
     workorder: PX-EXEC-EWO-007
     proposal: .asep/proposals/PX-EXEC-EWO-007-merge-plugin.md
@@ -209,7 +219,7 @@ capabilities:
     title: Integration Plugin
     aliases: [integration manager, integration review]
     phase: PX-EXEC-P2
-    lifecycle: implemented
+    lifecycle: done
     status: done
     workorder: PX-EXEC-EWO-008
     proposal: .asep/proposals/PX-EXEC-EWO-008-integration-plugin.md
@@ -226,8 +236,12 @@ capabilities:
     title: Qualification Plugin
     aliases: [qwo trigger, qualification engine]
     phase: PX-EXEC-P2
-    lifecycle: specified
-    status: ready
+    lifecycle: done
+    status: done
+    workorder: PX-EXEC-EWO-009
+    proposal: .asep/proposals/PX-EXEC-EWO-009-qualification-plugin.md
+    report: .asep/reports/PX-EXEC-EWO-009-qualification-plugin.md
+    implemented_at: "2026-07-06"
     depends_on: [px-exec-8-integration-plugin]
     requires: [runtime-model-v2 §7]
     acceptance:

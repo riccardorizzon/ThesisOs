@@ -25,6 +25,8 @@ Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 de
 
 **Done — platform (2026-06-28):** **MB2 Adaptive Runtime** (D1–D10) — `docs/mb2-phase-gate.md`; 65 `builder_engine` tests; full operator loop in `LOOP.md`.
 
+**Done — platform (2026-07-06):** **MB2 SoR Reference Implementation** promoted — `docs/mb2-promotion.md` @ `dbf5243`; MB2-Q1…Q6 + §13.3 PASS; 190 `builder_engine` tests.
+
 **Done — history (Era I + constitution):** M4 Recovery Sprint (2026-06-26) · M3 close-out · M4 (`m4-complete`) · MB1 Phase 2 · Era II constitution (ADR-0026) · L0 meta-model + L1 invariants (ADR-0028) · L2 GSM · DR-001 · ETM v1.1 · L2.1 patch · Behavioral Semantics (ADR-0029) · constitution sign-off · MB2 spec rebase + §13 sign-off · L4 Phase 0 (`l4-phase0-complete`).
 
 ---

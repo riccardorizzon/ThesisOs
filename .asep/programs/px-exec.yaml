@@ -9,10 +9,10 @@
 id: px-exec
 title: PX-EXEC — Execution Orchestration Platform
 program_type: platform
-status: implementing
-phase: phase_2
+status: promoted
+phase: phase_2_complete
 
-lifecycle: implementing
+lifecycle: promoted
 
 specification:
   status: frozen
@@ -26,7 +26,9 @@ implementation:
   authorized_at: "2026-07-05T21:26:00+02:00"
   authorization_receipt: .asep/reports/PX-EXEC-AUTHORIZATION-20260705.md
   operator_command: "ASEP: AUTHORIZE px-exec"
-  freeze: open
+  freeze: frozen
+  frozen_at: "2026-07-06"
+  promotion_baseline: dbf5243
   wave_a_backlog: .asep/reports/PX-EXEC-WAVE-A-BACKLOG.md
       first_executable_ewo: PX-EXEC-EWO-002
   authorized_when:
@@ -81,10 +83,15 @@ implementation:
     review: .asep/reports/MB2-PROMOTION-REVIEW-20260706.md
     authorization: .asep/reports/PX-EXEC-AUTHORIZATION-MB2-PROMOTION-REVIEW-20260706.md
   promotion_review:
-    status: reviewed
+    status: promoted
     reviewed_at: "2026-07-06"
-    disposition: qualification_bundle_pass_platform_promotion_not_authorized
-    report: .asep/reports/MB2-PROMOTION-REVIEW-20260706.md
+    promoted_at: "2026-07-06"
+    disposition: platform_promotion_authorized
+    review: .asep/reports/MB2-PROMOTION-REVIEW-20260706.md
+    execution: .asep/reports/MB2-PROMOTION-EXECUTION-20260706.md
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-MB2-PROMOTION-20260706.md
+    certificate: .asep/certificates/MB2-PROMOTION-20260706.yaml
+    gate_doc: docs/mb2-promotion.md
   golden_path:
     status: pass
     passed_at: "2026-07-06"
@@ -211,7 +218,8 @@ phases:
   phase_2:
     id: PX-EXEC-P2
     title: Execution Plugins
-    status: dispatch_authorized
+    status: complete
+    completed_at: "2026-07-06"
     depends_on_phase: phase_1
     goal: >-
       Register Merge, Integration, and Qualification engines as plugins driven by
@@ -345,8 +353,8 @@ phase_2:
     - .asep/proposals/PX-EXEC-EWO-007-merge-plugin.md
     - .asep/proposals/PX-EXEC-EWO-008-integration-plugin.md
     - .asep/proposals/PX-EXEC-EWO-009-qualification-plugin.md
-  status: dispatch_authorized
-  authorized_at: "2026-07-06"
+  status: complete
+  completed_at: "2026-07-06"
   authorization: .asep/reports/PX-EXEC-AUTHORIZATION-PHASE-2-DISPATCH-20260706.md
 
 workorder_backlog:
@@ -500,8 +508,17 @@ workorder_backlog:
     implemented_at: "2026-07-06"
 
 promotion:
+  status: promoted
   target_tag: mb2-complete
-  gate_doc: docs/mb2-phase-gate.md  # to be authored at MB2 freeze
+  tag_status: pending_explicit_go_ahead
+  promoted_at: "2026-07-06"
+  baseline: dbf5243
+  gate_doc: docs/mb2-promotion.md
+  authorization: .asep/reports/PX-EXEC-AUTHORIZATION-MB2-PROMOTION-20260706.md
+  report: .asep/reports/MB2-PROMOTION-EXECUTION-20260706.md
+  certificate: .asep/certificates/MB2-PROMOTION-20260706.yaml
   evidence:
-    - PX-2 parallel replay via Runtime
-    - Projection matches manual execution audit trail
+    - MB2-Q1…Q6 qualification certificates
+    - MB2-GOLDEN-PATH-20260706.yaml
+    - PX-2 parallel replay via builder_engine/golden_path.py
+    - Manual audit trail PX2-INTEGRATION-A…D

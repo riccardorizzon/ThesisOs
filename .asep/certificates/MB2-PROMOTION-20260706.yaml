@@ -1,0 +1,64 @@
+# Promotion Certificate — MB2 Engineering Runtime
+
+certificate_version: "1.0"
+certificate_type: platform-promotion
+issued_at: "2026-07-06T05:10:00+02:00"
+issued_by: architect
+
+milestone:
+  id: MB2
+  title: Engineering Runtime — Reference Implementation
+  platform_milestone: mb2-complete
+  tag_status: pending_explicit_go_ahead
+  baseline: dbf5243
+
+program:
+  id: px-exec
+  authorization: .asep/reports/PX-EXEC-AUTHORIZATION-MB2-PROMOTION-20260706.md
+  report: .asep/reports/MB2-PROMOTION-EXECUTION-20260706.md
+  gate_doc: docs/mb2-promotion.md
+
+specification_of_record:
+  path: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+  revision: "2026-07-05"
+  certificate: .asep/certificates/MB2-SOR-20260705.yaml
+
+qualification_gates:
+  - id: MB2-Q1
+    certificate: .asep/certificates/MB2-Q1-20260706.yaml
+    verdict: PASS
+  - id: MB2-Q2
+    certificate: .asep/certificates/MB2-Q2-20260706.yaml
+    verdict: PASS
+  - id: MB2-Q3
+    certificate: .asep/certificates/MB2-Q3-20260706.yaml
+    verdict: PASS
+  - id: MB2-Q4
+    certificate: .asep/certificates/MB2-Q4-20260706.yaml
+    verdict: PASS
+  - id: MB2-Q5
+    certificate: .asep/certificates/MB2-Q5-20260706.yaml
+    verdict: PASS
+  - id: MB2-Q6
+    certificate: .asep/certificates/MB2-Q6-20260706.yaml
+    verdict: PASS
+  - id: MB2-GOLDEN-PATH
+    certificate: .asep/certificates/MB2-GOLDEN-PATH-20260706.yaml
+    verdict: PASS
+
+phases_promoted:
+  - PX-EXEC-P1
+  - PX-EXEC-P2
+
+verification:
+  make_ci: PASS
+  unit_builder_engine: "190 passed"
+  unit_m4_recovery: "45 passed"
+
+verdict: PROMOTED
+
+not_included:
+  - mb2-complete git tag
+  - PX-EXEC-P3
+  - PX-EXEC-P4
+  - PX-4
