@@ -66,20 +66,23 @@ waves:
 
   wave_3_product_integration:
     title: Sources + Writing + Review flows
-    status: blocked
+    status: complete
     depends_on_wave: wave_2_integration
     merge_order: [PX4-EWO-008, PX4-EWO-009, PX4-EWO-010]
     workorders: [PX4-EWO-008, PX4-EWO-009, PX4-EWO-010]
+    integration: .asep/reports/PX4-INTEGRATION-D.md
 
   wave_3_integration:
     title: Integration D
     type: integration
-    status: blocked
+    status: complete
     depends_on_wave: wave_3_product_integration
     workorders: [PX4-INTEGRATION-D]
 
   wave_4_conformance:
     title: Conformance + Promotion
-    status: blocked
+    status: complete
     depends_on_wave: wave_3_integration
     workorders: [PX4-EWO-011, PX4-EWO-012]
+    integration: .asep/reports/PX4-PROMOTION-EXECUTION-20260706.md
+    tag: px4-complete

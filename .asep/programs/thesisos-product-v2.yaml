@@ -134,7 +134,12 @@ milestones:
     depends_on: [PX-2]
   PX-4:
     title: Knowledge
-    status: wave_3_complete
+    status: promoted
+    promoted_at: "2026-07-06"
+    promotion_certificate: .asep/certificates/PX4-PROMOTION-20260706.yaml
+    promotion_doc: docs/px4-promotion.md
+    promotion_report: .asep/reports/PX4-PROMOTION-EXECUTION-20260706.md
+    tag: px4-complete
     phase_0:
       title: Product-Runtime Integration Contract
       status: complete
@@ -153,8 +158,15 @@ milestones:
       parallel_program: .asep/programs/px4-parallel.yaml
       integration: .asep/reports/PX4-INTEGRATION-B.md
       ewos: [PX4-EWO-002, PX4-EWO-003, PX4-EWO-004]
+    wave_3:
+      title: Product integration — Sources, Writing, Review
+      status: complete
+      authorized_at: "2026-07-06"
+      authorization_receipt: .asep/reports/PX4-AUTHORIZATION-WAVE-3-20260706.md
+      integration: .asep/reports/PX4-INTEGRATION-D.md
+      ewos: [PX4-EWO-008, PX4-EWO-009, PX4-EWO-010]
     depends_on: [PX-3]
-    note: Wave 1 foundation complete; Wave 2 requires separate authorization
+    note: Wave 3 integration complete; Wave 4 conformance requires separate authorization
   PX-5:
     title: Research
     status: blocked
@@ -724,9 +736,44 @@ px4_workorder_backlog:
     report: .asep/reports/PX4-EWO-004-persistence.md
     completed_at: "2026-07-06"
 
+  - id: PX4-EWO-011
+    type: EWO
+    ewo_category: Release
+    milestone: PX-4
+    phase: wave_4
+    title: Conformance qualification
+    wave: px4-parallel/wave_4_conformance
+    depends_on: [PX4-EWO-008, PX4-EWO-009, PX4-EWO-010]
+    authorization: .asep/reports/PX4-AUTHORIZATION-EWO-011-20260706.md
+    acceptance:
+      - ADR-0037 C1–C3 evidenced
+      - Integration B/C/D regression PASS
+      - make ci + unit-m4-recovery green
+    status: qualified
+    report: .asep/reports/PX4-EWO-011-conformance.md
+    qualified_at: "2026-07-06"
+
+  - id: PX4-EWO-012
+    type: EWO
+    ewo_category: Release
+    milestone: PX-4
+    phase: wave_4
+    title: Milestone promotion
+    depends_on: [PX4-EWO-011]
+    authorization: .asep/reports/PX4-AUTHORIZATION-PROMOTION-20260706.md
+    acceptance:
+      - docs/px4-promotion.md
+      - PX4-PROMOTION certificate
+      - px4-complete tag
+    status: promoted
+    report: .asep/reports/PX4-PROMOTION-EXECUTION-20260706.md
+    certificate: .asep/certificates/PX4-PROMOTION-20260706.yaml
+    promoted_at: "2026-07-06"
+
 completion_criteria:
   PX-1: QWO-PX1-001 PASS
   PX-2: QWO-PX2-001 PASS
+  PX-4: PX4-EWO-011 PASS + px4-complete tag
 
 post_px2:
   px2_status: complete_qualified_frozen

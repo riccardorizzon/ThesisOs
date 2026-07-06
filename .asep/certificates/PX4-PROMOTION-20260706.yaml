@@ -1,0 +1,60 @@
+# Promotion Certificate — PX-4 Knowledge
+
+certificate_version: "1.0"
+certificate_type: product-promotion
+issued_at: "2026-07-06T17:00:00+02:00"
+issued_by: architect
+
+milestone:
+  id: PX-4
+  title: Knowledge
+  product_milestone: px4-complete
+  tag_status: applied
+  tag_commit: pending
+  baseline: 67acbc5e
+
+program:
+  id: thesisos-product-v2
+  authorization: .asep/reports/PX4-AUTHORIZATION-PROMOTION-20260706.md
+  report: .asep/reports/PX4-PROMOTION-EXECUTION-20260706.md
+  gate_doc: docs/px4-promotion.md
+
+runtime_contract:
+  path: docs/product/runtime-integration-contract.md
+  version: "1.0"
+  ewo: PX4-EWO-001
+
+qualification_gates:
+  - id: PX4-INTEGRATION-B
+    report: .asep/reports/PX4-INTEGRATION-B.md
+    verdict: PASS
+  - id: PX4-INTEGRATION-C
+    report: .asep/reports/PX4-INTEGRATION-C.md
+    verdict: PASS
+  - id: PX4-INTEGRATION-D
+    report: .asep/reports/PX4-INTEGRATION-D.md
+    verdict: PASS
+  - id: PX4-EWO-011
+    report: .asep/reports/PX4-EWO-011-conformance.md
+    verdict: PASS
+
+waves_promoted:
+  - phase_0_contract
+  - wave_1_foundation
+  - wave_2_graph_explorer
+  - wave_3_product_integration
+
+verification:
+  make_ci: PASS
+  unit_backend: "382 passed, 1 skipped"
+  unit_frontend: "243 passed"
+  unit_builder_engine: "191 passed"
+  unit_m4_recovery: "45 passed"
+  px4_targeted_suites: "34 passed"
+
+verdict: PROMOTED
+
+not_included:
+  - PX-5 Research
+  - PX-6 Polish
+  - MB2 runtime re-qualification
