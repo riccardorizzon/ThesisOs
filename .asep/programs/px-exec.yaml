@@ -1,6 +1,6 @@
 # Engineering Program — PX-EXEC (Execution Orchestration Platform)
 #
-# program_type: platform — SPECIFICATION ONLY (design freeze 2026-07-05)
+# program_type: platform — Wave A implementation authorized 2026-07-05
 # Does NOT mutate product code. Delivers Era II / MB2 architecture.
 #
 # Sequencing:
@@ -9,10 +9,10 @@
 id: px-exec
 title: PX-EXEC — Execution Orchestration Platform
 program_type: platform
-status: specified
-phase: specified
+status: implementing
+phase: phase_1
 
-lifecycle: specified
+lifecycle: implementing
 
 specification:
   status: frozen
@@ -22,13 +22,29 @@ specification:
   report: .asep/reports/MB2-SPECIFICATION-FREEZE.md
 
 implementation:
-  status: not_authorized
+  status: authorized
+  authorized_at: "2026-07-05T21:26:00+02:00"
+  authorization_receipt: .asep/reports/PX-EXEC-AUTHORIZATION-20260705.md
+  operator_command: "ASEP: AUTHORIZE px-exec"
   freeze: open
+  wave_a_backlog: .asep/reports/PX-EXEC-WAVE-A-BACKLOG.md
+      first_executable_ewo: PX-EXEC-EWO-002
   authorized_when:
     - PX-3 completed
     - MB2-CONFORMANCE-ASSESSMENT PASS
     - no_normative_sor_changes_required
+  not_authorized:
     - MB2-Q1-pass
+    - MB2-Q2-pass
+    - MB2-Q3-pass
+    - MB2-Q4-pass
+    - MB2-Q5-pass
+    - MB2-Q6-pass
+    - PX-4
+    - phase_2_execution_plugins
+    - phase_3_observability
+    - phase_4_provider_abstraction
+  phase_1_exit_gate: MB2-Q1-pass  # not satisfied — separate qualification act
   conformance:
     program: PX-3
     assessment_report: .asep/reports/MB2-CONFORMANCE-ASSESSMENT.md  # issued at PX-3 end — not before
@@ -36,8 +52,9 @@ implementation:
       SoR validated if PX-3 completes without substantial changes to invariants
       or normative contracts (clarifications via sor-compatibility-policy OK).
   note: >-
-    PX-3 completion alone does not authorize implementation. Conformance Assessment
-    must confirm SoR stability before Reference Implementation investment.
+    Program implementation authorized 2026-07-05 (PX-EXEC-AUTHORIZATION-20260705.md).
+    Wave A backlog synced; PX-EXEC-EWO-001 ready. MB2-Q gates, PX-4, and Phase 2+
+    remain not_authorized. EWO dispatch requires separate Architect authorization.
 
 parent: asep-platform
 platform_milestone: MB2
@@ -69,13 +86,14 @@ sequencing:
   blocks_runtime_implementation_until: MB2-SoR-freeze
 
 constraints:
-  code_mutation: false  # until MB2 freeze + Phase 1 authorization
+  code_mutation: true  # Wave A Phase 1 — builder_engine + platform docs only
   allowed_paths_when_active:
     - builder_engine/**
     - docs/platform/**
     - docs/mb2-*.md
     - .asep/programs/px-exec.yaml
     - .asep/capabilities/px-exec.yaml
+    - .asep/proposals/PX-EXEC-*.md
     - .asep/reports/PX-EXEC-*.md
     - decisions/ADR-0042-engineering-runtime.md
   forbidden:
@@ -114,7 +132,8 @@ phases:
   phase_1:
     id: PX-EXEC-P1
     title: Runtime Foundation
-    status: specification
+    status: implementing
+    wave: wave_a
     goal: >-
       Freeze and implement the Runtime core: event bus, rule engine, dependency
       engine, job queue, scheduler, state projection. No product impact.
@@ -246,13 +265,104 @@ roadmap:
   - step: Architect sign-off — Specification Freeze
     status: done
   - step: PX-3 authorization (Runtime Conformance Program)
-    status: next
+    status: done
   - step: MB2-CONFORMANCE-ASSESSMENT (at PX-3 completion)
-    status: future
-  - step: Runtime Reference Implementation
-    status: blocked_until_conformance_pass
+    status: done
+  - step: Wave A backlog registered
+    status: done
+  - step: Runtime Reference Implementation (Wave A / Phase 1)
+    status: in_progress
+  - step: MB2-Q1 qualification (Phase 1 exit)
+    status: not_authorized
 
-workorder_backlog: []  # populated after MB2 freeze — EWOs for platform track only
+wave_a:
+  backlog: .asep/reports/PX-EXEC-WAVE-A-BACKLOG.md
+  phase: PX-EXEC-P1
+  first_executable_ewo: PX-EXEC-EWO-002
+  ready_ewos: [PX-EXEC-EWO-002, PX-EXEC-EWO-003]
+  status: in_progress  # EWO-001 implemented; EWO-002/003 ready pending authorization
+
+workorder_backlog:
+  - id: PX-EXEC-EWO-001
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: MB2
+    phase: PX-EXEC-P1
+    wave: wave_a
+    capability: px-exec-1-event-model
+    title: Event Model & Bus
+    sor_sections: ["§6 Event model"]
+    depends_on: []
+    proposal: .asep/proposals/PX-EXEC-EWO-001-event-model.md
+    acceptance:
+      - v2 catalog events defined (SoR §6.3)
+      - append-only log durable; program_id payload (§6.4)
+      - subscriber hook for at-least-once delivery
+      - make unit-builder-engine green
+    status: implemented
+    report: .asep/reports/PX-EXEC-EWO-001-event-model.md
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-20260706.md
+    implemented_at: "2026-07-06"
+
+  - id: PX-EXEC-EWO-002
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: MB2
+    phase: PX-EXEC-P1
+    wave: wave_a
+    capability: px-exec-2-rule-engine
+    title: Rule Engine
+    sor_sections: ["§7 Rule model"]
+    depends_on: [PX-EXEC-EWO-001]
+    status: ready
+
+  - id: PX-EXEC-EWO-003
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: MB2
+    phase: PX-EXEC-P1
+    wave: wave_a
+    capability: px-exec-3-dependency-engine
+    title: Dependency Engine
+    sor_sections: ["§4.2", "§5 Job model"]
+    depends_on: [PX-EXEC-EWO-001]
+    status: ready
+
+  - id: PX-EXEC-EWO-004
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: MB2
+    phase: PX-EXEC-P1
+    wave: wave_a
+    capability: px-exec-4-job-queue
+    title: Job Queue
+    sor_sections: ["§5", "ADR-0025"]
+    depends_on: [PX-EXEC-EWO-003]
+    status: blocked
+
+  - id: PX-EXEC-EWO-005
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: MB2
+    phase: PX-EXEC-P1
+    wave: wave_a
+    capability: px-exec-5-scheduler
+    title: Scheduler
+    sor_sections: ["§8.2 scheduler plugin"]
+    depends_on: [PX-EXEC-EWO-004, PX-EXEC-EWO-002]
+    status: blocked
+
+  - id: PX-EXEC-EWO-006
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: MB2
+    phase: PX-EXEC-P1
+    wave: wave_a
+    capability: px-exec-6-state-projection
+    title: State Projection
+    sor_sections: ["§9 Projection model"]
+    depends_on: [PX-EXEC-EWO-001]
+    status: blocked
 
 promotion:
   target_tag: mb2-complete

@@ -23,8 +23,8 @@ capabilities:
     aliases: [engineering runtime, mb2, px-exec, platform runtime]
     milestone: MB2
     program: px-exec
-    lifecycle: specified
-    status: specified
+    lifecycle: implementing
+    status: in_progress
     specification:
       freeze: frozen
       frozen_at: "2026-07-05"
@@ -33,7 +33,20 @@ capabilities:
       report: .asep/reports/MB2-SPECIFICATION-FREEZE.md
     implementation:
       freeze: open
-      status: not_authorized
+      status: authorized
+      authorized_at: "2026-07-05T21:26:00+02:00"
+      authorization_receipt: .asep/reports/PX-EXEC-AUTHORIZATION-20260705.md
+      wave_a_backlog: .asep/reports/PX-EXEC-WAVE-A-BACKLOG.md
+      first_executable_ewo: PX-EXEC-EWO-002
+      not_authorized:
+        - MB2-Q1-pass
+        - MB2-Q2-pass
+        - MB2-Q3-pass
+        - MB2-Q4-pass
+        - MB2-Q5-pass
+        - MB2-Q6-pass
+        - PX-4
+        - phase_2_execution_plugins
     depends_on: []
     children:
       - px-exec-1-event-model
@@ -56,8 +69,12 @@ capabilities:
     title: Event Model & Bus
     aliases: [event bus, build events, event catalog]
     phase: PX-EXEC-P1
-    lifecycle: specified
-    status: specified
+    lifecycle: done
+    status: done
+    workorder: PX-EXEC-EWO-001
+    proposal: .asep/proposals/PX-EXEC-EWO-001-event-model.md
+    report: .asep/reports/PX-EXEC-EWO-001-event-model.md
+    implemented_at: "2026-07-06"
     depends_on: []
     requires: [ADR-0042, runtime-model-v2 §6]
     artifacts: [builder_engine/events.py]
@@ -71,7 +88,8 @@ capabilities:
     aliases: [rules, reactive workflow, event rules]
     phase: PX-EXEC-P1
     lifecycle: specified
-    status: specified
+    status: ready
+    workorder: PX-EXEC-EWO-002
     depends_on: [px-exec-1-event-model]
     requires: [runtime-model-v2 §6.3]
     acceptance:
@@ -83,8 +101,9 @@ capabilities:
     aliases: [dependency resolver, program graph derivation, execution graph]
     phase: PX-EXEC-P1
     lifecycle: specified
-    status: specified
-    depends_on: []
+    status: ready
+    workorder: PX-EXEC-EWO-003
+    depends_on: [px-exec-1-event-model]
     requires: [runtime-model-v2 §3, §4]
     acceptance:
       - Program Graph → Execution Graph derivation
@@ -95,7 +114,8 @@ capabilities:
     aliases: [queue, job lifecycle, ewo jobs]
     phase: PX-EXEC-P1
     lifecycle: specified
-    status: specified
+    status: blocked
+    workorder: PX-EXEC-EWO-004
     depends_on: [px-exec-3-dependency-engine]
     requires: [runtime-model-v2 §8, ADR-0025]
     acceptance:
@@ -107,7 +127,8 @@ capabilities:
     aliases: [agent scheduler, dispatch, wave scheduler]
     phase: PX-EXEC-P1
     lifecycle: specified
-    status: specified
+    status: blocked
+    workorder: PX-EXEC-EWO-005
     depends_on: [px-exec-4-job-queue, px-exec-2-rule-engine]
     requires: [runtime-model-v2 §8.2]
     artifacts: [builder_engine/scheduler.py]
@@ -119,7 +140,8 @@ capabilities:
     aliases: [projection, status model, derived state]
     phase: PX-EXEC-P1
     lifecycle: specified
-    status: specified
+    status: blocked
+    workorder: PX-EXEC-EWO-006
     depends_on: [px-exec-1-event-model]
     requires: [runtime-model-v2 §9]
     acceptance:
