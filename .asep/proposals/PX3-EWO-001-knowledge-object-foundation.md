@@ -7,6 +7,19 @@
 > Spec: `docs/product/specs/px3-knowledge-experience-v2.md` §3, §4, §6  
 > UI: `design-system/thesisos/product-patterns.md` PP-09
 
+```yaml
+platform_contract:
+  classification_schema: platform-contract-v1
+  classification_mode: retrospective
+  classification_pass: px3-20260706-v1
+  classified_on: 2026-07-06
+  category: A
+  hypothesis_id: n/a
+  success_metric: "Acceptance criteria in this proposal; Wave A foundation delivered"
+  exit_id: n/a
+  program_mode: product
+```
+
 ---
 
 ## Identity

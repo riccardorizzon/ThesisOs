@@ -2,6 +2,19 @@
 
 > **Status:** **AUTHORIZED** — `.asep/reports/PX3-AUTHORIZATION-EWO-008-20260705.md`
 
+```yaml
+platform_contract:
+  classification_schema: platform-contract-v1
+  classification_mode: retrospective
+  classification_pass: px3-20260706-v1
+  classified_on: 2026-07-06
+  category: B
+  hypothesis_id: H-06
+  success_metric: "Program-graph observation API §4.2 INV-R-12; .asep/reports/PX3-EWO-008-execution-graph-observation.md PASS"
+  exit_id: n/a
+  program_mode: product
+```
+
 Program: `.asep/programs/thesisos-product-v2.yaml`  
 Wave: `px3-parallel/wave_c_execution_graph`  
 SoR: `docs/superpowers/specs/mb2-engineering-runtime-spec.md` §4.2  

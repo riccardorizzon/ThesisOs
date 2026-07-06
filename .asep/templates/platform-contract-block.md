@@ -10,10 +10,11 @@ banner**. Authorization **STOP**s if B or C is missing `hypothesis_id`,
 
 ---
 
-## Required YAML
+## Required YAML (native — at filing time)
 
 ```yaml
 platform_contract:
+  classification_schema: platform-contract-v1
   category: A | B | C
   hypothesis_id: H-0N | n/a
   success_metric: "<measurable statement>"
@@ -23,11 +24,57 @@ platform_contract:
 
 | Field | Required when | Values |
 |-------|---------------|--------|
+| `classification_schema` | Always (from 2026-07-06) | `platform-contract-v1` — shape of this YAML block |
 | `category` | Always | **A** Validated · **B** Experimental · **C** Research |
 | `hypothesis_id` | B, C | `H-01`…`H-07` from platform-justification §2; `n/a` only for Category A |
 | `success_metric` | B, C | Falsifiable; cite proposal acceptance or §2 metric |
 | `exit_id` | B, C | `X-01`…`X-08` from platform-justification §3 |
 | `program_mode` | Always | **core** ASEP maintenance · **product** delivery · **rd** PX-EXEC / authorized R&D |
+
+**Native filings** omit `classification_mode`, `classification_pass`, and `classified_on`.
+
+---
+
+## Versioning (three distinct concepts)
+
+| Concept | Field | Example | Meaning |
+|---------|-------|---------|---------|
+| **Schema** | `classification_schema` | `platform-contract-v1` | YAML field set and semantics — evolves when the contract model changes |
+| **Mode** | `classification_mode` | `retrospective` | How the block was added: `retrospective` vs native at filing |
+| **Pass** | `classification_pass` | `px3-20260706-v1` | A bounded backfill operation — scope + date; **not** the schema version |
+| **Pass date** | `classified_on` | `2026-07-06` | When the retrospective pass ran (not original EWO authorization date) |
+
+Future passes use new `classification_pass` ids (e.g. `px1-multi-product-202608-v1`) while
+reusing or bumping `classification_schema` only when the YAML shape changes.
+
+---
+
+## Retrospective classification (closed proposals)
+
+When adding `platform_contract` **after** original authorization — metadata only;
+**do not** edit proposal body, outcomes, or authorization text.
+
+```yaml
+platform_contract:
+  classification_schema: platform-contract-v1
+  classification_mode: retrospective
+  classification_pass: <program>-<YYYYMMDD>-vN
+  classified_on: 2026-07-06
+  category: A | B | C
+  hypothesis_id: H-0N | n/a
+  success_metric: "<measurable or report reference>"
+  exit_id: X-0N | n/a
+  program_mode: core | product | rd
+```
+
+| Rule | |
+|------|--|
+| Pure product EWO | `category: A`, `hypothesis_id: n/a` — do not force H-* |
+| Conformance / Observable SoR | `category: B`, link H-06 when mapping is obvious |
+| Platform R&D (PX-EXEC) | `category: C` or **B** if implemented but hypothesis open |
+| Open / PROPOSED proposals | Native block — no `classification_mode` / `classification_pass` |
+
+**Pass index:** `.asep/reports/platform-classification-*` documents scope per pass.
 
 ---
 
@@ -40,6 +87,7 @@ platform_contract:
 
 ```yaml
 platform_contract:
+  classification_schema: platform-contract-v1
   category: A
   hypothesis_id: n/a
   success_metric: "Acceptance criteria §… in this proposal"
@@ -53,6 +101,7 @@ platform_contract:
 
 ```yaml
 platform_contract:
+  classification_schema: platform-contract-v1
   category: B
   hypothesis_id: H-03
   success_metric: "≥20 engineering cycles logged in 90 days with program_id"
@@ -66,6 +115,7 @@ platform_contract:
 
 ```yaml
 platform_contract:
+  classification_schema: platform-contract-v1
   category: C
   hypothesis_id: H-01
   success_metric: "≥3 policy rules evaluated in builder-engine cycle; zero manual policy overrides for 5 consecutive cycles"
@@ -87,4 +137,5 @@ platform_contract:
 
 - Hypotheses: `docs/platform-justification.md` §2  
 - Exit criteria: `docs/platform-justification.md` §3  
-- Decision protocol: `docs/platform-justification.md` §6
+- Decision protocol: `docs/platform-justification.md` §6  
+- Pass index: `.asep/reports/platform-classification-px3-v1-20260706.md`

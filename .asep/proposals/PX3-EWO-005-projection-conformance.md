@@ -2,6 +2,19 @@
 
 > **Status:** ✅ **IMPLEMENTED** — `.asep/reports/PX3-EWO-005-projection-conformance.md` PASS
 
+```yaml
+platform_contract:
+  classification_schema: platform-contract-v1
+  classification_mode: retrospective
+  classification_pass: px3-20260706-v1
+  classified_on: 2026-07-06
+  category: B
+  hypothesis_id: H-06
+  success_metric: "Read-only projection API §9; report PASS — Observable, not MB2-Q qualified"
+  exit_id: n/a
+  program_mode: product
+```
+
 Program: `.asep/programs/thesisos-product-v2.yaml`  
 Wave: `px3-parallel/wave_b_projection`  
 Spec: `docs/product/specs/px3-knowledge-experience-v2.md` §9 (regions A–B, §9.16 states)  

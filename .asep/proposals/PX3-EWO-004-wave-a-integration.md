@@ -6,6 +6,19 @@
 > Wave: `px3-parallel/wave_a_integration`  
 > Type: Integration EWO (supervisor-owned)
 
+```yaml
+platform_contract:
+  classification_schema: platform-contract-v1
+  classification_mode: retrospective
+  classification_pass: px3-20260706-v1
+  classified_on: 2026-07-06
+  category: A
+  hypothesis_id: n/a
+  success_metric: ".asep/reports/PX3-INTEGRATION-A.md PASS"
+  exit_id: n/a
+  program_mode: product
+```
+
 ---
 
 ## Identity

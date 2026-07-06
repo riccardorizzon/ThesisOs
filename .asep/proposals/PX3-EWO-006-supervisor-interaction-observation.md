@@ -2,6 +2,19 @@
 
 > **Status:** ✅ **IMPLEMENTED** — `.asep/reports/PX3-EWO-006-supervisor-interaction-observation.md` PASS
 
+```yaml
+platform_contract:
+  classification_schema: platform-contract-v1
+  classification_mode: retrospective
+  classification_pass: px3-20260706-v1
+  classified_on: 2026-07-06
+  category: B
+  hypothesis_id: H-06
+  success_metric: "Supervisor WAIT observable in Explain shell §10; report PASS"
+  exit_id: X-08
+  program_mode: product
+```
+
 Program: `.asep/programs/thesisos-product-v2.yaml`  
 Wave: `px3-parallel/wave_b_supervisor`  
 SoR: `docs/superpowers/specs/mb2-engineering-runtime-spec.md` §10

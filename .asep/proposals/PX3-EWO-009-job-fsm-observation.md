@@ -2,6 +2,19 @@
 
 > **Status:** **REGISTERED — NOT AUTHORIZED** (await PX3-EWO-008 PASS)
 
+```yaml
+platform_contract:
+  classification_schema: platform-contract-v1
+  classification_mode: retrospective
+  classification_pass: px3-20260706-v1
+  classified_on: 2026-07-06
+  category: B
+  hypothesis_id: H-06
+  success_metric: "Job FSM vocabulary observation §5; .asep/reports/PX3-EWO-009-job-fsm-observation.md PASS"
+  exit_id: n/a
+  program_mode: product
+```
+
 Program: `.asep/programs/thesisos-product-v2.yaml`  
 Wave: `px3-parallel/wave_c_job_fsm`  
 Spec: `docs/product/specs/px3-knowledge-experience-v2.md` §10  

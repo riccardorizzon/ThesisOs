@@ -12,6 +12,7 @@
 
 ```yaml
 platform_contract:
+  classification_schema: platform-contract-v1
   category: B
   hypothesis_id: H-06
   success_metric: "<SoR section promoted Observable → evidenced in report>"

@@ -7,6 +7,19 @@
 > Spec: `docs/product/specs/px3-knowledge-experience-v2.md` §12  
 > UI: `design-system/thesisos/px3-knowledge-experience-ui-spec.md` §5.4
 
+```yaml
+platform_contract:
+  classification_schema: platform-contract-v1
+  classification_mode: retrospective
+  classification_pass: px3-20260706-v1
+  classified_on: 2026-07-06
+  category: A
+  hypothesis_id: n/a
+  success_metric: "Acceptance criteria in this proposal; Integration A PASS"
+  exit_id: n/a
+  program_mode: product
+```
+
 ---
 
 ## Identity

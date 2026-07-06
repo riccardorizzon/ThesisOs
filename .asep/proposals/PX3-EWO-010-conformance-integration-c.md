@@ -2,6 +2,19 @@
 
 > **Status:** **REGISTERED — NOT AUTHORIZED** (await PX3-EWO-009 PASS)
 
+```yaml
+platform_contract:
+  classification_schema: platform-contract-v1
+  classification_mode: retrospective
+  classification_pass: px3-20260706-v1
+  classified_on: 2026-07-06
+  category: A
+  hypothesis_id: n/a
+  success_metric: ".asep/reports/PX3-INTEGRATION-C.md PASS"
+  exit_id: n/a
+  program_mode: product
+```
+
 Program: `.asep/programs/thesisos-product-v2.yaml`  
 Wave: `px3-parallel/wave_c_conformance_integration`  
 Backlog: `.asep/reports/PX3-WAVE-C-BACKLOG.md`

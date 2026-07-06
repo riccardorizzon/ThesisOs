@@ -7,6 +7,7 @@
 
 ```yaml
 platform_contract:
+  classification_schema: platform-contract-v1
   category: A | B | C
   hypothesis_id: H-0N | n/a
   success_metric: "<measurable>"

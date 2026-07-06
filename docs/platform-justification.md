@@ -275,12 +275,16 @@ Template: `.asep/templates/platform-contract-block.md`
 
 ```yaml
 platform_contract:
+  classification_schema: platform-contract-v1
   category: A | B | C
   hypothesis_id: H-0N | n/a
   success_metric: "<measurable>"
   exit_id: X-0N | n/a
   program_mode: core | product | rd
 ```
+
+Retrospective backfill adds `classification_mode`, `classification_pass`, `classified_on`
+per `.asep/templates/platform-contract-block.md`.
 
 **Promotion path:** C → B (implementation + evidence) → A (metric satisfied + gate pass
 or Architect ratification). **Demotion:** exit criteria (§3) fires → freeze or archive.
@@ -330,3 +334,4 @@ When evaluating a platform proposal, ask in order:
 | Date | Change |
 |------|--------|
 | 2026-07-06 | Initial contract — post architecture review |
+| 2026-07-06 | Retrospective classification — PX-3 closed EWOs — index `.asep/reports/platform-classification-px3-v1-20260706.md` |
