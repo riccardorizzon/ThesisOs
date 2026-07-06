@@ -1,0 +1,38 @@
+# Golden PX-2 parallel rules — MB2 SoR §7.3 (test fixture only)
+schema_version: 1
+program_id: px2-parallel
+rules:
+  - id: post-ewo-merge
+    priority: 10
+    on: EwoCompleted
+    when:
+      all_dependencies_satisfied: true
+    action:
+      plugin: merge
+      params: {}
+
+  - id: post-merge-integration
+    priority: 20
+    on: MergeCompleted
+    when:
+      ci_status: passed
+    action:
+      plugin: integration
+      params: {}
+
+  - id: post-integration-qwo
+    priority: 30
+    on: IntegrationPassed
+    when:
+      coverage_gate: passed
+    action:
+      plugin: qualification
+      params: {}
+
+  - id: qwo-escalate-supervisor
+    priority: 40
+    on: QwoPassed
+    action:
+      plugin: notification
+      params:
+        target: Supervisor

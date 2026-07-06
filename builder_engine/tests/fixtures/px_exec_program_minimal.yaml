@@ -1,0 +1,26 @@
+id: px-exec-test
+title: PX-EXEC minimal test program
+
+workorder_backlog:
+  - id: PX-EXEC-EWO-001
+    depends_on: []
+    status: implemented
+    wave: wave_a
+  - id: PX-EXEC-EWO-002
+    depends_on: [PX-EXEC-EWO-001]
+    status: ready
+    wave: wave_a
+  - id: PX-EXEC-EWO-003
+    depends_on: [PX-EXEC-EWO-001]
+    status: ready
+    wave: wave_a
+  - id: PX-EXEC-EWO-004
+    depends_on: [PX-EXEC-EWO-003]
+    status: blocked
+    wave: wave_a
+
+waves:
+  wave_a:
+    execute_in_parallel: true
+    merge_order: [PX-EXEC-EWO-003, PX-EXEC-EWO-002, PX-EXEC-EWO-004]
+    workorders: [PX-EXEC-EWO-001, PX-EXEC-EWO-002, PX-EXEC-EWO-003, PX-EXEC-EWO-004]

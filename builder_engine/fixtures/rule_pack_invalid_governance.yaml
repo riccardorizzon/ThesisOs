@@ -1,0 +1,12 @@
+# INV-R-07 negative fixture — governance guard keys must be rejected
+schema_version: 1
+program_id: test-governance
+rules:
+  - id: bad-qc-guard
+    priority: 1
+    on: EwoCompleted
+    when:
+      qc_required: true
+    action:
+      plugin: merge
+      params: {}

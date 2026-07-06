@@ -87,13 +87,15 @@ capabilities:
     title: Rule Engine
     aliases: [rules, reactive workflow, event rules]
     phase: PX-EXEC-P1
-    lifecycle: specified
-    status: ready
+    lifecycle: done
+    status: done
     workorder: PX-EXEC-EWO-002
     proposal: .asep/proposals/PX-EXEC-EWO-002-rule-engine.md
-    dispatch: approved_for_dispatch  # Architect 2026-07-06
+    report: .asep/reports/PX-EXEC-EWO-002-rule-engine.md
+    implemented_at: "2026-07-06"
     depends_on: [px-exec-1-event-model]
     requires: [runtime-model-v2 §7, SoR §7]
+    artifacts: [builder_engine/rules.py]
     acceptance:
       - declarative rule packs from YAML
       - no Governance policy evaluation in engine
@@ -102,13 +104,15 @@ capabilities:
     title: Dependency Engine
     aliases: [dependency resolver, program graph derivation, execution graph]
     phase: PX-EXEC-P1
-    lifecycle: specified
-    status: ready
+    lifecycle: done
+    status: done
     workorder: PX-EXEC-EWO-003
     proposal: .asep/proposals/PX-EXEC-EWO-003-dependency-engine.md
-    dispatch: approved_for_dispatch  # Architect 2026-07-06
+    report: .asep/reports/PX-EXEC-EWO-003-dependency-engine.md
+    implemented_at: "2026-07-06"
     depends_on: [px-exec-1-event-model]
     requires: [runtime-model-v2 §3, §4, SoR §4.2]
+    artifacts: [builder_engine/dependency.py, builder_engine/program_graph.py]
     acceptance:
       - Program Graph → Execution Graph derivation
       - merge_order as tie-breaker only
@@ -117,11 +121,14 @@ capabilities:
     title: Job Queue
     aliases: [queue, job lifecycle, ewo jobs]
     phase: PX-EXEC-P1
-    lifecycle: specified
-    status: blocked
+    lifecycle: done
+    status: done
     workorder: PX-EXEC-EWO-004
+    report: .asep/reports/PX-EXEC-EWO-004-job-queue.md
+    implemented_at: "2026-07-06"
     depends_on: [px-exec-3-dependency-engine]
     requires: [runtime-model-v2 §8, ADR-0025]
+    artifacts: [builder_engine/job_queue.py]
     acceptance:
       - Job FSM matches L2 Task transitions
       - recoverable from event log
@@ -131,7 +138,7 @@ capabilities:
     aliases: [agent scheduler, dispatch, wave scheduler]
     phase: PX-EXEC-P1
     lifecycle: specified
-    status: blocked
+    status: ready
     workorder: PX-EXEC-EWO-005
     depends_on: [px-exec-4-job-queue, px-exec-2-rule-engine]
     requires: [runtime-model-v2 §8.2]
@@ -144,7 +151,7 @@ capabilities:
     aliases: [projection, status model, derived state]
     phase: PX-EXEC-P1
     lifecycle: specified
-    status: blocked
+    status: ready
     workorder: PX-EXEC-EWO-006
     depends_on: [px-exec-1-event-model]
     requires: [runtime-model-v2 §9]

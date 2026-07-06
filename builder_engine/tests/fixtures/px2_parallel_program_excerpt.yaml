@@ -1,0 +1,22 @@
+id: px2-parallel-excerpt
+title: PX-2 wave_b excerpt for merge_order tests
+
+workorder_backlog:
+  - id: PX2-EWO-003
+    depends_on: []
+    status: ready
+    wave: wave_b
+  - id: PX2-EWO-004
+    depends_on: []
+    status: ready
+    wave: wave_b
+  - id: PX2-EWO-006
+    depends_on: []
+    status: ready
+    wave: wave_b
+
+waves:
+  wave_b:
+    execute_in_parallel: true
+    merge_order: [PX2-EWO-003, PX2-EWO-004, PX2-EWO-006]
+    workorders: [PX2-EWO-003, PX2-EWO-004, PX2-EWO-006]

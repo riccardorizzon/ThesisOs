@@ -1,0 +1,10 @@
+id: px-exec-circular
+title: Invalid circular dependency fixture
+
+workorder_backlog:
+  - id: EWO-A
+    depends_on: [EWO-B]
+    status: ready
+  - id: EWO-B
+    depends_on: [EWO-A]
+    status: ready

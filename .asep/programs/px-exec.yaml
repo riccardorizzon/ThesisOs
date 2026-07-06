@@ -281,11 +281,11 @@ wave_a:
   architect_decision: .asep/reports/PX-EXEC-ARCHITECT-DECISION-20260706-WAVE-A-ENGINEERING-PACKAGE.md
   phase: PX-EXEC-P1
   first_executable_ewo: PX-EXEC-EWO-002
-  ready_ewos: [PX-EXEC-EWO-002, PX-EXEC-EWO-003]
+  ready_ewos: [PX-EXEC-EWO-005, PX-EXEC-EWO-006]
   proposals:
     - .asep/proposals/PX-EXEC-EWO-002-rule-engine.md
     - .asep/proposals/PX-EXEC-EWO-003-dependency-engine.md
-  status: authorized_for_dispatch  # Architect 2026-07-06; Phase 1 parallel 002∥003
+  status: in_progress  # EWO-001…004 implemented; Integration A PASS
 
 workorder_backlog:
   - id: PX-EXEC-EWO-001
@@ -322,7 +322,9 @@ workorder_backlog:
     proposal: .asep/proposals/PX-EXEC-EWO-002-rule-engine.md
     dispatch: approved_for_dispatch  # Architect 2026-07-06
     authorization: .asep/reports/PX-EXEC-AUTHORIZATION-EWO-002-20260706.md
-    status: ready
+    status: implemented
+    report: .asep/reports/PX-EXEC-EWO-002-rule-engine.md
+    implemented_at: "2026-07-06"
 
   - id: PX-EXEC-EWO-003
     type: EWO
@@ -337,7 +339,9 @@ workorder_backlog:
     proposal: .asep/proposals/PX-EXEC-EWO-003-dependency-engine.md
     dispatch: approved_for_dispatch  # Architect 2026-07-06
     authorization: .asep/reports/PX-EXEC-AUTHORIZATION-EWO-003-20260706.md
-    status: ready
+    status: implemented
+    report: .asep/reports/PX-EXEC-EWO-003-dependency-engine.md
+    implemented_at: "2026-07-06"
 
   - id: PX-EXEC-EWO-004
     type: EWO
@@ -349,7 +353,9 @@ workorder_backlog:
     title: Job Queue
     sor_sections: ["§5", "ADR-0025"]
     depends_on: [PX-EXEC-EWO-003]
-    status: blocked
+    status: implemented
+    report: .asep/reports/PX-EXEC-EWO-004-job-queue.md
+    implemented_at: "2026-07-06"
 
   - id: PX-EXEC-EWO-005
     type: EWO
@@ -361,7 +367,7 @@ workorder_backlog:
     title: Scheduler
     sor_sections: ["§8.2 scheduler plugin"]
     depends_on: [PX-EXEC-EWO-004, PX-EXEC-EWO-002]
-    status: blocked
+    status: ready
 
   - id: PX-EXEC-EWO-006
     type: EWO
@@ -373,7 +379,7 @@ workorder_backlog:
     title: State Projection
     sor_sections: ["§9 Projection model"]
     depends_on: [PX-EXEC-EWO-001]
-    status: blocked
+    status: ready
 
 promotion:
   target_tag: mb2-complete
