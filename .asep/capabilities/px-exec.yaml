@@ -137,11 +137,14 @@ capabilities:
     title: Scheduler
     aliases: [agent scheduler, dispatch, wave scheduler]
     phase: PX-EXEC-P1
-    lifecycle: specified
-    status: ready
+    lifecycle: done
+    status: done
     workorder: PX-EXEC-EWO-005
+    proposal: .asep/proposals/PX-EXEC-EWO-005-scheduler.md
+    report: .asep/reports/PX-EXEC-EWO-005-scheduler.md
+    implemented_at: "2026-07-06"
     depends_on: [px-exec-4-job-queue, px-exec-2-rule-engine]
-    requires: [runtime-model-v2 §8.2]
+    requires: [runtime-model-v2 §8.2, SoR §8.2]
     artifacts: [builder_engine/scheduler.py]
     acceptance:
       - respects locks, parallel limits, Supervisor WAIT
@@ -150,11 +153,15 @@ capabilities:
     title: State Projection
     aliases: [projection, status model, derived state]
     phase: PX-EXEC-P1
-    lifecycle: specified
-    status: ready
+    lifecycle: done
+    status: done
     workorder: PX-EXEC-EWO-006
+    proposal: .asep/proposals/PX-EXEC-EWO-006-state-projection.md
+    report: .asep/reports/PX-EXEC-EWO-006-state-projection.md
+    implemented_at: "2026-07-06"
     depends_on: [px-exec-1-event-model]
-    requires: [runtime-model-v2 §9]
+    requires: [runtime-model-v2 §9, SoR §9]
+    artifacts: [builder_engine/projection.py]
     acceptance:
       - schema v1 rebuildable from events
       - CLI reads projection only

@@ -281,11 +281,14 @@ wave_a:
   architect_decision: .asep/reports/PX-EXEC-ARCHITECT-DECISION-20260706-WAVE-A-ENGINEERING-PACKAGE.md
   phase: PX-EXEC-P1
   first_executable_ewo: PX-EXEC-EWO-002
-  ready_ewos: [PX-EXEC-EWO-005, PX-EXEC-EWO-006]
+  ready_ewos: []
   proposals:
     - .asep/proposals/PX-EXEC-EWO-002-rule-engine.md
     - .asep/proposals/PX-EXEC-EWO-003-dependency-engine.md
-  status: in_progress  # EWO-001…004 implemented; Integration A PASS
+    - .asep/proposals/PX-EXEC-EWO-005-scheduler.md
+    - .asep/proposals/PX-EXEC-EWO-006-state-projection.md
+  architect_decision_005_006: .asep/reports/PX-EXEC-ARCHITECT-DECISION-20260706-EWO-005-006.md
+  status: wave_a_pass  # all EWO-001…006 implemented; Integration Wave A PASS 2026-07-06
 
 workorder_backlog:
   - id: PX-EXEC-EWO-001
@@ -367,7 +370,12 @@ workorder_backlog:
     title: Scheduler
     sor_sections: ["§8.2 scheduler plugin"]
     depends_on: [PX-EXEC-EWO-004, PX-EXEC-EWO-002]
-    status: ready
+    proposal: .asep/proposals/PX-EXEC-EWO-005-scheduler.md
+    dispatch: approved_for_dispatch
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-EWO-005-20260706.md
+    status: implemented
+    report: .asep/reports/PX-EXEC-EWO-005-scheduler.md
+    implemented_at: "2026-07-06"
 
   - id: PX-EXEC-EWO-006
     type: EWO
@@ -379,7 +387,12 @@ workorder_backlog:
     title: State Projection
     sor_sections: ["§9 Projection model"]
     depends_on: [PX-EXEC-EWO-001]
-    status: ready
+    proposal: .asep/proposals/PX-EXEC-EWO-006-state-projection.md
+    dispatch: approved_for_dispatch
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-EWO-006-20260706.md
+    status: implemented
+    report: .asep/reports/PX-EXEC-EWO-006-state-projection.md
+    implemented_at: "2026-07-06"
 
 promotion:
   target_tag: mb2-complete
