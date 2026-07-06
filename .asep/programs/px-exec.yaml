@@ -70,6 +70,16 @@ implementation:
       report: .asep/reports/MB2-Q6-RECOVERY-20260706.md
       certificate: .asep/certificates/MB2-Q6-20260706.yaml
       authorized_at: "2026-07-06"
+  qualification_bundle:
+    status: pass
+    reviewed_at: "2026-07-06"
+    review: .asep/reports/MB2-PROMOTION-REVIEW-20260706.md
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-MB2-PROMOTION-REVIEW-20260706.md
+  promotion_review:
+    status: reviewed
+    reviewed_at: "2026-07-06"
+    disposition: qualification_bundle_pass_platform_promotion_not_authorized
+    report: .asep/reports/MB2-PROMOTION-REVIEW-20260706.md
   conformance:
     program: PX-3
     assessment_report: .asep/reports/MB2-CONFORMANCE-ASSESSMENT.md  # issued at PX-3 end — not before

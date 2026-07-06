@@ -23,8 +23,12 @@ capabilities:
     aliases: [engineering runtime, mb2, px-exec, platform runtime]
     milestone: MB2
     program: px-exec
-    lifecycle: implementing
+    lifecycle: qualified
     status: in_progress
+    qualification_bundle:
+      status: pass
+      review: .asep/reports/MB2-PROMOTION-REVIEW-20260706.md
+      reviewed_at: "2026-07-06"
     specification:
       freeze: frozen
       frozen_at: "2026-07-05"
