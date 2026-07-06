@@ -34,7 +34,6 @@ implementation:
     - MB2-CONFORMANCE-ASSESSMENT PASS
     - no_normative_sor_changes_required
   not_authorized:
-    - MB2-Q1-pass
     - MB2-Q2-pass
     - MB2-Q3-pass
     - MB2-Q4-pass
@@ -44,7 +43,13 @@ implementation:
     - phase_2_execution_plugins
     - phase_3_observability
     - phase_4_provider_abstraction
-  phase_1_exit_gate: MB2-Q1-pass  # not satisfied — separate qualification act
+  phase_1_exit_gate: MB2-Q1-pass  # SATISFIED @ .asep/reports/MB2-Q1-RUNTIME-GRAPH-20260706.md
+  qualification:
+    mb2_q1:
+      status: pass
+      report: .asep/reports/MB2-Q1-RUNTIME-GRAPH-20260706.md
+      certificate: .asep/certificates/MB2-Q1-20260706.yaml
+      authorized_at: "2026-07-06"
   conformance:
     program: PX-3
     assessment_report: .asep/reports/MB2-CONFORMANCE-ASSESSMENT.md  # issued at PX-3 end — not before
@@ -273,7 +278,8 @@ roadmap:
   - step: Runtime Reference Implementation (Wave A / Phase 1)
     status: in_progress
   - step: MB2-Q1 qualification (Phase 1 exit)
-    status: not_authorized
+    status: pass
+    report: .asep/reports/MB2-Q1-RUNTIME-GRAPH-20260706.md
 
 wave_a:
   backlog: .asep/reports/PX-EXEC-WAVE-A-BACKLOG.md

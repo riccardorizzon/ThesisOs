@@ -1,0 +1,47 @@
+# Qualification Certificate — MB2-Q1 Runtime Graph
+#
+# Gate PASS — Reference Implementation (px-exec Wave A)
+
+certificate_version: "1.0"
+certificate_type: qualification-gate
+issued_at: "2026-07-06T04:00:00+02:00"
+issued_by: architect
+
+gate:
+  id: MB2-Q1
+  title: Runtime Graph
+  sor_sections: ["§4.2", "§5 partial"]
+  report: .asep/reports/MB2-Q1-RUNTIME-GRAPH-20260706.md
+  authorization: .asep/reports/PX-EXEC-AUTHORIZATION-MB2-Q1-20260706.md
+
+program:
+  id: px-exec
+  platform_milestone: MB2
+  phase: PX-EXEC-P1
+
+specification_of_record:
+  path: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+  revision: "2026-07-05"
+
+normative_tests:
+  - id: MB2-Q-001
+    verdict: PASS
+  - id: MB2-Q-002
+    verdict: PASS
+  - id: MB2-Q-003
+    verdict: PASS
+
+verification:
+  command: make unit-builder-engine
+  result: "138 passed"
+  qualification_module: builder_engine/tests/test_mb2_q1.py
+
+verdict: PASS
+
+not_satisfied:
+  - MB2-Q2
+  - MB2-Q3
+  - MB2-Q4
+  - MB2-Q5
+  - MB2-Q6
+  - mb2-promotion

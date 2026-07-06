@@ -39,7 +39,6 @@ capabilities:
       wave_a_backlog: .asep/reports/PX-EXEC-WAVE-A-BACKLOG.md
       first_executable_ewo: PX-EXEC-EWO-002
       not_authorized:
-        - MB2-Q1-pass
         - MB2-Q2-pass
         - MB2-Q3-pass
         - MB2-Q4-pass
@@ -47,6 +46,11 @@ capabilities:
         - MB2-Q6-pass
         - PX-4
         - phase_2_execution_plugins
+      qualification:
+        mb2_q1:
+          status: pass
+          report: .asep/reports/MB2-Q1-RUNTIME-GRAPH-20260706.md
+          certificate: .asep/certificates/MB2-Q1-20260706.yaml
     depends_on: []
     children:
       - px-exec-1-event-model
