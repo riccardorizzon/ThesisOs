@@ -7,8 +7,8 @@ Authorization: `.asep/reports/PX-EXEC-AUTHORIZATION-20260706.md`
 Proposal: `.asep/proposals/PX-EXEC-EWO-001-event-model.md`  
 SoR: §6.1–§6.4 @ 2026-07-05  
 Verdict: **PASS**  
-Timestamp: 2026-07-06T02:09:00+02:00  
-Repository: `main` @ `80bb8c9` (+ EWO-001 changes uncommitted)
+Timestamp: 2026-07-06T02:31:00+02:00  
+Repository: `main` @ `e171423` (+ EWO-001 implementation uncommitted)
 
 ---
 

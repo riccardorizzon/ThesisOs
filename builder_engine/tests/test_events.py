@@ -29,7 +29,7 @@ def test_corrupt_line_skipped(tmp_path: Path):
 
 def test_unknown_event_type_rejected():
     with pytest.raises(ValueError, match="not in catalog"):
-        BuildEvent(type="NotInCatalog", timestamp="t", payload={})
+        BuildEvent(type="NotInCatalog", timestamp="t", payload={}, program_id="builder")
 
 
 def test_catalog_matches_spec_minimum():
@@ -42,3 +42,4 @@ def test_round_trip_line():
     restored = BuildEvent.from_line(ev.to_line())
     assert restored.type == ev.type
     assert restored.payload == ev.payload
+    assert restored.program_id == ev.program_id
