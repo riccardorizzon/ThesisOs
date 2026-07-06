@@ -69,6 +69,7 @@ Stable interface: today interpreted by this skill; tomorrow executed by Engineer
 1. Intent        → .asep/resolvers/intent.md         (authorize|develop|review|design|qualify|promote|status)
 2. Capability    → .asep/resolvers/capability.md      (request → graph node + prerequisite check)
 3. Governance    → .asep/governance/manifest.yaml     (load rules + live repo context)
+3b. Platform     → docs/platform-justification.md + `.asep/templates/platform-contract-block.md` (EWO category / exit)
 4. Work Order    → .asep/templates/work-order-template.md   (build internally)
 5. Execute       → .asep/pipeline/executor.md          (Observe→…→Report) [develop]
 6. Qualify       → .asep/pipeline/qualification.md      (gates; STOP on red)

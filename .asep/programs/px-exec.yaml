@@ -473,7 +473,10 @@ workorder_backlog:
     sor_sections: ["§8.2 integration"]
     depends_on: [PX-EXEC-EWO-007]
     proposal: .asep/proposals/PX-EXEC-EWO-008-integration-plugin.md
-    status: ready
+    status: implemented
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-EWO-008-20260706.md
+    report: .asep/reports/PX-EXEC-EWO-008-integration-plugin.md
+    implemented_at: "2026-07-06"
 
   - id: PX-EXEC-EWO-009
     type: EWO
@@ -485,7 +488,7 @@ workorder_backlog:
     sor_sections: ["§8.2 qualification"]
     depends_on: [PX-EXEC-EWO-008]
     proposal: .asep/proposals/PX-EXEC-EWO-009-qualification-plugin.md
-    status: blocked
+    status: ready
 
 promotion:
   target_tag: mb2-complete

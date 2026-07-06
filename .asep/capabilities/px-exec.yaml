@@ -209,10 +209,15 @@ capabilities:
     title: Integration Plugin
     aliases: [integration manager, integration review]
     phase: PX-EXEC-P2
-    lifecycle: specified
-    status: ready
+    lifecycle: implemented
+    status: done
+    workorder: PX-EXEC-EWO-008
+    proposal: .asep/proposals/PX-EXEC-EWO-008-integration-plugin.md
+    report: .asep/reports/PX-EXEC-EWO-008-integration-plugin.md
+    implemented_at: "2026-07-06"
     depends_on: [px-exec-7-merge-plugin]
     requires: [runtime-model-v2 §7]
+    artifacts: [builder_engine/integration.py]
     acceptance:
       - spawned on MergeCompleted + CI green rule
       - IntegrationPassed unlocks downstream wave
@@ -222,7 +227,7 @@ capabilities:
     aliases: [qwo trigger, qualification engine]
     phase: PX-EXEC-P2
     lifecycle: specified
-    status: blocked
+    status: ready
     depends_on: [px-exec-8-integration-plugin]
     requires: [runtime-model-v2 §7]
     acceptance:

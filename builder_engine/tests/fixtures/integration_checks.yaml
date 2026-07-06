@@ -1,0 +1,16 @@
+# Integration check fixtures — MB2 §10.2 CI guard (test only)
+# Flat schema compatible with load_simple_yaml (no nested list dicts).
+integrations:
+  wave-a-integration:
+    ci_status: passed
+    check_outcome: passed
+    checks_count: 2
+
+  wave-b-integration:
+    ci_status: failed
+
+  wave-c-integration:
+    ci_status: passed
+    check_outcome: failed
+    failed_check_id: coverage-gate
+    checks_count: 1

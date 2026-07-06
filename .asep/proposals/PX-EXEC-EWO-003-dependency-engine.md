@@ -3,6 +3,15 @@
 > **Status:** PROPOSED — pending Architect authorization for dispatch  
 > **Prerequisite:** PX-EXEC-EWO-001 **IMPLEMENTED** @ 2026-07-06
 
+```yaml
+platform_contract:
+  category: C
+  hypothesis_id: H-02
+  success_metric: "Dry-run replay of PX-2 wave shows merge ordering enforced without human merge script"
+  exit_id: X-03
+  program_mode: rd
+```
+
 | Field | Value |
 |-------|-------|
 | **Program** | `.asep/programs/px-exec.yaml` |

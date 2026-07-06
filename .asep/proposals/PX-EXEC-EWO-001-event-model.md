@@ -2,6 +2,15 @@
 
 > **Status:** ✅ **IMPLEMENTED** — `.asep/reports/PX-EXEC-EWO-001-event-model.md` PASS @ 2026-07-06
 
+```yaml
+platform_contract:
+  category: B
+  hypothesis_id: H-03
+  success_metric: "≥20 engineering cycles logged in 90 days with program_id attribution"
+  exit_id: X-02
+  program_mode: rd
+```
+
 | Field | Value |
 |-------|-------|
 | **Program** | `.asep/programs/px-exec.yaml` |
