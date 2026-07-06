@@ -44,6 +44,9 @@ Contract-first → TDD red/green → evidence-backed gates. See `knowledge/devel
 
 ## Governance hierarchy
 
+**Platform investment contract:** `docs/platform-justification.md` — validated value,
+hypotheses, exit criteria, scope (binds EWO category and PX-EXEC vs Core maintenance).
+
 ASEP (ADR-0026) is the overall governance framework.
 
 **Engineering Program** (`docs/engineering-program.md`, `.asep/programs/`) sits between

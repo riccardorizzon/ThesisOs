@@ -6,6 +6,9 @@
 >
 > An Engineering Program is **above WorkOrders**. WorkOrders are instances; the
 > Program is the long-lived contract for scope, roadmap, validation, and release.
+>
+> **Why invest in platform work?** See `docs/platform-justification.md` (hypotheses,
+> exit criteria, Category A/B/C — not a duplicate of this doc).
 
 ---
 
