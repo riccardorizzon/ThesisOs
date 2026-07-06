@@ -39,7 +39,6 @@ capabilities:
       wave_a_backlog: .asep/reports/PX-EXEC-WAVE-A-BACKLOG.md
       first_executable_ewo: PX-EXEC-EWO-002
       not_authorized:
-        - MB2-Q4-pass
         - PX-4
         - phase_2_execution_plugins
       qualification:
@@ -55,6 +54,10 @@ capabilities:
           status: pass
           report: .asep/reports/MB2-Q3-SCHEDULER-20260706.md
           certificate: .asep/certificates/MB2-Q3-20260706.yaml
+        mb2_q4:
+          status: pass
+          report: .asep/reports/MB2-Q4-PLUGIN-REGISTRY-20260706.md
+          certificate: .asep/certificates/MB2-Q4-20260706.yaml
         mb2_q5:
           status: pass
           report: .asep/reports/MB2-Q5-PROJECTION-20260706.md

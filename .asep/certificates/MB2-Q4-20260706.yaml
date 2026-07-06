@@ -1,0 +1,42 @@
+# Qualification Certificate — MB2-Q4 Plugin Registry
+
+certificate_version: "1.0"
+certificate_type: qualification-gate
+issued_at: "2026-07-06T06:05:00+02:00"
+issued_by: architect
+
+gate:
+  id: MB2-Q4
+  title: Plugin Registry
+  sor_sections: ["§8"]
+  report: .asep/reports/MB2-Q4-PLUGIN-REGISTRY-20260706.md
+  authorization: .asep/reports/PX-EXEC-AUTHORIZATION-MB2-Q4-20260706.md
+  prerequisite: MB2-Q3
+
+program:
+  id: px-exec
+  platform_milestone: MB2
+
+specification_of_record:
+  path: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+  revision: "2026-07-05"
+
+normative_tests:
+  - id: MB2-Q-010
+    verdict: PASS
+  - id: MB2-Q-011
+    verdict: PASS
+  - id: MB2-Q-012
+    verdict: PASS
+
+verification:
+  command: make unit-builder-engine
+  result: "157 passed"
+  qualification_module: builder_engine/tests/test_mb2_q4.py
+  implementation_changes: plugin_registry.py
+
+verdict: PASS
+
+not_satisfied:
+  - mb2-promotion
+  - phase_2_execution_plugins
