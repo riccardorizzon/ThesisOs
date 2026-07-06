@@ -42,7 +42,9 @@ constraints:
     - .asep/reports/PX-1-*.md
     - .asep/reports/PX-2-*.md
     - .asep/reports/PX3-*.md
+    - .asep/reports/PX4-*.md
     - .asep/proposals/PX3-EWO-*.md
+    - .asep/proposals/PX4-EWO-*.md
     - .asep/capabilities/thesisos-product-v2.yaml
   regression:
     - make ci
@@ -132,7 +134,19 @@ milestones:
     depends_on: [PX-2]
   PX-4:
     title: Knowledge
-    status: blocked
+    status: phase_0_complete
+    phase_0:
+      title: Product-Runtime Integration Contract
+      status: complete
+      authorized_at: "2026-07-06"
+      authorization_receipt: .asep/reports/PX4-AUTHORIZATION-20260706.md
+      contract: docs/product/runtime-integration-contract.md
+      contract_version: "1.0"
+      runtime_baseline: mb2-complete@3957c94
+      ewo: PX4-EWO-001
+      report: .asep/reports/PX4-EWO-001-runtime-product-contract.md
+    depends_on: [PX-3]
+    note: Phase 0 contract ratified; PX-4 feature EWOs require separate authorization
   PX-5:
     title: Research
     status: blocked
@@ -641,6 +655,26 @@ px2_workorder_backlog:
     status: pending
     authorization: withheld_pending_ewo_009_pass
 
+px4_workorder_backlog:
+  - id: PX4-EWO-001
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-4
+    phase: phase_0
+    title: Product-Runtime Integration Contract
+    adr_refs: [ADR-0042]
+    depends_on: []
+    proposal: .asep/proposals/PX4-EWO-001-runtime-product-contract.md
+    authorization: .asep/reports/PX4-AUTHORIZATION-20260706.md
+    acceptance:
+      - docs/product/runtime-integration-contract.md ratified
+      - Event taxonomy, projection, Supervisor boundaries documented
+      - Ownership matrix signed off
+      - No runtime/SoR/Constitution modifications
+    status: implemented
+    report: .asep/reports/PX4-EWO-001-runtime-product-contract.md
+    completed_at: "2026-07-06"
+
 completion_criteria:
   PX-1: QWO-PX1-001 PASS
   PX-2: QWO-PX2-001 PASS
@@ -672,7 +706,9 @@ post_px2:
   px3_wave_c_authorization: .asep/reports/PX3-AUTHORIZATION-WAVE-C-20260705.md
   px3_wave_c_first_executable_ewo: PX3-EWO-008
   px3_architect_review_ewo_006: .asep/reports/PX3-ARCHITECT-REVIEW-EWO-006-20260705.md
-  px4_authorization: not_authorized
+  px4_authorization: phase_0_complete_20260706
+  px4_phase_0_contract: docs/product/runtime-integration-contract.md
+  px4_phase_0_report: .asep/reports/PX4-EWO-001-runtime-product-contract.md
   runtime_engineering_authorization: not_authorized
   next_artifact: .asep/reports/MB2-CONFORMANCE-ASSESSMENT.md
   note: Wave C dispatch authorized — PX3-EWO-008 first executable — STOP after PASS
