@@ -1,0 +1,45 @@
+# Qualification Certificate — MB2-Q3 Scheduler
+
+certificate_version: "1.0"
+certificate_type: qualification-gate
+issued_at: "2026-07-06T04:25:00+02:00"
+issued_by: architect
+
+gate:
+  id: MB2-Q3
+  title: Scheduler
+  sor_sections: ["§5", "§8.2"]
+  report: .asep/reports/MB2-Q3-SCHEDULER-20260706.md
+  authorization: .asep/reports/PX-EXEC-AUTHORIZATION-MB2-Q3-20260706.md
+  prerequisite: MB2-Q2
+
+program:
+  id: px-exec
+  platform_milestone: MB2
+
+specification_of_record:
+  path: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+  revision: "2026-07-05"
+
+normative_tests:
+  - id: MB2-Q-007
+    verdict: PASS
+  - id: MB2-Q-008
+    verdict: PASS
+  - id: MB2-Q-009
+    verdict: PASS
+
+verification:
+  command: make unit-builder-engine
+  result: "147 passed"
+  qualification_module: builder_engine/tests/test_mb2_q3.py
+  implementation_changes: none
+
+verdict: PASS
+
+not_satisfied:
+  - MB2-Q4
+  - MB2-Q5
+  - MB2-Q6
+  - mb2-promotion
+  - phase_2_execution_plugins

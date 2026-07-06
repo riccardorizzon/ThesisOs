@@ -34,7 +34,6 @@ implementation:
     - MB2-CONFORMANCE-ASSESSMENT PASS
     - no_normative_sor_changes_required
   not_authorized:
-    - MB2-Q3-pass
     - MB2-Q4-pass
     - MB2-Q5-pass
     - MB2-Q6-pass
@@ -53,6 +52,11 @@ implementation:
       status: pass
       report: .asep/reports/MB2-Q2-RULE-ENGINE-20260706.md
       certificate: .asep/certificates/MB2-Q2-20260706.yaml
+      authorized_at: "2026-07-06"
+    mb2_q3:
+      status: pass
+      report: .asep/reports/MB2-Q3-SCHEDULER-20260706.md
+      certificate: .asep/certificates/MB2-Q3-20260706.yaml
       authorized_at: "2026-07-06"
   conformance:
     program: PX-3
