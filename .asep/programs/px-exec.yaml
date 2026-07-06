@@ -458,8 +458,10 @@ workorder_backlog:
     depends_on: [PX-EXEC-EWO-001, PX-EXEC-EWO-002, PX-EXEC-EWO-003, PX-EXEC-EWO-005]
     proposal: .asep/proposals/PX-EXEC-EWO-007-merge-plugin.md
     dispatch: approved_for_registration
-    status: ready
-    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-PHASE-2-DISPATCH-20260706.md
+    status: implemented
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-EWO-007-20260706.md
+    report: .asep/reports/PX-EXEC-EWO-007-merge-plugin.md
+    implemented_at: "2026-07-06"
 
   - id: PX-EXEC-EWO-008
     type: EWO
@@ -471,7 +473,7 @@ workorder_backlog:
     sor_sections: ["§8.2 integration"]
     depends_on: [PX-EXEC-EWO-007]
     proposal: .asep/proposals/PX-EXEC-EWO-008-integration-plugin.md
-    status: blocked
+    status: ready
 
   - id: PX-EXEC-EWO-009
     type: EWO

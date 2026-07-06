@@ -193,10 +193,11 @@ capabilities:
     title: Merge Plugin
     aliases: [merge engine, merge manager, merge planner]
     phase: PX-EXEC-P2
-    lifecycle: specified
-    status: ready
+    lifecycle: implementing
+    status: done
     workorder: PX-EXEC-EWO-007
     proposal: .asep/proposals/PX-EXEC-EWO-007-merge-plugin.md
+    report: .asep/reports/PX-EXEC-EWO-007-merge-plugin.md
     depends_on: [px-exec-5-scheduler, px-exec-2-rule-engine]
     requires: [runtime-model-v2 §7]
     artifacts: [builder_engine/merge.py]
@@ -209,7 +210,7 @@ capabilities:
     aliases: [integration manager, integration review]
     phase: PX-EXEC-P2
     lifecycle: specified
-    status: blocked
+    status: ready
     depends_on: [px-exec-7-merge-plugin]
     requires: [runtime-model-v2 §7]
     acceptance:

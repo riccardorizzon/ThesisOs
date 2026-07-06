@@ -1,0 +1,22 @@
+id: merge-order-test
+title: Merge order enforcement fixture (INV-R-03)
+
+workorder_backlog:
+  - id: PX-MERGE-001
+    depends_on: []
+    status: implemented
+    wave: wave_a
+  - id: PX-MERGE-002
+    depends_on: [PX-MERGE-001]
+    status: ready
+    wave: wave_a
+  - id: PX-MERGE-003
+    depends_on: [PX-MERGE-001]
+    status: ready
+    wave: wave_a
+
+waves:
+  wave_a:
+    execute_in_parallel: true
+    merge_order: [PX-MERGE-002, PX-MERGE-003]
+    workorders: [PX-MERGE-001, PX-MERGE-002, PX-MERGE-003]
