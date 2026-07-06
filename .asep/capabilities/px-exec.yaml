@@ -40,8 +40,6 @@ capabilities:
       first_executable_ewo: PX-EXEC-EWO-002
       not_authorized:
         - MB2-Q4-pass
-        - MB2-Q5-pass
-        - MB2-Q6-pass
         - PX-4
         - phase_2_execution_plugins
       qualification:
@@ -57,6 +55,14 @@ capabilities:
           status: pass
           report: .asep/reports/MB2-Q3-SCHEDULER-20260706.md
           certificate: .asep/certificates/MB2-Q3-20260706.yaml
+        mb2_q5:
+          status: pass
+          report: .asep/reports/MB2-Q5-PROJECTION-20260706.md
+          certificate: .asep/certificates/MB2-Q5-20260706.yaml
+        mb2_q6:
+          status: pass
+          report: .asep/reports/MB2-Q6-RECOVERY-20260706.md
+          certificate: .asep/certificates/MB2-Q6-20260706.yaml
     depends_on: []
     children:
       - px-exec-1-event-model

@@ -1,0 +1,44 @@
+# Qualification Certificate — MB2-Q6 Recovery
+
+certificate_version: "1.0"
+certificate_type: qualification-gate
+issued_at: "2026-07-06T05:55:00+02:00"
+issued_by: architect
+
+gate:
+  id: MB2-Q6
+  title: Recovery
+  sor_sections: ["§12", "§13.3 partial"]
+  report: .asep/reports/MB2-Q6-RECOVERY-20260706.md
+  authorization: .asep/reports/PX-EXEC-AUTHORIZATION-MB2-Q6-20260706.md
+  prerequisite: MB2-Q3
+
+program:
+  id: px-exec
+  platform_milestone: MB2
+
+specification_of_record:
+  path: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+  revision: "2026-07-05"
+
+normative_tests:
+  - id: MB2-Q-016
+    verdict: PASS
+  - id: MB2-Q-017
+    verdict: PASS
+  - id: MB2-Q-018
+    verdict: PASS
+
+verification:
+  command: make unit-builder-engine
+  result: "153 passed"
+  qualification_module: builder_engine/tests/test_mb2_q6.py
+  implementation_changes: builder_engine/recovery.py
+
+verdict: PASS
+
+not_satisfied:
+  - MB2-Q4
+  - mb2-promotion
+  - px-exec-15-full-ewo
+  - phase_4_agent_provider

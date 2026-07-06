@@ -35,8 +35,6 @@ implementation:
     - no_normative_sor_changes_required
   not_authorized:
     - MB2-Q4-pass
-    - MB2-Q5-pass
-    - MB2-Q6-pass
     - PX-4
     - phase_2_execution_plugins
     - phase_3_observability
@@ -57,6 +55,16 @@ implementation:
       status: pass
       report: .asep/reports/MB2-Q3-SCHEDULER-20260706.md
       certificate: .asep/certificates/MB2-Q3-20260706.yaml
+      authorized_at: "2026-07-06"
+    mb2_q5:
+      status: pass
+      report: .asep/reports/MB2-Q5-PROJECTION-20260706.md
+      certificate: .asep/certificates/MB2-Q5-20260706.yaml
+      authorized_at: "2026-07-06"
+    mb2_q6:
+      status: pass
+      report: .asep/reports/MB2-Q6-RECOVERY-20260706.md
+      certificate: .asep/certificates/MB2-Q6-20260706.yaml
       authorized_at: "2026-07-06"
   conformance:
     program: PX-3
