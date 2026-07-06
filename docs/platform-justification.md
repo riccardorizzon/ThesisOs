@@ -283,8 +283,13 @@ platform_contract:
   program_mode: core | product | rd
 ```
 
-Retrospective backfill adds `classification_mode`, `classification_pass`, `classified_on`
-per `.asep/templates/platform-contract-block.md`.
+Retrospective backfill adds `classification_mode`, `classification_pass`, `classified_on`,
+and `classification_registry` per `.asep/templates/platform-contract-block.md`.
+
+**Registry (authoritative):** `.asep/registry/platform-classification.yaml`  
+**CI validation:** `make validate-platform-classification`  
+**Human index:** `.asep/reports/platform-classification-index.md`  
+**Not consumed by product runtime.**
 
 **Promotion path:** C → B (implementation + evidence) → A (metric satisfied + gate pass
 or Architect ratification). **Demotion:** exit criteria (§3) fires → freeze or archive.
@@ -334,4 +339,4 @@ When evaluating a platform proposal, ask in order:
 | Date | Change |
 |------|--------|
 | 2026-07-06 | Initial contract — post architecture review |
-| 2026-07-06 | Retrospective classification — PX-3 closed EWOs — index `.asep/reports/platform-classification-px3-v1-20260706.md` |
+| 2026-07-06 | Classification registry + CI consumer (`make validate-platform-classification`) |

@@ -42,9 +42,12 @@ platform_contract:
 | **Schema** | `classification_schema` | `platform-contract-v1` | YAML field set and semantics — evolves when the contract model changes |
 | **Mode** | `classification_mode` | `retrospective` | How the block was added: `retrospective` vs native at filing |
 | **Pass** | `classification_pass` | `px3-20260706-v1` | A bounded backfill operation — scope + date; **not** the schema version |
-| **Pass date** | `classified_on` | `2026-07-06` | When the retrospective pass ran (not original EWO authorization date) |
+| **Pass date** | `classified_on` | `2026-07-06` | When the pass ran (not original EWO authorization date) |
+| **Registry** | `classification_registry` | `.asep/registry/platform-classification.yaml` | Authoritative pass index — required for retrospective/prospective |
 
-Future passes use new `classification_pass` ids (e.g. `px1-multi-product-202608-v1`) while
+**Consumers:** CI (`make validate-platform-classification`), human index, agents — **not** product runtime.
+
+Future passes use new `classification_pass` ids (e.g. `px1-multi-product-v1`) while
 reusing or bumping `classification_schema` only when the YAML shape changes.
 
 ---
@@ -59,6 +62,7 @@ platform_contract:
   classification_schema: platform-contract-v1
   classification_mode: retrospective
   classification_pass: <program>-<YYYYMMDD>-vN
+  classification_registry: .asep/registry/platform-classification.yaml
   classified_on: 2026-07-06
   category: A | B | C
   hypothesis_id: H-0N | n/a
@@ -138,4 +142,4 @@ platform_contract:
 - Hypotheses: `docs/platform-justification.md` §2  
 - Exit criteria: `docs/platform-justification.md` §3  
 - Decision protocol: `docs/platform-justification.md` §6  
-- Pass index: `.asep/reports/platform-classification-px3-v1-20260706.md`
+- Pass index: `.asep/reports/platform-classification-index.md` (human view of registry)

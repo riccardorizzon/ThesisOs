@@ -134,7 +134,7 @@ milestones:
     depends_on: [PX-2]
   PX-4:
     title: Knowledge
-    status: wave_1_complete
+    status: wave_3_complete
     phase_0:
       title: Product-Runtime Integration Contract
       status: complete

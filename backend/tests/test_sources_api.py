@@ -41,3 +41,16 @@ def test_list_sources_filter_state():
     )
     assert res.status_code == 200
     assert all(s["knowledge_state"] == "linked" for s in res.json()["sources"])
+
+
+def test_get_source_detail_with_concepts():
+    res = client.get("/projects/thesis-agent/sources/benjamin-opera-arte")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["id"] == "benjamin-opera-arte"
+    assert any(c["slug"] == "aura" for c in body["related_concepts"])
+
+
+def test_get_source_not_found():
+    res = client.get("/projects/thesis-agent/sources/missing-source")
+    assert res.status_code == 404

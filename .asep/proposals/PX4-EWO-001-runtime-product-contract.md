@@ -14,6 +14,7 @@ platform_contract:
   classification_schema: platform-contract-v1
   classification_mode: prospective
   classification_pass: px4-20260706-v1
+  classification_registry: .asep/registry/platform-classification.yaml
   classified_on: 2026-07-06
   category: A
   hypothesis_id: n/a

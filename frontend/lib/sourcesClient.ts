@@ -1,5 +1,5 @@
 import type { ConfidenceLevel, KnowledgeState } from "@/lib/knowledgeTypes";
-import type { SourceListResponse } from "@/lib/sourcesTypes";
+import type { SourceListItem, SourceListResponse } from "@/lib/sourcesTypes";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const DEFAULT_PROJECT = "thesis-agent";
@@ -27,4 +27,18 @@ export async function listSources(
     throw new Error(`Sources list failed: ${res.status}`);
   }
   return res.json() as Promise<SourceListResponse>;
+}
+
+export async function getSource(
+  slug: string,
+  projectId: string = DEFAULT_PROJECT
+): Promise<SourceListItem> {
+  const res = await fetch(
+    `${BASE}/projects/${projectId}/sources/${encodeURIComponent(slug)}`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) {
+    throw new Error(`Source not found: ${slug}`);
+  }
+  return res.json() as Promise<SourceListItem>;
 }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { WritingContextBar } from "@/components/context";
-import { CONTEXT_STUB } from "@/lib/contextClient";
+import { CONTEXT_STUB, contextClient } from "@/lib/contextClient";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 import {
   getPendingProposals,
@@ -12,6 +12,7 @@ import {
   type WritingProposal,
 } from "@/lib/proposalQueue";
 import { ReviewComparePanel } from "./ReviewComparePanel";
+import { ReviewKnowledgePanel } from "./ReviewKnowledgePanel";
 import { ReviewDocumentSelector } from "./ReviewDocumentSelector";
 import {
   OPEN_REVIEW_EVENT,
@@ -54,6 +55,8 @@ export function ReviewMode({ className, contextPacket = CONTEXT_STUB }: ReviewMo
   const searchParams = useSearchParams();
   const chapterParam = searchParams.get("chapter");
   const proposalParam = searchParams.get("proposal");
+
+  const [context, setContext] = useState(contextPacket);
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loadingChapters, setLoadingChapters] = useState(true);
@@ -104,6 +107,29 @@ export function ReviewMode({ className, contextPacket = CONTEXT_STUB }: ReviewMo
     }
     if (proposalParam) setSelectedProposalId(proposalParam);
   }, [chapterParam, proposalParam]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setContext(contextPacket);
+      return;
+    }
+    let cancelled = false;
+    contextClient
+      .get(contextPacket.project_context.project_id, {
+        surface: "review",
+        entityType: "chapter",
+        entityId: selectedId,
+      })
+      .then((packet) => {
+        if (!cancelled) setContext(packet);
+      })
+      .catch(() => {
+        if (!cancelled) setContext(contextPacket);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId, contextPacket]);
 
   const pendingProposals = useMemo(() => {
     void queueVersion;
@@ -167,7 +193,7 @@ export function ReviewMode({ className, contextPacket = CONTEXT_STUB }: ReviewMo
 
   return (
     <div className={["flex flex-col gap-6", className].filter(Boolean).join(" ")}>
-      <WritingContextBar packet={contextPacket} />
+      <WritingContextBar packet={context} />
 
       <div className="px-4 lg:px-6">
         <header className="mb-6">
@@ -214,6 +240,8 @@ export function ReviewMode({ className, contextPacket = CONTEXT_STUB }: ReviewMo
             />
 
             <div className="min-w-0 space-y-6">
+              <ReviewKnowledgePanel packet={context} chapterId={selectedId} />
+
               {selectedId && step === "select" && activeProposal ? (
                 <div>
                   <button

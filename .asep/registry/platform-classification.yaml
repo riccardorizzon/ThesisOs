@@ -1,0 +1,57 @@
+# Authoritative index of platform_contract classification passes.
+# Human view: .asep/reports/platform-classification-index.md
+# CI consumer: make validate-platform-classification
+# NOT consumed by product runtime (backend/app, frontend).
+
+schema: platform-classification-registry-v1
+
+consumers:
+  - id: ci-validate
+    role: tooling
+    entry: make validate-platform-classification
+    invariant: pass ids in proposals ↔ registry scope; proposal files must exist
+  - id: human-review
+    role: human
+    entry: .asep/reports/platform-classification-index.md
+  - id: audit-agent
+    role: agent
+    entry: .asep/resolvers/authorize.md pre-flight; .cursor/skills/asep/SKILL.md
+  - id: product-runtime
+    role: forbidden
+    note: backend/app and frontend must not import or read this registry
+
+passes:
+  - id: px3-20260706-v1
+    mode: retrospective
+    executed_on: "2026-07-06"
+    contract_schema: platform-contract-v1
+    scope:
+      - PX3-EWO-001
+      - PX3-EWO-002
+      - PX3-EWO-003
+      - PX3-EWO-004
+      - PX3-EWO-005
+      - PX3-EWO-006
+      - PX3-EWO-007
+      - PX3-EWO-008
+      - PX3-EWO-009
+      - PX3-EWO-010
+
+  - id: px-exec-20260706-v1
+    mode: retrospective
+    executed_on: "2026-07-06"
+    contract_schema: platform-contract-v1
+    scope:
+      - PX-EXEC-EWO-001
+
+  - id: px4-20260706-v1
+    mode: prospective
+    executed_on: "2026-07-06"
+    contract_schema: platform-contract-v1
+    scope:
+      - PX4-EWO-001
+
+planned:
+  - id: px1-multi-product-v1
+    contract_schema: platform-contract-v1
+    note: PX1-EWO-006 multi-product / H-07 — not executed

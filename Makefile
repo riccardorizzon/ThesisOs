@@ -73,7 +73,12 @@ check: lint typecheck unit drift isolation ## Fast local gate (pre-commit / pre-
 
 test: unit unit-frontend unit-builder-engine ## All unit suites
 
-ci: lint typecheck unit unit-frontend unit-builder-engine drift scope isolation ## Full CI gate
+ci: lint typecheck unit unit-frontend unit-builder-engine drift scope isolation validate-platform-classification ## Full CI gate
+
+validate-platform-classification: ## ASEP registry ↔ proposal platform_contract (governance)
+	cd builder_engine && (test -d .venv || python3 -m venv .venv) \
+		&& .venv/bin/pip install -q -e ".[dev]" \
+		&& .venv/bin/builder-engine validate-classification --repo-root ..
 
 unit-m4-recovery: ## M4 recovery regression suite (53 tests; needs Postgres for some)
 	cd $(BACKEND) && .venv/bin/python -m pytest -q \

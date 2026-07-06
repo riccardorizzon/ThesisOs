@@ -91,6 +91,29 @@ export function ContextInspector({
       <DecisionInspectorSection packet={packet} />
 
       <InspectorSection
+        title="Concetti nel contesto"
+        defaultOpen
+        isEmpty={packet.concepts.length === 0}
+        emptyMessage="Nessun concetto nel contesto attuale."
+        testId="inspector-concetti"
+      >
+        {packet.concepts.length > 0 && (
+          <ul className="space-y-2">
+            {packet.concepts.map((concept) => (
+              <li key={concept.id}>
+                <a
+                  href={`/knowledge/${concept.slug ?? concept.id}`}
+                  className="font-medium text-accent underline-offset-2 hover:underline"
+                >
+                  {concept.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </InspectorSection>
+
+      <InspectorSection
         title="Vincoli corpus"
         defaultOpen={hasConstraints}
         isEmpty={!hasConstraints}

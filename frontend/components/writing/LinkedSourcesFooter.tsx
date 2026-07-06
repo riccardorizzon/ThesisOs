@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 import {
@@ -8,6 +8,8 @@ import {
   LINKED_SOURCES_CHANGED,
   type CorpusSource,
 } from "@/lib/corpusClient";
+import { getSource } from "@/lib/sourcesClient";
+import type { RelatedConceptRef } from "@/lib/sourcesTypes";
 
 export type LinkedSourcesFooterProps = {
   chapterId?: string;
@@ -21,10 +23,12 @@ export type LinkedSourcesFooterProps = {
 export function LinkedSourcesFooter({ chapterId, className }: LinkedSourcesFooterProps) {
   const [expanded, setExpanded] = useState(false);
   const [linked, setLinked] = useState<CorpusSource[]>([]);
+  const [relatedConcepts, setRelatedConcepts] = useState<RelatedConceptRef[]>([]);
 
   const refresh = useCallback(() => {
     if (!chapterId) {
       setLinked([]);
+      setRelatedConcepts([]);
       return;
     }
     setLinked(corpusClient.getLinkedToChapter(chapterId));
@@ -33,6 +37,37 @@ export function LinkedSourcesFooter({ chapterId, className }: LinkedSourcesFoote
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (linked.length === 0) {
+      setRelatedConcepts([]);
+      return;
+    }
+    let cancelled = false;
+    Promise.all(linked.slice(0, 5).map((s) => getSource(s.id).catch(() => null)))
+      .then((results) => {
+        if (cancelled) return;
+        const seen = new Set<string>();
+        const merged: RelatedConceptRef[] = [];
+        for (const item of results) {
+          if (!item) continue;
+          for (const concept of item.related_concepts) {
+            if (seen.has(concept.slug)) continue;
+            seen.add(concept.slug);
+            merged.push(concept);
+          }
+        }
+        setRelatedConcepts(merged);
+      })
+      .catch(() => {
+        if (!cancelled) setRelatedConcepts([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [linked]);
+
+  const conceptLinks = useMemo(() => relatedConcepts.slice(0, 8), [relatedConcepts]);
 
   useEffect(() => {
     const onChange = () => refresh();
@@ -88,6 +123,25 @@ export function LinkedSourcesFooter({ chapterId, className }: LinkedSourcesFoote
               Nessuna fonte collegata.{" "}
               <span className="text-accent">Cita fonte</span> (⌘⇧C) per aggiungerne una.
             </p>
+          )}
+          {conceptLinks.length > 0 && (
+            <div className="mt-3 border-t border-border pt-3">
+              <p className="mb-2 text-xs font-medium text-ink-subtle">
+                Concetti collegati
+              </p>
+              <ul className="flex flex-wrap gap-2">
+                {conceptLinks.map((concept) => (
+                  <li key={concept.slug}>
+                    <Link
+                      href={`/knowledge/${concept.slug}`}
+                      className="inline-flex rounded-full border border-accent/30 bg-accent-subtle/40 px-2.5 py-1 text-xs text-accent hover:bg-accent/10"
+                    >
+                      {concept.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       )}

@@ -82,6 +82,8 @@ jobs:
         run: python -m venv .venv && .venv/bin/pip install -q -e ".[dev]"
       - name: Unit tests (pytest)
         run: .venv/bin/pytest -q
+      - name: Platform classification registry (governance)
+        run: .venv/bin/builder-engine validate-classification --repo-root ..
 
   isolation:
     runs-on: ubuntu-latest

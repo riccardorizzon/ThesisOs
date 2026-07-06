@@ -64,7 +64,7 @@ Run before selecting an EWO. On any ✗ → STOP with Stop Report; do not implem
 
 | Check | Verification |
 |-------|--------------|
-| Platform contract | Proposal includes `platform_contract` YAML per `.asep/templates/platform-contract-block.md`; B/C must cite `hypothesis_id`, `success_metric`, `exit_id` from `docs/platform-justification.md` |
+| Platform contract | Proposal includes `platform_contract` YAML per `.asep/templates/platform-contract-block.md`; B/C must cite `hypothesis_id`, `success_metric`, `exit_id`; if `classification_pass` set → must match `.asep/registry/platform-classification.yaml` (`make validate-platform-classification`) |
 | Program exists | `.asep/programs/*.yaml` loads; milestone defined |
 | Prior milestone | Every `depends_on` milestone is `complete` / `qualified` / `frozen` |
 | Repository | `git status` clean (or operator waived); branch identified |

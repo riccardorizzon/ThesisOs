@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 
-from app.schemas.chapter import ChapterListFilters
 from app.schemas.context import (
     ConstraintsNode,
     ContextGraph,
@@ -17,8 +16,10 @@ from app.schemas.context import (
     UserIntentNode,
     WorkspaceNode,
 )
+from app.schemas.chapter import ChapterListFilters
 from app.schemas.memory import PromptContextFilters
 from app.services.chapter import ChapterNotFoundError, ChapterService
+from app.services.context.knowledge_bridge import assemble_knowledge_node
 from app.services.memory import MemoryService
 
 _STATUS_FACTOR = {"draft": 0.4, "review": 0.7, "approved": 1.0, "published": 1.0}
@@ -121,6 +122,8 @@ async def assemble_context_graph(
     chapters = await chapter_service.list(ChapterListFilters())
     progress_pct = _compute_progress_pct(chapters)
 
+    knowledge = await assemble_knowledge_node(request.project.project_id)
+
     thesis_ctx = await memory_service.load_prompt_context(
         filters=PromptContextFilters(
             include_binding_decisions=False,
@@ -141,6 +144,7 @@ async def assemble_context_graph(
             corpus=_extract_corpus_constraints(decisions_content),
             writing_rules=list(_DEFAULT_WRITING_RULES),
         ),
+        knowledge=knowledge,
         workspace=WorkspaceNode(
             project=ProjectSummary(
                 title=project_title,

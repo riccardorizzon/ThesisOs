@@ -482,5 +482,23 @@ def check(
     raise typer.Exit(result.exit_code)
 
 
+@app.command("validate-classification")
+def validate_classification(
+    repo_root: Optional[Path] = typer.Option(None, "--repo-root"),
+) -> None:
+    """Validate platform_contract passes against .asep/registry (governance only)."""
+    from builder_engine.classification_registry import validate_classification_registry
+
+    root = _root(repo_root)
+    errors = validate_classification_registry(root)
+    if not errors:
+        console.print("[green]PASS[/green] platform classification registry")
+        raise typer.Exit(0)
+    console.print(f"[red]FAIL[/red] {len(errors)} classification registry violation(s):")
+    for err in errors:
+        console.print(f"  - {err}")
+    raise typer.Exit(1)
+
+
 if __name__ == "__main__":
     app()

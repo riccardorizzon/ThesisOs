@@ -11,10 +11,12 @@ import {
   type LibraryConcept,
   type LibrarySource,
 } from "@/lib/libraryStub";
+import type { RelatedConceptRef, SourceListItem } from "@/lib/sourcesTypes";
 import { cn } from "@/lib/cn";
 
 export type SourceDetailViewProps = {
-  source: LibrarySource;
+  source?: LibrarySource;
+  sourceItem?: SourceListItem;
   chapterContext?: string;
   className?: string;
 };
@@ -25,27 +27,48 @@ export type SourceDetailViewProps = {
  */
 export function SourceDetailView({
   source,
+  sourceItem,
   chapterContext,
   className,
 }: SourceDetailViewProps) {
-  const corpusSource = corpusClient.getById(source.id);
-  const relatedConcepts = source.relatedConceptIds
-    .map((id) => getConceptById(id))
-    .filter((c): c is LibraryConcept => c != null);
+  const sourceId = sourceItem?.id ?? source?.id ?? "";
+  const corpusSource = corpusClient.getById(sourceId);
+
+  const relatedFromApi: RelatedConceptRef[] | undefined = sourceItem?.related_concepts;
+  const relatedConcepts: Array<{ id: string; title: string; subtitle?: string; meta?: string }> =
+    relatedFromApi && relatedFromApi.length > 0
+      ? relatedFromApi.map((c) => ({
+          id: c.slug,
+          title: c.title,
+          subtitle: undefined,
+          meta: undefined,
+        }))
+      : (source?.relatedConceptIds ?? [])
+          .map((id) => getConceptById(id))
+          .filter((c): c is LibraryConcept => c != null);
+
+  const displaySource = source ?? {
+    id: sourceId,
+    title: sourceItem?.title ?? sourceId,
+    subtitle: sourceItem?.subtitle ?? "",
+    meta: sourceItem?.summary ?? "",
+    status: (sourceItem?.corpus_status as LibrarySource["status"]) ?? "approvata",
+    relatedConceptIds: relatedFromApi?.map((c) => c.slug) ?? [],
+  };
 
   const [linked, setLinked] = useState(
     chapterContext
-      ? corpusClient.isLinkedToChapter(chapterContext, source.id)
+      ? corpusClient.isLinkedToChapter(chapterContext, sourceId)
       : false
   );
   const [linkMessage, setLinkMessage] = useState<string | null>(null);
 
   const handleLinkToChapter = useCallback(() => {
     if (!chapterContext) return;
-    corpusClient.linkToChapter(chapterContext, source.id);
+    corpusClient.linkToChapter(chapterContext, sourceId);
     setLinked(true);
     setLinkMessage("Fonte collegata al capitolo attivo.");
-  }, [chapterContext, source.id]);
+  }, [chapterContext, sourceId]);
 
   const backHref = chapterContext
     ? `/sources?chapter=${chapterContext}`
@@ -146,7 +169,7 @@ export function SourceDetailView({
         className="mt-10 rounded-lg border border-border bg-surface-muted p-4"
       >
         <p className="text-sm text-ink-muted">
-          Stato bibliografico: {sourceStatusMeta(source.status)}.
+          Stato bibliografico: {sourceStatusMeta(displaySource.status)}.
           Esplora tutti i concetti in{" "}
           <Link
             href="/knowledge"

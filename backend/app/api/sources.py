@@ -1,12 +1,17 @@
-"""Sources module API (PX3-EWO-002)."""
+"""Sources module API (PX3-EWO-002; PX4-EWO-008)."""
 
 from fastapi import APIRouter, Query
+from fastapi.responses import JSONResponse
 
 from app.schemas.knowledge import ConfidenceLevel, KnowledgeState
-from app.services.sources import SourcesService
+from app.services.sources.service import SourceNotFoundError, SourcesService
 
 router = APIRouter()
 _service = SourcesService()
+
+
+def _err(status: int, code: str, message: str) -> JSONResponse:
+    return JSONResponse(status_code=status, content={"code": code, "message": message})
 
 
 @router.get("/projects/{project_id}/sources")
@@ -17,10 +22,18 @@ async def list_sources(
     confidence: ConfidenceLevel | None = None,
     include_deprecated: bool = Query(default=False),
 ):
-    del project_id
-    return _service.list_sources(
+    return await _service.list_sources(
+        project_id,
         query=q,
         knowledge_state=knowledge_state,
         confidence=confidence,
         include_deprecated=include_deprecated,
     )
+
+
+@router.get("/projects/{project_id}/sources/{slug}")
+async def get_source(project_id: str, slug: str):
+    try:
+        return await _service.get_source(project_id, slug)
+    except SourceNotFoundError:
+        return _err(404, "source_not_found", f"Unknown source: {slug}")

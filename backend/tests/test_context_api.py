@@ -118,6 +118,9 @@ def test_get_context_returns_packet_subset(client):
     assert any("CORPUS-02" in c for c in body["corpus_constraints"])
     assert len(body["writing_rules"]) >= 1
     assert body["token_budget"] == 8000
+    assert len(body["concepts"]) >= 1
+    assert any(c["slug"] == "stigmata" for c in body["concepts"])
+    assert len(body["relevant_sources"]) >= 1
 
 
 def test_get_context_includes_chapter_entity(client):

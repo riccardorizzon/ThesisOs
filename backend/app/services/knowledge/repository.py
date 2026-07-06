@@ -189,6 +189,46 @@ class ConceptRepository:
         concept = await self._fetch(session, project_id, slug)
         await session.delete(concept)
 
+    async def get_related_concepts_for_source(
+        self,
+        session: AsyncSession,
+        project_id: str,
+        source_slug: str,
+    ) -> list[dict[str, str]]:
+        if await self.count_for_project(session, project_id) == 0:
+            return []
+        result = await session.execute(
+            select(Concept)
+            .join(ConceptSourceLink, ConceptSourceLink.concept_id == Concept.id)
+            .where(
+                Concept.project_id == project_id,
+                ConceptSourceLink.source_slug == source_slug,
+            )
+            .order_by(Concept.title)
+        )
+        return [
+            {"id": c.slug, "slug": c.slug, "title": c.title}
+            for c in result.scalars().all()
+        ]
+
+    async def get_source_slugs_for_concepts(
+        self,
+        session: AsyncSession,
+        project_id: str,
+        *,
+        limit: int = 20,
+    ) -> list[str]:
+        if await self.count_for_project(session, project_id) == 0:
+            return []
+        result = await session.execute(
+            select(ConceptSourceLink.source_slug)
+            .join(Concept, Concept.id == ConceptSourceLink.concept_id)
+            .where(Concept.project_id == project_id)
+            .distinct()
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
     async def count_for_project(self, session: AsyncSession, project_id: str) -> int:
         result = await session.execute(
             select(func.count()).select_from(Concept).where(Concept.project_id == project_id)
