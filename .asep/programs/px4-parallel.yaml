@@ -51,10 +51,11 @@ waves:
 
   wave_2_graph_explorer:
     title: Graph + Explorer + Search
-    status: blocked
+    status: complete
     depends_on_wave: wave_1_integration
     merge_order: [PX4-EWO-005, PX4-EWO-006, PX4-EWO-007]
     workorders: [PX4-EWO-005, PX4-EWO-006, PX4-EWO-007]
+    integration: .asep/reports/PX4-INTEGRATION-C.md
 
   wave_2_integration:
     title: Integration C

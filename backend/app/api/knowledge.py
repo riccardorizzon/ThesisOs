@@ -11,7 +11,8 @@ from app.services.knowledge import (
     KnowledgeObjectNotFoundError,
     KnowledgeService,
 )
-from app.services.knowledge.graph import build_knowledge_graph
+from app.services.knowledge.graph import build_knowledge_graph_for_project
+from app.services.knowledge_search import search_concepts
 
 router = APIRouter()
 _service = KnowledgeService()
@@ -95,6 +96,17 @@ async def get_concept_definition(project_id: str, slug: str):
         return _err(404, "concept_not_found", f"Unknown concept: {slug}")
 
 
+@router.get("/projects/{project_id}/knowledge/search")
+async def search_knowledge(
+    project_id: str,
+    q: str = Query(min_length=1),
+    limit: int = Query(default=20, ge=1, le=100),
+):
+    """Ranked concept search across Knowledge objects (PX4-EWO-007)."""
+    results = await search_concepts(project_id, q, limit=limit)
+    return {"query": q, "results": results, "total": len(results)}
+
+
 @router.get("/projects/{project_id}/knowledge/graph")
 async def get_knowledge_graph(
     project_id: str,
@@ -104,8 +116,8 @@ async def get_knowledge_graph(
     view: str | None = Query(default=None),
 ):
     """Knowledge Graph §10 — bounded concept navigation (read-only)."""
-    del project_id
-    graph = build_knowledge_graph(
+    graph = await build_knowledge_graph_for_project(
+        project_id,
         focus_slug=focus,
         depth=depth,
         max_nodes=max_nodes,

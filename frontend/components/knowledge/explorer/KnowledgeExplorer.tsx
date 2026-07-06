@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { KnowledgeConceptCard } from "@/components/knowledge/explorer/KnowledgeConceptCard";
 import { KnowledgeExplorerFilters } from "@/components/knowledge/explorer/KnowledgeExplorerFilters";
+import { KnowledgeExplorerSearch } from "@/components/knowledge/explorer/KnowledgeExplorerSearch";
 import type { ExplorerFilterState } from "@/components/knowledge/explorer/explorerTypes";
 import { cn } from "@/lib/cn";
 import type { KnowledgeObjectEnvelope } from "@/lib/knowledgeTypes";
@@ -45,13 +46,17 @@ export function KnowledgeExplorer({
     confidence: "all",
     showCandidates: false,
   });
-
-  const filtered = useMemo(
-    () => applyExplorerFilters(concepts, filter),
-    [concepts, filter]
+  const [searchResults, setSearchResults] = useState<KnowledgeObjectEnvelope[] | null>(
+    null
   );
 
-  const featured = concepts.find((c) => c.is_core && c.slug === "stigmata");
+  const baseConcepts = searchResults ?? concepts;
+  const filtered = useMemo(
+    () => applyExplorerFilters(baseConcepts, filter),
+    [baseConcepts, filter]
+  );
+
+  const featured = baseConcepts.find((c) => c.is_core && c.slug === "stigmata");
   const gridConcepts = useMemo(
     () =>
       featured != null
@@ -71,7 +76,12 @@ export function KnowledgeExplorer({
         </p>
       </header>
 
-      {featured != null && (
+      <KnowledgeExplorerSearch
+        className="mb-6"
+        onResults={setSearchResults}
+      />
+
+      {featured != null && searchResults == null && (
         <section
           className="mb-8 rounded-lg border border-accent/20 bg-accent-subtle/30 p-4"
           aria-label="Concetto di ancoraggio"

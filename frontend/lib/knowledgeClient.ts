@@ -100,6 +100,27 @@ export async function getConceptDetail(
   return res.json() as Promise<ConceptDetailEnvelope>;
 }
 
+export async function searchKnowledge(
+  query: string,
+  options: { projectId?: string; limit?: number } = {}
+): Promise<{ query: string; results: KnowledgeObjectEnvelope[]; total: number }> {
+  const projectId = options.projectId ?? DEFAULT_PROJECT;
+  const params = new URLSearchParams({ q: query });
+  if (options.limit != null) params.set("limit", String(options.limit));
+  const res = await fetch(
+    `${BASE}/projects/${projectId}/knowledge/search?${params}`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) {
+    throw new Error(`Knowledge search failed: ${res.status}`);
+  }
+  return res.json() as Promise<{
+    query: string;
+    results: KnowledgeObjectEnvelope[];
+    total: number;
+  }>;
+}
+
 export async function getConformanceProjection(
   projectId: string = DEFAULT_PROJECT
 ): Promise<ConformanceProjection> {
