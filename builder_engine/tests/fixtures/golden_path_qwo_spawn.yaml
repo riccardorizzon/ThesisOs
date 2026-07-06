@@ -1,0 +1,9 @@
+# Golden path QWO spawn — final gate only (§13.3 audit)
+qwo_spawns:
+  integration-d:
+    coverage_gate: passed
+    spawn_outcome: success
+    qwo_id: QWO-PX2-001
+    evidence_paths:
+      - .asep/reports/PX2-INTEGRATION-D.md
+      - .asep/certificates/qwo-px2-001-stub.yaml

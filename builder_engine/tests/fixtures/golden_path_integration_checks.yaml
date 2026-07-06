@@ -1,0 +1,21 @@
+# Golden path integration fixtures — all barriers PASS (§13.3 audit)
+integrations:
+  wave-a-integration:
+    ci_status: passed
+    check_outcome: passed
+    checks_count: 2
+
+  wave-b-integration:
+    ci_status: passed
+    check_outcome: passed
+    checks_count: 3
+
+  wave-c-integration:
+    ci_status: passed
+    check_outcome: passed
+    checks_count: 2
+
+  integration-d:
+    ci_status: passed
+    check_outcome: passed
+    checks_count: 4

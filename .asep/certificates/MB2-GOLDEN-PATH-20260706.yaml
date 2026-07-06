@@ -1,0 +1,59 @@
+# Qualification Certificate — MB2 §13.3 Golden Path Replay
+
+certificate_version: "1.0"
+certificate_type: golden-path-audit
+issued_at: "2026-07-06T04:55:00+02:00"
+issued_by: architect
+
+bundle:
+  id: MB2-GOLDEN-PATH
+  title: PX-2 Parallel Golden Path Replay
+  sor_sections: ["§13.3"]
+  report: .asep/reports/MB2-GOLDEN-PATH-REPLAY-AUDIT-20260706.md
+  authorization: .asep/reports/PX-EXEC-AUTHORIZATION-SECTION-13-3-GOLDEN-PATH-20260706.md
+  prerequisite: MB2-Q1…Q6 bundle + Phase 2 EWO-007…009
+
+program:
+  id: px-exec
+  platform_milestone: MB2
+  reference_program: .asep/programs/px2-parallel.yaml
+
+specification_of_record:
+  path: docs/superpowers/specs/mb2-engineering-runtime-spec.md
+  revision: "2026-07-05"
+
+replay_evidence:
+  orchestrator: builder_engine/golden_path.py
+  tests: builder_engine/tests/test_golden_path_replay.py
+  stages: 4
+  plugins: [merge, integration, qualification]
+  final_qwo: QWO-PX2-001
+
+normative_tests:
+  - id: MB2-Q-018
+    class: rule-replay
+    verdict: PASS
+    module: builder_engine/tests/test_mb2_q6.py
+  - id: MB2-Q-018
+    class: live-plugin-replay
+    verdict: PASS
+    module: builder_engine/tests/test_golden_path_replay.py
+
+manual_audit_trail:
+  - .asep/reports/PX2-INTEGRATION-A.md
+  - .asep/reports/PX2-INTEGRATION-B.md
+  - .asep/reports/PX2-INTEGRATION-C.md
+  - .asep/reports/PX2-INTEGRATION-D.md
+  - .asep/programs/px2-parallel.yaml
+
+verification:
+  command: make unit-builder-engine
+  result: "190 passed"
+  ci: PASS
+
+verdict: PASS
+
+not_satisfied:
+  - mb2-promotion
+  - mb2-complete-tag
+  - px-exec-phase-3

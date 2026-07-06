@@ -1,0 +1,55 @@
+# PX-2 parallel golden path program — SoR §13.3 replay fixture (test only)
+id: px2-parallel
+title: PX-2 Parallel Engineering — golden path replay
+
+workorder_backlog:
+  - id: PX2-EWO-001
+    depends_on: []
+    status: implemented
+    wave: wave_a
+  - id: PX2-EWO-002
+    depends_on: []
+    status: implemented
+    wave: wave_a
+  - id: PX2-EWO-005
+    depends_on: []
+    status: ready
+    wave: wave_a
+  - id: PX2-EWO-003
+    depends_on: []
+    status: implemented
+    wave: wave_b
+  - id: PX2-EWO-004
+    depends_on: []
+    status: implemented
+    wave: wave_b
+  - id: PX2-EWO-006
+    depends_on: []
+    status: ready
+    wave: wave_b
+  - id: PX2-EWO-007
+    depends_on: []
+    status: ready
+    wave: wave_c
+  - id: PX2-EWO-008
+    depends_on: []
+    status: ready
+    wave: wave_d
+
+waves:
+  wave_a:
+    execute_in_parallel: true
+    merge_order: [PX2-EWO-001, PX2-EWO-002, PX2-EWO-005]
+    workorders: [PX2-EWO-001, PX2-EWO-002, PX2-EWO-005]
+  wave_b:
+    execute_in_parallel: true
+    merge_order: [PX2-EWO-003, PX2-EWO-004, PX2-EWO-006]
+    workorders: [PX2-EWO-003, PX2-EWO-004, PX2-EWO-006]
+  wave_c:
+    execute_in_parallel: false
+    merge_order: [PX2-EWO-007]
+    workorders: [PX2-EWO-007]
+  wave_d:
+    execute_in_parallel: false
+    merge_order: [PX2-EWO-008]
+    workorders: [PX2-EWO-008]
