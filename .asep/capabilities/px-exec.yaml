@@ -90,8 +90,10 @@ capabilities:
     lifecycle: specified
     status: ready
     workorder: PX-EXEC-EWO-002
+    proposal: .asep/proposals/PX-EXEC-EWO-002-rule-engine.md
+    dispatch: approved_for_dispatch  # Architect 2026-07-06
     depends_on: [px-exec-1-event-model]
-    requires: [runtime-model-v2 §6.3]
+    requires: [runtime-model-v2 §7, SoR §7]
     acceptance:
       - declarative rule packs from YAML
       - no Governance policy evaluation in engine
@@ -103,8 +105,10 @@ capabilities:
     lifecycle: specified
     status: ready
     workorder: PX-EXEC-EWO-003
+    proposal: .asep/proposals/PX-EXEC-EWO-003-dependency-engine.md
+    dispatch: approved_for_dispatch  # Architect 2026-07-06
     depends_on: [px-exec-1-event-model]
-    requires: [runtime-model-v2 §3, §4]
+    requires: [runtime-model-v2 §3, §4, SoR §4.2]
     acceptance:
       - Program Graph → Execution Graph derivation
       - merge_order as tie-breaker only

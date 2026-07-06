@@ -277,10 +277,15 @@ roadmap:
 
 wave_a:
   backlog: .asep/reports/PX-EXEC-WAVE-A-BACKLOG.md
+  engineering_package: .asep/reports/PX-EXEC-WAVE-A-ENGINEERING-PACKAGE.md
+  architect_decision: .asep/reports/PX-EXEC-ARCHITECT-DECISION-20260706-WAVE-A-ENGINEERING-PACKAGE.md
   phase: PX-EXEC-P1
   first_executable_ewo: PX-EXEC-EWO-002
   ready_ewos: [PX-EXEC-EWO-002, PX-EXEC-EWO-003]
-  status: in_progress  # EWO-001 implemented; EWO-002/003 ready pending authorization
+  proposals:
+    - .asep/proposals/PX-EXEC-EWO-002-rule-engine.md
+    - .asep/proposals/PX-EXEC-EWO-003-dependency-engine.md
+  status: authorized_for_dispatch  # Architect 2026-07-06; Phase 1 parallel 002∥003
 
 workorder_backlog:
   - id: PX-EXEC-EWO-001
@@ -314,6 +319,8 @@ workorder_backlog:
     title: Rule Engine
     sor_sections: ["§7 Rule model"]
     depends_on: [PX-EXEC-EWO-001]
+    proposal: .asep/proposals/PX-EXEC-EWO-002-rule-engine.md
+    dispatch: approved_for_dispatch  # Architect 2026-07-06
     status: ready
 
   - id: PX-EXEC-EWO-003
@@ -326,6 +333,8 @@ workorder_backlog:
     title: Dependency Engine
     sor_sections: ["§4.2", "§5 Job model"]
     depends_on: [PX-EXEC-EWO-001]
+    proposal: .asep/proposals/PX-EXEC-EWO-003-dependency-engine.md
+    dispatch: approved_for_dispatch  # Architect 2026-07-06
     status: ready
 
   - id: PX-EXEC-EWO-004
