@@ -321,6 +321,7 @@ workorder_backlog:
     depends_on: [PX-EXEC-EWO-001]
     proposal: .asep/proposals/PX-EXEC-EWO-002-rule-engine.md
     dispatch: approved_for_dispatch  # Architect 2026-07-06
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-EWO-002-20260706.md
     status: ready
 
   - id: PX-EXEC-EWO-003
@@ -335,6 +336,7 @@ workorder_backlog:
     depends_on: [PX-EXEC-EWO-001]
     proposal: .asep/proposals/PX-EXEC-EWO-003-dependency-engine.md
     dispatch: approved_for_dispatch  # Architect 2026-07-06
+    authorization: .asep/reports/PX-EXEC-AUTHORIZATION-EWO-003-20260706.md
     status: ready
 
   - id: PX-EXEC-EWO-004
