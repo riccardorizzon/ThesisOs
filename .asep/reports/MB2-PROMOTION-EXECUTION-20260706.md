@@ -4,9 +4,9 @@
 > **Authority:** Architect (operator-authorized promotion)  
 > **Program:** px-exec — Execution Orchestration Platform  
 > **Authorization:** `.asep/reports/PX-EXEC-AUTHORIZATION-MB2-PROMOTION-20260706.md`  
-> **Repository:** `main` @ `dbf5243`  
+> **Repository:** `main` @ `3957c94`  
 > **SoR revision:** 2026-07-05 (read-only)  
-> **Target tag:** `mb2-complete` (pending explicit go-ahead)
+> **Target tag:** `mb2-complete` (applied @ 3957c94)
 
 ---
 
@@ -25,7 +25,7 @@ Phase 1 (EWO-001…006):         COMPLETE
 
 Phase 2 (EWO-007…009):         COMPLETE
 
-mb2-complete tag:              PENDING — not applied (explicit go-ahead required)
+mb2-complete tag:              APPLIED @ 3957c94
 ```
 
 ---
@@ -39,7 +39,7 @@ mb2-complete tag:              PENDING — not applied (explicit go-ahead requir
 | Program state | `.asep/programs/px-exec.yaml` → `promoted` | ✓ |
 | Capability graph | `.asep/capabilities/px-exec.yaml` → `lifecycle: promoted` | ✓ |
 | Certificate | `.asep/certificates/MB2-PROMOTION-20260706.yaml` | ✓ |
-| Git tag | `mb2-complete` | **Deferred** |
+| Git tag | `mb2-complete` | **Applied @ 3957c94** |
 
 ---
 
@@ -79,7 +79,7 @@ make unit-m4-recovery           → 45 passed
 Per `.asep/pipeline/promotion.md`, tag creation requires explicit operator request:
 
 ```bash
-git tag -a mb2-complete -m "MB2 Engineering Runtime — SoR qualified + §13.3 PASS" dbf5243
+git tag -a mb2-complete -m "MB2 Engineering Runtime — SoR qualified + §13.3 PASS" 3957c94
 ```
 
 ---
@@ -91,15 +91,15 @@ MB2-Q1…Q6 PASS → promotion review → §13.3 PARTIAL
   → §13.3 audit PASS
   → AUTHORIZE MB2 promotion
   → PROMOTED @ dbf5243
-  → tag pending
+  → tag applied @ 3957c94
 ```
 
 ---
 
 ```text
 Milestone Status: PASS
-Repository Status: main @ dbf5243 (+ promotion artifacts uncommitted)
-Remaining Scope: PX-EXEC-P3/P4 (not authorized); mb2-complete tag (pending)
+Repository Status: main @ 3957c94
+Remaining Scope: PX-EXEC-P3/P4 (not authorized)
 Known Risks: Phase 3+ capabilities remain planned/blocked
-Recommended Next Action: Apply mb2-complete tag on explicit go-ahead
+Recommended Next Action: PX-EXEC-P3/P4 authorization or new product milestone
 ```

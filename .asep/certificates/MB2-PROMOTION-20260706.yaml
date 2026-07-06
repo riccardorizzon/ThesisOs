@@ -9,7 +9,8 @@ milestone:
   id: MB2
   title: Engineering Runtime — Reference Implementation
   platform_milestone: mb2-complete
-  tag_status: pending_explicit_go_ahead
+  tag_status: applied
+  tag_commit: 3957c94
   baseline: dbf5243
 
 program:
@@ -58,7 +59,7 @@ verification:
 verdict: PROMOTED
 
 not_included:
-  - mb2-complete git tag
+  - mb2-complete git tag applied @ 3957c94
   - PX-EXEC-P3
   - PX-EXEC-P4
   - PX-4

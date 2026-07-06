@@ -510,7 +510,8 @@ workorder_backlog:
 promotion:
   status: promoted
   target_tag: mb2-complete
-  tag_status: pending_explicit_go_ahead
+  tag_status: applied
+  tag_commit: 3957c94
   promoted_at: "2026-07-06"
   baseline: dbf5243
   gate_doc: docs/mb2-promotion.md

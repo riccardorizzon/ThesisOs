@@ -1,6 +1,6 @@
 # MB2 — Engineering Runtime Promotion
 
-**Branch:** `main` · **Promotion baseline:** `dbf5243`  
+**Branch:** `main` · **Promotion commit:** `3957c94` · **Implementation baseline:** `dbf5243`  
 **Spec:** `docs/superpowers/specs/mb2-engineering-runtime-spec.md` (SoR frozen 2026-07-05)  
 **ADR:** ADR-0042 (Engineering Runtime)  
 **Program:** `.asep/programs/px-exec.yaml`
@@ -64,7 +64,7 @@ unit_m4_recovery: green            # C6 — M4 unchanged
 scope_creep: false
 documentation: complete
 knowledge_updated: true
-mb2_complete_tag: pending          # tag withheld — explicit go-ahead required
+mb2_complete_tag: applied @ 3957c94
 ```
 
 ## §13.3 golden path evidence
@@ -84,7 +84,7 @@ Audit report: `.asep/reports/MB2-GOLDEN-PATH-REPLAY-AUDIT-20260706.md`
 All promotion gates are green. Tag withheld for explicit Architect go-ahead:
 
 ```bash
-git tag -a mb2-complete -m "MB2 Engineering Runtime — SoR qualified + §13.3 PASS" dbf5243
+git tag -a mb2-complete -m "MB2 Engineering Runtime — SoR qualified + §13.3 PASS" 3957c94
 ```
 
 ## What MB2 explicitly did NOT close
