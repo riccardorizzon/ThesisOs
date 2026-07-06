@@ -1,10 +1,16 @@
-"""Knowledge Object API (PX3-EWO-001, PX3-EWO-009 §10)."""
+"""Knowledge Object API (PX3-EWO-001 read; PX4-EWO-003 CRUD)."""
 
 from fastapi import APIRouter, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
+from app.schemas.knowledge import ConceptCreate, ConceptUpdate
 from app.schemas.knowledge_graph import DEFAULT_VISIBLE_NODES, HARD_NODE_LIMIT
-from app.services.knowledge import KnowledgeObjectNotFoundError, KnowledgeService
+from app.services.knowledge import (
+    ConceptNotFoundError,
+    ConceptSlugExistsError,
+    KnowledgeObjectNotFoundError,
+    KnowledgeService,
+)
 from app.services.knowledge.graph import build_knowledge_graph
 
 router = APIRouter()
@@ -21,26 +27,52 @@ async def list_knowledge_objects(
     type: str | None = Query(default=None, alias="type"),
     include_deprecated: bool = Query(default=False),
 ):
-    """List Knowledge Object envelopes for a project (read-only catalog)."""
-    del project_id  # single-project v0; project scoping in later EWO
-    return _service.list_objects(object_type=type, include_deprecated=include_deprecated)
+    """List Knowledge Object envelopes for a project."""
+    return await _service.list_objects_async(
+        project_id=project_id,
+        object_type=type,
+        include_deprecated=include_deprecated,
+    )
 
 
 @router.get("/projects/{project_id}/knowledge/objects/{slug}")
 async def get_knowledge_object(project_id: str, slug: str):
-    del project_id
     try:
-        return _service.get_object(slug)
+        return await _service.get_object_async(project_id, slug)
     except KnowledgeObjectNotFoundError:
         return _err(404, "knowledge_object_not_found", f"Unknown knowledge object: {slug}")
+
+
+@router.post("/projects/{project_id}/knowledge/concepts", status_code=201)
+async def create_concept(project_id: str, body: ConceptCreate):
+    try:
+        return await _service.create_concept(project_id, body)
+    except ConceptSlugExistsError as exc:
+        return _err(409, "concept_slug_exists", str(exc))
+
+
+@router.patch("/projects/{project_id}/knowledge/concepts/{slug}")
+async def update_concept(project_id: str, slug: str, body: ConceptUpdate):
+    try:
+        return await _service.update_concept(project_id, slug, body)
+    except ConceptNotFoundError:
+        return _err(404, "concept_not_found", f"Unknown concept: {slug}")
+
+
+@router.delete("/projects/{project_id}/knowledge/concepts/{slug}", status_code=204, response_model=None)
+async def delete_concept(project_id: str, slug: str):
+    try:
+        await _service.delete_concept(project_id, slug)
+        return Response(status_code=204)
+    except ConceptNotFoundError:
+        return _err(404, "concept_not_found", f"Unknown concept: {slug}")
 
 
 @router.get("/projects/{project_id}/knowledge/concepts/{slug}")
 async def get_concept_detail(project_id: str, slug: str):
     """Explain Page concept detail (PX3-EWO-005)."""
-    del project_id
     try:
-        return _service.get_concept_detail(slug)
+        return await _service.get_concept_detail_async(project_id, slug)
     except KnowledgeObjectNotFoundError:
         return _err(404, "concept_not_found", f"Unknown concept: {slug}")
 
@@ -48,9 +80,8 @@ async def get_concept_detail(project_id: str, slug: str):
 @router.get("/projects/{project_id}/knowledge/concepts/{slug}/header")
 async def get_concept_header(project_id: str, slug: str):
     """Explain Page region A (PX3-EWO-006)."""
-    del project_id
     try:
-        return _service.get_concept_header(slug)
+        return await _service.get_concept_header_async(project_id, slug)
     except KnowledgeObjectNotFoundError:
         return _err(404, "concept_not_found", f"Unknown concept: {slug}")
 
@@ -58,9 +89,8 @@ async def get_concept_header(project_id: str, slug: str):
 @router.get("/projects/{project_id}/knowledge/concepts/{slug}/definition")
 async def get_concept_definition(project_id: str, slug: str):
     """Explain Page region B (PX3-EWO-006)."""
-    del project_id
     try:
-        return _service.get_concept_definition(slug)
+        return await _service.get_concept_definition_async(project_id, slug)
     except KnowledgeObjectNotFoundError:
         return _err(404, "concept_not_found", f"Unknown concept: {slug}")
 

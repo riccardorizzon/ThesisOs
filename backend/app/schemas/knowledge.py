@@ -105,3 +105,31 @@ class SourceListItem(KnowledgeObjectEnvelope):
 class SourceListResponse(BaseModel):
     sources: list[SourceListItem]
     total: int
+
+
+class ConceptCreate(BaseModel):
+    """Create payload for PX-4 concept CRUD (ADR-0037)."""
+
+    slug: str = Field(min_length=1, max_length=128, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+    title: str = Field(min_length=1)
+    subtitle: str | None = None
+    summary: str | None = None
+    definition: str | None = None
+    confidence: ConfidenceLevel = "non_valutata"
+    is_core: bool = False
+    created_by: CreatedBy = "operatore"
+    source_slugs: list[str] = Field(default_factory=list)
+
+
+class ConceptUpdate(BaseModel):
+    """Partial update for an existing concept."""
+
+    title: str | None = None
+    subtitle: str | None = None
+    summary: str | None = None
+    definition: str | None = None
+    confidence: ConfidenceLevel | None = None
+    knowledge_state: KnowledgeState | None = None
+    is_core: bool | None = None
+    proposal_state: ProposalState | None = None
+    source_slugs: list[str] | None = None

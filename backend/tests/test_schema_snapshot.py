@@ -4,6 +4,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.schema import CreateTable
 
 import app.db.models  # noqa: F401
+import app.models.knowledge  # noqa: F401  (PX-4 concept domain)
 from app.db.base import Base
 
 SCHEMA = Path(__file__).resolve().parents[2] / "contracts" / "db" / "schema.sql"

@@ -134,7 +134,7 @@ milestones:
     depends_on: [PX-2]
   PX-4:
     title: Knowledge
-    status: phase_0_complete
+    status: wave_1_complete
     phase_0:
       title: Product-Runtime Integration Contract
       status: complete
@@ -145,8 +145,16 @@ milestones:
       runtime_baseline: mb2-complete@3957c94
       ewo: PX4-EWO-001
       report: .asep/reports/PX4-EWO-001-runtime-product-contract.md
+    wave_1:
+      title: Foundation — domain model + CRUD + persistence
+      status: complete
+      authorized_at: "2026-07-06"
+      authorization_receipt: .asep/reports/PX4-AUTHORIZATION-WAVE-1-20260706.md
+      parallel_program: .asep/programs/px4-parallel.yaml
+      integration: .asep/reports/PX4-INTEGRATION-B.md
+      ewos: [PX4-EWO-002, PX4-EWO-003, PX4-EWO-004]
     depends_on: [PX-3]
-    note: Phase 0 contract ratified; PX-4 feature EWOs require separate authorization
+    note: Wave 1 foundation complete; Wave 2 requires separate authorization
   PX-5:
     title: Research
     status: blocked
@@ -673,6 +681,47 @@ px4_workorder_backlog:
       - No runtime/SoR/Constitution modifications
     status: implemented
     report: .asep/reports/PX4-EWO-001-runtime-product-contract.md
+    completed_at: "2026-07-06"
+
+  - id: PX4-EWO-002
+    type: EWO
+    ewo_category: Grounding
+    milestone: PX-4
+    phase: wave_1
+    title: Concept domain model
+    wave: px4-parallel/wave_1_foundation
+    depends_on: [PX4-EWO-001]
+    proposal: .asep/proposals/PX4-EWO-002-domain-model.md
+    adr_refs: [ADR-0037]
+    status: implemented
+    report: .asep/reports/PX4-EWO-002-domain-model.md
+    completed_at: "2026-07-06"
+
+  - id: PX4-EWO-003
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-4
+    phase: wave_1
+    title: Concept CRUD API
+    wave: px4-parallel/wave_1_foundation
+    depends_on: [PX4-EWO-002]
+    proposal: .asep/proposals/PX4-EWO-003-crud-api.md
+    adr_refs: [ADR-0037]
+    status: implemented
+    report: .asep/reports/PX4-EWO-003-crud-api.md
+    completed_at: "2026-07-06"
+
+  - id: PX4-EWO-004
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-4
+    phase: wave_1
+    title: Concept persistence
+    wave: px4-parallel/wave_1_foundation
+    depends_on: [PX4-EWO-002]
+    proposal: .asep/proposals/PX4-EWO-004-persistence.md
+    status: implemented
+    report: .asep/reports/PX4-EWO-004-persistence.md
     completed_at: "2026-07-06"
 
 completion_criteria:

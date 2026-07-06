@@ -5,6 +5,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 import app.db.models  # noqa: F401  (registers all models on the metadata)
+import app.models.knowledge  # noqa: F401  (PX-4 concept domain)
 from app.core.config import settings
 from app.db.base import Base
 

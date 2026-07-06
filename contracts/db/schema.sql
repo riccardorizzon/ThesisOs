@@ -16,6 +16,26 @@ CREATE TABLE chapters (
 	FOREIGN KEY(parent_id) REFERENCES chapters (id)
 );
 
+CREATE TABLE concepts (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	project_id VARCHAR(64) NOT NULL, 
+	slug VARCHAR(128) NOT NULL, 
+	title TEXT NOT NULL, 
+	subtitle TEXT, 
+	summary TEXT, 
+	definition TEXT, 
+	confidence VARCHAR(32) DEFAULT 'non_valutata' NOT NULL, 
+	knowledge_state VARCHAR(32) DEFAULT 'candidate' NOT NULL, 
+	is_core BOOLEAN DEFAULT false NOT NULL, 
+	created_by VARCHAR(32) DEFAULT 'operatore' NOT NULL, 
+	proposal_state VARCHAR(32) DEFAULT 'nessuna' NOT NULL, 
+	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT uq_concepts_project_slug UNIQUE (project_id, slug)
+);
+
 CREATE TABLE conversations (
 	id UUID DEFAULT gen_random_uuid() NOT NULL, 
 	title TEXT, 
@@ -148,6 +168,28 @@ CREATE TABLE chunks (
 	CONSTRAINT uq_chunks_document_id_chunk_index UNIQUE (document_id, chunk_index), 
 	CONSTRAINT uq_chunks_document_id_chunk_hash UNIQUE (document_id, chunk_hash), 
 	FOREIGN KEY(document_id) REFERENCES documents (id)
+);
+
+CREATE TABLE concept_relations (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	from_concept_id UUID NOT NULL, 
+	to_concept_id UUID NOT NULL, 
+	relation_type VARCHAR(32) NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT uq_concept_relations_triple UNIQUE (from_concept_id, to_concept_id, relation_type), 
+	FOREIGN KEY(from_concept_id) REFERENCES concepts (id) ON DELETE CASCADE, 
+	FOREIGN KEY(to_concept_id) REFERENCES concepts (id) ON DELETE CASCADE
+);
+
+CREATE TABLE concept_source_links (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	concept_id UUID NOT NULL, 
+	source_slug VARCHAR(128) NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT uq_concept_source_links_pair UNIQUE (concept_id, source_slug), 
+	FOREIGN KEY(concept_id) REFERENCES concepts (id) ON DELETE CASCADE
 );
 
 CREATE TABLE document_versions (

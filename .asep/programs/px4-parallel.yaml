@@ -1,0 +1,84 @@
+# PX-4 Parallel Engineering — Knowledge milestone
+
+id: px4-parallel
+title: PX-4 Parallel Engineering
+parent_program: thesisos-product-v2
+status: active
+authorization: PX4-AUTHORIZATION-WAVE-1-20260706
+authorized_at: "2026-07-06"
+phase_0_complete: true
+phase_0_contract: docs/product/runtime-integration-contract.md
+
+runtime_contract:
+  product_runtime: docs/product/runtime-integration-contract.md
+  contract_version: "1.0"
+  runtime_baseline: mb2-complete@3957c94
+  program_mode: product
+
+supervisor:
+  role: Engineering Supervisor
+  mode: worktree_per_subagent
+
+waves:
+  wave_0_contract:
+    title: Product-Runtime Integration Contract
+    status: complete
+    workorders: [PX4-EWO-001]
+    report: .asep/reports/PX4-EWO-001-runtime-product-contract.md
+
+  wave_1_foundation:
+    title: Domain model + CRUD + Persistence
+    execute_in_parallel: true
+    depends_on_wave: wave_0_contract
+    merge_order: [PX4-EWO-002, PX4-EWO-003, PX4-EWO-004]
+    workorders: [PX4-EWO-002, PX4-EWO-003, PX4-EWO-004]
+    sub_agents:
+      PX4-EWO-002: A
+      PX4-EWO-003: B
+      PX4-EWO-004: C
+    unblocks: wave_1_integration
+
+  wave_1_integration:
+    title: Integration B — Foundation
+    type: integration
+    execute_in_parallel: false
+    depends_on_wave: wave_1_foundation
+    workorders: [PX4-INTEGRATION-B]
+    actions:
+      - merge worktrees in merge_order (002 → 003 → 004)
+      - run make ci
+      - write .asep/reports/PX4-INTEGRATION-B.md
+
+  wave_2_graph_explorer:
+    title: Graph + Explorer + Search
+    status: blocked
+    depends_on_wave: wave_1_integration
+    merge_order: [PX4-EWO-005, PX4-EWO-006, PX4-EWO-007]
+    workorders: [PX4-EWO-005, PX4-EWO-006, PX4-EWO-007]
+
+  wave_2_integration:
+    title: Integration C
+    type: integration
+    status: blocked
+    depends_on_wave: wave_2_graph_explorer
+    workorders: [PX4-INTEGRATION-C]
+
+  wave_3_product_integration:
+    title: Sources + Writing + Review flows
+    status: blocked
+    depends_on_wave: wave_2_integration
+    merge_order: [PX4-EWO-008, PX4-EWO-009, PX4-EWO-010]
+    workorders: [PX4-EWO-008, PX4-EWO-009, PX4-EWO-010]
+
+  wave_3_integration:
+    title: Integration D
+    type: integration
+    status: blocked
+    depends_on_wave: wave_3_product_integration
+    workorders: [PX4-INTEGRATION-D]
+
+  wave_4_conformance:
+    title: Conformance + Promotion
+    status: blocked
+    depends_on_wave: wave_3_integration
+    workorders: [PX4-EWO-011, PX4-EWO-012]
