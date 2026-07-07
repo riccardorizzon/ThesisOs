@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session_async import AsyncSessionLocal
 from app.models.knowledge import Concept
-from app.services.knowledge.catalog import CONCEPT_CATALOG, build_concept_envelope
 from app.services.knowledge.repository import ConceptRepository
 
 
@@ -40,44 +39,29 @@ async def search_concepts(
 
     async def _run(s: AsyncSession) -> list[dict]:
         repo = ConceptRepository()
-        count = await repo.count_for_project(s, project_id)
-        if count > 0:
-            pattern = f"%{q}%"
-            result = await s.execute(
-                select(Concept)
-                .where(
-                    Concept.project_id == project_id,
-                    or_(
-                        Concept.title.ilike(pattern),
-                        Concept.summary.ilike(pattern),
-                        Concept.definition.ilike(pattern),
-                        Concept.slug.ilike(pattern),
-                    ),
-                )
-                .order_by(func.length(Concept.title))
-                .limit(limit * 2)
+        pattern = f"%{q}%"
+        result = await s.execute(
+            select(Concept)
+            .where(
+                Concept.project_id == project_id,
+                or_(
+                    Concept.title.ilike(pattern),
+                    Concept.summary.ilike(pattern),
+                    Concept.definition.ilike(pattern),
+                    Concept.slug.ilike(pattern),
+                ),
             )
-            rows = result.scalars().all()
-            scored: list[tuple[float, dict]] = []
-            for row in rows:
-                score = _score_concept(q, row.title, row.summary, row.definition)
-                if score <= 0:
-                    continue
-                envelope = await repo.get_by_slug(s, project_id, row.slug)
-                scored.append((score, {**envelope.model_dump(), "score": score}))
-            scored.sort(key=lambda x: (-x[0], x[1]["title"]))
-            return [item for _, item in scored[:limit]]
-
-        # Catalog fallback (no DB rows — e.g. unit tests without migration seed)
-        scored = []
-        for entry in CONCEPT_CATALOG:
-            title = str(entry["title"])
-            summary = str(entry.get("summary") or "")
-            score = _score_concept(q, title, summary, summary)
+            .order_by(func.length(Concept.title))
+            .limit(limit * 2)
+        )
+        rows = result.scalars().all()
+        scored: list[tuple[float, dict]] = []
+        for row in rows:
+            score = _score_concept(q, row.title, row.summary, row.definition)
             if score <= 0:
                 continue
-            env = build_concept_envelope(entry)
-            scored.append((score, {**env.model_dump(), "score": score}))
+            envelope = await repo.get_by_slug(s, project_id, row.slug)
+            scored.append((score, {**envelope.model_dump(), "score": score}))
         scored.sort(key=lambda x: (-x[0], x[1]["title"]))
         return [item for _, item in scored[:limit]]
 
