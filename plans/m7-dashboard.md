@@ -28,7 +28,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | M7.0b Architecture Lock | 🟢 | L1–L7 signed 2026-07-07 |
 | Preflight | 🟢 | builder-engine cycle dry-run |
 | Wave 1a Pilot (2 agents) | 🟢 | P-SOURCES-DB + P-KNOWLEDGE-DB merged, CI pass |
-| Wave 1b (4 agents) | 🟡 | P-CHAT-PERSIST-BE merged; 3 pending |
+| Wave 1b (4 agents) | 🟡 | P-CHAT + P-REVIEW merged; 2 pending |
 | Wave 2 (domain FE) | ⚪ | Sources, Knowledge, Writing, Review, Chat |
 | Wave 3 (E2E + export) | ⚪ | |
 | Wave 4 (cleanup) | ⚪ | |
