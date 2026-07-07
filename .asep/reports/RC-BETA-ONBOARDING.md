@@ -4,49 +4,44 @@
 > **Baseline:** `v2.0.0-rc.1` @ `fd23ad70`  
 > **Phase:** validation only — no new features
 
-## Access
+## Access (public beta — attivo)
 
-> **Important:** the dev VM is **not** exposed on the public internet (by design —
-> see `infra/dev-vm/README.md`). Use **SSH port forwarding** or **Cursor Ports**.
+**URL da condividere:**
 
-### Option A — Cursor (recommended)
+### https://indexes-ghz-joan-stronger.trycloudflare.com
 
-1. Connected via **Remote-SSH** to `thesisos-dev.europe-west1-b.thesisos-prod`
-2. Open **Ports** panel (or Forward a Port)
-3. Forward **3000** and **8000**
-4. Open **http://localhost:3000**
+Frontend + API sulla stessa origine (nginx + Cloudflare Tunnel).  
+Funziona da qualsiasi browser, senza SSH.
 
-### Option B — SSH tunnel from Mac
+> Il tunnel quick Cloudflare **non ha uptime garantito** e l’URL cambia se riavvii
+> `bin/beta-public-open.sh`. Per ripristinare: `bash bin/beta-public-open.sh`
+
+### Ripristino / rigenerazione URL
+
+```bash
+bash bin/beta-public-open.sh
+cat /tmp/thesisos-beta-public.env   # URL corrente
+```
+
+### Opzioni alternative (solo dev)
+
+<details>
+<summary>SSH / Cursor port forward (single-user)</summary>
+
+### Option A — Cursor
+
+1. Remote-SSH → `thesisos-dev.europe-west1-b.thesisos-prod`
+2. Forward ports **3000** + **8000**
+3. http://localhost:3000
+
+### Option B — SSH tunnel
 
 ```bash
 gcloud compute ssh thesisos-dev --zone=europe-west1-b --project=thesisos-prod \
   -- -L 3000:127.0.0.1:3000 -L 8000:127.0.0.1:8000 -N
 ```
 
-Then open **http://localhost:3000** (keep the terminal open).
-
-### Option C — Public beta (requires GCP admin)
-
-Only if you explicitly open the firewall (not default):
-
-```bash
-gcloud compute firewall-rules create thesisos-rc-beta \
-  --project=thesisos-prod \
-  --direction=INGRESS \
-  --priority=1000 \
-  --network=default \
-  --action=ALLOW \
-  --rules=tcp:3000,tcp:8000 \
-  --source-ranges=0.0.0.0/0 \
-  --target-tags=thesisos-dev
-```
-
-Then tag the VM and use `http://34.79.238.160:3000`. **Prefer Options A/B for single-user / internal beta.**
-
-| Service | Local (via tunnel) | Public (only if firewall open) |
-|---------|-------------------|----------------------------------|
-| App | http://localhost:3000 | http://34.79.238.160:3000 |
-| API | http://localhost:8000/health | http://34.79.238.160:8000/health |
+</details>
 
 Use Chrome or Firefox desktop. Research Canvas requires viewport ≥ 1024px.
 
