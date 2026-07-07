@@ -29,7 +29,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | Preflight | 🟢 | builder-engine cycle dry-run |
 | Wave 1a Pilot (2 agents) | 🟢 | P-SOURCES-DB + P-KNOWLEDGE-DB merged, CI pass |
 | Wave 1b (4 agents) | 🟢 | all 4 packets merged, CI pass |
-| Wave 2 (domain FE) | 🟡 | 3/5 merged |
+| Wave 2 (domain FE) | 🟡 | 4/5 merged |
 | Wave 3 (E2E + export) | ⚪ | |
 | Wave 4 (cleanup) | ⚪ | |
 | **M7 PASS** | ⚪ | G1–G11 |
@@ -62,7 +62,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 |--------|--------|--------|--------|--------|---------------|----------|
 | P-SOURCES-FE | Sources | 🟢 | feat/p-sources-fe | 2026-07-07 | ☑ pass | |
 | P-KNOWLEDGE-FE | Knowledge | 🟢 | feat/p-knowledge-fe | 2026-07-07 | ☑ pass | |
-| P-WRITING-FE | Writing | ⚪ | | | | |
+| P-WRITING-FE | Writing | 🟢 | feat/p-writing-fe | 2026-07-07 | ☑ pass | |
 | P-REVIEW-FE | Review | ⚪ | | | | |
 | P-CHAT-FE | Chat | ⚪ | | | | |
 
@@ -116,6 +116,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | 2026-07-07 | P-WRITING-GROUND | f82ce777 | ☑ pass | retrieval context in writing actions |
 | 2026-07-07 | P-SOURCES-FE | 4c745777 | ☑ pass | sources UI wired to API |
 | 2026-07-07 | P-KNOWLEDGE-FE | 6c7317e6 | ☑ pass | knowledge explorer API-only |
+| 2026-07-07 | P-WRITING-FE | 8909a7ae | ☑ pass | grounded writing UI + index banner |
 
 ---
 
