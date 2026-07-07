@@ -12,6 +12,10 @@ from sse_starlette.sse import EventSourceResponse
 from app.graph.writer import LLMWriter, WriterGenerationError, run_writing_panel_action
 from app.llm.base import NotConfiguredLLM
 from app.llm.factory import get_llm_client
+from app.services.writing.panel import (
+    WritingPanelRetrievalError,
+    fetch_panel_retrieved_context,
+)
 
 router = APIRouter(prefix="/writing", tags=["writing"])
 
@@ -41,6 +45,18 @@ async def writing_actions(req: WritingActionRequest):
             content={"code": "llm_not_configured", "message": "LLM runtime not configured"},
         )
 
+    try:
+        retrieved_context = await fetch_panel_retrieved_context(
+            action=req.action,
+            selection_text=req.selection_text,
+            chapter_content=req.chapter_content,
+        )
+    except WritingPanelRetrievalError as exc:
+        return JSONResponse(
+            status_code=422,
+            content={"code": "embed_failed", "message": str(exc)},
+        )
+
     writer = LLMWriter(llm)
 
     async def event_gen():
@@ -58,7 +74,7 @@ async def writing_actions(req: WritingActionRequest):
                 selection_text=req.selection_text,
                 chapter_content=req.chapter_content,
                 context_summary=req.context_summary,
-                retrieved_context=[],
+                retrieved_context=retrieved_context,
                 emit=emit,
             )
         except WriterGenerationError as exc:
