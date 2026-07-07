@@ -9,12 +9,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from pydantic import BaseModel, Field
-from sqlalchemy import ForeignKey, String, Text, select, text
-from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
+from app.db.models import Proposal as ProposalRow
 from app.db.session_async import AsyncSessionLocal
 from app.schemas.chapter import ChapterContentUpdate, ChapterRecord
 from app.services.chapter import ChapterService
@@ -49,24 +47,6 @@ class ProposalAcceptRequest(BaseModel):
 
 class ProposalRejectRequest(BaseModel):
     reason: str | None = None
-
-
-class ProposalRow(Base):
-    __tablename__ = "proposals"
-
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()")
-    )
-    project_id: Mapped[str] = mapped_column(String(64))
-    chapter_id: Mapped[str] = mapped_column(ForeignKey("chapters.id"))
-    status: Mapped[str] = mapped_column(String(16), default="pending")
-    original: Mapped[str] = mapped_column(Text)
-    proposed: Mapped[str] = mapped_column(Text)
-    action: Mapped[str] = mapped_column(String(32))
-    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, server_default=text("'{}'::jsonb"))
-    created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), server_default=text("now()")
-    )
 
 
 class ProposalServiceError(Exception):

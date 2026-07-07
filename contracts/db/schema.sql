@@ -247,6 +247,20 @@ CREATE TABLE notes (
 	FOREIGN KEY(chapter_id) REFERENCES chapters (id)
 );
 
+CREATE TABLE proposals (
+	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	project_id VARCHAR(64) NOT NULL, 
+	chapter_id UUID NOT NULL, 
+	status VARCHAR(16) NOT NULL, 
+	original TEXT NOT NULL, 
+	proposed TEXT NOT NULL, 
+	action VARCHAR(32) NOT NULL, 
+	metadata JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(chapter_id) REFERENCES chapters (id)
+);
+
 CREATE TABLE sources (
 	id UUID DEFAULT gen_random_uuid() NOT NULL, 
 	document_id UUID, 

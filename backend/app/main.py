@@ -15,6 +15,7 @@ from app.api import (
     memory,
     project_registry,
     projects,
+    proposals,
     search,
     sources,
     system,
@@ -47,6 +48,7 @@ app.include_router(memory.router)
 app.include_router(documents.router)
 app.include_router(search.router)
 app.include_router(chapters.router)
+app.include_router(proposals.router)
 app.include_router(project_registry.router)
 app.include_router(projects.router)
 app.include_router(citations.router)

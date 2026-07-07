@@ -262,3 +262,18 @@ class AgentStep(Base):
     started_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
+
+
+class Proposal(Base):
+    __tablename__ = "proposals"
+    __table_args__ = (Index("idx_proposals_project_chapter", "project_id", "chapter_id"),)
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
+    project_id: Mapped[str] = mapped_column(String(64))
+    chapter_id: Mapped[str] = mapped_column(ForeignKey("chapters.id"))
+    status: Mapped[str] = mapped_column(String(16), default="pending")
+    original: Mapped[str] = mapped_column(Text)
+    proposed: Mapped[str] = mapped_column(Text)
+    action: Mapped[str] = mapped_column(String(32))
+    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, server_default=text("'{}'::jsonb"))
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
