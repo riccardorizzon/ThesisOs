@@ -1,8 +1,16 @@
 import type { ConfidenceLevel, KnowledgeState } from "@/lib/knowledgeTypes";
 import type { SourceListItem, SourceListResponse } from "@/lib/sourcesTypes";
 
+import { getActiveProjectId } from "@/lib/projectPrefs";
+
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const DEFAULT_PROJECT = "thesis-agent";
+
+function resolveProjectId(projectId?: string): string {
+  if (projectId) return projectId;
+  if (typeof window !== "undefined") return getActiveProjectId();
+  return DEFAULT_PROJECT;
+}
 
 export async function listSources(
   options: {
@@ -13,7 +21,7 @@ export async function listSources(
     includeDeprecated?: boolean;
   } = {}
 ): Promise<SourceListResponse> {
-  const projectId = options.projectId ?? DEFAULT_PROJECT;
+  const projectId = resolveProjectId(options.projectId);
   const params = new URLSearchParams();
   if (options.query) params.set("q", options.query);
   if (options.state) params.set("state", options.state);
@@ -31,14 +39,27 @@ export async function listSources(
 
 export async function getSource(
   slug: string,
-  projectId: string = DEFAULT_PROJECT
+  projectId?: string
 ): Promise<SourceListItem> {
+  const pid = resolveProjectId(projectId);
   const res = await fetch(
-    `${BASE}/projects/${projectId}/sources/${encodeURIComponent(slug)}`,
+    `${BASE}/projects/${pid}/sources/${encodeURIComponent(slug)}`,
     { cache: "no-store" }
   );
   if (!res.ok) {
     throw new Error(`Source not found: ${slug}`);
   }
   return res.json() as Promise<SourceListItem>;
+}
+
+export async function exportBibliography(
+  projectId?: string
+): Promise<Blob> {
+  const pid = resolveProjectId(projectId);
+  const res = await fetch(
+    `${BASE}/projects/${pid}/sources/bibliography/export?format=bibtex`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) throw new Error(`Bibliography export failed: ${res.status}`);
+  return res.blob();
 }

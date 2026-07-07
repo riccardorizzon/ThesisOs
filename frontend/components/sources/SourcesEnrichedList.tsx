@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { SourcesFilterRail } from "@/components/sources/SourcesFilterRail";
+import { BibliographyExportBar } from "@/components/sources/BibliographyExportBar";
 import { SourceKnowledgeCard } from "@/components/sources/SourceKnowledgeCard";
 import { cn } from "@/lib/cn";
 import type { SourceListItem, SourcesFilterState } from "@/lib/sourcesTypes";
@@ -108,6 +109,8 @@ export function SourcesEnrichedList({
           concetti del corpus.
         </p>
       </header>
+
+      <BibliographyExportBar />
 
       <div className="mb-6">
         <label htmlFor="sources-unified-search" className="sr-only">

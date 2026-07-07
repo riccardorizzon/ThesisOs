@@ -1,32 +1,103 @@
 "use client";
 
-import { defaultProjectContext } from "@/lib/projectContext";
+import { useEffect, useState } from "react";
+import { setActiveProjectId, getActiveProjectId } from "@/lib/projectPrefs";
+import { createProject, listProjects, type ProjectEntry } from "@/lib/projectsClient";
 
 /**
- * PX-1 project switcher stub — displays active project_id from ProjectContext.
- * Multi-project selection deferred to PX-2+.
+ * PX-6 project switcher — multi-project selection with persistence.
  * Layer: Business (Product Plane)
  */
 export function ProjectSwitcher() {
-  const { project_id } = defaultProjectContext();
+  const [projects, setProjects] = useState<ProjectEntry[]>([]);
+  const [activeId, setActiveId] = useState("thesis-agent");
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const items = await listProjects();
+        if (!active) return;
+        setProjects(items);
+        setActiveId(getActiveProjectId());
+      } catch {
+        if (!active) return;
+        setProjects([
+          { id: "thesis-agent", display_name: "Tesi di laurea", created_at: "" },
+        ]);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const active = projects.find((p) => p.id === activeId) ?? projects[0];
+
+  const handleSelect = (id: string) => {
+    setActiveProjectId(id);
+    setActiveId(id);
+    setOpen(false);
+    window.location.reload();
+  };
+
+  const handleCreate = async () => {
+    const name = window.prompt("Nome nuovo progetto");
+    if (!name?.trim()) return;
+    const created = await createProject(name.trim());
+    const items = await listProjects();
+    setProjects(items);
+    handleSelect(created.id);
+  };
 
   return (
-    <div className="space-y-1">
+    <div className="relative space-y-1">
       <span className="text-xs font-medium uppercase tracking-wide text-ink-subtle">
         Progetto
       </span>
       <button
         type="button"
-        disabled
-        aria-label={`Progetto attivo: ${project_id}`}
-        title="Selezione multi-progetto in arrivo"
-        className="flex w-full items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-left text-sm font-medium text-ink shadow-sm"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-left text-sm font-medium text-ink shadow-sm cursor-pointer"
       >
-        <span className="truncate font-mono text-xs">{project_id}</span>
+        <span className="truncate">{active?.display_name ?? activeId}</span>
         <span className="ml-2 shrink-0 text-xs text-ink-subtle" aria-hidden>
-          PX-2
+          ▾
         </span>
       </button>
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute z-20 mt-1 w-full rounded-md border border-border bg-surface py-1 shadow-lg"
+        >
+          {projects.map((p) => (
+            <li key={p.id}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={p.id === activeId}
+                onClick={() => handleSelect(p.id)}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-accent-subtle/30 cursor-pointer"
+              >
+                {p.display_name}
+                <span className="block font-mono text-xs text-ink-subtle">{p.id}</span>
+              </button>
+            </li>
+          ))}
+          <li className="border-t border-border">
+            <button
+              type="button"
+              onClick={() => void handleCreate()}
+              className="w-full px-3 py-2 text-left text-sm text-accent cursor-pointer"
+            >
+              + Nuovo progetto
+            </button>
+          </li>
+        </ul>
+      )}
     </div>
   );
 }

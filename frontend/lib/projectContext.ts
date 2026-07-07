@@ -37,10 +37,14 @@ export type ContextQueryExtras = {
   userIntent?: string;
 };
 
-/** Canonical PX-1 single-tenant defaults. */
+/** Canonical PX-1 single-tenant defaults; PX-6 reads active project from storage. */
 export function defaultProjectContext(): ProjectContext {
+  const project_id =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("thesisos:active-project-id") ?? DEFAULT_PROJECT_ID)
+      : DEFAULT_PROJECT_ID;
   return {
-    project_id: DEFAULT_PROJECT_ID,
+    project_id,
     product_id: DEFAULT_PRODUCT_ID,
   };
 }
