@@ -1,17 +1,20 @@
-# PX3 Parallel Engineering — Wave A/B complete; Wave C authorized (EWO-008)
+# PX3 Parallel Engineering — complete (Waves A/B/C)
 
 id: px3-parallel
 title: PX-3 Parallel Engineering
 parent_program: thesisos-product-v2
-status: active
+status: complete
 authorization: PX3-AUTHORIZATION-20260705
 wave_b_authorization: PX3-AUTHORIZATION-WAVE-B-20260705
 wave_c_authorization: PX3-AUTHORIZATION-WAVE-C-20260705
 authorized_at: "2026-07-05"
+completed_at: "2026-07-05"
 wave_a_complete: true
 wave_a_integration: .asep/reports/PX3-INTEGRATION-A.md
 wave_b_complete: true
 wave_b_integration: .asep/reports/PX3-INTEGRATION-B.md
+wave_c_complete: true
+wave_c_integration: .asep/reports/PX3-INTEGRATION-C.md
 wave_b_backlog: .asep/reports/PX3-WAVE-B-BACKLOG.md
 wave_b_first_executable_ewo: PX3-EWO-005
 wave_c_backlog: .asep/reports/PX3-WAVE-C-BACKLOG.md

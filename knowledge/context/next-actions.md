@@ -1,31 +1,41 @@
 # Next Actions — 100-task backlog
 
-> Grounded in the repo (contracts, gates, known debt, roadmap). **Updated 2026-06-28 — Pre-M5 Closure complete; M5 authorized.**
+> **Updated 2026-07-07 — ASEP Core 1.0 maintenance freeze (ADR-0043). Product-first.**
 
 Legend: `[Pn]` priority · `dep:` dependency · 🔴 blocks promotion · 🟡 debt · 🟢 net-new · ✅ done.
 
 ---
 
-## OPERATING MODE — provisional (trial from 2026-06-25, **not** an ADR)
+## OPERATING MODE — **ASEP Core 1.0 / maintenance** (ADR-0043)
 
-> Direction under trial — validate by *using ThesisOS* for a few weeks before crystallizing into any decision record.
-> - **ThesisOS = feature acceleration. ASEP = maintenance + minimal evolution.**
-> - **Progress metric:** *"Does this directly bring closer the next user-perceivable capability?"* — not *"is it already perceivable?"* (so M5 plumbing that unlocks M6 counts).
-> - **ASEP may be modified only if all three hold at once:** (1) an active product milestone is blocked; (2) the block is identifiable and reproducible; (3) the ASEP change is the minimal fix that removes it. No preventive/speculative platform work.
+> **ThesisOS = feature acceleration. ASEP Core = maintenance + minimal evolution.**
+> Release: `docs/asep-1.0-release.md` · Tag: `asep-core-1.0` (operator)
+>
+> - **Progress metric:** *"Does this directly bring closer the next user-perceivable capability?"*
+> - **ASEP may be modified only if:** (1) active product milestone blocked; (2) block reproducible;
+>   (3) minimal fix; **or** break/fix on CI/isolation/registry.
+> - **PX-EXEC:** R&D frozen — promotion criteria in `docs/asep-1.0-release.md`.
+> - **No preventive/speculative platform work.**
 
-## IMMEDIATE — ordered pipeline (reordered 2026-06-25 → product-first)
+## IMMEDIATE — ordered pipeline (2026-07-07 — product-first)
 
 **Active — do next (product):**
-1. **M5 — Tool Router** 🔴 — `T055–T061` (supervisor/planner/router nodes + graph rewire). Critic §12 sign-off complete (`docs/m5-critic-signoff.md`).
-2. **M6 — Writing** ⬜ — `T062–T068`. At `m6-complete` = usable thesis product (roadmap "usable product line", M1–M6).
-3. **Dogfood** — use ThesisOS on the real thesis for a few days; record *real* bottlenecks. No further platform work until then.
+1. **Dogfood** 🔴 — use ThesisOS on the real thesis; record *real* bottlenecks (only valid input to unfreeze PX-EXEC).
+2. **Post-M6 product** — polish, UX gaps (e.g. R4-UX1 sources SSE), thesis workflow.
+3. **M7+** — pull from dogfood evidence only.
 
-**Deferred — ASEP maintenance mode (pull only on a real block per Operating Mode):**
-- **L4 MB3+** ⏸️ — next platform era work per `docs/platform/era-model.md` / ETM; no pull until product dogfood surfaces a block.
+**Frozen — ASEP Core 1.0 (maintenance only):**
+- Governance, registry, platform contract — break/fix or product-block minimal diff only.
+- See `docs/asep-1.0-release.md` change policy.
 
-**Done — platform (2026-06-28):** **MB2 Adaptive Runtime** (D1–D10) — `docs/mb2-phase-gate.md`; 65 `builder_engine` tests; full operator loop in `LOOP.md`.
+**Frozen — PX-EXEC R&D:**
+- No EWO-002+ until promotion criteria (two programs | merge pain | parallel waves).
 
-**Done — platform (2026-07-06):** **MB2 SoR Reference Implementation** promoted — `docs/mb2-promotion.md` @ `dbf5243`; MB2-Q1…Q6 + §13.3 PASS; 190 `builder_engine` tests.
+**Deferred — L4 MB3+ / era work:** ⏸️ until dogfood surfaces a block.
+
+**Done — ASEP Core 1.0 (2026-07-07):** platform justification · classification registry · CI validator · ADR-0043.
+
+**Done — platform (2026-06-28):** **MB2 Adaptive Runtime** (D1–D10) — `docs/mb2-phase-gate.md`.
 
 **Done — history (Era I + constitution):** M4 Recovery Sprint (2026-06-26) · M3 close-out · M4 (`m4-complete`) · MB1 Phase 2 · Era II constitution (ADR-0026) · L0 meta-model + L1 invariants (ADR-0028) · L2 GSM · DR-001 · ETM v1.1 · L2.1 patch · Behavioral Semantics (ADR-0029) · constitution sign-off · MB2 spec rebase + §13 sign-off · L4 Phase 0 (`l4-phase0-complete`).
 

@@ -6,6 +6,8 @@ describe("PRODUCT_ROUTES", () => {
     const paths = PRODUCT_ROUTES.map((r) => r.path);
     expect(paths).toContain("/");
     expect(paths).toContain("/research");
+    expect(paths).toContain("/research/canvas");
+    expect(paths).toContain("/research/guided");
     expect(paths).toContain("/writing");
     expect(paths).toContain("/sources");
     expect(paths).toContain("/knowledge");

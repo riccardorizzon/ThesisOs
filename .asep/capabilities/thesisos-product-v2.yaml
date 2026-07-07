@@ -502,8 +502,8 @@ capabilities:
   px-3-sources:
     title: PX-3 Knowledge Experience
     milestone: PX-3
-    lifecycle: specified
-    status: in_progress
+    lifecycle: complete
+    status: done
     authorization: authorized_20260705
     product_spec: docs/product/specs/px3-knowledge-experience-v2.md
     wave_a_backlog: .asep/reports/PX3-WAVE-A-BACKLOG.md
@@ -656,13 +656,14 @@ capabilities:
     ewo_category: Alignment
     proposal: .asep/proposals/PX3-EWO-008-execution-graph-observation.md
     milestone: PX-3
-    lifecycle: specified
-    status: authorized
+    lifecycle: implemented
+    status: done
     wave: px3-parallel/wave_c_execution_graph
     sub_agent: A
     depends_on: [px3-ewo-007-conformance-integration-b]
     layer: Business
     authorization: .asep/reports/PX3-AUTHORIZATION-EWO-008-20260705.md
+    report: .asep/reports/PX3-EWO-008-execution-graph-observation.md
     sor_coverage:
       primary: "§4.2 Execution Graph Observation"
       px3_exercisability: Observable
@@ -676,13 +677,14 @@ capabilities:
     ewo_category: Alignment
     proposal: .asep/proposals/PX3-EWO-009-job-fsm-observation.md
     milestone: PX-3
-    lifecycle: specified
-    status: pending
+    lifecycle: implemented
+    status: done
     wave: px3-parallel/wave_c_job_fsm
     sub_agent: B
     depends_on: [px3-ewo-008-execution-graph-observation]
     layer: Business
-    authorization: withheld_pending_ewo_008_pass
+    authorization: .asep/reports/PX3-AUTHORIZATION-EWO-009-20260705.md
+    report: .asep/reports/PX3-EWO-009-job-fsm-observation.md
     sor_coverage:
       primary: "§5 Job FSM Observation"
       px3_exercisability: Observable
@@ -696,26 +698,35 @@ capabilities:
     ewo_category: Infrastructure
     proposal: .asep/proposals/PX3-EWO-010-conformance-integration-c.md
     milestone: PX-3
-    lifecycle: specified
-    status: pending
+    lifecycle: implemented
+    status: done
     wave: px3-parallel/wave_c_conformance_integration
     depends_on: [px3-ewo-009-job-fsm-observation]
     layer: Business
-    authorization: withheld_pending_ewo_009_pass
+    authorization: .asep/reports/PX3-AUTHORIZATION-EWO-010-20260705.md
+    report: .asep/reports/PX3-INTEGRATION-C.md
+    unblocks: [px-4-knowledge]
 
   px-4-knowledge:
     title: PX-4 Knowledge
     milestone: PX-4
-    lifecycle: specified
-    status: blocked
-    authorization: excluded_until_gate_3_amendment
+    lifecycle: promoted
+    status: done
+    promotion_certificate: .asep/certificates/PX4-PROMOTION-20260706.yaml
+    tag: px4-complete
+    unblocks: [px-5-research]
 
   px-5-research:
     title: PX-5 Research
     milestone: PX-5
-    lifecycle: specified
-    status: blocked
-    authorization: excluded_until_gate_3_amendment
+    lifecycle: authorized
+    status: authorized
+    authorization: .asep/reports/PX5-AUTHORIZATION-20260706.md
+    wave_a_backlog: .asep/reports/PX5-WAVE-A-BACKLOG.md
+    product_spec: docs/product/specs/px5-research-experience-v1.md
+    ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
+    wave_a_ewo: PX5-EWO-001
+    first_executable_ewo: PX5-EWO-002
 
   px-6-polish:
     title: PX-6 Polish

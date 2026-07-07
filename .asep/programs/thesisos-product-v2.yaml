@@ -9,10 +9,10 @@ title: ThesisOS Product v2 — Engineering
 program_type: engineering
 status: active
 
-milestone_authorized: null
-milestone_authorized_prior: PX-2
-milestone_frozen: PX-2
-milestones_planned_blocked: [PX-3, PX-4, PX-5, PX-6]
+milestone_authorized: PX-5
+milestone_authorized_prior: PX-4
+milestone_frozen: PX-4
+milestones_planned_blocked: [PX-6]
 
 depends_on:
   product_constitution: docs/product/PRODUCT-CONSTITUTION.md
@@ -39,12 +39,15 @@ constraints:
     - frontend/**
     - backend/app/**
     - docs/product/**
+    - docs/product/specs/px5-research-experience-v1.md
     - .asep/reports/PX-1-*.md
     - .asep/reports/PX-2-*.md
     - .asep/reports/PX3-*.md
     - .asep/reports/PX4-*.md
+    - .asep/reports/PX5-*.md
     - .asep/proposals/PX3-EWO-*.md
     - .asep/proposals/PX4-EWO-*.md
+    - .asep/proposals/PX5-EWO-*.md
     - .asep/capabilities/thesisos-product-v2.yaml
   regression:
     - make ci
@@ -98,10 +101,23 @@ milestones:
     reconfirmed_at: "2026-07-05"
   PX-3:
     title: Sources
-    status: in_progress
-    authorized_at: "2026-07-05"
-    authorization_receipt: .asep/reports/PX3-AUTHORIZATION-20260705.md
+    status: complete
     program_role: conformance  # first Runtime Conformance Program — not product-only
+    authorized_at: "2026-07-05"
+    completed_at: "2026-07-05"
+    ratified_at: "2026-07-05"
+    authorization_receipt: .asep/reports/PX3-AUTHORIZATION-20260705.md
+    conformance_assessment: .asep/reports/MB2-CONFORMANCE-ASSESSMENT.md
+    architect_ratification: .asep/reports/PX3-ARCHITECT-RATIFICATION-MB2-CONFORMANCE-ASSESSMENT-20260705.md
+    completion_certificate: .asep/certificates/PX3-CONFORMANCE-COMPLETE-20260706.yaml
+    completion_sync: .asep/reports/PX3-COMPLETION-SYNC-20260706.md
+    ewo_count: 10
+    wave_a_status: complete
+    wave_b_status: complete
+    wave_c_status: complete
+    wave_a_integration: .asep/reports/PX3-INTEGRATION-A.md
+    wave_b_integration: .asep/reports/PX3-INTEGRATION-B.md
+    wave_c_integration: .asep/reports/PX3-INTEGRATION-C.md
     product_spec: docs/product/specs/px3-knowledge-experience-v2.md
     ui_spec: design-system/thesisos/px3-knowledge-experience-ui-spec.md
     wave_a_backlog: .asep/reports/PX3-WAVE-A-BACKLOG.md
@@ -169,7 +185,21 @@ milestones:
     note: Wave 3 integration complete; Wave 4 conformance requires separate authorization
   PX-5:
     title: Research
-    status: blocked
+    status: authorized
+    program_role: engineering
+    authorized_at: "2026-07-07"
+    authorization_receipt: .asep/reports/PX5-AUTHORIZATION-20260707.md
+    authorization_receipt_prior: .asep/reports/PX5-AUTHORIZATION-20260706.md
+    wave_a_backlog: .asep/reports/PX5-WAVE-A-BACKLOG.md
+    wave_b_status: complete
+    wave_b_authorization: .asep/reports/PX5-AUTHORIZATION-20260707.md
+    product_spec: docs/product/specs/px5-research-experience-v1.md
+    ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
+    product_spec_baseline: docs/product/specs/thesisos-product-ux-v1.md
+    wave_a_status: complete
+    first_executable_ewo: PX5-EWO-003
+    depends_on: [PX-4]
+    adr_refs: [ADR-0036, ADR-0037]
   PX-6:
     title: Polish
     status: blocked
@@ -626,8 +656,10 @@ px2_workorder_backlog:
       - Read-only Program Graph API; INV-R-01 audit table in report
       - Program Trace UI; INV-R-12 boundary documented (no ReadySet)
       - make ci green; Wave A/B regression preserved
-    status: authorized
+    status: implemented
     authorization: .asep/reports/PX3-AUTHORIZATION-EWO-008-20260705.md
+    report: .asep/reports/PX3-EWO-008-execution-graph-observation.md
+    completed_at: "2026-07-05"
 
   - id: PX3-EWO-009
     type: EWO
@@ -649,8 +681,10 @@ px2_workorder_backlog:
       - Job FSM vocabulary alignment report (§5.3 aggregate states)
       - Knowledge Graph §10 with lifecycle badges; Explain → Graph nav
       - make ci green; no forced §11 FAIL paths
-    status: pending
-    authorization: withheld_pending_ewo_008_pass
+    status: implemented
+    authorization: .asep/reports/PX3-AUTHORIZATION-EWO-009-20260705.md
+    report: .asep/reports/PX3-EWO-009-job-fsm-observation.md
+    completed_at: "2026-07-05"
 
   - id: PX3-EWO-010
     type: EWO
@@ -672,8 +706,46 @@ px2_workorder_backlog:
       - PX3-INTEGRATION-C.md PASS with coverage delta ≥2 Observable rows
       - MB2-CONFORMANCE-COVERAGE.md updated; Wave C exit criteria satisfied
       - no N-class in log; INV-R-12 re-verified
-    status: pending
-    authorization: withheld_pending_ewo_009_pass
+    status: implemented
+    authorization: .asep/reports/PX3-AUTHORIZATION-EWO-010-20260705.md
+    report: .asep/reports/PX3-INTEGRATION-C.md
+    completed_at: "2026-07-05"
+
+px5_workorder_backlog:
+  - id: PX5-EWO-001
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-5
+    title: Research Experience Spec + UX foundation
+    depends_on: []
+    proposal: .asep/proposals/PX5-EWO-001-research-experience-spec.md
+    adr_refs: [ADR-0036, ADR-0037]
+    acceptance:
+      - docs/product/specs/px5-research-experience-v1.md ratified
+      - design-system/thesisos/px5-research-experience-ui-spec.md draft
+      - Boundary vs PX-3 guided research and PX-4 knowledge graph documented
+      - INV-KM-5 preserved
+    status: implemented
+    authorization: .asep/reports/PX5-AUTHORIZATION-20260706.md
+    report: .asep/reports/PX5-EWO-001-research-experience-spec.md
+    completed_at: "2026-07-06"
+
+  - id: PX5-EWO-002
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-5
+    title: Research hub + route scaffolding
+    depends_on: [PX5-EWO-001]
+    proposal: .asep/proposals/PX5-EWO-002-research-hub-scaffolding.md
+    authorization: .asep/reports/PX5-AUTHORIZATION-20260707.md
+    acceptance:
+      - /research hub with canvas + guided links
+      - /research/canvas route stub wired
+      - /research/[conceptId] redirect to canvas focus
+      - ModuleStub replaced; make ci green
+    status: implemented
+    report: .asep/reports/PX5-EWO-002-research-hub-scaffolding.md
+    completed_at: "2026-07-07"
 
 px4_workorder_backlog:
   - id: PX4-EWO-001
@@ -773,6 +845,7 @@ px4_workorder_backlog:
 completion_criteria:
   PX-1: QWO-PX1-001 PASS
   PX-2: QWO-PX2-001 PASS
+  PX-3: MB2-CONFORMANCE-ASSESSMENT PASS + Architect ratification
   PX-4: PX4-EWO-011 PASS + px4-complete tag
 
 post_px2:
@@ -798,13 +871,27 @@ post_px2:
   px3_architect_review_wave_b: .asep/reports/PX3-ARCHITECT-REVIEW-WAVE-B-20260705.md
   px3_wave_c_backlog: .asep/reports/PX3-WAVE-C-BACKLOG.md
   px3_architect_decision_wave_c_backlog: .asep/reports/PX3-ARCHITECT-DECISION-20260705-WAVE-C-BACKLOG-REVIEW.md
-  px3_wave_c_status: dispatch_authorized_ewo_008
+  px3_wave_c_status: complete
+  px3_wave_c_integration: .asep/reports/PX3-INTEGRATION-C.md
   px3_wave_c_authorization: .asep/reports/PX3-AUTHORIZATION-WAVE-C-20260705.md
-  px3_wave_c_first_executable_ewo: PX3-EWO-008
+  px3_status: complete_conformance
+  px3_completion_certificate: .asep/certificates/PX3-CONFORMANCE-COMPLETE-20260706.yaml
+  px3_completion_sync: .asep/reports/PX3-COMPLETION-SYNC-20260706.md
   px3_architect_review_ewo_006: .asep/reports/PX3-ARCHITECT-REVIEW-EWO-006-20260705.md
-  px4_authorization: phase_0_complete_20260706
-  px4_phase_0_contract: docs/product/runtime-integration-contract.md
-  px4_phase_0_report: .asep/reports/PX4-EWO-001-runtime-product-contract.md
+  px4_status: promoted
+  px4_promotion_certificate: .asep/certificates/PX4-PROMOTION-20260706.yaml
+  px4_tag: px4-complete
+  px5_authorization: authorized_20260707
+  px5_authorization_receipt: .asep/reports/PX5-AUTHORIZATION-20260707.md
+  px5_wave_a_backlog: .asep/reports/PX5-WAVE-A-BACKLOG.md
+  px5_wave_a_status: complete
+  px5_wave_b_status: complete
+  px5_wave_b_authorization: .asep/reports/PX5-AUTHORIZATION-20260707.md
+  px5_product_spec: docs/product/specs/px5-research-experience-v1.md
+  px5_ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
+  px5_ewo_001_report: .asep/reports/PX5-EWO-001-research-experience-spec.md
+  px5_ewo_002_report: .asep/reports/PX5-EWO-002-research-hub-scaffolding.md
+  px5_first_executable_ewo: PX5-EWO-003
   runtime_engineering_authorization: not_authorized
-  next_artifact: .asep/reports/MB2-CONFORMANCE-ASSESSMENT.md
-  note: Wave C dispatch authorized — PX3-EWO-008 first executable — STOP after PASS
+  next_milestone: PX-5 Research Wave C
+  note: PX5-EWO-002 PASS — spawn Wave C canvas viewport backlog

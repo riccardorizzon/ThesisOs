@@ -1,8 +1,9 @@
 # Platform Justification
 
 > **Document class:** Architectural contract — hypotheses, validated value, exit criteria  
-> **Status:** Active (2026-07-06)  
+> **Status:** Active — ASEP Core 1.0 maintenance (ADR-0043, 2026-07-07)  
 > **Audience:** Architect, operators, EWO authors  
+> **Release:** `docs/asep-1.0-release.md`  
 > **Does not replace:** Constitution, ADRs, SoR, Engineering Program — it binds *investment* decisions
 
 This document states **what the platform layer has proven**, **what it assumes**,
@@ -27,8 +28,8 @@ failure, unless this section is ignored.
 
 | Track | Mode | Scope | Pull policy |
 |-------|------|-------|-------------|
-| **ASEP Core** | Maintenance | CI gates, isolation, drift, QWO/STOP for active programs, closed MB2 Era I sidecar | `next-actions.md` operating mode: change only when a **reproducible product block** exists |
-| **PX-EXEC** | R&D | MB2 Reference Implementation in `builder_engine/` per `.asep/programs/px-exec.yaml` | Separate Architect authorization; **does not** relax Core maintenance rules for product paths |
+| **ASEP Core** | **Maintenance (1.0)** | CI gates, isolation, drift, QWO/STOP, platform contract, classification registry | ADR-0043 — change only on break/fix or **reproducible product block** |
+| **PX-EXEC** | **R&D — frozen (post 1.0)** | Reference implementation per program graph; **no new phases/EWOs** until promotion criteria in `docs/asep-1.0-release.md` | Program yaml may record past delivery; **pull policy** is ADR-0043 |
 | **Product programs** | Delivery | `backend/app/`, `frontend/` under Engineering Program graphs (PX-1…PX-3, thesis-agent, …) | User-perceivable capability is the primary progress metric |
 
 **Rule:** New platform capabilities **do not enter ASEP Core** until promoted from
@@ -339,4 +340,4 @@ When evaluating a platform proposal, ask in order:
 | Date | Change |
 |------|--------|
 | 2026-07-06 | Initial contract — post architecture review |
-| 2026-07-06 | Classification registry + CI consumer (`make validate-platform-classification`) |
+| 2026-07-07 | ASEP Core 1.0 maintenance freeze — ADR-0043, `docs/asep-1.0-release.md` |

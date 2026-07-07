@@ -29,7 +29,19 @@ export const PRODUCT_ROUTES: ProductRoute[] = [
     path: "/research",
     module: "research",
     milestone: "PX-5",
-    description: "Research graph",
+    description: "Research hub",
+  },
+  {
+    path: "/research/canvas",
+    module: "research",
+    milestone: "PX-5",
+    description: "Spatial research canvas",
+  },
+  {
+    path: "/research/guided",
+    module: "research",
+    milestone: "PX-3",
+    description: "Guided exploration trail",
   },
   {
     path: "/writing",

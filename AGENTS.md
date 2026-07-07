@@ -44,9 +44,13 @@ Contract-first → TDD red/green → evidence-backed gates. See `knowledge/devel
 
 ## Governance hierarchy
 
+**ASEP Core 1.0 (maintenance):** `docs/asep-1.0-release.md`, ADR-0043 — governance frozen; product-first.
+
 **Platform investment contract:** `docs/platform-justification.md` — validated value,
 hypotheses, exit criteria, scope. Classification registry: `.asep/registry/platform-classification.yaml`
 (CI: `make validate-platform-classification`; **not** read by product runtime).
+
+**PX-EXEC:** R&D frozen — not Core; promotion criteria in `docs/asep-1.0-release.md`.
 
 ASEP (ADR-0026) is the overall governance framework.
 

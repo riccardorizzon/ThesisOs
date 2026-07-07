@@ -1,0 +1,50 @@
+# Conformance Completion Certificate — PX-3 Sources
+
+certificate_version: "1.0"
+certificate_type: conformance-complete
+issued_at: "2026-07-06T19:10:00+02:00"
+issued_by: architect
+
+milestone:
+  id: PX-3
+  title: Sources
+  program_role: conformance
+  baseline: d5206a0f
+
+program:
+  id: thesisos-product-v2
+  sync_report: .asep/reports/PX3-COMPLETION-SYNC-20260706.md
+
+conformance_gates:
+  - id: PX3-INTEGRATION-A
+    report: .asep/reports/PX3-INTEGRATION-A.md
+    verdict: PASS
+  - id: PX3-INTEGRATION-B
+    report: .asep/reports/PX3-INTEGRATION-B.md
+    verdict: PASS
+  - id: PX3-INTEGRATION-C
+    report: .asep/reports/PX3-INTEGRATION-C.md
+    verdict: PASS
+  - id: MB2-CONFORMANCE-ASSESSMENT
+    report: .asep/reports/MB2-CONFORMANCE-ASSESSMENT.md
+    verdict: PASS
+  - id: ARCHITECT-RATIFICATION
+    report: .asep/reports/PX3-ARCHITECT-RATIFICATION-MB2-CONFORMANCE-ASSESSMENT-20260705.md
+    verdict: RATIFIED
+
+ewos_complete: 10
+conformance_log_entries: 0
+n_class_blockers: 0
+sor_amendments_required: 0
+coverage_evidenced: "9/15"
+
+verdict: COMPLETE
+
+not_included:
+  - QWO-PX3-001 product qualification (optional; conformance track satisfied)
+  - px-exec Runtime Engineering
+  - MB2-Q qualification program
+  - px3-complete product tag (conformance milestone; no product promotion ceremony)
+
+unblocks:
+  - PX-5 Research authorization gate
