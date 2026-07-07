@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { ContextPacket } from "@/lib/contextClient";
 import { ContextBar } from "@/components/context/ContextBar";
 import { useDecisionWarning } from "@/lib/useDecisionWarning";
+import { consumeCanvasBasketHandoff } from "@/lib/canvasBasket";
 
 export type WritingContextBarProps = {
   packet: ContextPacket;
@@ -23,6 +24,14 @@ export function WritingContextBar({
   onOpenContestoTab,
 }: WritingContextBarProps) {
   const [selectionText, setSelectionText] = useState("");
+  const [canvasBasketCount, setCanvasBasketCount] = useState(0);
+
+  useEffect(() => {
+    const imported = consumeCanvasBasketHandoff();
+    if (imported.length > 0) {
+      setCanvasBasketCount(imported.length);
+    }
+  }, []);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -42,7 +51,17 @@ export function WritingContextBar({
   const warning = useDecisionWarning({ packet, selectionText });
 
   return (
-    <ContextBar
+    <>
+      {canvasBasketCount > 0 && (
+        <p
+          className="mb-2 rounded-md border border-accent/30 bg-accent-subtle px-3 py-2 text-sm text-ink"
+          data-testid="writing-canvas-basket-chip"
+        >
+          Basket canvas importato ({canvasBasketCount} elementi) — disponibile nel pannello
+          Contesto.
+        </p>
+      )}
+      <ContextBar
       packet={packet}
       selectionAnchor={selectionAnchor}
       warningState={{
@@ -52,5 +71,6 @@ export function WritingContextBar({
       onScopeClick={onScopeClick}
       onOpenContestoTab={onOpenContestoTab}
     />
+    </>
   );
 }

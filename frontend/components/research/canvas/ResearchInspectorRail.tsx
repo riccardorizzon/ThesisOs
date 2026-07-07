@@ -21,6 +21,7 @@ export type ResearchInspectorRailProps = {
   selectedSlugs: readonly string[];
   graph: KnowledgeGraphResponse;
   className?: string;
+  onAddToBasket?: (slugs: readonly string[]) => void;
 };
 
 function relatedConceptLinks(graph: KnowledgeGraphResponse, slug: string): string[] {
@@ -40,6 +41,7 @@ export function ResearchInspectorRail({
   selectedSlugs,
   graph,
   className,
+  onAddToBasket,
 }: ResearchInspectorRailProps) {
   const [activeTab, setActiveTab] = useState<InspectorTabId>("dettaglio");
   const [detail, setDetail] = useState<KnowledgeObjectEnvelope | null>(null);
@@ -94,9 +96,10 @@ export function ResearchInspectorRail({
         </p>
         <button
           type="button"
-          disabled
-          className="rounded-md border border-border px-3 py-1.5 text-sm text-ink-subtle"
+          disabled={onAddToBasket == null}
+          className="rounded-md border border-border px-3 py-1.5 text-sm text-ink hover:bg-surface-muted cursor-pointer disabled:text-ink-subtle"
           data-testid="canvas-inspector-batch-basket"
+          onClick={() => onAddToBasket?.(selectedSlugs)}
         >
           Aggiungi al basket
         </button>
@@ -219,8 +222,9 @@ export function ResearchInspectorRail({
             </Link>
             <button
               type="button"
-              disabled
-              className="block rounded-md border border-border px-3 py-1.5 text-sm text-ink-subtle"
+              className="block rounded-md border border-border px-3 py-1.5 text-sm text-ink hover:bg-surface-muted cursor-pointer"
+              data-testid="canvas-inspector-basket-button"
+              onClick={() => onAddToBasket?.([slug])}
             >
               Aggiungi al basket
             </button>

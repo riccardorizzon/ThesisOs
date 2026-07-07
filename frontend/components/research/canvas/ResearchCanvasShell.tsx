@@ -1,14 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { CanvasHardLimitModal } from "@/components/research/canvas/CanvasHardLimitModal";
+import { CanvasMinimap } from "@/components/research/canvas/CanvasMinimap";
 import { CanvasFilterPopover } from "@/components/research/canvas/CanvasFilterPopover";
+import { ResearchBasketDrawer } from "@/components/research/canvas/ResearchBasketDrawer";
 import { ResearchCanvasViewport } from "@/components/research/canvas/ResearchCanvasViewport";
 import { ResearchInspectorRail } from "@/components/research/canvas/ResearchInspectorRail";
 import { ResearchLensRail } from "@/components/research/canvas/ResearchLensRail";
+import { SaveViewModal } from "@/components/research/canvas/SaveViewModal";
 import { SerendipityStrip } from "@/components/research/canvas/SerendipityStrip";
 import { loadContext } from "@/lib/contextLoad";
+import {
+  addToCanvasBasket,
+  basketItemsFromSlugs,
+  loadCanvasBasket,
+  removeFromCanvasBasket,
+  stageCanvasBasketHandoff,
+  type CanvasBasketItem,
+} from "@/lib/canvasBasket";
+import {
+  buildClusterChips,
+  exceedsHardLimit,
+  graphWithClusterCollapse,
+} from "@/lib/canvasCluster";
+import { layoutCanvasNodes } from "@/lib/canvasLayout";
+import {
+  getCanvasSavedView,
+  loadCanvasSavedViews,
+  saveCanvasView,
+  type CanvasSavedView,
+} from "@/lib/canvasSavedViews";
 import {
   buildStubLensContext,
   DEFAULT_CANVAS_FILTERS,
@@ -57,6 +82,8 @@ export type ResearchCanvasShellProps = {
  * Layer: Business (Product Plane)
  */
 export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellProps) {
+  const router = useRouter();
+  const canvasRegionRef = useRef<HTMLDivElement>(null);
   const isDesktop = useDesktopCanvas();
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>(
     graph.focus_slug != null ? [graph.focus_slug] : []
@@ -73,16 +100,69 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
   const [highlightEdgeKeys, setHighlightEdgeKeys] = useState<string[]>([]);
   const [panRequest, setPanRequest] = useState<{ key: number; slugs: string[] } | null>(null);
   const [panRequestKey, setPanRequestKey] = useState(0);
+  const [basketItems, setBasketItems] = useState<CanvasBasketItem[]>([]);
+  const [basketOpen, setBasketOpen] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [savedViews, setSavedViews] = useState<CanvasSavedView[]>([]);
+  const [saveToast, setSaveToast] = useState<string | null>(null);
+  const [clusterMode, setClusterMode] = useState(false);
+  const [expandedClusterIds, setExpandedClusterIds] = useState<Set<string>>(() => new Set());
+  const [viewportSize, setViewportSize] = useState({ width: 800, height: 560 });
+  const [minimapOpen, setMinimapOpen] = useState(true);
 
   const filteredGraph = useMemo(
     () => filterGraphByLens(graph, filters, lensContext),
     [graph, filters, lensContext]
   );
 
-  const serendipitySuggestions = useMemo(
-    () => rankSerendipitySuggestions(filteredGraph, serendipityContext),
-    [filteredGraph, serendipityContext]
+  const layout = useMemo(() => layoutCanvasNodes(filteredGraph), [filteredGraph]);
+  const clusterChips = useMemo(
+    () => (clusterMode ? buildClusterChips(filteredGraph, layout) : []),
+    [clusterMode, filteredGraph, layout]
   );
+  const displayGraph = useMemo(
+    () =>
+      graphWithClusterCollapse(filteredGraph, clusterMode, expandedClusterIds, clusterChips),
+    [filteredGraph, clusterMode, expandedClusterIds, clusterChips]
+  );
+
+  const hardLimitBlocked = exceedsHardLimit(filteredGraph, clusterMode);
+
+  const serendipitySuggestions = useMemo(
+    () => rankSerendipitySuggestions(displayGraph, serendipityContext),
+    [displayGraph, serendipityContext]
+  );
+
+  useEffect(() => {
+    setBasketItems(loadCanvasBasket());
+    setSavedViews(loadCanvasSavedViews());
+  }, []);
+
+  useEffect(() => {
+    if (view == null) return;
+    const saved = getCanvasSavedView(savedViews, view);
+    if (saved == null) return;
+    setTransform(saved.camera);
+    setFilters(saved.filters);
+    if (saved.include_selection && saved.selected_ids.length > 0) {
+      setSelectedSlugs(saved.selected_ids);
+    }
+  }, [view, savedViews]);
+
+  useEffect(() => {
+    const element = canvasRegionRef.current;
+    if (element == null) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry == null) return;
+      setViewportSize({
+        width: entry.contentRect.width,
+        height: entry.contentRect.height,
+      });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,6 +230,41 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
     setSelectedSlugs([]);
   }, []);
 
+  const addSelectionToBasket = useCallback(
+    (slugs: readonly string[]) => {
+      const incoming = basketItemsFromSlugs(filteredGraph, slugs);
+      if (incoming.length === 0) return;
+      setBasketItems((current) => addToCanvasBasket(current, incoming));
+    },
+    [filteredGraph]
+  );
+
+  const handleBasketHandoff = useCallback(() => {
+    if (basketItems.length === 0) return;
+    stageCanvasBasketHandoff(basketItems);
+    setBasketOpen(false);
+    router.push("/writing?panel=contesto&canvasBasket=1");
+  }, [basketItems, router]);
+
+  const handleSaveView = useCallback(
+    (payload: { name: string; description?: string; includeSelection: boolean }) => {
+      const next = saveCanvasView(savedViews, {
+        name: payload.name,
+        description: payload.description,
+        focus_slug: focus ?? graph.focus_slug,
+        camera: transform,
+        lens_id: filters.lensId,
+        filters,
+        selected_ids: payload.includeSelection ? [...selectedSlugs] : [],
+        include_selection: payload.includeSelection,
+      });
+      setSavedViews(next);
+      setSaveToast("Vista salvata");
+      window.setTimeout(() => setSaveToast(null), 2500);
+    },
+    [savedViews, focus, graph.focus_slug, transform, filters, selectedSlugs]
+  );
+
   const setLensId = useCallback((lensId: CanvasLensId) => {
     setLensLoading(true);
     setFilters((current) => ({ ...current, lensId }));
@@ -171,6 +286,10 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        if (basketOpen) {
+          setBasketOpen(false);
+          return;
+        }
         clearSelection();
         return;
       }
@@ -178,10 +297,18 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
         event.preventDefault();
         setInspectorOpen((open) => !open);
       }
+      if (event.key.toLowerCase() === "b" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setBasketOpen((open) => !open);
+      }
+      if (event.key.toLowerCase() === "s" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setSaveModalOpen(true);
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [clearSelection]);
+  }, [clearSelection, basketOpen]);
 
   if (!isDesktop) {
     return (
@@ -247,19 +374,27 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
           <CanvasFilterPopover filters={filters} onChange={setFilters} />
           <button
             type="button"
-            disabled
-            className="rounded-md border border-border px-2 py-1 text-xs text-ink-subtle"
+            className="rounded-md border border-border px-2 py-1 text-xs text-ink hover:bg-surface-muted cursor-pointer"
             data-testid="canvas-save-view-button"
+            onClick={() => setSaveModalOpen(true)}
           >
             Salva vista
           </button>
           <button
             type="button"
-            disabled
-            className="rounded-md border border-border px-2 py-1 text-xs text-ink-subtle"
+            className="rounded-md border border-border px-2 py-1 text-xs text-ink hover:bg-surface-muted cursor-pointer"
             data-testid="canvas-basket-badge"
+            onClick={() => setBasketOpen(true)}
           >
-            Basket 0
+            Basket {basketItems.length}
+          </button>
+          <button
+            type="button"
+            className="rounded-md border border-border px-2 py-1 text-xs text-ink-muted cursor-pointer"
+            data-testid="canvas-minimap-toggle"
+            onClick={() => setMinimapOpen((open) => !open)}
+          >
+            Minimap {minimapOpen ? "on" : "off"}
           </button>
           <p className="text-xs text-ink-subtle" data-testid="canvas-node-count">
             {filteredGraph.limits.visible_count} / {filteredGraph.limits.total_in_scope} concetti
@@ -277,10 +412,21 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
         </p>
       )}
 
+      {saveToast != null && (
+        <p className="text-sm text-success" data-testid="canvas-save-toast">
+          {saveToast}
+        </p>
+      )}
+
       {view != null && (
         <p className="text-sm text-ink-muted" data-testid="canvas-saved-view-notice">
-          Vista salvata <span className="font-mono">{view}</span> — ripristino camera in wave
-          futura.
+          Vista salvata <span className="font-mono">{view}</span>
+          {getCanvasSavedView(savedViews, view)?.name != null && (
+            <>
+              {" "}
+              — {getCanvasSavedView(savedViews, view)?.name}
+            </>
+          )}
         </p>
       )}
 
@@ -295,7 +441,7 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
           <ResearchLensRail activeLensId={filters.lensId} onLensChange={setLensId} />
         </aside>
 
-        <div className="relative min-w-0 flex-1">
+        <div className="relative min-w-0 flex-1" ref={canvasRegionRef}>
           {lensLoading && (
             <div
               className="pointer-events-none absolute inset-x-0 top-0 z-10 h-1 animate-pulse bg-accent/30"
@@ -303,7 +449,7 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
             />
           )}
           <ResearchCanvasViewport
-            graph={filteredGraph}
+            graph={displayGraph}
             selectedSlugs={selectedSlugs}
             onSelectedSlugsChange={setSelectedSlugs}
             transform={transform}
@@ -312,6 +458,14 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
             highlightEdgeKeys={highlightEdgeKeys}
             panRequest={panRequest}
           />
+          {minimapOpen && (
+            <CanvasMinimap
+              graph={displayGraph}
+              transform={transform}
+              viewportWidth={viewportSize.width}
+              viewportHeight={viewportSize.height}
+            />
+          )}
         </div>
 
         {inspectorOpen && (
@@ -321,7 +475,11 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
             )}
             data-testid="canvas-inspector-slot"
           >
-            <ResearchInspectorRail selectedSlugs={selectedSlugs} graph={filteredGraph} />
+            <ResearchInspectorRail
+              selectedSlugs={selectedSlugs}
+              graph={displayGraph}
+              onAddToBasket={addSelectionToBasket}
+            />
           </aside>
         )}
       </div>
@@ -343,22 +501,56 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            disabled
-            className="rounded-md border border-border px-3 py-1.5 text-sm text-ink-subtle"
+            disabled={selectedSlugs.length === 0}
+            className={cn(
+              "rounded-md border border-border px-3 py-1.5 text-sm",
+              selectedSlugs.length === 0
+                ? "text-ink-subtle"
+                : "text-ink hover:bg-surface-muted cursor-pointer"
+            )}
             data-testid="canvas-add-basket-button"
+            onClick={() => addSelectionToBasket(selectedSlugs)}
           >
             Aggiungi al basket
           </button>
           <button
             type="button"
-            disabled
-            className="rounded-md bg-accent/40 px-3 py-1.5 text-sm text-ink-subtle"
+            disabled={basketItems.length === 0}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-sm font-medium",
+              basketItems.length === 0
+                ? "bg-accent/40 text-ink-subtle"
+                : "bg-accent text-on-accent cursor-pointer"
+            )}
             data-testid="canvas-writing-handoff-button"
+            onClick={handleBasketHandoff}
           >
             Porta in Scrittura
           </button>
         </div>
       </footer>
+
+      <ResearchBasketDrawer
+        open={basketOpen}
+        items={basketItems}
+        onClose={() => setBasketOpen(false)}
+        onRemove={(slug) => setBasketItems((current) => removeFromCanvasBasket(current, slug))}
+        onHandoff={handleBasketHandoff}
+      />
+      <SaveViewModal
+        open={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        onSave={handleSaveView}
+      />
+      <CanvasHardLimitModal
+        open={hardLimitBlocked}
+        nodeCount={filteredGraph.nodes.length}
+        hardLimit={filteredGraph.limits.hard_limit}
+        activeLensId={filters.lensId}
+        clusterMode={clusterMode}
+        onChooseLens={(lensId) => setLensId(lensId)}
+        onEnableCluster={() => setClusterMode(true)}
+      />
     </div>
   );
 }

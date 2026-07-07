@@ -1,6 +1,7 @@
 import { LIBRARY_CONCEPTS, LIBRARY_SOURCES } from "@/lib/libraryStub";
 import type {
   KnowledgeGraphEdge,
+  KnowledgeGraphNode,
   KnowledgeGraphResponse,
   KnowledgeState,
 } from "@/lib/knowledgeTypes";
@@ -90,30 +91,59 @@ export function mergeSourceCounts(
   return merged;
 }
 
+function isConceptNode(node: KnowledgeGraphNode): boolean {
+  return (node.kind ?? "concept") === "concept";
+}
+
+function expandWithSatellites(
+  graph: KnowledgeGraphResponse,
+  conceptSlugs: Set<string>
+): Set<string> {
+  const expanded = new Set(conceptSlugs);
+  for (const node of graph.nodes) {
+    if (isConceptNode(node)) continue;
+    for (const edge of graph.edges) {
+      if (edge.target !== node.slug || edge.link_kind == null) continue;
+      if (edge.link_kind === "author_source") continue;
+      if (conceptSlugs.has(edge.source)) {
+        expanded.add(node.slug);
+      }
+    }
+  }
+  return expanded;
+}
+
 function slugsForLens(
   graph: KnowledgeGraphResponse,
   lensId: CanvasLensId,
   context: CanvasLensContext
 ): Set<string> {
-  const all = new Set(graph.nodes.map((node) => node.slug));
+  const concepts = graph.nodes.filter(isConceptNode);
+  const all = new Set(concepts.map((node) => node.slug));
 
   switch (lensId) {
     case "L-all":
-      return all;
+      return expandWithSatellites(graph, all);
     case "L-gap":
-      return new Set(
-        graph.nodes
-          .filter((node) => (context.sourceCountByConceptSlug.get(node.slug) ?? 0) < 2)
-          .map((node) => node.slug)
+      return expandWithSatellites(
+        graph,
+        new Set(
+          concepts
+            .filter((node) => (context.sourceCountByConceptSlug.get(node.slug) ?? 0) < 2)
+            .map((node) => node.slug)
+        )
       );
     case "L-chapter":
       if (context.activeChapterConceptSlugs.size === 0) {
         return new Set<string>();
       }
-      return new Set(
-        graph.nodes
-          .filter((node) => context.activeChapterConceptSlugs.has(node.slug))
-          .map((node) => node.slug)
+      return expandWithSatellites(
+        graph,
+        new Set(
+          concepts
+            .filter((node) => context.activeChapterConceptSlugs.has(node.slug))
+            .map((node) => node.slug)
+        )
       );
     case "L-author": {
       if (context.selectedAuthor == null) return new Set<string>();
@@ -127,16 +157,16 @@ function slugsForLens(
           if (edge.target === slug && all.has(edge.source)) expanded.add(edge.source);
         }
       }
-      return expanded;
+      return expandWithSatellites(graph, expanded);
     }
     case "L-controversy": {
       const slugs = new Set<string>();
       for (const edge of graph.edges) {
-        if (edge.relation !== "contradicts") continue;
+        if (edge.link_kind != null || edge.relation !== "contradicts") continue;
         slugs.add(edge.source);
         slugs.add(edge.target);
       }
-      return slugs;
+      return expandWithSatellites(graph, slugs);
     }
     case "L-unread": {
       const slugs = new Set<string>();
@@ -147,10 +177,10 @@ function slugsForLens(
           if (all.has(conceptId)) slugs.add(conceptId);
         }
       }
-      return slugs;
+      return expandWithSatellites(graph, slugs);
     }
     default:
-      return all;
+      return expandWithSatellites(graph, all);
   }
 }
 
@@ -177,6 +207,7 @@ export function filterGraphByLens(
   const nodeSlugs = new Set(nodes.map((node) => node.slug));
   const edges = graph.edges.filter((edge) => {
     if (!nodeSlugs.has(edge.source) || !nodeSlugs.has(edge.target)) return false;
+    if (edge.link_kind != null) return true;
     if (filters.relationTypes !== "all" && !filters.relationTypes.includes(edge.relation)) {
       return false;
     }

@@ -4,7 +4,11 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse, Response
 
 from app.schemas.knowledge import ConceptCreate, ConceptUpdate
-from app.schemas.knowledge_graph import DEFAULT_VISIBLE_NODES, HARD_NODE_LIMIT
+from app.schemas.knowledge_graph import (
+    CANVAS_DEFAULT_VISIBLE,
+    CANVAS_HARD_LIMIT,
+    DEFAULT_VISIBLE_NODES,
+)
 from app.services.knowledge import (
     ConceptNotFoundError,
     ConceptSlugExistsError,
@@ -112,15 +116,21 @@ async def get_knowledge_graph(
     project_id: str,
     focus: str | None = Query(default=None),
     depth: int = Query(default=1, ge=0, le=4),
-    max_nodes: int = Query(default=DEFAULT_VISIBLE_NODES, ge=1, le=HARD_NODE_LIMIT),
+    max_nodes: int | None = Query(default=None, ge=1, le=CANVAS_HARD_LIMIT),
     view: str | None = Query(default=None),
+    profile: str | None = Query(default=None),
 ):
     """Knowledge Graph §10 — bounded concept navigation (read-only)."""
+    canvas_profile = profile == "canvas"
+    resolved_max = max_nodes
+    if resolved_max is None:
+        resolved_max = CANVAS_DEFAULT_VISIBLE if canvas_profile else DEFAULT_VISIBLE_NODES
     graph = await build_knowledge_graph_for_project(
         project_id,
         focus_slug=focus,
         depth=depth,
-        max_nodes=max_nodes,
+        max_nodes=resolved_max,
         force_list=view == "list",
+        canvas_profile=canvas_profile,
     )
     return graph.model_dump(mode="json")

@@ -16,6 +16,8 @@ export default async function ResearchCanvasRoute({ searchParams }: Props) {
     graph = await getKnowledgeGraph({
       focus,
       depth: 2,
+      maxNodes: 80,
+      profile: "canvas",
     });
   } catch {
     graph = buildStubResearchGraph(focus);

@@ -190,6 +190,13 @@ describe("ResearchCanvasShell", () => {
     expect(screen.getByTestId("canvas-selection-count")).toHaveTextContent("Nessuna selezione");
   });
 
+  it("adds selection to basket from action bar", () => {
+    sessionStorage.clear();
+    render(<ResearchCanvasShell graph={SAMPLE_GRAPH} focus="aura" />);
+    fireEvent.click(screen.getByTestId("canvas-add-basket-button"));
+    expect(screen.getByTestId("canvas-basket-badge")).toHaveTextContent("Basket 1");
+  });
+
   it("shows desktop-required message below 1024px", () => {
     const matchMedia = vi.fn().mockImplementation((query: string) => ({
       matches: false,

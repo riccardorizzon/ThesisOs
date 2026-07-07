@@ -1,4 +1,4 @@
-import { LIBRARY_CONCEPTS } from "@/lib/libraryStub";
+import { LIBRARY_CONCEPTS, LIBRARY_SOURCES } from "@/lib/libraryStub";
 import type { KnowledgeGraphResponse } from "@/lib/knowledgeTypes";
 
 /**
@@ -7,13 +7,14 @@ import type { KnowledgeGraphResponse } from "@/lib/knowledgeTypes";
  */
 export function buildStubResearchGraph(focus?: string): KnowledgeGraphResponse {
   const focusSlug = focus ?? "stigmata";
-  const nodes = LIBRARY_CONCEPTS.slice(0, 8).map((concept, index) => ({
+  const nodes: KnowledgeGraphResponse["nodes"] = LIBRARY_CONCEPTS.slice(0, 8).map((concept, index) => ({
     id: concept.id,
     slug: concept.id,
     title: concept.title,
     knowledge_state: "validated" as const,
     is_core: index === 0,
     degree: concept.relatedSourceIds.length,
+    kind: "concept" as const,
   }));
 
   const edges: KnowledgeGraphResponse["edges"] = [];
@@ -26,6 +27,27 @@ export function buildStubResearchGraph(focus?: string): KnowledgeGraphResponse {
   }
   if (nodes.length > 3) {
     edges.push({ source: nodes[1].slug, target: nodes[2].slug, relation: "extends" });
+  }
+
+  const focusConcept = LIBRARY_CONCEPTS.find((concept) => concept.id === focusSlug) ?? LIBRARY_CONCEPTS[0];
+  for (const sourceId of focusConcept.relatedSourceIds.slice(0, 3)) {
+    const source = LIBRARY_SOURCES.find((item) => item.id === sourceId);
+    if (source == null) continue;
+    nodes.push({
+      id: source.id,
+      slug: source.id,
+      title: source.title,
+      knowledge_state: "linked" as const,
+      is_core: false,
+      degree: 1,
+      kind: "source" as const,
+    });
+    edges.push({
+      source: focusSlug,
+      target: source.id,
+      relation: "related",
+      link_kind: "concept_source",
+    });
   }
 
   return {

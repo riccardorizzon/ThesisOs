@@ -15,6 +15,7 @@ import { KnowledgeLifecycleBadge } from "@/components/knowledge/shared/Knowledge
 import {
   CANVAS_ZOOM_MAX,
   CANVAS_ZOOM_MIN,
+  canvasNodeKind,
   isNodeVisible,
   layoutCanvasNodes,
   nodeRadius,
@@ -28,7 +29,7 @@ import {
   type CanvasTransform,
 } from "@/lib/canvasTransform";
 import { cn } from "@/lib/cn";
-import type { KnowledgeGraphEdge, KnowledgeGraphResponse, KnowledgeState } from "@/lib/knowledgeTypes";
+import type { KnowledgeGraphEdge, KnowledgeGraphNode, KnowledgeGraphResponse, KnowledgeState } from "@/lib/knowledgeTypes";
 
 const EDGE_STROKE: Record<KnowledgeGraphEdge["relation"], string> = {
   supports: "#16a34a",
@@ -36,6 +37,24 @@ const EDGE_STROKE: Record<KnowledgeGraphEdge["relation"], string> = {
   extends: "#2563eb",
   related: "#94a3b8",
 };
+
+const SATELLITE_EDGE_STROKE = "#64748b";
+
+function edgeStroke(edge: KnowledgeGraphEdge): string {
+  if (edge.link_kind != null) return SATELLITE_EDGE_STROKE;
+  return EDGE_STROKE[edge.relation];
+}
+
+function nodeNavigateTarget(node: KnowledgeGraphNode): string | null {
+  switch (canvasNodeKind(node)) {
+    case "concept":
+      return `/knowledge/${node.slug}`;
+    case "source":
+      return `/sources/${node.slug}`;
+    default:
+      return null;
+  }
+}
 
 export type ResearchCanvasViewportProps = {
   graph: KnowledgeGraphResponse;
@@ -355,6 +374,7 @@ export function ResearchCanvasViewport({
             if (source == null || target == null) return null;
             const key = edgeKey(edge);
             const isHighlighted = highlightEdgeSet.has(key);
+            const isSatelliteLink = edge.link_kind != null;
             return (
               <line
                 key={key}
@@ -362,9 +382,11 @@ export function ResearchCanvasViewport({
                 y1={source.y}
                 x2={target.x}
                 y2={target.y}
-                stroke={EDGE_STROKE[edge.relation]}
-                strokeWidth={isHighlighted ? 4 : edge.relation === "related" ? 1 : 2}
-                strokeDasharray={edge.relation === "contradicts" ? "6 4" : undefined}
+                stroke={edgeStroke(edge)}
+                strokeWidth={isHighlighted ? 4 : isSatelliteLink ? 1 : edge.relation === "related" ? 1 : 2}
+                strokeDasharray={
+                  isSatelliteLink || edge.relation === "contradicts" ? "6 4" : undefined
+                }
                 className={cn(isHighlighted && "animate-pulse")}
                 data-testid={`canvas-edge-${edge.source}-${edge.target}`}
               />
@@ -375,9 +397,11 @@ export function ResearchCanvasViewport({
             const pos = layout.get(node.slug);
             if (pos == null) return null;
             const radius = nodeRadius(node);
+            const kind = canvasNodeKind(node);
             const isSelected = selectedSet.has(node.slug);
             const isFocus = graph.focus_slug === node.slug;
             const isHighlighted = highlightSlugSet.has(node.slug);
+            const navigateTarget = nodeNavigateTarget(node);
 
             return (
               <g
@@ -385,12 +409,15 @@ export function ResearchCanvasViewport({
                 transform={`translate(${pos.x},${pos.y})`}
                 className="pointer-events-auto cursor-pointer"
                 data-testid={`canvas-node-${node.slug}`}
+                data-node-kind={kind}
                 data-highlighted={isHighlighted ? "true" : undefined}
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => handleNodeClick(event, node.slug)}
                 onDoubleClick={(event) => {
                   event.stopPropagation();
-                  router.push(`/knowledge/${node.slug}`);
+                  if (navigateTarget != null) {
+                    router.push(navigateTarget);
+                  }
                 }}
               >
                 {isHighlighted && (
@@ -399,17 +426,69 @@ export function ResearchCanvasViewport({
                     className="fill-none stroke-accent stroke-[2px] animate-pulse"
                   />
                 )}
-                <circle
-                  r={radius}
-                  className={cn(
-                    "fill-surface stroke-accent transition-[stroke-width]",
-                    isSelected || isFocus || isHighlighted ? "stroke-[3px]" : "stroke-[2px]",
-                    node.is_core && "fill-accent-subtle",
-                    isHighlighted && "fill-accent/20"
-                  )}
-                />
-                {node.is_core && (
-                  <circle r={radius + 4} className="fill-none stroke-accent/40 stroke-[1px]" />
+                {kind === "concept" && (
+                  <>
+                    <circle
+                      r={radius}
+                      className={cn(
+                        "fill-surface stroke-accent transition-[stroke-width]",
+                        isSelected || isFocus || isHighlighted ? "stroke-[3px]" : "stroke-[2px]",
+                        node.is_core && "fill-accent-subtle",
+                        isHighlighted && "fill-accent/20"
+                      )}
+                    />
+                    {node.is_core && (
+                      <circle r={radius + 4} className="fill-none stroke-accent/40 stroke-[1px]" />
+                    )}
+                  </>
+                )}
+                {kind === "source" && (
+                  <rect
+                    x={-radius}
+                    y={-radius * 0.75}
+                    width={radius * 2}
+                    height={radius * 1.5}
+                    rx={4}
+                    className={cn(
+                      "fill-surface stroke-accent",
+                      isSelected || isHighlighted ? "stroke-[3px]" : "stroke-[2px]"
+                    )}
+                  />
+                )}
+                {kind === "author" && (
+                  <circle
+                    r={radius}
+                    className={cn(
+                      "fill-accent-subtle stroke-accent",
+                      isSelected || isHighlighted ? "stroke-[3px]" : "stroke-[2px]"
+                    )}
+                  />
+                )}
+                {kind === "decision" && (
+                  <rect
+                    x={-radius}
+                    y={-radius}
+                    width={radius * 2}
+                    height={radius * 2}
+                    transform="rotate(45)"
+                    className={cn(
+                      "fill-surface stroke-warning",
+                      isSelected || isHighlighted ? "stroke-[3px]" : "stroke-[2px]"
+                    )}
+                  />
+                )}
+                {kind === "chapter" && (
+                  <rect
+                    x={-radius}
+                    y={-radius * 0.6}
+                    width={radius * 2}
+                    height={radius * 1.2}
+                    rx={2}
+                    className={cn(
+                      "fill-bg stroke-border",
+                      isSelected || isHighlighted ? "stroke-[3px]" : "stroke-[2px]"
+                    )}
+                  />
                 )}
                 {showLabels && (
                   <text
@@ -420,18 +499,20 @@ export function ResearchCanvasViewport({
                     {truncateLabel(node.title)}
                   </text>
                 )}
-                <foreignObject
-                  x={radius - 28}
-                  y={radius - 8}
-                  width={56}
-                  height={24}
-                  className="overflow-visible"
-                >
-                  <KnowledgeLifecycleBadge
-                    state={node.knowledge_state as KnowledgeState}
-                    className="scale-90 origin-top-left"
-                  />
-                </foreignObject>
+                {kind === "concept" && (
+                  <foreignObject
+                    x={radius - 28}
+                    y={radius - 8}
+                    width={56}
+                    height={24}
+                    className="overflow-visible"
+                  >
+                    <KnowledgeLifecycleBadge
+                      state={node.knowledge_state as KnowledgeState}
+                      className="scale-90 origin-top-left"
+                    />
+                  </foreignObject>
+                )}
               </g>
             );
           })}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
+import { ResearchResumeSection } from "@/components/research/ResearchResumeSection";
 
 export type ResearchHubPageProps = {
   conceptCount: number;
@@ -126,17 +127,7 @@ export function ResearchHubPage({ conceptCount }: ResearchHubPageProps) {
       ) : (
         <section aria-label="Riprendi">
           <h2 className="text-sm font-medium text-ink">Riprendi</h2>
-          <p className="mt-1 text-sm text-ink-muted">
-            Nessuna vista salvata — apri la{" "}
-            <Link
-              href="/research/canvas"
-              className="font-medium text-accent hover:underline cursor-pointer"
-            >
-              mappa concettuale
-            </Link>{" "}
-            (lenti, inspector e percorsi suggeriti). Il ripristino camera sarà disponibile con le
-            viste salvate.
-          </p>
+          <ResearchResumeSection />
         </section>
       )}
     </div>

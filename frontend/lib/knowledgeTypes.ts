@@ -127,12 +127,22 @@ export type KnowledgeGraphNode = {
   knowledge_state: KnowledgeState;
   is_core: boolean;
   degree: number;
+  kind?: CanvasNodeKind;
 };
+
+export type CanvasNodeKind = "concept" | "source" | "author" | "decision" | "chapter";
+
+export type CanvasLinkKind =
+  | "concept_source"
+  | "concept_decision"
+  | "concept_chapter"
+  | "author_source";
 
 export type KnowledgeGraphEdge = {
   source: string;
   target: string;
   relation: "related" | "supports" | "extends" | "contradicts";
+  link_kind?: CanvasLinkKind;
 };
 
 export type KnowledgeGraphResponse = {

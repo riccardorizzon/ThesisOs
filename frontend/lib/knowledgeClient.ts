@@ -154,6 +154,7 @@ export async function getKnowledgeGraph(
     depth?: number;
     maxNodes?: number;
     view?: "graph" | "list";
+    profile?: "canvas" | "navigation";
   } = {}
 ): Promise<KnowledgeGraphResponse> {
   const projectId = options.projectId ?? DEFAULT_PROJECT;
@@ -162,6 +163,7 @@ export async function getKnowledgeGraph(
   if (options.depth != null) params.set("depth", String(options.depth));
   if (options.maxNodes != null) params.set("max_nodes", String(options.maxNodes));
   if (options.view != null) params.set("view", options.view);
+  if (options.profile === "canvas") params.set("profile", "canvas");
 
   const qs = params.toString();
   const url = `${BASE}/projects/${projectId}/knowledge/graph${qs ? `?${qs}` : ""}`;

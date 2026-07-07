@@ -56,3 +56,20 @@ def test_knowledge_graph_edges_only_among_visible_nodes():
 def test_knowledge_graph_read_only():
     post = client.post("/projects/thesis-agent/knowledge/graph")
     assert post.status_code == 405
+
+
+def test_knowledge_graph_canvas_profile_includes_satellites():
+    body = client.get(
+        "/projects/thesis-agent/knowledge/graph?profile=canvas&focus=stigmata&depth=2"
+    ).json()
+    kinds = {node["kind"] for node in body["nodes"]}
+    assert "concept" in kinds
+    assert "source" in kinds
+    assert body["limits"]["default_visible"] == 80
+    assert body["limits"]["hard_limit"] == 300
+    slugs = {node["slug"] for node in body["nodes"]}
+    for edge in body["edges"]:
+        assert edge["source"] in slugs
+        assert edge["target"] in slugs
+    link_kinds = {edge.get("link_kind") for edge in body["edges"] if edge.get("link_kind")}
+    assert "concept_source" in link_kinds

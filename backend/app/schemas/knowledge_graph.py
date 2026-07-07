@@ -10,10 +10,21 @@ from app.schemas.knowledge import KnowledgeState
 
 GraphRelationType = Literal["related", "supports", "extends", "contradicts"]
 GraphViewMode = Literal["graph", "list"]
+CanvasNodeKind = Literal["concept", "source", "author", "decision", "chapter"]
+CanvasLinkKind = Literal[
+    "concept_source",
+    "concept_decision",
+    "concept_chapter",
+    "author_source",
+]
 
 DEFAULT_VISIBLE_NODES = 15
 SOFT_NODE_LIMIT = 50
 HARD_NODE_LIMIT = 100
+
+CANVAS_DEFAULT_VISIBLE = 80
+CANVAS_SOFT_LIMIT = 150
+CANVAS_HARD_LIMIT = 300
 
 
 class KnowledgeGraphNode(BaseModel):
@@ -23,12 +34,14 @@ class KnowledgeGraphNode(BaseModel):
     knowledge_state: KnowledgeState
     is_core: bool = False
     degree: int = 0
+    kind: CanvasNodeKind = "concept"
 
 
 class KnowledgeGraphEdge(BaseModel):
     source: str
     target: str
     relation: GraphRelationType = "related"
+    link_kind: CanvasLinkKind | None = None
 
 
 class KnowledgeGraphLimits(BaseModel):
