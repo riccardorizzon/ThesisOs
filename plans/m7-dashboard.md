@@ -28,7 +28,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | M7.0b Architecture Lock | 🟢 | L1–L7 signed 2026-07-07 |
 | Preflight | 🟢 | builder-engine cycle dry-run |
 | Wave 1a Pilot (2 agents) | 🟢 | P-SOURCES-DB + P-KNOWLEDGE-DB merged, CI pass |
-| Wave 1b (4 agents) | ⚪ | P-CHAT-PERSIST-BE, P-REVIEW-PERSIST-BE, P-UPLOAD-UI, P-WRITING-GROUND |
+| Wave 1b (4 agents) | 🟡 | P-CHAT-PERSIST-BE merged; 3 pending |
 | Wave 2 (domain FE) | ⚪ | Sources, Knowledge, Writing, Review, Chat |
 | Wave 3 (E2E + export) | ⚪ | |
 | Wave 4 (cleanup) | ⚪ | |
@@ -49,7 +49,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 
 | Packet | Status | Branch | Merged | CI post-merge | Reviewer |
 |--------|--------|--------|--------|---------------|----------|
-| P-CHAT-PERSIST-BE | ⚪ | | | | |
+| P-CHAT-PERSIST-BE | 🟢 | feat/p-chat-persist-be | 2026-07-07 | ☑ pass | |
 | P-REVIEW-PERSIST-BE | ⚪ | | | | |
 | P-UPLOAD-UI | ⚪ | | | | |
 | P-WRITING-GROUND | ⚪ | | | | |
@@ -110,6 +110,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 |------|--------|--------|-----------|-------|
 | 2026-07-07 | P-SOURCES-DB | b595530e | ☑ pass | migration 0007 + DB-backed sources API |
 | 2026-07-07 | P-KNOWLEDGE-DB | 8617019a | ☑ pass | DB-only knowledge list/search |
+| 2026-07-07 | P-CHAT-PERSIST-BE | 4a675200 | ☑ pass | conversations API + chat persist |
 
 ---
 
