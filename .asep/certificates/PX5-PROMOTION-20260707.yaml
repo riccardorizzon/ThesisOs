@@ -9,9 +9,9 @@ milestone:
   id: PX-5
   title: Research
   product_milestone: px5-complete
-  tag_status: pending_commit
-  tag_commit: null
-  baseline: b6c04da9
+  tag_status: applied
+  tag_commit: 3d950ade
+  baseline: 68150e8e
 
 program:
   id: thesisos-product-v2

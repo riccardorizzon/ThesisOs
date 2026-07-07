@@ -17,7 +17,7 @@ PX-5 Research Milestone:       PROMOTED
 Qualification:                 QWO-PX5-001 PASS
 Integration D/E:               PASS
 make ci:                       PASS
-px5-complete tag:              PENDING (commit Wave E delta first)
+px5-complete tag:              APPLIED @ 3d950ade
 ```
 
 ---
@@ -31,7 +31,7 @@ px5-complete tag:              PENDING (commit Wave E delta first)
 | Promotion doc | `docs/px5-promotion.md` | ✓ |
 | Certificate | `.asep/certificates/PX5-PROMOTION-20260707.yaml` | ✓ |
 | Program state | `thesisos-product-v2.yaml` → PX-5 promoted | ✓ |
-| Git tag | `px5-complete` | pending commit |
+| Git tag | `px5-complete` | ✓ @ `3d950ade` |
 
 ---
 
@@ -58,7 +58,7 @@ px5_research_suites             → 29/29 PASS
 
 ```text
 Milestone Status: PROMOTED
-Repository Status: main @ b6c04da9, Wave E uncommitted
+Repository Status: main @ 3d950ade, tag px5-complete applied
 Remaining Scope: PX-6 Polish (blocked until authorized)
-Recommended Next Action: Commit Wave E → apply tag px5-complete
+Recommended Next Action: AUTHORIZE PX-6 when ready
 ```
