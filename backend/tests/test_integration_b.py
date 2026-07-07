@@ -15,6 +15,17 @@ def test_explorer_to_explain_api_chain():
     )
     assert listing.status_code == 200
     concepts = listing.json()["objects"]
+    if not concepts:
+        created = client.post(
+            "/projects/thesis-agent/knowledge/concepts",
+            json={"slug": "integration-b-concept", "title": "Integration B Concept"},
+        )
+        assert created.status_code == 201
+        listing = client.get(
+            "/projects/thesis-agent/knowledge/objects",
+            params={"type": "concept"},
+        )
+        concepts = listing.json()["objects"]
     assert len(concepts) >= 1
     slug = concepts[0]["slug"]
 
