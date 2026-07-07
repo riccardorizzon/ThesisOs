@@ -786,7 +786,9 @@ px5_workorder_backlog:
       - Multi-select gestures (⌘+click, marquee, Esc)
       - Responsive desktop-required message <1024px
       - make ci green
-    status: authorized
+    status: implemented
+    report: .asep/reports/PX5-EWO-004-canvas-shell-selection.md
+    completed_at: "2026-07-07"
 
   - id: PX5-EWO-005
     type: EWO

@@ -2,6 +2,7 @@ import { describe, expect, it, vi, afterEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ResearchCanvasViewport } from "./ResearchCanvasViewport";
 import type { KnowledgeGraphResponse } from "@/lib/knowledgeTypes";
+import { DEFAULT_CANVAS_TRANSFORM } from "@/lib/canvasTransform";
 import {
   layoutCanvasNodes,
   nodeRadius,
@@ -67,6 +68,25 @@ const SAMPLE_GRAPH: KnowledgeGraphResponse = {
   },
 };
 
+function renderViewport(
+  overrides: Partial<{
+    selectedSlugs: string[];
+    onSelectedSlugsChange: (slugs: string[]) => void;
+  }> = {}
+) {
+  const onSelectedSlugsChange = overrides.onSelectedSlugsChange ?? vi.fn();
+  render(
+    <ResearchCanvasViewport
+      graph={SAMPLE_GRAPH}
+      selectedSlugs={overrides.selectedSlugs ?? []}
+      onSelectedSlugsChange={onSelectedSlugsChange}
+      transform={DEFAULT_CANVAS_TRANSFORM}
+      onTransformChange={vi.fn()}
+    />
+  );
+  return { onSelectedSlugsChange };
+}
+
 afterEach(() => {
   cleanup();
 });
@@ -124,20 +144,28 @@ describe("canvasLayout", () => {
 
 describe("ResearchCanvasViewport", () => {
   it("renders viewport with concept nodes", () => {
-    render(<ResearchCanvasViewport graph={SAMPLE_GRAPH} />);
+    renderViewport();
     expect(screen.getByTestId("research-canvas-viewport")).toBeTruthy();
     expect(screen.getByTestId("canvas-node-aura")).toBeTruthy();
     expect(screen.getByTestId("canvas-node-riproducibilita")).toBeTruthy();
   });
 
   it("selects node on click", () => {
-    render(<ResearchCanvasViewport graph={SAMPLE_GRAPH} />);
+    const onSelectedSlugsChange = vi.fn();
+    renderViewport({ onSelectedSlugsChange });
     fireEvent.click(screen.getByTestId("canvas-node-stigmata"));
-    expect(screen.getByTestId("canvas-selection-chip")).toHaveTextContent("STIGMATA");
+    expect(onSelectedSlugsChange).toHaveBeenCalledWith(["stigmata"]);
+  });
+
+  it("toggles multi-select with meta click", () => {
+    const onSelectedSlugsChange = vi.fn();
+    renderViewport({ selectedSlugs: ["aura"], onSelectedSlugsChange });
+    fireEvent.click(screen.getByTestId("canvas-node-stigmata"), { metaKey: true });
+    expect(onSelectedSlugsChange).toHaveBeenCalledWith(["aura", "stigmata"]);
   });
 
   it("renders typed edges", () => {
-    render(<ResearchCanvasViewport graph={SAMPLE_GRAPH} />);
+    renderViewport();
     expect(screen.getByTestId("canvas-edge-aura-riproducibilita")).toBeTruthy();
   });
 });

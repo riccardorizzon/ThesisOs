@@ -21,6 +21,11 @@ import {
   truncateLabel,
   visibleWorldBounds,
 } from "@/lib/canvasLayout";
+import { applyNodeSelection, normalizeScreenRect, slugsInMarquee } from "@/lib/canvasSelection";
+import {
+  DEFAULT_CANVAS_TRANSFORM,
+  type CanvasTransform,
+} from "@/lib/canvasTransform";
 import { cn } from "@/lib/cn";
 import type { KnowledgeGraphEdge, KnowledgeGraphResponse, KnowledgeState } from "@/lib/knowledgeTypes";
 
@@ -33,6 +38,10 @@ const EDGE_STROKE: Record<KnowledgeGraphEdge["relation"], string> = {
 
 export type ResearchCanvasViewportProps = {
   graph: KnowledgeGraphResponse;
+  selectedSlugs: readonly string[];
+  onSelectedSlugsChange: (slugs: string[]) => void;
+  transform: CanvasTransform;
+  onTransformChange: (transform: CanvasTransform) => void;
 };
 
 function edgeKey(edge: KnowledgeGraphEdge): string {
@@ -40,33 +49,54 @@ function edgeKey(edge: KnowledgeGraphEdge): string {
 }
 
 /**
- * PX-5 spatial canvas — pan/zoom viewport with concept node layer (PX5-EWO-003).
+ * PX-5 spatial canvas — pan/zoom viewport with concept node layer (PX5-EWO-003/004).
  * Layer: Business (Product Plane)
  */
-export function ResearchCanvasViewport({ graph }: ResearchCanvasViewportProps) {
+export function ResearchCanvasViewport({
+  graph,
+  selectedSlugs,
+  onSelectedSlugsChange,
+  transform,
+  onTransformChange,
+}: ResearchCanvasViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [size, setSize] = useState({ width: 800, height: 560 });
-  const [transform, setTransform] = useState({ x: 400, y: 280, scale: 1 });
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(
-    graph.focus_slug ?? null
-  );
-  const panRef = useRef<{ active: boolean; startX: number; startY: number; tx: number; ty: number }>({
+  const selectedSet = useMemo(() => new Set(selectedSlugs), [selectedSlugs]);
+  const panRef = useRef<{
+    active: boolean;
+    startX: number;
+    startY: number;
+    tx: number;
+    ty: number;
+  }>({
     active: false,
     startX: 0,
     startY: 0,
     tx: 0,
     ty: 0,
   });
+  const marqueeRef = useRef<{
+    active: boolean;
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+  }>({
+    active: false,
+    startX: 0,
+    startY: 0,
+    endX: 0,
+    endY: 0,
+  });
+  const [marqueeRect, setMarqueeRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   const layout = useMemo(() => layoutCanvasNodes(graph), [graph]);
-  const titleBySlug = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const node of graph.nodes) {
-      map.set(node.slug, node.title);
-    }
-    return map;
-  }, [graph.nodes]);
 
   useEffect(() => {
     const element = containerRef.current;
@@ -93,13 +123,13 @@ export function ResearchCanvasViewport({ graph }: ResearchCanvasViewportProps) {
     if (focusSlug == null) return;
     const pos = layout.get(focusSlug);
     if (pos == null) return;
-    setTransform({
+    onTransformChange({
       x: size.width / 2 - pos.x,
       y: size.height / 2 - pos.y,
       scale: 1,
     });
-    setSelectedSlug(focusSlug);
-  }, [graph.focus_slug, layout, size.width, size.height]);
+    onSelectedSlugsChange([focusSlug]);
+  }, [graph.focus_slug, layout, onSelectedSlugsChange, onTransformChange, size.width, size.height]);
 
   const bounds = useMemo(
     () => visibleWorldBounds(size.width, size.height, transform),
@@ -129,18 +159,72 @@ export function ResearchCanvasViewport({ graph }: ResearchCanvasViewportProps) {
     [graph.edges, visibleSlugs]
   );
 
-  const handleWheel = useCallback((event: ReactWheelEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const factor = event.deltaY > 0 ? 0.92 : 1.08;
-    setTransform((current) => ({
-      ...current,
-      scale: Math.min(CANVAS_ZOOM_MAX, Math.max(CANVAS_ZOOM_MIN, current.scale * factor)),
-    }));
-  }, []);
+  const handleWheel = useCallback(
+    (event: ReactWheelEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      const factor = event.deltaY > 0 ? 0.92 : 1.08;
+      onTransformChange({
+        ...transform,
+        scale: Math.min(CANVAS_ZOOM_MAX, Math.max(CANVAS_ZOOM_MIN, transform.scale * factor)),
+      });
+    },
+    [onTransformChange, transform]
+  );
+
+  const finishMarquee = useCallback(
+    (clientX: number, clientY: number) => {
+      const container = containerRef.current;
+      if (container == null || !marqueeRef.current.active) return;
+
+      marqueeRef.current.active = false;
+      marqueeRef.current.endX = clientX;
+      marqueeRef.current.endY = clientY;
+      setMarqueeRect(null);
+
+      const slugs = slugsInMarquee(
+        graph,
+        container.getBoundingClientRect(),
+        transform,
+        marqueeRef.current.startX,
+        marqueeRef.current.startY,
+        clientX,
+        clientY
+      );
+      if (slugs.length > 0) {
+        onSelectedSlugsChange(slugs);
+      }
+    },
+    [graph, onSelectedSlugsChange, transform]
+  );
 
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return;
+
+      if (event.shiftKey) {
+        marqueeRef.current = {
+          active: true,
+          startX: event.clientX,
+          startY: event.clientY,
+          endX: event.clientX,
+          endY: event.clientY,
+        };
+        const container = containerRef.current;
+        if (container != null) {
+          setMarqueeRect(
+            normalizeScreenRect(
+              event.clientX,
+              event.clientY,
+              event.clientX,
+              event.clientY,
+              container.getBoundingClientRect()
+            )
+          );
+        }
+        event.currentTarget.setPointerCapture(event.pointerId);
+        return;
+      }
+
       panRef.current = {
         active: true,
         startX: event.clientX,
@@ -154,33 +238,73 @@ export function ResearchCanvasViewport({ graph }: ResearchCanvasViewportProps) {
   );
 
   const handlePointerMove = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (marqueeRef.current.active) {
+      marqueeRef.current.endX = event.clientX;
+      marqueeRef.current.endY = event.clientY;
+      const container = containerRef.current;
+      if (container != null) {
+        setMarqueeRect(
+          normalizeScreenRect(
+            marqueeRef.current.startX,
+            marqueeRef.current.startY,
+            event.clientX,
+            event.clientY,
+            container.getBoundingClientRect()
+          )
+        );
+      }
+      return;
+    }
+
     if (!panRef.current.active) return;
     const dx = event.clientX - panRef.current.startX;
     const dy = event.clientY - panRef.current.startY;
-    setTransform((current) => ({
-      ...current,
+    onTransformChange({
+      ...transform,
       x: panRef.current.tx + dx,
       y: panRef.current.ty + dy,
-    }));
-  }, []);
+    });
+  }, [onTransformChange, transform]);
 
-  const handlePointerUp = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    panRef.current.active = false;
-    event.currentTarget.releasePointerCapture(event.pointerId);
-  }, []);
+  const handlePointerUp = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (marqueeRef.current.active) {
+        finishMarquee(event.clientX, event.clientY);
+      } else {
+        panRef.current.active = false;
+      }
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    },
+    [finishMarquee]
+  );
+
+  const handleNodeClick = useCallback(
+    (event: React.MouseEvent, slug: string) => {
+      event.stopPropagation();
+      const additive = event.metaKey || event.ctrlKey;
+      onSelectedSlugsChange(applyNodeSelection(selectedSlugs, slug, additive));
+    },
+    [onSelectedSlugsChange, selectedSlugs]
+  );
 
   const showLabels = transform.scale >= 0.6;
 
   return (
     <div
       ref={containerRef}
-      className="relative h-[min(640px,calc(100vh-14rem))] cursor-grab overflow-hidden rounded-lg border border-border bg-bg active:cursor-grabbing"
+      className="relative h-full min-h-[560px] cursor-grab overflow-hidden bg-bg active:cursor-grabbing"
       data-testid="research-canvas-viewport"
       onWheel={handleWheel}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerUp}
+      onPointerLeave={(event) => {
+        if (marqueeRef.current.active) {
+          finishMarquee(event.clientX, event.clientY);
+        } else {
+          panRef.current.active = false;
+        }
+      }}
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.08]"
@@ -221,7 +345,7 @@ export function ResearchCanvasViewport({ graph }: ResearchCanvasViewportProps) {
             const pos = layout.get(node.slug);
             if (pos == null) return null;
             const radius = nodeRadius(node);
-            const isSelected = selectedSlug === node.slug;
+            const isSelected = selectedSet.has(node.slug);
             const isFocus = graph.focus_slug === node.slug;
 
             return (
@@ -230,10 +354,8 @@ export function ResearchCanvasViewport({ graph }: ResearchCanvasViewportProps) {
                 transform={`translate(${pos.x},${pos.y})`}
                 className="pointer-events-auto cursor-pointer"
                 data-testid={`canvas-node-${node.slug}`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setSelectedSlug(node.slug);
-                }}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => handleNodeClick(event, node.slug)}
                 onDoubleClick={(event) => {
                   event.stopPropagation();
                   router.push(`/knowledge/${node.slug}`);
@@ -277,26 +399,24 @@ export function ResearchCanvasViewport({ graph }: ResearchCanvasViewportProps) {
         </g>
       </svg>
 
+      {marqueeRect != null && marqueeRect.width + marqueeRect.height > 0 && (
+        <div
+          className="pointer-events-none absolute border border-accent bg-accent/10"
+          style={{
+            left: marqueeRect.left,
+            top: marqueeRect.top,
+            width: marqueeRect.width,
+            height: marqueeRect.height,
+          }}
+          data-testid="canvas-marquee"
+        />
+      )}
+
       <div className="pointer-events-none absolute bottom-3 right-3 rounded-md border border-border bg-surface/90 px-2 py-1 text-xs text-ink-muted">
         {Math.round(transform.scale * 100)}%
       </div>
-
-      {selectedSlug != null && (
-        <div
-          className="pointer-events-none absolute left-3 top-3 max-w-xs rounded-md border border-border bg-surface/95 px-3 py-2 text-xs text-ink-muted shadow-sm"
-          data-testid="canvas-selection-chip"
-        >
-          Selezionato:{" "}
-          <span className="font-medium text-ink">
-            {titleBySlug.get(selectedSlug) ?? selectedSlug}
-          </span>
-          <span className="mt-1 block text-ink-subtle">
-            Doppio clic → Explain · Trascina sfondo → pan · Rotella → zoom
-          </span>
-        </div>
-      )}
     </div>
   );
 }
 
-export { EDGE_STROKE };
+export { EDGE_STROKE, DEFAULT_CANVAS_TRANSFORM };
