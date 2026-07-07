@@ -1,0 +1,19 @@
+id: PX6-PROMOTION-20260707
+program: thesisos-product-v2
+milestone: PX-6
+status: PROMOTED
+qualified_at: "2026-07-07"
+qwo: QWO-PX6-001
+qwo_report: .asep/reports/QWO-PX6-001.md
+tag: px6-complete
+promotion_doc: docs/px6-promotion.md
+integrations:
+  - .asep/reports/PX6-INTEGRATION-A.md
+  - .asep/reports/PX6-INTEGRATION-B.md
+  - .asep/reports/PX6-INTEGRATION-C.md
+gates:
+  wave_b_validator: green
+  wave_cd_export_multiproject: green
+  wave_e_polish: green
+  qwo_px6_001: green
+  make_ci: green
