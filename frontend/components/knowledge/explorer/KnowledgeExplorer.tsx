@@ -56,6 +56,7 @@ export function KnowledgeExplorer({
     [baseConcepts, filter]
   );
 
+  const isCorpusEmpty = concepts.length === 0 && searchResults == null;
   const featured = baseConcepts.find((c) => c.is_core && c.slug === "stigmata");
   const gridConcepts = useMemo(
     () =>
@@ -64,6 +65,38 @@ export function KnowledgeExplorer({
         : filtered,
     [filtered, featured]
   );
+
+  if (isCorpusEmpty) {
+    return (
+      <div className={cn("mx-auto max-w-content", className)}>
+        <header className="mb-8">
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+            Knowledge
+          </h1>
+          <p className="mt-1 max-w-prose text-sm text-ink-muted">
+            Cosa sa la tua ricerca — concetti, relazioni e ponti verso le fonti.
+          </p>
+        </header>
+
+        <div
+          className="rounded-md border border-dashed border-border bg-surface-muted p-10 text-center"
+          data-testid="knowledge-empty-state"
+        >
+          <p className="text-sm font-medium text-ink">Nessun concetto nel corpus</p>
+          <p className="mt-2 text-sm text-ink-muted">
+            Importa fonti in{" "}
+            <Link
+              href="/sources"
+              className="font-medium text-accent underline-offset-2 hover:underline cursor-pointer"
+            >
+              Sources
+            </Link>{" "}
+            per estrarre concetti dalla tua ricerca.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("mx-auto max-w-content", className)}>

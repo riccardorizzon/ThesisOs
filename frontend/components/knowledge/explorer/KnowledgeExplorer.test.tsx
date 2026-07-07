@@ -89,4 +89,11 @@ describe("KnowledgeExplorer", () => {
       screen.getByRole("link", { name: /3 fonti in Sources/i })
     ).toHaveAttribute("href", "/sources");
   });
+
+  it("shows empty state when corpus has no concepts", () => {
+    render(<KnowledgeExplorer concepts={[]} />);
+    expect(screen.getByTestId("knowledge-empty-state")).toBeTruthy();
+    expect(screen.getByText(/Nessun concetto nel corpus/i)).toBeTruthy();
+    expect(screen.queryByTestId("knowledge-filter-rail")).toBeNull();
+  });
 });
