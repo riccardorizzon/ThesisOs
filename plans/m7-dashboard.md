@@ -28,7 +28,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | M7.0b Architecture Lock | 🟢 | L1–L7 signed 2026-07-07 |
 | Preflight | 🟢 | builder-engine cycle dry-run |
 | Wave 1a Pilot (2 agents) | 🟢 | P-SOURCES-DB + P-KNOWLEDGE-DB merged, CI pass |
-| Wave 1b (4 agents) | 🟡 | 3/4 merged; P-WRITING-GROUND pending |
+| Wave 1b (4 agents) | 🟢 | all 4 packets merged, CI pass |
 | Wave 2 (domain FE) | ⚪ | Sources, Knowledge, Writing, Review, Chat |
 | Wave 3 (E2E + export) | ⚪ | |
 | Wave 4 (cleanup) | ⚪ | |
@@ -52,7 +52,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | P-CHAT-PERSIST-BE | 🟢 | feat/p-chat-persist-be | 2026-07-07 | ☑ pass | |
 | P-REVIEW-PERSIST-BE | 🟢 | feat/p-review-persist-be | 2026-07-07 | ☑ pass | |
 | P-UPLOAD-UI | 🟢 | feat/p-upload-ui | 2026-07-07 | ☑ pass | |
-| P-WRITING-GROUND | ⚪ | | | | |
+| P-WRITING-GROUND | 🟢 | feat/p-writing-ground | 2026-07-07 | ☑ pass | |
 
 ---
 
@@ -112,6 +112,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | 2026-07-07 | P-KNOWLEDGE-DB | 8617019a | ☑ pass | DB-only knowledge list/search |
 | 2026-07-07 | P-CHAT-PERSIST-BE | 4a675200 | ☑ pass | conversations API + chat persist |
 | 2026-07-07 | P-REVIEW-PERSIST-BE | 5eea046e | ☑ pass | proposals API + migration 0008 |
+| 2026-07-07 | P-UPLOAD-UI | 6b3e4718 | ☑ pass | /sources/upload + Home CTA |
 
 ---
 
