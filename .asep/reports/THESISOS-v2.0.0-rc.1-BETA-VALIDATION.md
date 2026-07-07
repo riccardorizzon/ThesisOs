@@ -26,7 +26,7 @@ Collect **only**:
 | Beta validator script | ✓ PASS | `.asep/reports/THESISOS-v2.0.0-rc.1-BETA-VALIDATION-RUN-20260707.md` |
 | Certificate | ✓ | `.asep/certificates/THESISOS-v2.0.0-rc.1-BETA-VALIDATION-DAY0-20260707.yaml` |
 
-**Staging URL (beta):** http://34.79.238.160:3000
+**Staging URL (beta):** `http://localhost:3000` via SSH port forward (see `RC-BETA-ONBOARDING.md`)
 
 ## Cohort
 
