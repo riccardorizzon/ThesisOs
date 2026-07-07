@@ -9,7 +9,7 @@ title: ThesisOS Product v2 — Engineering
 program_type: engineering
 status: active
 
-milestone_authorized: PX-5
+milestone_authorized: PX-6
 milestone_authorized_prior: PX-4
 milestone_frozen: PX-4
 milestones_planned_blocked: [PX-6]
@@ -185,8 +185,14 @@ milestones:
     note: Wave 3 integration complete; Wave 4 conformance requires separate authorization
   PX-5:
     title: Research
-    status: authorized
+    status: promoted
     program_role: engineering
+    promoted_at: "2026-07-07"
+    promotion_certificate: .asep/certificates/PX5-PROMOTION-20260707.yaml
+    promotion_doc: docs/px5-promotion.md
+    promotion_execution: .asep/reports/PX5-PROMOTION-EXECUTION-20260707.md
+    qualification: .asep/reports/QWO-PX5-001.md
+    tag: px5-complete
     authorized_at: "2026-07-07"
     authorization_receipt: .asep/reports/PX5-AUTHORIZATION-20260707.md
     authorization_receipt_prior: .asep/reports/PX5-AUTHORIZATION-20260706.md
@@ -201,6 +207,11 @@ milestones:
     wave_d_status: complete
     wave_d_integration: .asep/reports/PX5-INTEGRATION-D.md
     wave_d_first_executable_ewo: PX5-EWO-007
+    wave_e_backlog: .asep/reports/PX5-WAVE-E-BACKLOG.md
+    wave_e_authorization: .asep/reports/PX5-AUTHORIZATION-INTEGRATION-E-20260707.md
+    wave_e_status: complete
+    wave_e_integration: .asep/reports/PX5-INTEGRATION-E.md
+    wave_e_ewo_011_authorization: .asep/reports/PX5-AUTHORIZATION-EWO-011-20260707.md
     product_spec: docs/product/specs/px5-research-experience-v1.md
     ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
     product_spec_baseline: docs/product/specs/thesisos-product-ux-v1.md
@@ -841,6 +852,87 @@ px5_workorder_backlog:
     report: .asep/reports/PX5-EWO-007-serendipity-integration.md
     completed_at: "2026-07-07"
 
+  - id: PX5-EWO-008
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-5
+    title: Satellite node layer
+    wave: E
+    depends_on: [PX5-EWO-007]
+    authorization: .asep/reports/PX5-AUTHORIZATION-INTEGRATION-E-20260707.md
+    proposal: .asep/proposals/PX5-EWO-008-satellite-node-layer.md
+    acceptance:
+      - Canvas graph profile returns concept + satellite nodes per product §4.1
+      - Viewport renders distinct shapes per node kind
+      - PX-3 navigation graph unchanged without profile=canvas
+      - make ci green
+    status: implemented
+    report: .asep/reports/PX5-EWO-008-satellite-node-layer.md
+    completed_at: "2026-07-07"
+
+  - id: PX5-EWO-009
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-5
+    title: Basket + Writing handoff
+    wave: E
+    depends_on: [PX5-EWO-008]
+    proposal: .asep/proposals/PX5-EWO-009-basket-writing-handoff.md
+    acceptance:
+      - Session basket + Porta in Scrittura handoff per product §8
+      - make ci green
+    status: implemented
+    report: .asep/reports/PX5-EWO-009-basket-writing-handoff.md
+    completed_at: "2026-07-07"
+
+  - id: PX5-EWO-010
+    type: EWO
+    ewo_category: Alignment
+    milestone: PX-5
+    title: Saved views persistence
+    wave: E
+    depends_on: [PX5-EWO-008]
+    proposal: .asep/proposals/PX5-EWO-010-saved-views.md
+    acceptance:
+      - Saved views + hub Riprendi per product §9
+      - make ci green
+    status: implemented
+    report: .asep/reports/PX5-EWO-010-saved-views.md
+    completed_at: "2026-07-07"
+
+  - id: PX5-EWO-011
+    type: EWO
+    ewo_category: Release
+    milestone: PX-5
+    title: Minimap + cluster + hard-limit + Wave E integration
+    wave: E
+    depends_on: [PX5-EWO-009, PX5-EWO-010]
+    authorization: .asep/reports/PX5-AUTHORIZATION-EWO-011-20260707.md
+    proposal: .asep/proposals/PX5-EWO-011-minimap-cluster-conformance.md
+    acceptance:
+      - Minimap + cluster + hard-limit modal per product §5.2–§5.3
+      - PX5-INTEGRATION-E PASS
+      - make ci green
+    status: implemented
+    report: .asep/reports/PX5-EWO-011-minimap-cluster-conformance.md
+    completed_at: "2026-07-07"
+
+  - id: PX5-EWO-012
+    type: EWO
+    ewo_category: Release
+    milestone: PX-5
+    title: Milestone promotion
+    depends_on: [PX5-EWO-011]
+    authorization: .asep/reports/PX5-AUTHORIZATION-PROMOTION-20260707.md
+    acceptance:
+      - docs/px5-promotion.md
+      - PX5-PROMOTION certificate
+      - px5-complete tag
+    status: promoted
+    report: .asep/reports/PX5-PROMOTION-EXECUTION-20260707.md
+    certificate: .asep/certificates/PX5-PROMOTION-20260707.yaml
+    promoted_at: "2026-07-07"
+
 px4_workorder_backlog:
   - id: PX4-EWO-001
     type: EWO
@@ -941,6 +1033,7 @@ completion_criteria:
   PX-2: QWO-PX2-001 PASS
   PX-3: MB2-CONFORMANCE-ASSESSMENT PASS + Architect ratification
   PX-4: PX4-EWO-011 PASS + px4-complete tag
+  PX-5: QWO-PX5-001 PASS + px5-complete tag
 
 post_px2:
   px2_status: complete_qualified_frozen
@@ -989,6 +1082,15 @@ post_px2:
   px5_wave_d_status: complete
   px5_wave_d_integration: .asep/reports/PX5-INTEGRATION-D.md
   px5_wave_d_first_executable_ewo: PX5-EWO-007
+  px5_wave_e_backlog: .asep/reports/PX5-WAVE-E-BACKLOG.md
+  px5_wave_e_authorization: .asep/reports/PX5-AUTHORIZATION-INTEGRATION-E-20260707.md
+  px5_wave_e_status: complete
+  px5_wave_e_integration: .asep/reports/PX5-INTEGRATION-E.md
+  px5_wave_e_ewo_011_authorization: .asep/reports/PX5-AUTHORIZATION-EWO-011-20260707.md
+  px5_ewo_008_report: .asep/reports/PX5-EWO-008-satellite-node-layer.md
+  px5_ewo_009_report: .asep/reports/PX5-EWO-009-basket-writing-handoff.md
+  px5_ewo_010_report: .asep/reports/PX5-EWO-010-saved-views.md
+  px5_ewo_011_report: .asep/reports/PX5-EWO-011-minimap-cluster-conformance.md
   px5_product_spec: docs/product/specs/px5-research-experience-v1.md
   px5_ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
   px5_ewo_001_report: .asep/reports/PX5-EWO-001-research-experience-spec.md
@@ -1000,6 +1102,11 @@ post_px2:
   px5_ewo_007_report: .asep/reports/PX5-EWO-007-serendipity-integration.md
   px5_dispatch_wave_d_005_006: .asep/reports/PX5-DISPATCH-WAVE-D-005-006.md
   px5_first_executable_ewo: none
+  px5_status: promoted
+  px5_promotion_certificate: .asep/certificates/PX5-PROMOTION-20260707.yaml
+  px5_promotion_doc: docs/px5-promotion.md
+  px5_qualification: .asep/reports/QWO-PX5-001.md
+  px5_tag: px5-complete
   runtime_engineering_authorization: not_authorized
-  next_milestone: Architect review Wave D → spawn Wave E backlog
-  note: PX5-EWO-007 PASS — Wave D integration complete
+  next_milestone: PX-6 Polish (blocked until authorized)
+  note: PX-5 PROMOTED — tag pending commit of Wave E delta

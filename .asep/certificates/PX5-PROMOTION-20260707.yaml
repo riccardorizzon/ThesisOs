@@ -1,0 +1,56 @@
+# Promotion Certificate — PX-5 Research
+
+certificate_version: "1.0"
+certificate_type: product-promotion
+issued_at: "2026-07-07T04:55:00+02:00"
+issued_by: architect
+
+milestone:
+  id: PX-5
+  title: Research
+  product_milestone: px5-complete
+  tag_status: pending_commit
+  tag_commit: null
+  baseline: b6c04da9
+
+program:
+  id: thesisos-product-v2
+  authorization: .asep/reports/PX5-AUTHORIZATION-PROMOTION-20260707.md
+  report: .asep/reports/PX5-PROMOTION-EXECUTION-20260707.md
+  gate_doc: docs/px5-promotion.md
+
+product_spec:
+  path: docs/product/specs/px5-research-experience-v1.md
+  ewo: PX5-EWO-001
+
+qualification_gates:
+  - id: PX5-INTEGRATION-D
+    report: .asep/reports/PX5-INTEGRATION-D.md
+    verdict: PASS
+  - id: PX5-INTEGRATION-E
+    report: .asep/reports/PX5-INTEGRATION-E.md
+    verdict: PASS
+  - id: QWO-PX5-001
+    report: .asep/reports/QWO-PX5-001.md
+    verdict: PASS
+
+waves_promoted:
+  - wave_a_spec
+  - wave_b_hub
+  - wave_c_viewport
+  - wave_d_discovery
+  - wave_e_satellites_polish
+
+verification:
+  make_ci: PASS
+  unit_frontend: "283 passed"
+  unit_builder_engine: "191 passed"
+  knowledge_graph: "7 passed"
+  px5_research_suites: "29 passed"
+
+verdict: PROMOTED
+
+not_included:
+  - PX-6 Polish
+  - MB2 runtime re-qualification
+  - Guided trail full implementation
