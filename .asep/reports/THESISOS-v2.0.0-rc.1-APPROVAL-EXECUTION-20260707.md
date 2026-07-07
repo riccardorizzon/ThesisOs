@@ -2,7 +2,7 @@
 
 > **Product:** ThesisOS v2.0.0-rc.1  
 > **Program:** `thesisos-product-v2`  
-> **Status:** **APPROVED** — staging deploy authorized  
+> **Status:** **RC VALIDATION** — staging deployed @ `fd23ad70`; smoke 6/6 PASS; beta open  
 > **Date:** 2026-07-07
 
 ## Approval receipt
@@ -41,10 +41,11 @@ Certificate: `.asep/certificates/THESISOS-v2.0.0-rc.1-APPROVAL-20260707.yaml`
 | Record approval certificate | ✓ | `.asep/certificates/THESISOS-v2.0.0-rc.1-APPROVAL-20260707.yaml` |
 | Update approval request status | ✓ | `.asep/reports/THESISOS-v2.0-RC-APPROVAL-REQUEST.md` |
 | Update RC bundle status | ✓ | `.asep/reports/THESISOS-v2.0-RC-BUNDLE.md` |
-| Verify `make ci` | ✓ PASS | 391 backend + 286 frontend + 191 builder-engine @ HEAD |
-| Push `v2.0.0-rc.1` to remote | blocked | no `origin` remote configured |
-| Deploy staging | pending | requires infra (Release Manager) |
-| Beta onboarding | pending | Product Lead — bundle §9 |
+| Governance commit | ✓ | `b052df67` — `governance: approve ThesisOS v2.0.0-rc.1` |
+| Push `main` + tag to remote | blocked | no `origin` remote — run `git remote -v` and configure |
+| Deploy staging @ `fd23ad70` | ✓ | worktree `.worktrees/rc-staging`; `rc-staging-*` @ :3000/:8000 |
+| Smoke tests (6 surfaces) | ✓ PASS | `.asep/reports/THESISOS-v2.0.0-rc.1-STAGING-SMOKE-20260707.md` |
+| Beta validation | open | `.asep/reports/THESISOS-v2.0.0-rc.1-BETA-VALIDATION.md` |
 
 ## Authorized next steps (Release Manager)
 
@@ -68,6 +69,7 @@ Certificate: `.asep/certificates/THESISOS-v2.0.0-rc.1-APPROVAL-20260707.yaml`
 PX-6 promoted (px6-complete @ bb561ea4)
   → THESISOS-v2.0-RC-BUNDLE (fd23ad70)
   → v2.0.0-rc.1 tagged
-  → APPROVED (2026-07-07) — make ci PASS
-  → staging + beta → v2.0.0 GA
+  → APPROVED (2026-07-07) — governance b052df67
+  → staging @ fd23ad70 — smoke 6/6 PASS
+  → beta validation (7d) → GA approval → v2.0.0
 ```

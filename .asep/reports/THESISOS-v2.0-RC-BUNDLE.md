@@ -129,9 +129,9 @@ Full limitations: `docs/KNOWN_LIMITATIONS.md`
 ## 7. Deployment checklist
 
 - [x] Tag `v2.0.0-rc.1` on `fd23ad70` (approved 2026-07-07)
-- [ ] Deploy backend to staging
-- [ ] Deploy frontend to staging
-- [ ] Run smoke tests on staging
+- [x] Deploy backend to staging (local RC stack @ fd23ad70)
+- [x] Deploy frontend to staging (local RC stack @ fd23ad70)
+- [x] Run smoke tests on staging (6/6 PASS)
 - [ ] Invite beta users
 - [ ] Monitor error tracking and performance for 7 days
 - [ ] Collect beta feedback
