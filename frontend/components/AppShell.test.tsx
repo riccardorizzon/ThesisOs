@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import { AppShell } from "./AppShell";
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 import {
@@ -14,6 +14,17 @@ vi.mock("next/navigation", () => ({
     push: vi.fn(),
     replace: vi.fn(),
   }),
+}));
+
+vi.mock("@/lib/projectsClient", () => ({
+  listProjects: vi.fn().mockResolvedValue([
+    {
+      id: "thesis-agent",
+      display_name: "Tesi di laurea",
+      created_at: "2026-07-01T00:00:00Z",
+    },
+  ]),
+  createProject: vi.fn(),
 }));
 
 vi.mock("@/lib/chapterClient", () => ({
@@ -69,13 +80,15 @@ describe("AppShell", () => {
     expect(screen.getByRole("link", { name: "Settings" })).toBeTruthy();
   });
 
-  it("renders project switcher and breadcrumbs", () => {
+  it("renders project switcher and breadcrumbs", async () => {
     render(
       <AppShell>
         <div>Content</div>
       </AppShell>
     );
-    expect(screen.getByText(DEFAULT_PROJECT_ID)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Tesi di laurea")).toBeTruthy();
+    });
     const breadcrumb = screen.getByRole("navigation", { name: "Breadcrumb" });
     expect(breadcrumb).toBeTruthy();
     expect(

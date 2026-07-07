@@ -24,6 +24,7 @@ from app.schemas.chapter import (
     ChapterListFilters,
     ChapterMetadataUpdate,
     ChapterRecord,
+    ChapterReorderRequest,
     ChapterVersionRecord,
 )
 from app.services.chapter.exceptions import (
@@ -108,6 +109,20 @@ class ChapterService:
             return await self._list_versions(session, chapter_id)
         async with AsyncSessionLocal() as s:
             return await self._list_versions(s, chapter_id)
+
+    async def reorder(
+        self, data: ChapterReorderRequest, *, session: AsyncSession | None = None
+    ) -> list[ChapterRecord]:
+        if session is not None:
+            return await self._reorder(session, data)
+        async with AsyncSessionLocal() as s:
+            try:
+                records = await self._reorder(s, data)
+                await s.commit()
+                return records
+            except Exception:
+                await s.rollback()
+                raise
 
     # ------------------------------------------------------------------
     # Internals (operate on an injected session)
@@ -207,6 +222,21 @@ class ChapterService:
             .all()
         )
         return [self._to_version_record(r) for r in rows]
+
+    async def _reorder(
+        self, session: AsyncSession, data: ChapterReorderRequest
+    ) -> list[ChapterRecord]:
+        rows = (await session.execute(select(models.Chapter))).scalars().all()
+        by_id = {r.id: r for r in rows}
+        missing = [cid for cid in data.ordered_ids if cid not in by_id]
+        if missing:
+            raise ChapterNotFoundError(missing[0])
+        for index, chapter_id in enumerate(data.ordered_ids):
+            row = by_id[chapter_id]
+            row.order_index = index
+            row.updated_at = datetime.now(timezone.utc)
+        await session.flush()
+        return await self._list(session, ChapterListFilters(limit=500))
 
     # ------------------------------------------------------------------
     # Helpers

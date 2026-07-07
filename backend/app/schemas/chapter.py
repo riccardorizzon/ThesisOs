@@ -84,3 +84,7 @@ class ChapterListFilters(BaseModel):
     q: str | None = None
     limit: int = Field(default=100, ge=1, le=500)
     offset: int = Field(default=0, ge=0)
+
+
+class ChapterReorderRequest(BaseModel):
+    ordered_ids: list[str] = Field(min_length=1)

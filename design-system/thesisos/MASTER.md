@@ -39,7 +39,7 @@ Do **not** adopt uupm-generated palettes (teal/gold/black) — they conflict wit
 | Phase | Choice |
 |-------|--------|
 | **PX-1…PX-3** | System UI stack (`--font-sans`) — ship without font CDN |
-| **PX-6 candidate** | Crimson Pro (headings) + Atkinson Hyperlegible (body) — uupm academic pairing |
+| **PX-6** | Crimson Pro (headings) + Atkinson Hyperlegible (body) — **ACTIVE** |
 
 Mood: academic, readable, low cognitive friction. Max body line ~70ch.
 

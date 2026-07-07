@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { MarkdownSection } from "@/components/writing/MarkdownEditor";
@@ -9,6 +9,7 @@ import {
   WRITING_OUTLINE_STUB,
   type WritingOutlineChapter,
 } from "@/components/writing/writingStub";
+import { chapterClient } from "@/lib/chapterClient";
 
 export type OutlineFilter = "all" | "in_progress" | "needs_review";
 
@@ -19,6 +20,8 @@ export type WritingOutlineProps = {
   sections?: MarkdownSection[];
   className?: string;
 };
+
+const ORDER_KEY = "thesisos:outline-order";
 
 const FILTER_OPTIONS: { id: OutlineFilter; label: string }[] = [
   { id: "all", label: "Tutti" },
@@ -40,6 +43,21 @@ function filterChapters(
   }
 }
 
+function applyStoredOrder(chapters: WritingOutlineChapter[]): WritingOutlineChapter[] {
+  if (typeof window === "undefined") return chapters;
+  try {
+    const raw = localStorage.getItem(ORDER_KEY);
+    if (!raw) return chapters;
+    const order: string[] = JSON.parse(raw);
+    const byId = new Map(chapters.map((c) => [c.id, c]));
+    const sorted = order.map((id) => byId.get(id)).filter(Boolean) as WritingOutlineChapter[];
+    const rest = chapters.filter((c) => !order.includes(c.id));
+    return [...sorted, ...rest];
+  } catch {
+    return chapters;
+  }
+}
+
 function chapterHref(chapterId: string, sectionId?: string): string {
   const base = `/writing/${chapterId}`;
   if (!sectionId) return base;
@@ -47,8 +65,7 @@ function chapterHref(chapterId: string, sectionId?: string): string {
 }
 
 /**
- * Outline tree — left panel with status badges and section nav (UI spec §5.2).
- * Layer: Business (Product Plane)
+ * Outline tree — left panel with status badges, section nav, drag reorder (PX-6).
  */
 export function WritingOutline({
   chapters = WRITING_OUTLINE_STUB,
@@ -58,18 +75,50 @@ export function WritingOutline({
   className,
 }: WritingOutlineProps) {
   const [filter, setFilter] = useState<OutlineFilter>("all");
+  const [ordered, setOrdered] = useState(chapters);
+  const [dragId, setDragId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOrdered(applyStoredOrder(chapters));
+  }, [chapters]);
+
+  const persistOrder = useCallback(async (next: WritingOutlineChapter[]) => {
+    const ids = next.map((c) => c.id);
+    localStorage.setItem(ORDER_KEY, JSON.stringify(ids));
+    setOrdered(next);
+    try {
+      await chapterClient.reorder(ids);
+    } catch {
+      // Stub chapters may not exist in API — local order still persisted
+    }
+  }, []);
+
+  const handleDrop = (targetId: string) => {
+    if (!dragId || dragId === targetId) return;
+    const from = ordered.findIndex((c) => c.id === dragId);
+    const to = ordered.findIndex((c) => c.id === targetId);
+    if (from < 0 || to < 0) return;
+    const next = [...ordered];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    void persistOrder(next);
+    setDragId(null);
+  };
+
   const visible = useMemo(
-    () => filterChapters(chapters, filter),
-    [chapters, filter]
+    () => filterChapters(ordered, filter),
+    [ordered, filter]
   );
 
   return (
     <nav
       aria-label="Outline capitoli"
       className={cn("flex h-full flex-col", className)}
+      data-testid="writing-outline"
     >
       <header className="border-b border-border px-3 py-2">
         <h2 className="text-sm font-semibold text-ink">Outline</h2>
+        <p className="mt-0.5 text-xs text-ink-subtle">Trascina per riordinare</p>
         <div
           className="mt-2 flex rounded-md border border-border bg-surface-muted p-0.5"
           role="group"
@@ -98,7 +147,13 @@ export function WritingOutline({
         {visible.map((chapter) => {
           const selected = chapter.id === activeChapterId;
           return (
-            <li key={chapter.id}>
+            <li
+              key={chapter.id}
+              draggable
+              onDragStart={() => setDragId(chapter.id)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => handleDrop(chapter.id)}
+            >
               <Link
                 href={chapterHref(chapter.id)}
                 aria-current={selected ? "page" : undefined}
@@ -111,6 +166,13 @@ export function WritingOutline({
                     : "text-ink hover:bg-surface-muted"
                 )}
               >
+                <span
+                  className="cursor-grab text-ink-subtle"
+                  aria-hidden
+                  title="Trascina per riordinare"
+                >
+                  ⠿
+                </span>
                 <span className="min-w-0 flex-1 truncate text-sm">{chapter.title}</span>
                 <StatusBadge status={chapter.status} />
               </Link>

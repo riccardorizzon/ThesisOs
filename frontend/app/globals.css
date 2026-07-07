@@ -6,6 +6,27 @@
 
 @layer base {
   body {
-    @apply bg-bg font-sans text-ink antialiased;
+    @apply bg-bg text-ink antialiased;
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading), ui-serif, Georgia, serif;
+  }
+}
+
+@media print {
+  nav,
+  aside,
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: black;
   }
 }

@@ -12,6 +12,7 @@ from app.schemas.chapter import (
     ChapterCreate,
     ChapterListFilters,
     ChapterMetadataUpdate,
+    ChapterReorderRequest,
     ChapterUpdate,
 )
 from app.services.chapter import (
@@ -27,6 +28,14 @@ _service = ChapterService()
 
 def _err(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(status_code=status, content={"code": code, "message": message})
+
+
+@router.patch("/chapters/reorder")
+async def reorder_chapters(body: ChapterReorderRequest):
+    try:
+        return await _service.reorder(body)
+    except ChapterNotFoundError as exc:
+        return _err(404, "chapter_not_found", str(exc))
 
 
 @router.post("/chapters", status_code=201)

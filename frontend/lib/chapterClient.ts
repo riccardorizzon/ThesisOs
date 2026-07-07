@@ -107,4 +107,11 @@ export const chapterClient = {
   listVersions(id: string) {
     return request<ChapterVersion[]>(`/chapters/${id}/versions`);
   },
+  reorder(orderedIds: string[]) {
+    return request<Chapter[]>("/chapters/reorder", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ordered_ids: orderedIds }),
+    });
+  },
 };
