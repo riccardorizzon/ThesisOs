@@ -7,3 +7,7 @@ export type { SourcePeekReaderProps } from "./SourcePeekReader";
 export { SourcesEnrichedList } from "./SourcesEnrichedList";
 export { SourcesFilterRail } from "./SourcesFilterRail";
 export { SourceKnowledgeCard } from "./SourceKnowledgeCard";
+export { SourceApiDetailView } from "./SourceApiDetailView";
+export type { SourceApiDetailViewProps } from "./SourceApiDetailView";
+export { SourcesErrorState } from "./SourcesErrorState";
+export type { SourcesErrorStateProps } from "./SourcesErrorState";

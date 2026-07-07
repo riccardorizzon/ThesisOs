@@ -93,8 +93,8 @@ export function SourcesEnrichedList({
     [initialSources, filter.knowledgeState, filter.confidence, filter.includeDeprecated, debouncedQuery]
   );
 
-  const hrefForSource = (sourceId: string) => {
-    const base = `/sources/${sourceId}`;
+  const hrefForSource = (slug: string) => {
+    const base = `/sources/${slug}`;
     return chapterContext ? `${base}?chapter=${chapterContext}` : base;
   };
 
@@ -140,7 +140,7 @@ export function SourcesEnrichedList({
                 <li key={source.id}>
                   <SourceKnowledgeCard
                     source={source}
-                    href={hrefForSource(source.id)}
+                    href={hrefForSource(source.slug)}
                   />
                 </li>
               ))}

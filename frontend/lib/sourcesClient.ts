@@ -32,7 +32,12 @@ export async function listSources(
   const url = `${BASE}/projects/${projectId}/sources${qs ? `?${qs}` : ""}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
-    throw new Error(`Sources list failed: ${res.status}`);
+    const detail = await res.text().catch(() => "");
+    throw new Error(
+      detail
+        ? `Sources list failed (${res.status}): ${detail}`
+        : `Sources list failed (${res.status})`
+    );
   }
   return res.json() as Promise<SourceListResponse>;
 }
@@ -47,7 +52,12 @@ export async function getSource(
     { cache: "no-store" }
   );
   if (!res.ok) {
-    throw new Error(`Source not found: ${slug}`);
+    const detail = await res.text().catch(() => "");
+    throw new Error(
+      detail
+        ? `Source not found (${res.status}): ${detail}`
+        : `Source not found: ${slug} (${res.status})`
+    );
   }
   return res.json() as Promise<SourceListItem>;
 }
