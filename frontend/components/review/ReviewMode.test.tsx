@@ -3,10 +3,28 @@ import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/re
 import { ReviewMode } from "./ReviewMode";
 import {
   _resetProposalQueueForTests,
-  addProposal,
+  _seedProposalQueueForTests,
+  refreshProposalsFromApi,
 } from "@/lib/proposalQueue";
 import * as chapterClientModule from "@/lib/chapterClient";
 import { dispatchOpenReview } from "./reviewIntegration";
+
+vi.mock("@/lib/proposalClient", () => ({
+  proposalClient: {
+    list: vi.fn().mockResolvedValue({ items: [] }),
+    create: vi.fn(),
+    accept: vi.fn(),
+    reject: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/proposalQueue", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/proposalQueue")>();
+  return {
+    ...actual,
+    refreshProposalsFromApi: vi.fn().mockImplementation(async () => actual.getPendingProposals()),
+  };
+});
 
 vi.mock("next/link", () => ({
   default: ({
@@ -37,16 +55,28 @@ vi.mock("@/components/context/WritingContextBar", () => ({
   WritingContextBar: () => <div data-testid="writing-context-bar" />,
 }));
 
+const SAMPLE_PROPOSAL = {
+  id: "prop-test-1",
+  actionId: "rewrite",
+  actionLabel: "Riscrivi",
+  chapterId: "ch-1",
+  selectionText: "Secondo originale.",
+  selectionAnchor: null,
+  preview: "Secondo rivisto.",
+  status: "pending" as const,
+  createdAt: "2026-01-01T00:00:00Z",
+};
+
 afterEach(() => {
   cleanup();
   _resetProposalQueueForTests();
-  vi.restoreAllMocks();
   searchParams.delete("chapter");
   searchParams.delete("proposal");
 });
 
 beforeEach(() => {
   _resetProposalQueueForTests();
+  vi.mocked(refreshProposalsFromApi).mockResolvedValue([]);
   vi.spyOn(chapterClientModule.chapterClient, "list").mockResolvedValue([
     {
       id: "ch-1",
@@ -79,14 +109,8 @@ beforeEach(() => {
 
 describe("ReviewMode", () => {
   it("renders review shell with workflow steps and ContextBar", async () => {
-    addProposal({
-      actionId: "rewrite",
-      actionLabel: "Riscrivi",
-      chapterId: "ch-1",
-      selectionText: "Secondo originale.",
-      selectionAnchor: null,
-      preview: "Secondo rivisto.",
-    });
+    _seedProposalQueueForTests([SAMPLE_PROPOSAL]);
+    vi.mocked(refreshProposalsFromApi).mockResolvedValue([SAMPLE_PROPOSAL]);
 
     render(<ReviewMode />);
 
@@ -112,14 +136,8 @@ describe("ReviewMode", () => {
   });
 
   it("advances workflow from select to compare", async () => {
-    addProposal({
-      actionId: "rewrite",
-      actionLabel: "Riscrivi",
-      chapterId: "ch-1",
-      selectionText: "Secondo originale.",
-      selectionAnchor: null,
-      preview: "Secondo rivisto.",
-    });
+    _seedProposalQueueForTests([SAMPLE_PROPOSAL]);
+    vi.mocked(refreshProposalsFromApi).mockResolvedValue([SAMPLE_PROPOSAL]);
 
     render(<ReviewMode />);
 
