@@ -176,14 +176,17 @@ If critical issues are found during RC:
 ## 11. Proposed commands
 
 ```text
-# Tag RC
-git tag -a v2.0.0-rc.1 -m "ThesisOS v2.0.0 release candidate 1" bb561ea4
+# Tag RC (DONE locally @ fd23ad70)
+git tag -a v2.0.0-rc.1 -m "ThesisOS v2.0.0 release candidate 1" fd23ad70
+
+# After approval — push tag
+git push origin v2.0.0-rc.1
 
 # Deploy staging
 # (deployment commands depend on infra setup)
 
 # After RC validation
-git tag -a v2.0.0 -m "ThesisOS v2.0.0" bb561ea4  # or later hotfix commit
+git tag -a v2.0.0 -m "ThesisOS v2.0.0" <hotfix-or-rc-commit>
 ```
 
 ---
