@@ -9,6 +9,7 @@ import { chapterClient, type Chapter } from "@/lib/chapterClient";
 import {
   getPendingProposals,
   getPendingProposalsForChapter,
+  refreshProposalsFromApi,
   type WritingProposal,
 } from "@/lib/proposalQueue";
 import { ReviewComparePanel } from "./ReviewComparePanel";
@@ -66,7 +67,23 @@ export function ReviewMode({ className, contextPacket = CONTEXT_STUB }: ReviewMo
   const [queueVersion, setQueueVersion] = useState(0);
 
   const refreshQueue = useCallback(() => {
-    setQueueVersion((v) => v + 1);
+    void refreshProposalsFromApi().then(() => {
+      setQueueVersion((v) => v + 1);
+    });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    refreshProposalsFromApi()
+      .then(() => {
+        if (!cancelled) setQueueVersion((v) => v + 1);
+      })
+      .catch(() => {
+        if (!cancelled) setQueueVersion((v) => v + 1);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

@@ -4,13 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
+import { proposalClient } from "@/lib/proposalClient";
+import type { WritingProposal } from "@/lib/proposalQueue";
 import {
-  approveProposal,
-  rejectProposal,
-  type WritingProposal,
-} from "@/lib/proposalQueue";
-import {
-  allChangeHunkIds,
   applyProposalToContent,
   computeParagraphDiff,
   mergeAcceptedHunks,
@@ -191,23 +187,21 @@ export function ReviewCompare({
 
     try {
       if (confirmKind === "reject") {
-        rejectProposal(proposal.id);
+        await proposalClient.reject(proposal.id);
         setFeedback("Proposta rifiutata — il capitolo non è stato modificato.");
         onResolved?.("rejected");
+      } else if (confirmKind === "accept-all") {
+        await proposalClient.accept(proposal.id, {
+          expected_chapter_version: chapter.version,
+        });
+        setFeedback("Revisione accettata — bozza del capitolo aggiornata.");
+        onResolved?.("accepted");
       } else {
-        const acceptedIds =
-          confirmKind === "accept-all"
-            ? allChangeHunkIds(hunks)
-            : selectedHunks;
-        const merged = mergeAcceptedHunks(hunks, acceptedIds);
+        const merged = mergeAcceptedHunks(hunks, selectedHunks);
         await persistChapter(merged);
-        approveProposal(proposal.id);
-        setFeedback(
-          confirmKind === "accept-all"
-            ? "Revisione accettata — bozza del capitolo aggiornata."
-            : "Modifiche parziali accettate — bozza del capitolo aggiornata."
-        );
-        onResolved?.(confirmKind === "accept-all" ? "accepted" : "partial");
+        await proposalClient.reject(proposal.id, { reason: "partial_accept" });
+        setFeedback("Modifiche parziali accettate — bozza del capitolo aggiornata.");
+        onResolved?.("partial");
       }
     } catch {
       setFeedback("Errore durante il salvataggio. Riprova.");

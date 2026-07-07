@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import {
   getPendingProposals,
+  refreshProposalsFromApi,
   type WritingProposal,
 } from "@/lib/proposalQueue";
 
@@ -39,12 +40,38 @@ function groupByChapter(proposals: WritingProposal[]): Map<string, WritingPropos
  * Layer: Business (Product Plane)
  */
 export function RevisionQueuePanel({ chapterId, className }: RevisionQueuePanelProps) {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    refreshProposalsFromApi({ chapterId })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [chapterId]);
+
   const pending = getPendingProposals();
   const filtered = chapterId
     ? pending.filter((p) => p.chapterId === chapterId)
     : pending;
 
   const grouped = useMemo(() => groupByChapter(filtered), [filtered]);
+
+  if (!loaded) {
+    return (
+      <aside
+        aria-label="Coda revisioni"
+        className={cn("p-4 text-center", className)}
+        data-testid="revision-queue-loading"
+      >
+        <p className="text-sm text-ink-muted">Caricamento revisioni…</p>
+      </aside>
+    );
+  }
 
   if (filtered.length === 0) {
     return (
