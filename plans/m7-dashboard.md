@@ -3,7 +3,7 @@
 > Aggiornare **a ogni merge** di packet. Legenda: 🔴 blocked · 🟡 in progress · 🟢 done · ⚪ not started
 
 **Branch:** `m7-product-hardening`  
-**Architecture Lock:** ☐ PASS (date: _____)  
+**Architecture Lock:** ☑ PASS (date: 2026-07-07)  
 **M7 Gate:** ☐ PASS (date: _____)
 
 ---
@@ -25,7 +25,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | Phase | Status | Notes |
 |-------|--------|-------|
 | M7.0 Governance | 🟢 | ADR-0044 + plan v2 |
-| M7.0b Architecture Lock | ⚪ | `plans/m7-architecture-lock.md` |
+| M7.0b Architecture Lock | 🟢 | L1–L7 signed 2026-07-07 |
 | Preflight | ⚪ | `builder-engine cycle --dry-run` |
 | Wave 1a Pilot (2 agents) | ⚪ | P-SOURCES-DB, P-KNOWLEDGE-DB |
 | Wave 1b (4 agents) | ⚪ | P-CHAT-PERSIST-BE, P-REVIEW-PERSIST-BE, P-UPLOAD-UI, P-WRITING-GROUND |

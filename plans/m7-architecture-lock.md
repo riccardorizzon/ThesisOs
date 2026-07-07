@@ -1,6 +1,6 @@
 # M7 Architecture Lock
 
-> **Status:** DRAFT until signed at M7.0b gate  
+> **Status:** PASS — signed 2026-07-07 (M7.0b)  
 > **Authority:** `plans/m7-product-hardening-plan.md` · ADR-0044  
 > **Rule:** from sign-off until M7 PASS — **no contract changes** without Architect unlock.
 
@@ -17,13 +17,13 @@ During M7 waves, builders implement against this document only — no drive-by c
 
 | # | Item | Owner | Status |
 |---|------|-------|--------|
-| L1 | API endpoints listed below are final for M7 | Architect | ☐ |
-| L2 | DB schema changes limited to migration `0007` (+ proposal table if needed) | Architect | ☐ |
-| L3 | Request/response JSON shapes reviewed | Architect | ☐ |
-| L4 | Naming conventions locked (snake_case API, camelCase FE clients) | Architect | ☐ |
-| L5 | No new GraphState fields | Architect | ☐ |
-| L6 | No new ASEP / builder_engine modules | Architect | ☐ |
-| L7 | OpenAPI update deferred to Wave 4 (`P-DOCS-SYNC`) | Architect | ☐ |
+| L1 | API endpoints listed below are final for M7 | Architect | ☑ |
+| L2 | DB schema changes limited to migration `0007` (+ proposal table if needed) | Architect | ☑ |
+| L3 | Request/response JSON shapes reviewed | Architect | ☑ |
+| L4 | Naming conventions locked (snake_case API, camelCase FE clients) | Architect | ☑ |
+| L5 | No new GraphState fields | Architect | ☑ |
+| L6 | No new ASEP / builder_engine modules | Architect | ☑ |
+| L7 | OpenAPI update deferred to Wave 4 (`P-DOCS-SYNC`) | Architect | ☑ |
 
 **Sign:** `Architecture Lock PASS` recorded in `plans/m7-dashboard.md` with date.
 
