@@ -1,10 +1,11 @@
-"""Bibliography export (PX6-EWO-005)."""
+"""Bibliography export (M7 P-BIBTEX-DB — DB-backed)."""
 
 from __future__ import annotations
 
 import re
 
-from app.graph.corpus_query import CORPUS_PICKER_SOURCES
+from app.db.session_async import AsyncSessionLocal
+from app.services.sources.repository import SourceRepository, SourceRow
 
 
 def _surname(author: str) -> str:
@@ -20,21 +21,24 @@ def _escape_bibtex(value: str) -> str:
     return value.replace("{", "\\{").replace("}", "\\}")
 
 
-def export_bibliography_bibtex(project_id: str) -> str:
-    """Export approved sources as BibTeX (academic order by author)."""
-    approved = [
-        s
-        for s in CORPUS_PICKER_SOURCES
-        if s.get("status") == "approvata"
-    ]
-    approved.sort(key=lambda s: (s.get("author", ""), s.get("year", "")))
+def _author_from_row(row: SourceRow) -> str:
+    return (row.subtitle or "Unknown").strip()
+
+
+def _year_str(row: SourceRow) -> str:
+    return str(row.year) if row.year is not None else "n.d."
+
+
+def _render_bibtex(project_id: str, rows: list[SourceRow]) -> str:
+    approved = [r for r in rows if r.corpus_status == "approvata"]
+    approved.sort(key=lambda r: (_author_from_row(r), _year_str(r)))
 
     lines = [f"% Bibliography export — project: {project_id}", ""]
-    for src in approved:
-        author = src.get("author", "Unknown")
-        year = src.get("year", "n.d.")
-        title = src.get("title", "Untitled")
-        key = _bibtex_key(author, year, src["id"])
+    for row in approved:
+        author = _author_from_row(row)
+        year = _year_str(row)
+        title = row.title or "Untitled"
+        key = _bibtex_key(author, year, row.slug)
         lines.extend(
             [
                 f"@book{{{key},",
@@ -46,3 +50,11 @@ def export_bibliography_bibtex(project_id: str) -> str:
             ]
         )
     return "\n".join(lines)
+
+
+async def export_bibliography_bibtex(project_id: str) -> str:
+    """Export approved DB sources as BibTeX (academic order by author)."""
+    async with AsyncSessionLocal() as session:
+        repo = SourceRepository()
+        rows = await repo.list_for_project(session, project_id)
+    return _render_bibtex(project_id, rows)

@@ -10,6 +10,7 @@ from app.api import (
     conformance,
     conversations,
     documents,
+    export,
     jobs,
     knowledge,
     memory,
@@ -46,6 +47,7 @@ app.include_router(chat.router)
 app.include_router(conversations.router)
 app.include_router(memory.router)
 app.include_router(documents.router)
+app.include_router(export.router)
 app.include_router(search.router)
 app.include_router(chapters.router)
 app.include_router(proposals.router)

@@ -107,6 +107,14 @@ export const chapterClient = {
   listVersions(id: string) {
     return request<ChapterVersion[]>(`/chapters/${id}/versions`);
   },
+  async exportMarkdown(id: string): Promise<Blob> {
+    const r = await fetch(`${BASE}/export/chapters/${id}.md`, { cache: "no-store" });
+    if (!r.ok) {
+      const body = (await r.json().catch(() => null)) as { code?: string; message?: string } | null;
+      throw new ChapterApiError(r.status, body?.code ?? "unknown", body?.message ?? r.statusText);
+    }
+    return r.blob();
+  },
   reorder(orderedIds: string[]) {
     return request<Chapter[]>("/chapters/reorder", {
       method: "PATCH",

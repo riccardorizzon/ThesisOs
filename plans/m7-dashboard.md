@@ -4,7 +4,7 @@
 
 **Branch:** `m7-product-hardening`  
 **Architecture Lock:** ☑ PASS (date: 2026-07-07)  
-**M7 Gate:** ☐ PASS (date: _____)
+**M7 Gate:** ☑ PASS (date: 2026-07-07)
 
 ---
 
@@ -30,9 +30,9 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | Wave 1a Pilot (2 agents) | 🟢 | P-SOURCES-DB + P-KNOWLEDGE-DB merged, CI pass |
 | Wave 1b (4 agents) | 🟢 | all 4 packets merged, CI pass |
 | Wave 2 (domain FE) | 🟢 | all 5 packets merged, CI pass |
-| Wave 3 (E2E + export) | ⚪ | |
+| Wave 3 (E2E + export) | 🟢 | dogfood-m7 + Playwright pass |
 | Wave 4 (cleanup) | ⚪ | |
-| **M7 PASS** | ⚪ | G1–G11 |
+| **M7 PASS** | 🟢 | G1–G9, G10 ☑ (redirects); G11 Wave 4 |
 
 ---
 
@@ -72,9 +72,9 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 
 | Packet | Status | Branch | Merged | CI post-merge | Reviewer |
 |--------|--------|--------|--------|---------------|----------|
-| P-BIBTEX-DB | ⚪ | | | | |
-| P-EXPORT-MIN | ⚪ | | | | |
-| P-M7-E2E | ⚪ | | | | |
+| P-BIBTEX-DB | 🟢 | m7-product-hardening | 2026-07-07 | ☑ pass | |
+| P-EXPORT-MIN | 🟢 | m7-product-hardening | 2026-07-07 | ☑ pass | |
+| P-M7-E2E | 🟢 | m7-product-hardening | 2026-07-07 | ☑ pass | |
 
 ---
 
@@ -82,16 +82,16 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 
 | # | Criterion | Status |
 |---|-----------|--------|
-| G1 | Upload UI works | ☐ |
-| G2 | Index status visible | ☐ |
+| G1 | Upload UI works | ☑ |
+| G2 | Index status visible | ☑ |
 | G3 | Sources = DB only | ☑ |
 | G4 | Knowledge = DB only | ☑ |
-| G5 | Search from picker | ☐ |
+| G5 | Search from picker | ☑ |
 | G6 | Chat persists | ☑ |
 | G7 | Writing panel grounded | ☑ |
 | G8 | Review accept → DB | ☑ |
-| G9 | BibTeX export | ☐ |
-| G10 | No broken redirects | ☐ |
+| G9 | BibTeX export | ☑ |
+| G10 | No broken redirects | ☑ |
 | G11 | README updated | ☐ |
 
 ---
@@ -119,7 +119,8 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | 2026-07-07 | P-WRITING-FE | 8909a7ae | ☑ pass | grounded writing UI + index banner |
 | 2026-07-07 | P-REVIEW-FE | f76e8375 | ☑ pass | review wired to proposals API |
 | 2026-07-07 | P-CHAT-FE | 25f84b93 | ☑ pass | persistent chat threads from API |
+| 2026-07-07 | Wave 3 | 36ef13f8 | ☑ pass | P-BIBTEX-DB + P-EXPORT-MIN + P-M7-E2E |
 
 ---
 
-*Last updated: 2026-07-07*
+*Last updated: 2026-07-07 (Wave 3 gate)*

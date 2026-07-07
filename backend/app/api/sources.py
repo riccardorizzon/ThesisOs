@@ -22,7 +22,7 @@ async def export_bibliography(
 ):
     if format != "bibtex":
         return _err(422, "unsupported_format", f"Unsupported format: {format}")
-    content = export_bibliography_bibtex(project_id)
+    content = await export_bibliography_bibtex(project_id)
     return PlainTextResponse(
         content,
         media_type="application/x-bibtex",

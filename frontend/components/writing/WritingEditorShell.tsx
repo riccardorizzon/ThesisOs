@@ -275,6 +275,21 @@ export function WritingEditorShell({
     setFindOpen(true);
   }, []);
 
+  const handleExportMarkdown = useCallback(async () => {
+    if (!chapter) return;
+    try {
+      const blob = await chapterClient.exportMarkdown(chapter.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${chapter.id}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setSaveState("error");
+    }
+  }, [chapter]);
+
   useWritingEditorChrome({
     onForceSave: handleForceSave,
     onFindInChapter: handleFindInChapter,
@@ -326,6 +341,15 @@ export function WritingEditorShell({
               data-testid="find-in-chapter-trigger"
             >
               Find
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleExportMarkdown()}
+              disabled={readOnly || !chapter}
+              className="rounded px-2 py-1 text-xs text-ink-muted hover:text-ink disabled:opacity-50"
+              data-testid="chapter-export-md"
+            >
+              Esporta .md
             </button>
             <button
               type="button"
