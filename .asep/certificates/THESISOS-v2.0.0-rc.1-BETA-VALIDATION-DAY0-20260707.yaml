@@ -1,0 +1,41 @@
+certificate_version: "1.0"
+certificate_type: rc-beta-validation
+issued_at: "2026-07-07T17:08:00+02:00"
+issued_by: release-manager
+
+product:
+  id: thesisos-v2.0.0-rc.1
+  tag: v2.0.0-rc.1
+  commit: fd23ad70
+
+validation:
+  day: 0
+  script: bin/beta-validator-rc.sh
+  report: .asep/reports/THESISOS-v2.0.0-rc.1-BETA-VALIDATION-RUN-20260707.md
+  onboarding: .asep/reports/RC-BETA-ONBOARDING.md
+
+staging:
+  frontend: http://34.79.238.160:3000
+  api: http://34.79.238.160:8000
+  containers: rc-staging-*
+
+checks:
+  health: PASS
+  http_routes: PASS
+  context_api: PASS
+  playwright_ui: "6/6 PASS"
+  playwright_api: "2/2 PASS"
+
+human_cohort:
+  status: pending
+  target_users: "5-10"
+  duration_days: 7
+
+blockers: []
+
+verdict: PASS
+
+next:
+  - onboard beta users via RC-BETA-ONBOARDING.md
+  - rerun make beta-validator-rc daily
+  - triage feedback in BETA-VALIDATION tracker

@@ -120,6 +120,9 @@ qualify-m6: ensure-test-db ## M6 Writing Qualification suite (writer route + cha
 dogfood-m6: ## End-to-end M6 writing smoke: draft a chapter + save (requires: make up, Vertex ADC)
 	@bash bin/dogfood-m6-writing-run.sh
 
+beta-validator-rc: ## RC beta validation — staging health + 6 surfaces + context API
+	@bash bin/beta-validator-rc.sh
+
 # --- developer cockpit -------------------------------------------------------
 status: ## "Where are we?" — read-only product/ASEP/infra snapshot
 	@bash bin/status.sh

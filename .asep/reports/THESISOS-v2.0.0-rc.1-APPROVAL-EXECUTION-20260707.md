@@ -42,10 +42,11 @@ Certificate: `.asep/certificates/THESISOS-v2.0.0-rc.1-APPROVAL-20260707.yaml`
 | Update approval request status | ✓ | `.asep/reports/THESISOS-v2.0-RC-APPROVAL-REQUEST.md` |
 | Update RC bundle status | ✓ | `.asep/reports/THESISOS-v2.0-RC-BUNDLE.md` |
 | Governance commit | ✓ | `b052df67` — `governance: approve ThesisOS v2.0.0-rc.1` |
-| Push `main` + tag to remote | blocked | no `origin` remote — run `git remote -v` and configure |
+| Push `main` + tag to remote | ✓ | `origin` → github.com/riccardorizzon/ThesisOs |
 | Deploy staging @ `fd23ad70` | ✓ | worktree `.worktrees/rc-staging`; `rc-staging-*` @ :3000/:8000 |
 | Smoke tests (6 surfaces) | ✓ PASS | `.asep/reports/THESISOS-v2.0.0-rc.1-STAGING-SMOKE-20260707.md` |
-| Beta validation | open | `.asep/reports/THESISOS-v2.0.0-rc.1-BETA-VALIDATION.md` |
+| Beta validation Day 0 | ✓ PASS | `bin/beta-validator-rc.sh` — 8/8 |
+| Beta human cohort | open | `.asep/reports/RC-BETA-ONBOARDING.md` |
 
 ## Authorized next steps (Release Manager)
 
