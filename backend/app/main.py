@@ -8,6 +8,7 @@ from app.api import (
     chat,
     citations,
     conformance,
+    conversations,
     documents,
     jobs,
     knowledge,
@@ -41,6 +42,7 @@ app = FastAPI(title="ThesisOS API", version="0.0.0", lifespan=lifespan)
 app.include_router(system.router)
 app.include_router(jobs.router)
 app.include_router(chat.router)
+app.include_router(conversations.router)
 app.include_router(memory.router)
 app.include_router(documents.router)
 app.include_router(search.router)

@@ -6,7 +6,7 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import exists, select
 
 from app.db import models
 from app.db.session_async import AsyncSessionLocal
@@ -18,8 +18,15 @@ from app.runtime.event_bus import RuntimeEventBus
 from app.runtime.events import EventType, RuntimeEvent
 from app.runtime.instrumentation import emit_safely
 from app.runtime.subscribers import AgentStepsSubscriber, LoggingSubscriber
+from app.schemas.conversation import (
+    ConversationListResponse,
+    ConversationMessage,
+    ConversationMessagesResponse,
+    ConversationSummary,
+)
 from app.schemas.graph_state import GraphState, Message
 from app.schemas.run_context import RunContext
+from app.services.conversation.exceptions import ConversationNotFoundError
 from app.services.task.service import TaskService
 
 logger = logging.getLogger("app.services.conversation")
@@ -55,15 +62,119 @@ class ConversationService:
             ),
         )
 
-    async def _get_or_create_conversation(self, session, conversation_id: str | None) -> models.Conversation:
+    async def _get_or_create_conversation(
+        self,
+        session,
+        conversation_id: str | None,
+        *,
+        title: str | None = None,
+    ) -> models.Conversation:
         if conversation_id:
             conv = await session.get(models.Conversation, conversation_id)
             if conv:
                 return conv
-        conv = models.Conversation(id=conversation_id or str(uuid.uuid4()), title="New Conversation")
+        conv = models.Conversation(
+            id=conversation_id or str(uuid.uuid4()),
+            title=title or "New Conversation",
+        )
         session.add(conv)
         await session.flush()
         return conv
+
+    async def _record_project_scope(
+        self,
+        session,
+        conversation_id: str,
+        project_id: str,
+    ) -> None:
+        """Associate a conversation with a project without altering the conversations table."""
+        scoped = (
+            await session.execute(
+                select(models.AgentRun.id)
+                .where(
+                    models.AgentRun.conversation_id == conversation_id,
+                    models.AgentRun.input["project_id"].as_string() == project_id,
+                )
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        if scoped is not None:
+            return
+        now = datetime.now(timezone.utc)
+        session.add(
+            models.AgentRun(
+                conversation_id=conversation_id,
+                graph="conversation",
+                trigger="scope",
+                status="done",
+                started_at=now,
+                finished_at=now,
+                input={"project_id": project_id},
+            )
+        )
+        await session.flush()
+
+    def _summary(self, conv: models.Conversation, project_id: str) -> ConversationSummary:
+        return ConversationSummary(
+            id=conv.id,
+            project_id=project_id,
+            title=conv.title,
+            created_at=conv.created_at,
+        )
+
+    async def list_conversations(self, project_id: str) -> ConversationListResponse:
+        async with AsyncSessionLocal() as session:
+            rows = (
+                await session.execute(
+                    select(models.Conversation)
+                    .where(
+                        exists().where(
+                            models.AgentRun.conversation_id == models.Conversation.id,
+                            models.AgentRun.input["project_id"].as_string() == project_id,
+                        )
+                    )
+                    .order_by(models.Conversation.created_at.desc())
+                )
+            ).scalars().all()
+            return ConversationListResponse(
+                items=[self._summary(conv, project_id) for conv in rows]
+            )
+
+    async def create_conversation(
+        self,
+        project_id: str,
+        *,
+        title: str | None = None,
+    ) -> ConversationSummary:
+        async with AsyncSessionLocal() as session:
+            conv = await self._get_or_create_conversation(session, None, title=title)
+            await self._record_project_scope(session, conv.id, project_id)
+            await session.commit()
+            return self._summary(conv, project_id)
+
+    async def list_messages(self, conversation_id: str) -> ConversationMessagesResponse:
+        async with AsyncSessionLocal() as session:
+            conv = await session.get(models.Conversation, conversation_id)
+            if conv is None:
+                raise ConversationNotFoundError(conversation_id)
+            rows = (
+                await session.execute(
+                    select(models.Message)
+                    .where(models.Message.conversation_id == conversation_id)
+                    .order_by(models.Message.created_at)
+                )
+            ).scalars().all()
+            return ConversationMessagesResponse(
+                items=[
+                    ConversationMessage(
+                        id=row.id,
+                        role=row.role,
+                        content=row.content,
+                        created_at=row.created_at,
+                    )
+                    for row in rows
+                ]
+            )
 
     async def _load_messages(self, session, conversation_id: str) -> list[Message]:
         rows = (await session.execute(
@@ -72,7 +183,13 @@ class ConversationService:
         )).scalars().all()
         return [Message(role=r.role, content=r.content) for r in rows]
 
-    async def stream_turn(self, *, conversation_id: str | None, user_text: str) -> AsyncIterator[dict]:
+    async def stream_turn(
+        self,
+        *,
+        conversation_id: str | None,
+        user_text: str,
+        project_id: str | None = None,
+    ) -> AsyncIterator[dict]:
         """Yield SSE-ready dicts: {"event": "token"|"done"|"error", "data": {...}}.
         Persists the user message before streaming and the assistant message on completion.
         The AgentRun is finalized on every exit path (success, error, client disconnect)
@@ -90,6 +207,8 @@ class ConversationService:
             async with AsyncSessionLocal() as session:
                 conv = await self._get_or_create_conversation(session, conversation_id)
                 conv_id = conv.id
+                if project_id:
+                    await self._record_project_scope(session, conv_id, project_id)
                 session.add(models.Message(conversation_id=conv_id, role="user", content=user_text))
                 rc = RunContext(
                     conversation_id=conv_id,
@@ -97,6 +216,9 @@ class ConversationService:
                     trace_id=str(uuid.uuid4()),
                     request_id=str(uuid.uuid4()),
                 )
+                run_input: dict = {"trace_id": rc.trace_id, "request_id": rc.request_id}
+                if project_id:
+                    run_input["project_id"] = project_id
                 run = models.AgentRun(
                     id=run_id,
                     conversation_id=conv_id,
@@ -104,7 +226,7 @@ class ConversationService:
                     trigger="chat",
                     status="running",
                     started_at=datetime.now(timezone.utc),
-                    input={"trace_id": rc.trace_id, "request_id": rc.request_id},
+                    input=run_input,
                 )
                 session.add(run)
                 await session.commit()

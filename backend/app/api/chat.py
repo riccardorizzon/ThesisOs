@@ -18,6 +18,7 @@ _service = ConversationService()
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=32000)
     conversation_id: str | None = None
+    project_id: str | None = None
 
 
 @router.post("/chat")
@@ -39,7 +40,10 @@ async def chat(req: ChatRequest):
 
     async def event_gen():
         try:
-            async for ev in _service.stream_turn(conversation_id=conversation_id, user_text=req.message):
+            kwargs: dict = {"conversation_id": conversation_id, "user_text": req.message}
+            if req.project_id is not None:
+                kwargs["project_id"] = req.project_id
+            async for ev in _service.stream_turn(**kwargs):
                 yield {"event": ev["event"], "data": json.dumps(ev["data"])}
         finally:
             conversation_locks.release(conversation_id)
