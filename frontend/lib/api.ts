@@ -13,7 +13,7 @@ export type ChatEvent =
   | { event: "error"; data: { code: string; message: string } };
 
 export async function postChatStream(
-  body: { message: string; conversation_id?: string },
+  body: { message: string; conversation_id?: string; project_id?: string },
   onEvent: (e: ChatEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
