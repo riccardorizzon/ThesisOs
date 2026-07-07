@@ -145,45 +145,25 @@ async function parseSseStream(
   }
 }
 
-function mockStream(
-  actionId: WritingActionId,
-  selectionText: string | null,
-  onEvent: (e: WritingActionStreamEvent) => void,
-  signal?: AbortSignal
-): Promise<void> {
-  const snippets: Record<WritingActionId, string> = {
-    rewrite: selectionText
-      ? `Versione riformulata:\n\n${selectionText.trim()} — riscritto con registro accademico.`
-      : "Seleziona un passaggio da riscrivere.",
-    verify:
-      "Verifica completata: nessun conflitto evidente con le decisioni vincolanti attive.",
-    "find-sources":
-      "Fonti candidate:\n- Benjamin (1936) — Opera d'arte nell'epoca della riproducibilità\n- Barthes (1957) — Mito e significato",
-    expand: selectionText
-      ? `${selectionText.trim()}\n\nApprofondimento: il passaggio può essere collegato al quadro teorico STIGMATA e alle fonti del corpus approvato.`
-      : "Seleziona un passaggio da espandere.",
+async function readErrorBody(
+  response: Response
+): Promise<{ code: string; message: string }> {
+  const body = (await response.json().catch(() => null)) as {
+    code?: string;
+    message?: string;
+  } | null;
+  return {
+    code: body?.code ?? "request_failed",
+    message: body?.message ?? response.statusText,
   };
-  const text = snippets[actionId];
-  const tokens = text.split(/(?=\s)/);
+}
 
-  return new Promise((resolve) => {
-    let i = 0;
-    const tick = () => {
-      if (signal?.aborted) {
-        resolve();
-        return;
-      }
-      if (i >= tokens.length) {
-        onEvent({ event: "done", data: { draft: text } });
-        resolve();
-        return;
-      }
-      onEvent({ event: "token", data: { text: tokens[i] } });
-      i += 1;
-      setTimeout(tick, 8);
-    };
-    tick();
-  });
+function emitError(
+  onEvent: (e: WritingActionStreamEvent) => void,
+  code: string,
+  message: string
+): void {
+  onEvent({ event: "error", data: { code, message } });
 }
 
 export async function streamWritingAction(
@@ -211,19 +191,24 @@ export async function streamWritingAction(
       signal,
     });
 
-    if (r.status === 503 || r.status === 404 || !r.ok) {
-      await mockStream(params.actionId, params.selectionText ?? null, onEvent, signal);
+    if (!r.ok) {
+      const err = await readErrorBody(r);
+      emitError(onEvent, err.code, err.message);
       return;
     }
 
     if (!r.body) {
-      await mockStream(params.actionId, params.selectionText ?? null, onEvent, signal);
+      emitError(onEvent, "empty_response", "Risposta AI vuota dal server");
       return;
     }
 
     await parseSseStream(r.body, onEvent, signal);
   } catch (err) {
     if (signal?.aborted) return;
-    await mockStream(params.actionId, params.selectionText ?? null, onEvent, signal);
+    emitError(
+      onEvent,
+      "network_error",
+      err instanceof Error ? err.message : "Connessione al servizio AI non disponibile"
+    );
   }
 }

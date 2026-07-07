@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { dispatchOpenReview } from "@/components/review/reviewIntegration";
 import type { ContextPacket } from "@/lib/contextClient";
-import { CONTEXT_STUB } from "@/lib/contextClient";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 import { parseWritingUrlState, saveSessionState, type PanelTab } from "@/lib/sessionState";
 import { RightRail } from "@/components/writing/RightRail";
@@ -13,6 +12,7 @@ import { type RailTabId } from "@/components/writing/RailTabs";
 import { WritingEditorShell } from "@/components/writing/WritingEditorShell";
 import { WritingOutline } from "@/components/writing/WritingOutline";
 import { LinkedSourcesFooter } from "@/components/writing/LinkedSourcesFooter";
+import { DocumentIndexStatusBanner } from "@/components/writing/DocumentIndexStatusBanner";
 import type { MarkdownSection } from "@/components/writing/MarkdownEditor";
 import {
   WRITING_OUTLINE_STUB,
@@ -25,7 +25,7 @@ import {
 
 export type WritingWorkspaceProps = {
   chapterId?: string;
-  contextPacket?: ContextPacket;
+  contextPacket: ContextPacket;
   chapters?: WritingOutlineChapter[];
   className?: string;
 };
@@ -61,7 +61,7 @@ function panelFromParam(value: string | null): RailTabId | undefined {
  */
 export function WritingWorkspace({
   chapterId,
-  contextPacket = CONTEXT_STUB,
+  contextPacket,
   chapters: chaptersProp,
   className,
 }: WritingWorkspaceProps) {
@@ -195,6 +195,8 @@ export function WritingWorkspace({
 
   return (
     <div className={cn("space-y-3", className)} data-testid="writing-workspace">
+      <DocumentIndexStatusBanner />
+
       {readOnly && (
         <div
           className="rounded-md border border-warning/30 bg-warning/10 px-4 py-2 text-sm text-warning"

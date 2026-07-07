@@ -77,6 +77,31 @@ describe("WritingAiPanel", () => {
     expect(screen.queryByTestId("ai-stream-output")).toBeNull();
   });
 
+  it("shows API error instead of mock stream when LLM unavailable", async () => {
+    vi.spyOn(aiActions, "streamWritingAction").mockImplementation(async (_params, onEvent) => {
+      onEvent({
+        event: "error",
+        data: { code: "llm_not_configured", message: "LLM runtime not configured" },
+      });
+    });
+
+    render(
+      <WritingAiPanel
+        contextPacket={CONTEXT_STUB}
+        selectionText="Selezione"
+        chapterContent="Capitolo"
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Verifica/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("ai-stream-output")).toHaveTextContent(
+        "LLM runtime not configured"
+      );
+    });
+  });
+
   it("discards partial stream on cancel", async () => {
     let rejectStream: (() => void) | undefined;
     vi.spyOn(aiActions, "streamWritingAction").mockImplementation(
