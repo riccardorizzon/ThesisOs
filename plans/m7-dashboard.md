@@ -27,7 +27,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | M7.0 Governance | 🟢 | ADR-0044 + plan v2 |
 | M7.0b Architecture Lock | 🟢 | L1–L7 signed 2026-07-07 |
 | Preflight | 🟢 | builder-engine cycle dry-run |
-| Wave 1a Pilot (2 agents) | 🟡 | P-SOURCES-DB merged; P-KNOWLEDGE-DB pending |
+| Wave 1a Pilot (2 agents) | 🟢 | P-SOURCES-DB + P-KNOWLEDGE-DB merged, CI pass |
 | Wave 1b (4 agents) | ⚪ | P-CHAT-PERSIST-BE, P-REVIEW-PERSIST-BE, P-UPLOAD-UI, P-WRITING-GROUND |
 | Wave 2 (domain FE) | ⚪ | Sources, Knowledge, Writing, Review, Chat |
 | Wave 3 (E2E + export) | ⚪ | |
@@ -41,7 +41,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | Packet | Status | Branch | Merged | CI post-merge | Reviewer |
 |--------|--------|--------|--------|---------------|----------|
 | P-SOURCES-DB | 🟢 | feat/p-sources-db | 2026-07-07 | ☑ pass | |
-| P-KNOWLEDGE-DB | ⚪ | | | | |
+| P-KNOWLEDGE-DB | 🟢 | feat/p-knowledge-db | 2026-07-07 | ☑ pass | |
 
 ---
 
@@ -109,6 +109,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | Date | Packet | Commit | `make ci` | Notes |
 |------|--------|--------|-----------|-------|
 | 2026-07-07 | P-SOURCES-DB | b595530e | ☑ pass | migration 0007 + DB-backed sources API |
+| 2026-07-07 | P-KNOWLEDGE-DB | 8617019a | ☑ pass | DB-only knowledge list/search |
 
 ---
 
