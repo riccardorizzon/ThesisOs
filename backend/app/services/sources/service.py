@@ -1,9 +1,8 @@
-"""Sources list service (PX3-EWO-002; PX4-EWO-008 Knowledge links)."""
+"""Sources list service (PX3-EWO-002; M7 P-SOURCES-DB — DB-backed)."""
 
 from __future__ import annotations
 
 from app.db.session_async import AsyncSessionLocal
-from app.graph.corpus_query import CORPUS_PICKER_SOURCES
 from app.schemas.knowledge import (
     ConfidenceLevel,
     KnowledgeState,
@@ -11,38 +10,71 @@ from app.schemas.knowledge import (
     SourceListItem,
     SourceListResponse,
 )
-from app.services.knowledge.catalog import (
-    build_source_envelope,
-    get_related_concepts_for_source,
-)
 from app.services.knowledge.repository import ConceptRepository
+from app.services.sources.repository import SourceNotFoundError, SourceRepository
 
-
-class SourceNotFoundError(LookupError):
-    pass
+__all__ = ["SourceNotFoundError", "SourcesService"]
 
 
 class SourcesService:
+    def __init__(self) -> None:
+        self._sources = SourceRepository()
+        self._concepts = ConceptRepository()
+
     async def _related_concepts(
         self,
+        session,
         project_id: str,
         source_id: str,
     ) -> list[RelatedConceptRef]:
-        try:
-            async with AsyncSessionLocal() as session:
-                repo = ConceptRepository()
-                if await repo.count_for_project(session, project_id) > 0:
-                    refs = await repo.get_related_concepts_for_source(
-                        session, project_id, source_id
-                    )
-                    if refs:
-                        return [RelatedConceptRef(**ref) for ref in refs]
-        except Exception:
-            pass
-        return [
-            RelatedConceptRef(**ref)
-            for ref in get_related_concepts_for_source(source_id)
-        ]
+        refs = await self._concepts.get_related_concepts_for_source(
+            session, project_id, source_id
+        )
+        return [RelatedConceptRef(**ref) for ref in refs]
+
+    def _matches_query(self, row, query: str) -> bool:
+        if not query:
+            return True
+        haystack = " ".join(
+            filter(
+                None,
+                [
+                    row.title,
+                    row.subtitle,
+                    row.summary,
+                    str(row.year) if row.year is not None else None,
+                ],
+            )
+        ).lower()
+        return query in haystack
+
+    async def _to_list_item(
+        self,
+        session,
+        project_id: str,
+        row,
+    ) -> SourceListItem:
+        state = await self._sources.effective_state(session, project_id, row)
+        linked = await self._sources.linked_counts(session, project_id, row.slug)
+        related = await self._related_concepts(session, project_id, row.slug)
+        summary = row.summary
+        if not summary and row.year is not None:
+            summary = f"{row.year} · Fonte bibliografica"
+        return SourceListItem(
+            id=row.slug,
+            slug=row.slug,
+            type="source",
+            title=row.title,
+            subtitle=row.subtitle,
+            summary=summary,
+            confidence=row.confidence,  # type: ignore[arg-type]
+            knowledge_state=state,
+            linked_counts=linked,
+            created_by=row.created_by,  # type: ignore[arg-type]
+            is_core=row.is_core,
+            related_concepts=related,
+            corpus_status=row.corpus_status,
+        )
 
     async def list_sources(
         self,
@@ -56,39 +88,19 @@ class SourcesService:
         q = query.strip().lower()
         items: list[SourceListItem] = []
 
-        for raw in CORPUS_PICKER_SOURCES:
-            envelope = build_source_envelope(raw)
-            if not include_deprecated and envelope.knowledge_state == "deprecated":
-                continue
-            if knowledge_state is not None and envelope.knowledge_state != knowledge_state:
-                continue
-            if confidence is not None and envelope.confidence != confidence:
-                continue
-
-            if q:
-                haystack = " ".join(
-                    filter(
-                        None,
-                        [
-                            envelope.title,
-                            envelope.subtitle,
-                            envelope.summary,
-                            raw.get("author"),
-                            raw.get("year"),
-                        ],
-                    )
-                ).lower()
-                if q not in haystack:
+        async with AsyncSessionLocal() as session:
+            rows = await self._sources.list_for_project(session, project_id)
+            for row in rows:
+                item = await self._to_list_item(session, project_id, row)
+                if not include_deprecated and item.knowledge_state == "deprecated":
                     continue
-
-            related = await self._related_concepts(project_id, raw["id"])
-            items.append(
-                SourceListItem(
-                    **envelope.model_dump(),
-                    related_concepts=related,
-                    corpus_status=raw.get("status"),
-                )
-            )
+                if knowledge_state is not None and item.knowledge_state != knowledge_state:
+                    continue
+                if confidence is not None and item.confidence != confidence:
+                    continue
+                if not self._matches_query(row, q):
+                    continue
+                items.append(item)
 
         return SourceListResponse(sources=items, total=len(items))
 
@@ -97,13 +109,9 @@ class SourcesService:
         project_id: str,
         slug: str,
     ) -> SourceListItem:
-        raw = next((entry for entry in CORPUS_PICKER_SOURCES if entry["id"] == slug), None)
-        if raw is None:
-            raise SourceNotFoundError(slug)
-        envelope = build_source_envelope(raw)
-        related = await self._related_concepts(project_id, slug)
-        return SourceListItem(
-            **envelope.model_dump(),
-            related_concepts=related,
-            corpus_status=raw.get("status"),
-        )
+        async with AsyncSessionLocal() as session:
+            try:
+                row = await self._sources.get_by_slug(session, project_id, slug)
+            except SourceNotFoundError:
+                raise SourceNotFoundError(slug) from None
+            return await self._to_list_item(session, project_id, row)

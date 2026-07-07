@@ -20,7 +20,8 @@ CORPUS_LIST_BOOST_QUERY = (
 
 CORPUS_RETRIEVAL_LIMIT = 12
 
-# Read-only picker metadata — aligned with frontend libraryStub (PX2-EWO-004).
+# Legacy read-only catalog for corpus-query boost and graph picker (PX2-EWO-004).
+# Sources API list/get reads DB only (M7 P-SOURCES-DB); do not use here for happy path.
 CORPUS_PICKER_SOURCES: tuple[dict[str, str], ...] = (
     {
         "id": "benjamin-opera-arte",
