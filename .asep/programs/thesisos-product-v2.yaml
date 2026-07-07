@@ -204,7 +204,7 @@ milestones:
     ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
     product_spec_baseline: docs/product/specs/thesisos-product-ux-v1.md
     wave_a_status: complete
-    first_executable_ewo: PX5-EWO-004
+    first_executable_ewo: PX5-EWO-005
     depends_on: [PX-4]
     adr_refs: [ADR-0036, ADR-0037]
   PX-6:
@@ -803,7 +803,9 @@ px5_workorder_backlog:
       - Inspector tabs Dettaglio/Collegamenti/Azioni per UI spec §6
       - Apri Explain deep link; multi-select batch summary
       - make ci green
-    status: authorized
+    status: implemented
+    report: .asep/reports/PX5-EWO-005-inspector-rail.md
+    completed_at: "2026-07-07"
 
   - id: PX5-EWO-006
     type: EWO
@@ -818,7 +820,9 @@ px5_workorder_backlog:
       - Six lenses L-all through L-unread per product §6
       - Filter popover composes with active lens
       - make ci green
-    status: authorized
+    status: implemented
+    report: .asep/reports/PX5-EWO-006-discovery-lenses.md
+    completed_at: "2026-07-07"
 
 px4_workorder_backlog:
   - id: PX4-EWO-001
@@ -972,7 +976,11 @@ post_px2:
   px5_ewo_001_report: .asep/reports/PX5-EWO-001-research-experience-spec.md
   px5_ewo_002_report: .asep/reports/PX5-EWO-002-research-hub-scaffolding.md
   px5_ewo_003_report: .asep/reports/PX5-EWO-003-canvas-viewport-node-layer.md
-  px5_first_executable_ewo: PX5-EWO-004
+  px5_ewo_004_report: .asep/reports/PX5-EWO-004-canvas-shell-selection.md
+  px5_ewo_005_report: .asep/reports/PX5-EWO-005-inspector-rail.md
+  px5_ewo_006_report: .asep/reports/PX5-EWO-006-discovery-lenses.md
+  px5_dispatch_wave_d_005_006: .asep/reports/PX5-DISPATCH-WAVE-D-005-006.md
+  px5_first_executable_ewo: PX5-EWO-007
   runtime_engineering_authorization: not_authorized
-  next_milestone: PX-5 Wave D execution (PX5-EWO-004 → parallel 005/006)
-  note: Wave D authorized — execute EWO-004; dispatch 005+006 after 004 PASS
+  next_milestone: AUTHORIZE PX5-EWO-007 (serendipity + integration)
+  note: PX5-EWO-005 + 006 PASS — merge barrier cleared for EWO-007

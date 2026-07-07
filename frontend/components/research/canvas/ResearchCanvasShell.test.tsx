@@ -13,6 +13,77 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+vi.mock("@/lib/contextLoad", () => ({
+  loadContext: vi.fn(async () => ({
+    schema_version: "1",
+    project_context: {
+      project_id: "thesis-agent",
+      product_id: "thesisos",
+      workspace_id: "default",
+      session_id: "default",
+    },
+    presentation: { surface: "research" },
+    project: { title: "Tesi", phase: "writing", progress_pct: 10 },
+    concepts: [{ id: "aura", slug: "aura", title: "Aura" }],
+    relevant_sources: [],
+    decisions: [],
+    definitions: [],
+    citations_available: [],
+    corpus_constraints: [],
+    writing_rules: [],
+    memory_proposals_pending: 0,
+    recent_activity: [],
+    token_budget: 8000,
+  })),
+}));
+
+vi.mock("@/lib/knowledgeClient", () => ({
+  listKnowledgeObjects: vi.fn(async () => ({
+    objects: [
+      {
+        id: "aura",
+        slug: "aura",
+        type: "concept",
+        title: "Aura",
+        confidence: "alta",
+        knowledge_state: "validated",
+        linked_counts: {
+          sources: 1,
+          chapters: 0,
+          concepts: 1,
+          decisions: 0,
+          authors: 0,
+          citations: 0,
+        },
+        created_by: "operatore",
+        proposal_state: "nessuna",
+        is_core: true,
+      },
+    ],
+    total: 1,
+  })),
+  getKnowledgeObject: vi.fn(async (slug: string) => ({
+    id: slug,
+    slug,
+    type: "concept",
+    title: "Aura",
+    confidence: "alta",
+    knowledge_state: "validated",
+    linked_counts: {
+      sources: 1,
+      chapters: 0,
+      concepts: 1,
+      decisions: 0,
+      authors: 0,
+      citations: 0,
+    },
+    created_by: "operatore",
+    proposal_state: "nessuna",
+    is_core: true,
+    summary: "Test",
+  })),
+}));
+
 const SAMPLE_GRAPH: KnowledgeGraphResponse = {
   schema_version: 1,
   focus_slug: "aura",
@@ -101,11 +172,10 @@ describe("ResearchCanvasShell", () => {
     expect(screen.getByTestId("canvas-action-bar")).toBeTruthy();
   });
 
-  it("disables lens and basket controls until later waves", () => {
+  it("enables lens dropdown and lens rail", () => {
     render(<ResearchCanvasShell graph={SAMPLE_GRAPH} />);
-    expect(screen.getByTestId("canvas-lens-dropdown")).toBeDisabled();
-    expect(screen.getByTestId("canvas-basket-badge")).toBeDisabled();
-    expect(screen.getByTestId("canvas-writing-handoff-button")).toBeDisabled();
+    expect(screen.getByTestId("canvas-lens-dropdown")).not.toBeDisabled();
+    expect(screen.getByTestId("canvas-lens-rail")).toBeTruthy();
   });
 
   it("clears selection on Escape", () => {

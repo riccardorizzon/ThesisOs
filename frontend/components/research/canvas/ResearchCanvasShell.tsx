@@ -1,12 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { CanvasFilterPopover } from "@/components/research/canvas/CanvasFilterPopover";
 import { ResearchCanvasViewport } from "@/components/research/canvas/ResearchCanvasViewport";
-import { selectionLabel } from "@/lib/canvasSelection";
+import { ResearchInspectorRail } from "@/components/research/canvas/ResearchInspectorRail";
+import { ResearchLensRail } from "@/components/research/canvas/ResearchLensRail";
+import { loadContext } from "@/lib/contextLoad";
+import {
+  buildStubLensContext,
+  DEFAULT_CANVAS_FILTERS,
+  filterGraphByLens,
+  lensLabel,
+  mergeSourceCounts,
+  type CanvasFilterOptions,
+  type CanvasLensContext,
+  type CanvasLensId,
+} from "@/lib/canvasLenses";
 import { DEFAULT_CANVAS_TRANSFORM, type CanvasTransform } from "@/lib/canvasTransform";
+import { listKnowledgeObjects } from "@/lib/knowledgeClient";
 import type { KnowledgeGraphResponse } from "@/lib/knowledgeTypes";
+import { cn } from "@/lib/cn";
 
 const DESKTOP_MIN_WIDTH = 1024;
 
@@ -31,7 +46,7 @@ export type ResearchCanvasShellProps = {
 };
 
 /**
- * PX-5 canvas shell — three-region layout + selection model (PX5-EWO-004).
+ * PX-5 canvas shell — layout, lenses, inspector (PX5-EWO-004/005/006).
  * Layer: Business (Product Plane)
  */
 export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellProps) {
@@ -40,15 +55,81 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
     graph.focus_slug != null ? [graph.focus_slug] : []
   );
   const [transform, setTransform] = useState<CanvasTransform>(DEFAULT_CANVAS_TRANSFORM);
+  const [filters, setFilters] = useState<CanvasFilterOptions>(DEFAULT_CANVAS_FILTERS);
+  const [lensContext, setLensContext] = useState<CanvasLensContext>(() => buildStubLensContext());
+  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [lensLoading, setLensLoading] = useState(false);
+
+  const filteredGraph = useMemo(
+    () => filterGraphByLens(graph, filters, lensContext),
+    [graph, filters, lensContext]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function enrichLensContext() {
+      setLensLoading(true);
+      try {
+        const [contextPacket, knowledgeList] = await Promise.all([
+          loadContext({ surface: "research" }),
+          listKnowledgeObjects({ type: "concept" }).catch(() => null),
+        ]);
+
+        if (cancelled) return;
+
+        const chapterConceptSlugs = new Set<string>();
+        if (contextPacket.entity?.type === "chapter") {
+          for (const concept of contextPacket.concepts) {
+            if (concept.slug != null) chapterConceptSlugs.add(concept.slug);
+            else chapterConceptSlugs.add(concept.id);
+          }
+        } else {
+          for (const concept of contextPacket.concepts) {
+            if (concept.slug != null) chapterConceptSlugs.add(concept.slug);
+          }
+        }
+
+        const base = buildStubLensContext();
+        setLensContext({
+          ...base,
+          activeChapterConceptSlugs:
+            chapterConceptSlugs.size > 0 ? chapterConceptSlugs : base.activeChapterConceptSlugs,
+          sourceCountByConceptSlug:
+            knowledgeList != null
+              ? mergeSourceCounts(base.sourceCountByConceptSlug, knowledgeList.objects)
+              : base.sourceCountByConceptSlug,
+        });
+      } finally {
+        if (!cancelled) setLensLoading(false);
+      }
+    }
+
+    void enrichLensContext();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const clearSelection = useCallback(() => {
     setSelectedSlugs([]);
+  }, []);
+
+  const setLensId = useCallback((lensId: CanvasLensId) => {
+    setLensLoading(true);
+    setFilters((current) => ({ ...current, lensId }));
+    window.setTimeout(() => setLensLoading(false), 200);
   }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         clearSelection();
+        return;
+      }
+      if (event.key === "\\" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setInspectorOpen((open) => !open);
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -70,8 +151,6 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
       </div>
     );
   }
-
-  const selectionSummary = selectionLabel(graph.nodes, selectedSlugs);
 
   return (
     <div
@@ -103,22 +182,22 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
           <label className="flex items-center gap-2 text-xs text-ink-muted">
             <span>Lente</span>
             <select
-              disabled
-              className="rounded-md border border-border bg-surface-muted px-2 py-1 text-xs text-ink-subtle"
+              value={filters.lensId}
+              onChange={(event) => setLensId(event.target.value as CanvasLensId)}
+              className="rounded-md border border-border bg-surface px-2 py-1 text-xs text-ink"
               data-testid="canvas-lens-dropdown"
-              aria-label="Lente (disponibile a breve)"
+              aria-label="Lente attiva"
             >
-              <option>Panorama</option>
+              {(["L-all", "L-gap", "L-chapter", "L-author", "L-controversy", "L-unread"] as CanvasLensId[]).map(
+                (lensId) => (
+                  <option key={lensId} value={lensId}>
+                    {lensLabel(lensId)}
+                  </option>
+                )
+              )}
             </select>
           </label>
-          <button
-            type="button"
-            disabled
-            className="rounded-md border border-border px-2 py-1 text-xs text-ink-subtle"
-            data-testid="canvas-filters-button"
-          >
-            Filtri
-          </button>
+          <CanvasFilterPopover filters={filters} onChange={setFilters} />
           <button
             type="button"
             disabled
@@ -136,18 +215,18 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
             Basket 0
           </button>
           <p className="text-xs text-ink-subtle" data-testid="canvas-node-count">
-            {graph.limits.visible_count} / {graph.limits.total_in_scope} concetti
+            {filteredGraph.limits.visible_count} / {filteredGraph.limits.total_in_scope} concetti
           </p>
         </div>
       </header>
 
-      {graph.limits.show_performance_banner && (
+      {filteredGraph.limits.show_performance_banner && (
         <p
           className="rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-sm text-warning"
           data-testid="canvas-performance-banner"
         >
           Canvas ampio — applica un filtro o riduci la profondità (soft limit{" "}
-          {graph.limits.soft_limit})
+          {filteredGraph.limits.soft_limit})
         </p>
       )}
 
@@ -166,13 +245,18 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
           className="hidden w-[240px] shrink-0 border-r border-border bg-surface p-3 lg:block"
           data-testid="canvas-lens-slot"
         >
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-subtle">Lenti</p>
-          <p className="mt-2 text-sm text-ink-muted">Disponibili nel prossimo aggiornamento.</p>
+          <ResearchLensRail activeLensId={filters.lensId} onLensChange={setLensId} />
         </aside>
 
-        <div className="min-w-0 flex-1">
+        <div className="relative min-w-0 flex-1">
+          {lensLoading && (
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 z-10 h-1 animate-pulse bg-accent/30"
+              data-testid="canvas-lens-loading"
+            />
+          )}
           <ResearchCanvasViewport
-            graph={graph}
+            graph={filteredGraph}
             selectedSlugs={selectedSlugs}
             onSelectedSlugsChange={setSelectedSlugs}
             transform={transform}
@@ -180,22 +264,16 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
           />
         </div>
 
-        <aside
-          className="hidden w-[320px] shrink-0 border-l border-border bg-surface p-3 xl:block"
-          data-testid="canvas-inspector-slot"
-        >
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-subtle">
-            Inspector
-          </p>
-          <p className="mt-2 text-sm text-ink-muted">
-            Seleziona un nodo sulla mappa. Dettaglio completo nel prossimo aggiornamento.
-          </p>
-          {selectedSlugs.length > 0 && (
-            <p className="mt-3 text-sm text-ink" data-testid="canvas-inspector-selection-preview">
-              {selectionSummary}
-            </p>
-          )}
-        </aside>
+        {inspectorOpen && (
+          <aside
+            className={cn(
+              "hidden w-[320px] shrink-0 border-l border-border bg-surface p-3 xl:block"
+            )}
+            data-testid="canvas-inspector-slot"
+          >
+            <ResearchInspectorRail selectedSlugs={selectedSlugs} graph={filteredGraph} />
+          </aside>
+        )}
       </div>
 
       <footer
