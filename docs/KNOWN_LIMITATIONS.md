@@ -68,6 +68,22 @@ Capability graph: `or-6-write-paragraph.platform_limitation.oracle_id: W-06`
    (outside current OR-6 oracle contract).
 3. **Accept variance** — operator revision workflow handles residual numeric cites.
 
+### PX-6 partial mitigation (2026-07-07)
+
+**Status:** **PARTIALLY MITIGATED** via product validation layer (PX6-EWO-002…004).
+
+| Layer | Delivered |
+|-------|-----------|
+| Detection | Deterministic flag of numeric `[n]` in Writing editor and AI proposals |
+| Suggestion | Author-date hint from source metadata when available |
+| Gating | Optional block on AI **Applica** until override |
+| API | `POST /citations/validate` |
+
+**Still not guaranteed:** deterministic author-date on every LLM generation. OR-6
+remains **PASS\***; W-06 is mitigated in product UX, not eliminated at model layer.
+
+Evidence: `.asep/reports/PX6-INTEGRATION-A.md`, `docs/product/specs/px6-polish-experience-v1.md` §4.
+
 ### What ThesisOS still guarantees for writing
 
 - Academic register; persona OFF (OR-6 C.6.1)

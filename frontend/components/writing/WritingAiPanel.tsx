@@ -11,6 +11,8 @@ import {
 } from "@/lib/aiActions";
 import { addProposal } from "@/lib/proposalQueue";
 import { findConflictingDecision, parseDecisionsFromPacket } from "@/lib/decisionClient";
+import { hasBlockingCitationIssues } from "@/lib/citationValidation";
+import { CitationValidatorBanner } from "@/components/writing/CitationValidatorBanner";
 import { useApplyAiSuggestionChrome } from "@/lib/writingChromeIntegration";
 
 export type WritingAiPanelProps = {
@@ -44,6 +46,7 @@ export function WritingAiPanel({
   const [activeActionId, setActiveActionId] = useState<WritingActionId | null>(null);
   const [activeActionLabel, setActiveActionLabel] = useState("");
   const [appliedNotice, setAppliedNotice] = useState<string | null>(null);
+  const [citationOverride, setCitationOverride] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const liveRef = useRef<HTMLDivElement>(null);
 
@@ -135,8 +138,15 @@ export function WritingAiPanel({
 
   const handleApplica = useCallback(() => {
     if (!streamText.trim() || !activeActionId) return;
+    if (hasBlockingCitationIssues(streamText) && !citationOverride) return;
     setPhase("preview");
-  }, [streamText, activeActionId]);
+  }, [streamText, activeActionId, citationOverride]);
+
+  const citationBlocked =
+    phase === "complete" &&
+    Boolean(streamText.trim()) &&
+    hasBlockingCitationIssues(streamText) &&
+    !citationOverride;
 
   useApplyAiSuggestionChrome(handleApplica);
 
@@ -155,7 +165,7 @@ export function WritingAiPanel({
   };
 
   const showStreamArea = phase !== "idle";
-  const canApplica = phase === "complete" && Boolean(streamText.trim());
+  const canApplica = phase === "complete" && Boolean(streamText.trim()) && !citationBlocked;
 
   return (
     <aside
@@ -221,6 +231,10 @@ export function WritingAiPanel({
 
       {showStreamArea && (
         <div className="flex min-h-0 flex-1 flex-col border-t border-border">
+          <CitationValidatorBanner
+            text={streamText}
+            className="border-b border-warning/20 bg-warning/5 px-3 py-2"
+          />
           <div
             className="flex-1 overflow-y-auto p-3 font-mono text-sm text-ink"
             data-testid="ai-stream-output"
@@ -265,7 +279,7 @@ export function WritingAiPanel({
           )}
 
           {phase !== "preview" && (
-            <div className="flex gap-2 border-t border-border p-3">
+            <div className="flex flex-wrap gap-2 border-t border-border p-3">
               <button
                 type="button"
                 onClick={handleCancel}
@@ -273,6 +287,16 @@ export function WritingAiPanel({
               >
                 Annulla
               </button>
+              {citationBlocked && (
+                <button
+                  type="button"
+                  onClick={() => setCitationOverride(true)}
+                  className="rounded-md border border-warning/40 px-3 py-1.5 text-xs font-medium text-warning cursor-pointer"
+                  data-testid="applica-override-button"
+                >
+                  Applica comunque
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleApplica}

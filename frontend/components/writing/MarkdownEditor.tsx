@@ -14,6 +14,7 @@ import {
   INSERT_CITATION_EVENT,
   type InsertCitationDetail,
 } from "@/lib/citationInsert";
+import { CitationValidatorBanner } from "@/components/writing/CitationValidatorBanner";
 
 export type MarkdownSection = {
   id: string;
@@ -216,6 +217,10 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
         )}
         data-testid={testId}
       >
+        <CitationValidatorBanner
+          text={value}
+          className="border-b border-warning/20 bg-warning/5 px-4 py-2"
+        />
         <textarea
           ref={textareaRef}
           value={value}
