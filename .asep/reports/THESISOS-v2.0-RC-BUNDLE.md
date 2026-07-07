@@ -1,10 +1,10 @@
 # ThesisOS v2.0 — Release Candidate Bundle
 
-> **Status:** PROPOSED — awaiting Architect/Release Manager sign-off  
+> **Status:** PROPOSED — tag `v2.0.0-rc.1` @ `fd23ad70` (local); **awaiting sign-off** — see `.asep/reports/THESISOS-v2.0-RC-APPROVAL-REQUEST.md`  
 > **Date:** 2026-07-07  
 > **Product program:** `thesisos-product-v2`  
 > **Scope:** PX-1 through PX-6 complete and promoted  
-> **Baseline:** `main @ bb561ea4`, tag `px6-complete`
+> **Baseline:** product `bb561ea4` (`px6-complete`); RC bundle `fd23ad70` (`v2.0.0-rc.1`)
 
 ---
 
@@ -29,10 +29,12 @@ This bundle requests authorization to tag and deploy `v2.0.0-rc.1`.
 
 ```text
 Branch:     main
-Commit:     bb561ea4 promote(px6): PX-6 Polish milestone ratified
+RC commit:  fd23ad70 docs(release): ThesisOS v2.0 RC bundle
+Product:    bb561ea4 promote(px6): PX-6 Polish milestone ratified
 Tag:        px6-complete → bb561ea4
+Tag:        v2.0.0-rc.1 → fd23ad70 (local)
 Runtime:    mb2-complete → 3957c94
-CI:         green
+CI:         green @ fd23ad70
 ```
 
 ---
