@@ -90,6 +90,10 @@ async def seeded_db(db_session):
 
 @pytest.mark.asyncio
 async def test_migration_seeds_sources(_test_db_ready):
+    import os
+    import subprocess
+    from pathlib import Path
+
     from app.db.session_async import AsyncSessionLocal
 
     try:
@@ -97,6 +101,28 @@ async def test_migration_seeds_sources(_test_db_ready):
             await probe.execute(text("SELECT 1"))
     except Exception as exc:
         pytest.skip(f"async DB not reachable: {exc}")
+
+    backend = Path(__file__).resolve().parents[1]
+    env = os.environ.copy()
+    env.setdefault(
+        "DATABASE_URL",
+        "postgresql+psycopg://thesisos:thesisos@localhost:5432/thesisos_test",
+    )
+    alembic = backend / ".venv" / "bin" / "alembic"
+    if not alembic.exists():
+        alembic = Path(os.environ.get("VIRTUAL_ENV", "")) / "bin" / "alembic"
+    subprocess.run(
+        [str(alembic), "downgrade", "0006_knowledge_concepts"],
+        cwd=backend,
+        env=env,
+        check=True,
+    )
+    subprocess.run(
+        [str(alembic), "upgrade", "0007_sources_populated"],
+        cwd=backend,
+        env=env,
+        check=True,
+    )
 
     async with AsyncSessionLocal() as session:
         result = await session.execute(
