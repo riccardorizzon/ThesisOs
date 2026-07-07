@@ -7,6 +7,7 @@ import { CanvasFilterPopover } from "@/components/research/canvas/CanvasFilterPo
 import { ResearchCanvasViewport } from "@/components/research/canvas/ResearchCanvasViewport";
 import { ResearchInspectorRail } from "@/components/research/canvas/ResearchInspectorRail";
 import { ResearchLensRail } from "@/components/research/canvas/ResearchLensRail";
+import { SerendipityStrip } from "@/components/research/canvas/SerendipityStrip";
 import { loadContext } from "@/lib/contextLoad";
 import {
   buildStubLensContext,
@@ -18,6 +19,12 @@ import {
   type CanvasLensContext,
   type CanvasLensId,
 } from "@/lib/canvasLenses";
+import {
+  buildStubSerendipityContext,
+  rankSerendipitySuggestions,
+  type SerendipityContext,
+  type SerendipitySuggestion,
+} from "@/lib/canvasSerendipity";
 import { DEFAULT_CANVAS_TRANSFORM, type CanvasTransform } from "@/lib/canvasTransform";
 import { listKnowledgeObjects } from "@/lib/knowledgeClient";
 import type { KnowledgeGraphResponse } from "@/lib/knowledgeTypes";
@@ -46,7 +53,7 @@ export type ResearchCanvasShellProps = {
 };
 
 /**
- * PX-5 canvas shell — layout, lenses, inspector (PX5-EWO-004/005/006).
+ * PX-5 canvas shell — layout, lenses, inspector, serendipity (PX5-EWO-004…007).
  * Layer: Business (Product Plane)
  */
 export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellProps) {
@@ -57,12 +64,24 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
   const [transform, setTransform] = useState<CanvasTransform>(DEFAULT_CANVAS_TRANSFORM);
   const [filters, setFilters] = useState<CanvasFilterOptions>(DEFAULT_CANVAS_FILTERS);
   const [lensContext, setLensContext] = useState<CanvasLensContext>(() => buildStubLensContext());
+  const [serendipityContext, setSerendipityContext] = useState<SerendipityContext>(() =>
+    buildStubSerendipityContext()
+  );
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const [lensLoading, setLensLoading] = useState(false);
+  const [highlightSlugs, setHighlightSlugs] = useState<string[]>([]);
+  const [highlightEdgeKeys, setHighlightEdgeKeys] = useState<string[]>([]);
+  const [panRequest, setPanRequest] = useState<{ key: number; slugs: string[] } | null>(null);
+  const [panRequestKey, setPanRequestKey] = useState(0);
 
   const filteredGraph = useMemo(
     () => filterGraphByLens(graph, filters, lensContext),
     [graph, filters, lensContext]
+  );
+
+  const serendipitySuggestions = useMemo(
+    () => rankSerendipitySuggestions(filteredGraph, serendipityContext),
+    [filteredGraph, serendipityContext]
   );
 
   useEffect(() => {
@@ -91,6 +110,11 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
         }
 
         const base = buildStubLensContext();
+        const chapterLabel =
+          contextPacket.entity?.type === "chapter"
+            ? contextPacket.entity.title
+            : "Capitolo attivo";
+
         setLensContext({
           ...base,
           activeChapterConceptSlugs:
@@ -99,6 +123,17 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
             knowledgeList != null
               ? mergeSourceCounts(base.sourceCountByConceptSlug, knowledgeList.objects)
               : base.sourceCountByConceptSlug,
+        });
+        setSerendipityContext({
+          ...base,
+          activeChapterConceptSlugs:
+            chapterConceptSlugs.size > 0 ? chapterConceptSlugs : base.activeChapterConceptSlugs,
+          sourceCountByConceptSlug:
+            knowledgeList != null
+              ? mergeSourceCounts(base.sourceCountByConceptSlug, knowledgeList.objects)
+              : base.sourceCountByConceptSlug,
+          decisions: contextPacket.decisions,
+          activeChapterLabel: chapterLabel,
         });
       } finally {
         if (!cancelled) setLensLoading(false);
@@ -120,6 +155,18 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
     setFilters((current) => ({ ...current, lensId }));
     window.setTimeout(() => setLensLoading(false), 200);
   }, []);
+
+  const activateSerendipitySuggestion = useCallback((suggestion: SerendipitySuggestion) => {
+    const nextKey = panRequestKey + 1;
+    setPanRequestKey(nextKey);
+    setPanRequest({ key: nextKey, slugs: suggestion.targetSlugs });
+    setHighlightSlugs(suggestion.targetSlugs);
+    setHighlightEdgeKeys(suggestion.targetEdgeKeys);
+    window.setTimeout(() => {
+      setHighlightSlugs([]);
+      setHighlightEdgeKeys([]);
+    }, 2000);
+  }, [panRequestKey]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -261,6 +308,9 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
             onSelectedSlugsChange={setSelectedSlugs}
             transform={transform}
             onTransformChange={setTransform}
+            highlightSlugs={highlightSlugs}
+            highlightEdgeKeys={highlightEdgeKeys}
+            panRequest={panRequest}
           />
         </div>
 
@@ -275,6 +325,11 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
           </aside>
         )}
       </div>
+
+      <SerendipityStrip
+        suggestions={serendipitySuggestions}
+        onSuggestionActivate={activateSerendipitySuggestion}
+      />
 
       <footer
         className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface px-4 py-3"

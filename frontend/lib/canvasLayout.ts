@@ -15,6 +15,27 @@ const NODE_SPACING = 120;
 /**
  * Radial layout from focus concept — product spec §5.1 initial layout.
  */
+export function panTransformToSlugs(
+  slugs: readonly string[],
+  layout: Map<string, CanvasNodePosition>,
+  viewportWidth: number,
+  viewportHeight: number,
+  scale: number
+): { x: number; y: number } | null {
+  const positions = slugs
+    .map((slug) => layout.get(slug))
+    .filter((position): position is CanvasNodePosition => position != null);
+  if (positions.length === 0) return null;
+
+  const centerX = positions.reduce((sum, position) => sum + position.x, 0) / positions.length;
+  const centerY = positions.reduce((sum, position) => sum + position.y, 0) / positions.length;
+
+  return {
+    x: viewportWidth / 2 - centerX * scale,
+    y: viewportHeight / 2 - centerY * scale,
+  };
+}
+
 export function layoutCanvasNodes(
   graph: KnowledgeGraphResponse
 ): Map<string, CanvasNodePosition> {

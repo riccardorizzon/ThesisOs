@@ -198,7 +198,8 @@ milestones:
     wave_c_status: complete
     wave_d_backlog: .asep/reports/PX5-WAVE-D-BACKLOG.md
     wave_d_authorization: .asep/reports/PX5-AUTHORIZATION-WAVE-D-20260707.md
-    wave_d_status: authorized
+    wave_d_status: complete
+    wave_d_integration: .asep/reports/PX5-INTEGRATION-D.md
     wave_d_first_executable_ewo: PX5-EWO-007
     product_spec: docs/product/specs/px5-research-experience-v1.md
     ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
@@ -824,6 +825,22 @@ px5_workorder_backlog:
     report: .asep/reports/PX5-EWO-006-discovery-lenses.md
     completed_at: "2026-07-07"
 
+  - id: PX5-EWO-007
+    type: EWO
+    ewo_category: Release
+    milestone: PX-5
+    title: Serendipity strip + Wave D integration
+    wave: D
+    depends_on: [PX5-EWO-005, PX5-EWO-006]
+    authorization: .asep/reports/PX5-AUTHORIZATION-EWO-007-20260707.md
+    acceptance:
+      - Deterministic serendipity suggestions per product §7 (RR-7)
+      - Full shell integration + PX5-INTEGRATION-D PASS
+      - make ci green
+    status: implemented
+    report: .asep/reports/PX5-EWO-007-serendipity-integration.md
+    completed_at: "2026-07-07"
+
 px4_workorder_backlog:
   - id: PX4-EWO-001
     type: EWO
@@ -969,8 +986,9 @@ post_px2:
   px5_wave_c_status: complete
   px5_wave_d_backlog: .asep/reports/PX5-WAVE-D-BACKLOG.md
   px5_wave_d_authorization: .asep/reports/PX5-AUTHORIZATION-WAVE-D-20260707.md
-  px5_wave_d_status: authorized
-  px5_wave_d_first_executable_ewo: PX5-EWO-004
+  px5_wave_d_status: complete
+  px5_wave_d_integration: .asep/reports/PX5-INTEGRATION-D.md
+  px5_wave_d_first_executable_ewo: PX5-EWO-007
   px5_product_spec: docs/product/specs/px5-research-experience-v1.md
   px5_ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
   px5_ewo_001_report: .asep/reports/PX5-EWO-001-research-experience-spec.md
@@ -979,8 +997,9 @@ post_px2:
   px5_ewo_004_report: .asep/reports/PX5-EWO-004-canvas-shell-selection.md
   px5_ewo_005_report: .asep/reports/PX5-EWO-005-inspector-rail.md
   px5_ewo_006_report: .asep/reports/PX5-EWO-006-discovery-lenses.md
+  px5_ewo_007_report: .asep/reports/PX5-EWO-007-serendipity-integration.md
   px5_dispatch_wave_d_005_006: .asep/reports/PX5-DISPATCH-WAVE-D-005-006.md
-  px5_first_executable_ewo: PX5-EWO-007
+  px5_first_executable_ewo: none
   runtime_engineering_authorization: not_authorized
-  next_milestone: AUTHORIZE PX5-EWO-007 (serendipity + integration)
-  note: PX5-EWO-005 + 006 PASS — merge barrier cleared for EWO-007
+  next_milestone: Architect review Wave D → spawn Wave E backlog
+  note: PX5-EWO-007 PASS — Wave D integration complete

@@ -18,6 +18,7 @@ import {
   isNodeVisible,
   layoutCanvasNodes,
   nodeRadius,
+  panTransformToSlugs,
   truncateLabel,
   visibleWorldBounds,
 } from "@/lib/canvasLayout";
@@ -42,6 +43,9 @@ export type ResearchCanvasViewportProps = {
   onSelectedSlugsChange: (slugs: string[]) => void;
   transform: CanvasTransform;
   onTransformChange: (transform: CanvasTransform) => void;
+  highlightSlugs?: readonly string[];
+  highlightEdgeKeys?: readonly string[];
+  panRequest?: { key: number; slugs: string[] } | null;
 };
 
 function edgeKey(edge: KnowledgeGraphEdge): string {
@@ -58,11 +62,16 @@ export function ResearchCanvasViewport({
   onSelectedSlugsChange,
   transform,
   onTransformChange,
+  highlightSlugs = [],
+  highlightEdgeKeys = [],
+  panRequest = null,
 }: ResearchCanvasViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [size, setSize] = useState({ width: 800, height: 560 });
   const selectedSet = useMemo(() => new Set(selectedSlugs), [selectedSlugs]);
+  const highlightSlugSet = useMemo(() => new Set(highlightSlugs), [highlightSlugs]);
+  const highlightEdgeSet = useMemo(() => new Set(highlightEdgeKeys), [highlightEdgeKeys]);
   const panRef = useRef<{
     active: boolean;
     startX: number;
@@ -130,6 +139,24 @@ export function ResearchCanvasViewport({
     });
     onSelectedSlugsChange([focusSlug]);
   }, [graph.focus_slug, layout, onSelectedSlugsChange, onTransformChange, size.width, size.height]);
+
+  useEffect(() => {
+    if (panRequest == null || panRequest.slugs.length === 0) return;
+    const pan = panTransformToSlugs(
+      panRequest.slugs,
+      layout,
+      size.width,
+      size.height,
+      transform.scale
+    );
+    if (pan == null) return;
+    onTransformChange({
+      x: pan.x,
+      y: pan.y,
+      scale: transform.scale,
+    });
+    onSelectedSlugsChange([...panRequest.slugs]);
+  }, [panRequest, layout, onSelectedSlugsChange, onTransformChange, size.height, size.width, transform.scale]);
 
   const bounds = useMemo(
     () => visibleWorldBounds(size.width, size.height, transform),
@@ -326,16 +353,19 @@ export function ResearchCanvasViewport({
             const source = layout.get(edge.source);
             const target = layout.get(edge.target);
             if (source == null || target == null) return null;
+            const key = edgeKey(edge);
+            const isHighlighted = highlightEdgeSet.has(key);
             return (
               <line
-                key={edgeKey(edge)}
+                key={key}
                 x1={source.x}
                 y1={source.y}
                 x2={target.x}
                 y2={target.y}
                 stroke={EDGE_STROKE[edge.relation]}
-                strokeWidth={edge.relation === "related" ? 1 : 2}
+                strokeWidth={isHighlighted ? 4 : edge.relation === "related" ? 1 : 2}
                 strokeDasharray={edge.relation === "contradicts" ? "6 4" : undefined}
+                className={cn(isHighlighted && "animate-pulse")}
                 data-testid={`canvas-edge-${edge.source}-${edge.target}`}
               />
             );
@@ -347,6 +377,7 @@ export function ResearchCanvasViewport({
             const radius = nodeRadius(node);
             const isSelected = selectedSet.has(node.slug);
             const isFocus = graph.focus_slug === node.slug;
+            const isHighlighted = highlightSlugSet.has(node.slug);
 
             return (
               <g
@@ -354,6 +385,7 @@ export function ResearchCanvasViewport({
                 transform={`translate(${pos.x},${pos.y})`}
                 className="pointer-events-auto cursor-pointer"
                 data-testid={`canvas-node-${node.slug}`}
+                data-highlighted={isHighlighted ? "true" : undefined}
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => handleNodeClick(event, node.slug)}
                 onDoubleClick={(event) => {
@@ -361,12 +393,19 @@ export function ResearchCanvasViewport({
                   router.push(`/knowledge/${node.slug}`);
                 }}
               >
+                {isHighlighted && (
+                  <circle
+                    r={radius + 10}
+                    className="fill-none stroke-accent stroke-[2px] animate-pulse"
+                  />
+                )}
                 <circle
                   r={radius}
                   className={cn(
                     "fill-surface stroke-accent transition-[stroke-width]",
-                    isSelected || isFocus ? "stroke-[3px]" : "stroke-[2px]",
-                    node.is_core && "fill-accent-subtle"
+                    isSelected || isFocus || isHighlighted ? "stroke-[3px]" : "stroke-[2px]",
+                    node.is_core && "fill-accent-subtle",
+                    isHighlighted && "fill-accent/20"
                   )}
                 />
                 {node.is_core && (

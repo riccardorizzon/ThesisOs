@@ -100,7 +100,7 @@ export function ResearchHubPage({ conceptCount }: ResearchHubPageProps) {
       <div className="grid gap-4 sm:grid-cols-2">
         <ModeCard
           title="Mappa concettuale"
-          description="Scoperta spaziale su canvas — concetti, fonti e decisioni collegati."
+          description="Canvas con lenti di scoperta, inspector e suggerimenti serendipità — esplora collegamenti non ovvi."
           href="/research/canvas"
           cta="Apri mappa →"
           icon="map"
@@ -134,7 +134,8 @@ export function ResearchHubPage({ conceptCount }: ResearchHubPageProps) {
             >
               mappa concettuale
             </Link>{" "}
-            per iniziare.
+            (lenti, inspector e percorsi suggeriti). Il ripristino camera sarà disponibile con le
+            viste salvate.
           </p>
         </section>
       )}

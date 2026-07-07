@@ -178,6 +178,11 @@ describe("ResearchCanvasShell", () => {
     expect(screen.getByTestId("canvas-lens-rail")).toBeTruthy();
   });
 
+  it("renders serendipity strip with suggestions", () => {
+    render(<ResearchCanvasShell graph={SAMPLE_GRAPH} />);
+    expect(screen.getByTestId("canvas-serendipity-strip")).toBeTruthy();
+  });
+
   it("clears selection on Escape", () => {
     render(<ResearchCanvasShell graph={SAMPLE_GRAPH} focus="aura" />);
     expect(screen.getByTestId("canvas-selection-count")).toHaveTextContent("1 selezionato");
