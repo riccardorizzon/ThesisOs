@@ -1,6 +1,6 @@
 # ThesisOS v2.0 — Release Candidate Bundle
 
-> **Status:** PROPOSED — tag `v2.0.0-rc.1` @ `fd23ad70` (local); **awaiting sign-off** — see `.asep/reports/THESISOS-v2.0-RC-APPROVAL-REQUEST.md`  
+> **Status:** **APPROVED** — tag `v2.0.0-rc.1` @ `fd23ad70`; staging deploy authorized 2026-07-07 — see `.asep/reports/THESISOS-v2.0.0-rc.1-APPROVAL-EXECUTION-20260707.md`  
 > **Date:** 2026-07-07  
 > **Product program:** `thesisos-product-v2`  
 > **Scope:** PX-1 through PX-6 complete and promoted  
@@ -128,7 +128,7 @@ Full limitations: `docs/KNOWN_LIMITATIONS.md`
 
 ## 7. Deployment checklist
 
-- [ ] Tag `v2.0.0-rc.1` on `bb561ea4`
+- [x] Tag `v2.0.0-rc.1` on `fd23ad70` (approved 2026-07-07)
 - [ ] Deploy backend to staging
 - [ ] Deploy frontend to staging
 - [ ] Run smoke tests on staging

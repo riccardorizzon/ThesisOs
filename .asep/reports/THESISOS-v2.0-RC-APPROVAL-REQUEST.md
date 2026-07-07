@@ -2,7 +2,7 @@
 
 > **Product:** ThesisOS v2.0.0-rc.1  
 > **Program:** `thesisos-product-v2` (PX-1…PX-6 complete)  
-> **Status:** **PENDING SIGN-OFF** — tag applied locally; staging deploy not authorized until approvals below  
+> **Status:** **APPROVED** — 2026-07-07; staging deploy authorized — see `.asep/reports/THESISOS-v2.0.0-rc.1-APPROVAL-EXECUTION-20260707.md`  
 > **Date:** 2026-07-07  
 > **Bundle:** `.asep/reports/THESISOS-v2.0-RC-BUNDLE.md`
 
@@ -63,9 +63,11 @@ Reply with **`APPROVE RC v2.0.0-rc.1`** (or structured block below) in each role
 
 | Role | Name | Decision | Date |
 |------|------|----------|------|
-| **Architect** | | ☐ APPROVE ☐ REJECT | |
-| **Release Manager** | | ☐ APPROVE ☐ REJECT | |
-| **Product Lead** | | ☐ APPROVE ☐ REJECT | |
+| **Architect** | | ☑ APPROVE ☐ REJECT | 2026-07-07 |
+| **Release Manager** | | ☑ APPROVE ☐ REJECT | 2026-07-07 |
+| **Product Lead** | | ☑ APPROVE ☐ REJECT | 2026-07-07 |
+
+Certificate: `.asep/certificates/THESISOS-v2.0.0-rc.1-APPROVAL-20260707.yaml`
 
 ### Structured approval (copy/paste)
 

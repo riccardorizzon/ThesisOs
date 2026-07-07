@@ -1,0 +1,55 @@
+# Release Candidate Approval Certificate — ThesisOS v2.0.0-rc.1
+
+certificate_version: "1.0"
+certificate_type: release-candidate-approval
+issued_at: "2026-07-07T15:51:00+02:00"
+
+product:
+  id: thesisos-v2.0.0-rc.1
+  program: thesisos-product-v2
+  tag: v2.0.0-rc.1
+  rc_commit: fd23ad70
+  product_baseline_commit: bb561ea4
+  product_milestone_tag: px6-complete
+
+approvals:
+  - role: architect
+    decision: APPROVE
+    timestamp: "2026-07-07"
+  - role: release_manager
+    decision: APPROVE
+    timestamp: "2026-07-07"
+  - role: product_lead
+    decision: APPROVE
+    timestamp: "2026-07-07"
+
+notes: >
+  PX-1…PX-6 complete; make ci green; known limitations accepted per bundle §5.
+
+artifacts:
+  bundle: .asep/reports/THESISOS-v2.0-RC-BUNDLE.md
+  approval_request: .asep/reports/THESISOS-v2.0-RC-APPROVAL-REQUEST.md
+  execution_report: .asep/reports/THESISOS-v2.0.0-rc.1-APPROVAL-EXECUTION-20260707.md
+  known_limitations: docs/KNOWN_LIMITATIONS.md
+
+milestones_complete: [PX-1, PX-2, PX-3, PX-4, PX-5, PX-6]
+
+runtime_dependency:
+  tag: mb2-complete
+  commit: "3957c94"
+
+authorized_actions:
+  - push_tag_v2.0.0-rc.1
+  - deploy_staging_backend
+  - deploy_staging_frontend
+  - smoke_tests_staging
+  - beta_onboarding_5_to_10_users
+  - monitor_7_days
+
+not_authorized:
+  - product_code_changes_without_hotfix_workorder
+  - tag_v2.0.0_ga
+  - runtime_mb2_sor_constitution_modifications
+  - scope_expansion_beyond_px1_px6
+
+verdict: APPROVED
