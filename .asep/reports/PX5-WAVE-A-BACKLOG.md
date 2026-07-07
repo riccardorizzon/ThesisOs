@@ -51,7 +51,7 @@ PX5-EWO-001  Research Experience Spec + UX foundation  ✓ PASS
       ↓
 PX5-EWO-002  Research hub + route scaffolding  ✓ PASS
       ↓
-PX5-EWO-003  Canvas viewport + node layer  (Wave C — pending authorization)
+PX5-EWO-003  Canvas viewport + node layer  ✓ PASS (Wave C)
 ```
 
 | EWO | Title | Parallel after |

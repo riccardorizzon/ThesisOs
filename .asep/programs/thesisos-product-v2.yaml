@@ -193,11 +193,14 @@ milestones:
     wave_a_backlog: .asep/reports/PX5-WAVE-A-BACKLOG.md
     wave_b_status: complete
     wave_b_authorization: .asep/reports/PX5-AUTHORIZATION-20260707.md
+    wave_c_backlog: .asep/reports/PX5-WAVE-C-BACKLOG.md
+    wave_c_authorization: .asep/reports/PX5-AUTHORIZATION-WAVE-C-20260707.md
+    wave_c_status: complete
     product_spec: docs/product/specs/px5-research-experience-v1.md
     ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
     product_spec_baseline: docs/product/specs/thesisos-product-ux-v1.md
     wave_a_status: complete
-    first_executable_ewo: PX5-EWO-003
+    first_executable_ewo: none
     depends_on: [PX-4]
     adr_refs: [ADR-0036, ADR-0037]
   PX-6:
@@ -747,6 +750,24 @@ px5_workorder_backlog:
     report: .asep/reports/PX5-EWO-002-research-hub-scaffolding.md
     completed_at: "2026-07-07"
 
+  - id: PX5-EWO-003
+    type: EWO
+    ewo_category: Infrastructure
+    milestone: PX-5
+    title: Canvas viewport + node layer
+    wave: C
+    depends_on: [PX5-EWO-002]
+    proposal: .asep/proposals/PX5-EWO-003-canvas-viewport-node-layer.md
+    authorization: .asep/reports/PX5-AUTHORIZATION-WAVE-C-20260707.md
+    acceptance:
+      - /research/canvas pan/zoom viewport with concept nodes
+      - Typed edges; focus entry via ?focus=
+      - Performance banner at soft limit; viewport culling
+      - make ci green
+    status: implemented
+    report: .asep/reports/PX5-EWO-003-canvas-viewport-node-layer.md
+    completed_at: "2026-07-07"
+
 px4_workorder_backlog:
   - id: PX4-EWO-001
     type: EWO
@@ -887,11 +908,15 @@ post_px2:
   px5_wave_a_status: complete
   px5_wave_b_status: complete
   px5_wave_b_authorization: .asep/reports/PX5-AUTHORIZATION-20260707.md
+  px5_wave_c_backlog: .asep/reports/PX5-WAVE-C-BACKLOG.md
+  px5_wave_c_authorization: .asep/reports/PX5-AUTHORIZATION-WAVE-C-20260707.md
+  px5_wave_c_status: complete
   px5_product_spec: docs/product/specs/px5-research-experience-v1.md
   px5_ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
   px5_ewo_001_report: .asep/reports/PX5-EWO-001-research-experience-spec.md
   px5_ewo_002_report: .asep/reports/PX5-EWO-002-research-hub-scaffolding.md
-  px5_first_executable_ewo: PX5-EWO-003
+  px5_ewo_003_report: .asep/reports/PX5-EWO-003-canvas-viewport-node-layer.md
+  px5_first_executable_ewo: none
   runtime_engineering_authorization: not_authorized
-  next_milestone: PX-5 Research Wave C
-  note: PX5-EWO-002 PASS — spawn Wave C canvas viewport backlog
+  next_milestone: PX-5 Research Wave D (lens / inspector / serendipity)
+  note: PX5-EWO-003 PASS — Wave C complete; spawn Wave D backlog
