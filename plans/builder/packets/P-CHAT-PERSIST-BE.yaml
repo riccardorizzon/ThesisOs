@@ -1,0 +1,45 @@
+id: P-CHAT-PERSIST-BE
+wave: 1b
+agent_type: implementer
+track: product
+
+objective: >-
+  Add conversations API; persist messages on POST /chat;
+  accept optional conversation_id for thread continuity.
+  Architecture Lock: plans/m7-architecture-lock.md
+
+depends_on:
+  - M7.0b
+  - P-SOURCES-DB
+  - P-KNOWLEDGE-DB
+
+owned_files:
+  - backend/app/api/conversations.py
+  - backend/app/services/conversation/service.py
+  - backend/app/schemas/conversation.py
+  - backend/app/main.py
+  - backend/tests/test_conversations_api.py
+
+do_not_touch:
+  - frontend/
+  - backend/app/graph/writer.py
+
+required_checks:
+  - cmd: cd backend && .venv/bin/python -m pytest tests/test_conversations_api.py tests/test_chat_endpoint.py -q
+    expect: pass
+  - cmd: make qualify-m5
+    expect: pass
+
+definition_of_done:
+  tests_green: true
+  api_documented: true
+  ui_wired: n/a
+  no_silent_fallback: true
+  no_stub_happy_path: true
+  screenshot: n/a
+  reviewer_approved: true
+  ci_after_merge: true
+
+done_criteria:
+  - "GET /conversations lists threads"
+  - "POST /chat with conversation_id appends to same thread"

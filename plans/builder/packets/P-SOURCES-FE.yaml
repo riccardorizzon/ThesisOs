@@ -1,0 +1,45 @@
+id: P-SOURCES-FE
+wave: 2
+agent_type: implementer
+track: product
+domain: sources
+
+objective: >-
+  Wire Sources UI to real API only; remove stubSources and libraryStub
+  from sources domain happy path.
+
+depends_on:
+  - P-SOURCES-DB
+
+owned_files:
+  - frontend/app/sources/page.tsx
+  - frontend/app/sources/[sourceId]/page.tsx
+  - frontend/components/sources/
+  - frontend/lib/sourcesClient.ts
+
+do_not_touch:
+  - frontend/app/knowledge/
+  - frontend/app/writing/
+  - frontend/app/review/
+  - frontend/app/ai/
+  - backend/
+
+required_checks:
+  - cmd: cd frontend && npx tsc --noEmit
+    expect: pass
+  - cmd: cd frontend && npm run test -- --run Sources
+    expect: pass
+
+definition_of_done:
+  tests_green: true
+  api_documented: n/a
+  ui_wired: true
+  no_silent_fallback: true
+  no_stub_happy_path: true
+  screenshot: "Sources list from DB"
+  reviewer_approved: true
+  ci_after_merge: true
+
+done_criteria:
+  - "Sources page shows API data or explicit error"
+  - "Source detail uses getSource API, not getSourceById stub"

@@ -1,0 +1,38 @@
+id: P-WRITING-GROUND
+wave: 1b
+agent_type: implementer
+track: product
+
+objective: >-
+  Ground writing panel: replace retrieved_context=[] with RetrievalService.search().
+
+depends_on:
+  - M7.0b
+
+owned_files:
+  - backend/app/api/writing_actions.py
+  - backend/app/services/writing/panel.py
+  - backend/tests/test_writing_actions_api.py
+
+do_not_touch:
+  - frontend/
+  - builder_engine/
+
+required_checks:
+  - cmd: cd backend && .venv/bin/python -m pytest tests/test_writing_actions_api.py -q
+    expect: pass
+  - cmd: make qualify-m6
+    expect: pass
+
+definition_of_done:
+  tests_green: true
+  api_documented: true
+  ui_wired: n/a
+  no_silent_fallback: true
+  no_stub_happy_path: true
+  screenshot: n/a
+  reviewer_approved: true
+  ci_after_merge: true
+
+done_criteria:
+  - "writing actions include real retrieved_context when corpus indexed"

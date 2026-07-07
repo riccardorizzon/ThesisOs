@@ -1,0 +1,45 @@
+id: P-CHAT-FE
+wave: 2
+agent_type: implementer
+track: product
+domain: chat
+
+objective: >-
+  Chat domain: conversationClient, persistent threads, ConversationList from API.
+
+depends_on:
+  - P-CHAT-PERSIST-BE
+
+owned_files:
+  - frontend/app/ai/
+  - frontend/components/AiChatView.tsx
+  - frontend/components/ConversationList.tsx
+  - frontend/lib/conversationClient.ts
+  - frontend/lib/api.ts
+
+do_not_touch:
+  - frontend/app/sources/
+  - frontend/app/knowledge/
+  - frontend/app/writing/
+  - frontend/app/review/
+  - backend/
+
+required_checks:
+  - cmd: cd frontend && npx tsc --noEmit
+    expect: pass
+  - cmd: cd frontend && npm run test -- --run AiChat
+    expect: pass
+
+definition_of_done:
+  tests_green: true
+  api_documented: n/a
+  ui_wired: true
+  no_silent_fallback: true
+  no_stub_happy_path: true
+  screenshot: "Chat messages after page refresh"
+  reviewer_approved: true
+  ci_after_merge: true
+
+done_criteria:
+  - "ConversationList loads from API"
+  - "Refresh /ai preserves messages"

@@ -1,0 +1,115 @@
+# M7 Dashboard
+
+> Aggiornare **a ogni merge** di packet. Legenda: 🔴 blocked · 🟡 in progress · 🟢 done · ⚪ not started
+
+**Branch:** `m7-product-hardening`  
+**Architecture Lock:** ☐ PASS (date: _____)  
+**M7 Gate:** ☐ PASS (date: _____)
+
+---
+
+## Program roadmap
+
+```text
+ASEP ── maintenance ──┐
+                        ├──► M7 Product Hardening ──► M7.1 Stub Removal ──► M7.2 UX Polish
+ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC ──► Beta ──► M8 Features
+```
+
+**ASEP rule:** evolves only when ThesisOS requires it (ADR-0044).
+
+---
+
+## Phase status
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| M7.0 Governance | 🟢 | ADR-0044 + plan v2 |
+| M7.0b Architecture Lock | ⚪ | `plans/m7-architecture-lock.md` |
+| Preflight | ⚪ | `builder-engine cycle --dry-run` |
+| Wave 1a Pilot (2 agents) | ⚪ | P-SOURCES-DB, P-KNOWLEDGE-DB |
+| Wave 1b (4 agents) | ⚪ | P-CHAT-PERSIST-BE, P-REVIEW-PERSIST-BE, P-UPLOAD-UI, P-WRITING-GROUND |
+| Wave 2 (domain FE) | ⚪ | Sources, Knowledge, Writing, Review, Chat |
+| Wave 3 (E2E + export) | ⚪ | |
+| Wave 4 (cleanup) | ⚪ | |
+| **M7 PASS** | ⚪ | G1–G11 |
+
+---
+
+## Wave 1a — Pilot (max 2 agents)
+
+| Packet | Status | Branch | Merged | CI post-merge | Reviewer |
+|--------|--------|--------|--------|---------------|----------|
+| P-SOURCES-DB | ⚪ | | | | |
+| P-KNOWLEDGE-DB | ⚪ | | | | |
+
+---
+
+## Wave 1b — Remaining backend + upload
+
+| Packet | Status | Branch | Merged | CI post-merge | Reviewer |
+|--------|--------|--------|--------|---------------|----------|
+| P-CHAT-PERSIST-BE | ⚪ | | | | |
+| P-REVIEW-PERSIST-BE | ⚪ | | | | |
+| P-UPLOAD-UI | ⚪ | | | | |
+| P-WRITING-GROUND | ⚪ | | | | |
+
+---
+
+## Wave 2 — Domain frontend (max 5 parallel, disjoint dirs)
+
+| Packet | Domain | Status | Branch | Merged | CI post-merge | Reviewer |
+|--------|--------|--------|--------|--------|---------------|----------|
+| P-SOURCES-FE | Sources | ⚪ | | | | |
+| P-KNOWLEDGE-FE | Knowledge | ⚪ | | | | |
+| P-WRITING-FE | Writing | ⚪ | | | | |
+| P-REVIEW-FE | Review | ⚪ | | | | |
+| P-CHAT-FE | Chat | ⚪ | | | | |
+
+---
+
+## Wave 3
+
+| Packet | Status | Branch | Merged | CI post-merge | Reviewer |
+|--------|--------|--------|--------|---------------|----------|
+| P-BIBTEX-DB | ⚪ | | | | |
+| P-EXPORT-MIN | ⚪ | | | | |
+| P-M7-E2E | ⚪ | | | | |
+
+---
+
+## Gate checklist (M7 PASS)
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| G1 | Upload UI works | ☐ |
+| G2 | Index status visible | ☐ |
+| G3 | Sources = DB only | ☐ |
+| G4 | Knowledge = DB only | ☐ |
+| G5 | Search from picker | ☐ |
+| G6 | Chat persists | ☐ |
+| G7 | Writing panel grounded | ☐ |
+| G8 | Review accept → DB | ☐ |
+| G9 | BibTeX export | ☐ |
+| G10 | No broken redirects | ☐ |
+| G11 | README updated | ☐ |
+
+---
+
+## Blockers
+
+| Date | Packet | Blocker | Resolution |
+|------|--------|---------|------------|
+| | | | |
+
+---
+
+## Merge log (CI per merge — required)
+
+| Date | Packet | Commit | `make ci` | Notes |
+|------|--------|--------|-----------|-------|
+| | | | | |
+
+---
+
+*Last updated: 2026-07-07*

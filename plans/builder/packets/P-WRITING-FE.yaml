@@ -1,0 +1,47 @@
+id: P-WRITING-FE
+wave: 2
+agent_type: implementer
+track: product
+domain: writing
+
+objective: >-
+  Writing domain: index status after upload, remove aiActions mock fallback,
+  remove CONTEXT_STUB in writing path, wire grounded actions.
+
+depends_on:
+  - P-UPLOAD-UI
+  - P-WRITING-GROUND
+
+owned_files:
+  - frontend/app/writing/
+  - frontend/components/writing/
+  - frontend/lib/aiActions.ts
+  - frontend/lib/contextLoad.ts
+  - frontend/lib/contextClient.ts
+
+do_not_touch:
+  - frontend/app/sources/
+  - frontend/app/knowledge/
+  - frontend/app/review/
+  - frontend/app/ai/
+  - backend/
+
+required_checks:
+  - cmd: cd frontend && npx tsc --noEmit
+    expect: pass
+  - cmd: cd frontend && npm run test -- --run Writing
+    expect: pass
+
+definition_of_done:
+  tests_green: true
+  api_documented: n/a
+  ui_wired: true
+  no_silent_fallback: true
+  no_stub_happy_path: true
+  screenshot: "Writing workspace with AI panel or index status"
+  reviewer_approved: true
+  ci_after_merge: true
+
+done_criteria:
+  - "aiActions shows error when LLM unavailable, no mock stream"
+  - "contextLoad does not use CONTEXT_STUB in writing path"
