@@ -15,7 +15,7 @@ const QUICK_ACTIONS = [
   { href: "/research", label: "Ricerca", description: "Esplora il panorama concettuale" },
   { href: "/writing", label: "Scrittura", description: "Apri l'editor dei capitoli" },
   { href: "/review", label: "Revisione", description: "Revisiona con l'assistente" },
-  { href: "/documents/upload", label: "Importa documento", description: "Aggiungi una nuova fonte" },
+  { href: "/sources/upload", label: "Importa documento", description: "Aggiungi una nuova fonte" },
 ] as const;
 
 /** PX-2 activity feed card kinds — UI spec §7 */
@@ -296,7 +296,7 @@ export function HomeView({
               </Link>{" "}
               o{" "}
               <Link
-                href="/documents/upload"
+                href="/sources/upload"
                 className="font-medium text-accent underline-offset-2 hover:underline cursor-pointer"
               >
                 importa un documento

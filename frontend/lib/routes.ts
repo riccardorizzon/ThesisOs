@@ -56,6 +56,12 @@ export const PRODUCT_ROUTES: ProductRoute[] = [
     description: "Source library",
   },
   {
+    path: "/sources/upload",
+    module: "sources",
+    milestone: "M7",
+    description: "Import document into corpus",
+  },
+  {
     path: "/knowledge",
     module: "knowledge",
     milestone: "PX-4",
