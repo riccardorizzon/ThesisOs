@@ -199,7 +199,7 @@ milestones:
     wave_d_backlog: .asep/reports/PX5-WAVE-D-BACKLOG.md
     wave_d_authorization: .asep/reports/PX5-AUTHORIZATION-WAVE-D-20260707.md
     wave_d_status: authorized
-    wave_d_first_executable_ewo: PX5-EWO-004
+    wave_d_first_executable_ewo: PX5-EWO-007
     product_spec: docs/product/specs/px5-research-experience-v1.md
     ui_spec: design-system/thesisos/px5-research-experience-ui-spec.md
     product_spec_baseline: docs/product/specs/thesisos-product-ux-v1.md
