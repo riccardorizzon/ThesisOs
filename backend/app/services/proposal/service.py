@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Proposal as ProposalRow
