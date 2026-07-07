@@ -183,10 +183,6 @@ def list_knowledge_objects(
                 continue
             items.append(envelope)
 
-    if object_type in (None, "concept"):
-        for raw in CONCEPT_CATALOG:
-            items.append(build_concept_envelope(raw))
-
     return items
 
 

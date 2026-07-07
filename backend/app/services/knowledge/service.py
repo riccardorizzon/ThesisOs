@@ -12,12 +12,7 @@ from app.schemas.knowledge import (
     KnowledgeObjectEnvelope,
     KnowledgeObjectListResponse,
 )
-from app.services.knowledge.catalog import (
-    CONCEPT_CATALOG,
-    build_concept_envelope,
-    get_knowledge_object,
-    list_knowledge_objects,
-)
+from app.services.knowledge.catalog import get_knowledge_object, list_knowledge_objects
 from app.services.knowledge.repository import (
     ConceptNotFoundError,
     ConceptRepository,
@@ -57,12 +52,7 @@ class KnowledgeService:
         items: list[KnowledgeObjectEnvelope] = []
 
         if typed in (None, "concept"):
-            db_concepts = await self._load_db_concepts(project_id, include_deprecated)
-            if db_concepts:
-                items.extend(db_concepts)
-            else:
-                for raw in CONCEPT_CATALOG:
-                    items.append(build_concept_envelope(raw))
+            items.extend(await self._load_db_concepts(project_id, include_deprecated))
 
         if typed in (None, "source"):
             for raw in list_knowledge_objects(object_type="source", include_deprecated=include_deprecated):

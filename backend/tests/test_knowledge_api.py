@@ -1,17 +1,24 @@
 """Knowledge Object API tests (PX3-EWO-001)."""
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 
 client = TestClient(app)
+PROJECT = "thesis-agent"
 
 
-def test_list_knowledge_objects_defaults():
-    res = client.get("/projects/thesis-agent/knowledge/objects")
+@pytest.mark.asyncio
+async def test_list_knowledge_objects_defaults(db_session):
+    client.post(
+        f"/projects/{PROJECT}/knowledge/concepts",
+        json={"slug": "list-defaults-concept", "title": "Defaults Concept"},
+    )
+    res = client.get(f"/projects/{PROJECT}/knowledge/objects")
     assert res.status_code == 200
     body = res.json()
-    assert body["total"] >= 5
+    assert body["total"] >= 2
     types = {o["type"] for o in body["objects"]}
     assert "concept" in types
     assert "source" in types

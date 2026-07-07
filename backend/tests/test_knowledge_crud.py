@@ -64,11 +64,48 @@ async def test_delete_concept(db_session):
 
 
 @pytest.mark.asyncio
-async def test_list_uses_db_after_seed(db_session):
-    """After migration seed, concepts come from DB (7 seeded + any created in test)."""
+async def test_list_concepts_empty_db_returns_empty(db_session):
+    """Empty DB returns [] — no silent CONCEPT_CATALOG fallback."""
     res = client.get(f"/projects/{PROJECT}/knowledge/objects", params={"type": "concept"})
     assert res.status_code == 200
     body = res.json()
-    assert body["total"] >= 7
+    assert body["objects"] == []
+    assert body["total"] == 0
+
+
+@pytest.mark.asyncio
+async def test_search_concepts_empty_db_returns_empty(db_session):
+    """Search with empty DB returns [] — no catalog fallback."""
+    res = client.get(f"/projects/{PROJECT}/knowledge/search", params={"q": "aura"})
+    assert res.status_code == 200
+    body = res.json()
+    assert body["results"] == []
+    assert body["total"] == 0
+
+
+@pytest.mark.asyncio
+async def test_list_uses_db_after_seed(db_session):
+    """Concept list returns persisted DB rows only."""
+    client.post(
+        f"/projects/{PROJECT}/knowledge/concepts",
+        json={"slug": "aura", "title": "Aura", "summary": "Benjamin — unicità dell'originale"},
+    )
+    res = client.get(f"/projects/{PROJECT}/knowledge/objects", params={"type": "concept"})
+    assert res.status_code == 200
+    body = res.json()
+    assert body["total"] == 1
     slugs = {o["slug"] for o in body["objects"]}
-    assert "aura" in slugs
+    assert slugs == {"aura"}
+
+
+@pytest.mark.asyncio
+async def test_search_concepts_from_db(db_session):
+    client.post(
+        f"/projects/{PROJECT}/knowledge/concepts",
+        json={"slug": "aura", "title": "Aura", "summary": "Presenza unica dell'originale"},
+    )
+    res = client.get(f"/projects/{PROJECT}/knowledge/search", params={"q": "aura"})
+    assert res.status_code == 200
+    body = res.json()
+    assert body["total"] == 1
+    assert body["results"][0]["slug"] == "aura"
