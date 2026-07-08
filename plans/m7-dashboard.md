@@ -129,7 +129,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | 2026-07-07 | P-REVIEW-FE | f76e8375 | ☑ pass | review wired to proposals API |
 | 2026-07-07 | P-CHAT-FE | 25f84b93 | ☑ pass | persistent chat threads from API |
 | 2026-07-07 | Wave 3 | 36ef13f8 | ☑ pass | P-BIBTEX-DB + P-EXPORT-MIN + P-M7-E2E |
-| 2026-07-08 | Wave 4 | (pending) | ☑ pass | README + OpenAPI M7 + legacy redirects |
+| 2026-07-08 | Wave 4 | 93403046 | ☑ pass | README + OpenAPI M7 + legacy redirects |
 
 ---
 
