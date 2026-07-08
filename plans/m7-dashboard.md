@@ -2,9 +2,11 @@
 
 > Aggiornare **a ogni merge** di packet. Legenda: 🔴 blocked · 🟡 in progress · 🟢 done · ⚪ not started
 
-**Branch:** `m7-product-hardening`  
+**Branch:** `m7-product-hardening` (merged → `main` pending PR)  
+**Tag:** `m7-product-hardening` @ `992c4164`  
 **Architecture Lock:** ☑ PASS (date: 2026-07-07)  
-**M7 Gate:** ☑ PASS (date: 2026-07-08)
+**M7 Gate:** ☑ PASS (date: 2026-07-08)  
+**M7 chiuso:** 2026-07-08 — tag `m7-product-hardening`, G1–G11 ☑, `make ci` + `make dogfood-m7` green
 
 ---
 
@@ -13,7 +15,7 @@
 ```text
 ASEP ── maintenance ──┐
                         ├──► M7 Product Hardening ──► M7.1 Stub Removal ──► M7.2 UX Polish
-ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC ──► Beta ──► M8 Features
+ThesisOS ── primary ────┘         🟢 closed 2026-07-08      ▲ YOU ARE HERE    RC ──► Beta ──► M8 Features
 ```
 
 **ASEP rule:** evolves only when ThesisOS requires it (ADR-0044).
@@ -133,4 +135,4 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 
 ---
 
-*Last updated: 2026-07-08 (Wave 4 gate — M7 PASS)*
+*Last updated: 2026-07-08 (M7 chiuso — cursore su M7.1 Stub Removal)*
