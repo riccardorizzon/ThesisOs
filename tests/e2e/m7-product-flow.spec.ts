@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 const API_BASE = process.env.E2E_API_BASE_URL ?? "http://127.0.0.1:8001";
 const PROJECT_ID = "thesis-agent";
 
-test.describe("M7 workflow @m7", () => {
+test.describe("M7 product flow @m7", () => {
   test("Home surfaces import CTA and primary navigation", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Home", level: 1 })).toBeVisible();
@@ -39,10 +39,11 @@ test.describe("M7 workflow @m7", () => {
     await expect(page.getByTestId("knowledge-card-aura")).toBeVisible({ timeout: 15_000 });
   });
 
-  test("Writing workspace shell renders", async ({ page }) => {
+  test("Writing workspace shell renders with export menu", async ({ page }) => {
     await page.goto("/writing");
     await expect(page.getByTestId("writing-workspace")).toBeVisible();
     await expect(page.getByTestId("context-summary")).toBeVisible();
+    await expect(page.getByTestId("export-menu")).toBeVisible();
   });
 
   test("Review workspace loads", async ({ page }) => {
@@ -78,5 +79,15 @@ test.describe("M7 workflow @m7", () => {
     const bibText = await bib.text();
     expect(bibText).toContain("@book{");
     expect(bibText).toContain("Benjamin");
+
+    const created = await request.post(`${API_BASE}/chapters`, {
+      data: { title: "E2E export", content_md: "# E2E\n\nExport smoke." },
+    });
+    expect(created.ok()).toBeTruthy();
+    const chapter = (await created.json()) as { id: string };
+    const md = await request.get(`${API_BASE}/export/chapters/${chapter.id}.md`);
+    expect(md.ok()).toBeTruthy();
+    expect(md.headers()["content-type"] ?? "").toContain("text/markdown");
+    expect(await md.text()).toContain("Export smoke.");
   });
 });

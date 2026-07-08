@@ -239,3 +239,15 @@ def test_get_source_detail_with_concepts():
 def test_get_source_not_found():
     res = client.get("/projects/thesis-agent/sources/missing-source")
     assert res.status_code == 404
+
+
+def test_export_bibliography_bibtex_from_db():
+    res = client.get("/projects/thesis-agent/sources/bibliography/export")
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("application/x-bibtex")
+    assert "attachment" in res.headers.get("content-disposition", "")
+    text = res.text
+    assert "@book{" in text
+    assert "Benjamin" in text
+    assert "Hollander" in text
+    assert "Barthes" not in text

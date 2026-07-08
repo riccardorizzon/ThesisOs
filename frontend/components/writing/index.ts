@@ -1,6 +1,7 @@
 export { WritingWorkspace, type WritingWorkspaceProps } from "@/components/writing/WritingWorkspace";
 export { WritingOutline, type WritingOutlineProps } from "@/components/writing/WritingOutline";
 export { WritingEditorShell, type WritingEditorShellProps } from "@/components/writing/WritingEditorShell";
+export { ExportMenu, type ExportMenuProps } from "@/components/writing/ExportMenu";
 export { WritingAiPanel, type WritingAiPanelProps } from "@/components/writing/WritingAiPanel";
 export { RightRail, type RightRailProps } from "@/components/writing/RightRail";
 export { RailTabs, RAIL_TABS, railTabFromShortcut, type RailTabId, type RailTabsProps } from "@/components/writing/RailTabs";

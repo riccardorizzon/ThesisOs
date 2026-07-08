@@ -14,6 +14,7 @@ import { ChapterApiError, chapterClient, type Chapter } from "@/lib/chapterClien
 import { SourcePicker } from "@/components/sources/SourcePicker";
 import { corpusClient } from "@/lib/corpusClient";
 import { dispatchOpenFontePeek } from "@/components/writing/rightRailIntegration";
+import { ExportMenu } from "@/components/writing/ExportMenu";
 import { useWritingEditorChrome } from "@/lib/writingChromeIntegration";
 
 function sectionWordCount(content: string, sectionId: string): number {
@@ -275,21 +276,6 @@ export function WritingEditorShell({
     setFindOpen(true);
   }, []);
 
-  const handleExportMarkdown = useCallback(async () => {
-    if (!chapter) return;
-    try {
-      const blob = await chapterClient.exportMarkdown(chapter.id);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${chapter.id}.md`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      setSaveState("error");
-    }
-  }, [chapter]);
-
   useWritingEditorChrome({
     onForceSave: handleForceSave,
     onFindInChapter: handleFindInChapter,
@@ -344,21 +330,17 @@ export function WritingEditorShell({
             </button>
             <button
               type="button"
-              onClick={() => void handleExportMarkdown()}
-              disabled={readOnly || !chapter}
-              className="rounded px-2 py-1 text-xs text-ink-muted hover:text-ink disabled:opacity-50"
-              data-testid="chapter-export-md"
-            >
-              Esporta .md
-            </button>
-            <button
-              type="button"
               disabled
               className="rounded px-2 py-1 text-xs text-ink-muted"
             >
               Preview
             </button>
           </div>
+          <ExportMenu
+            chapterId={chapter?.id}
+            disabled={readOnly}
+            onError={() => setSaveState("error")}
+          />
           <SaveIndicator state={saveState} />
         </div>
       </header>

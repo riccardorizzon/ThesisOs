@@ -93,6 +93,19 @@ describe("chapterClient", () => {
     const versions = await chapterClient.listVersions("ch1");
     expect(versions[0].change_kind).toBe("WRITE");
   });
+
+  it("exportMarkdown fetches markdown blob", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      blob: async () => new Blob(["# Hello"], { type: "text/markdown" }),
+    } as Response);
+
+    const blob = await chapterClient.exportMarkdown("ch1");
+    expect(blob.type).toContain("markdown");
+    const url = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    expect(url).toContain("/export/chapters/ch1.md");
+  });
 });
 
 describe("ChapterApiError", () => {

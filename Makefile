@@ -120,12 +120,9 @@ qualify-m6: ensure-test-db ## M6 Writing Qualification suite (writer route + cha
 dogfood-m6: ## End-to-end M6 writing smoke: draft a chapter + save (requires: make up, Vertex ADC)
 	@bash bin/dogfood-m6-writing-run.sh
 
-dogfood-m7: ## M7 full workflow smoke: API dogfood + Playwright UI (requires: make up, Vertex ADC)
+dogfood-m7: ## M7 full workflow smoke: API dogfood + Playwright UI (requires: stack or Vertex ADC for indexing)
 	@bash bin/dogfood-m7-run.sh
-	@cd tests/e2e && PLAYWRIGHT_SKIP_WEBSERVER=1 \
-	  PLAYWRIGHT_BASE_URL=$${PLAYWRIGHT_BASE_URL:-http://127.0.0.1:3000} \
-	  E2E_API_BASE_URL=$${E2E_API_BASE_URL:-http://127.0.0.1:8000} \
-	  npx playwright test m7-workflow.spec.ts
+	@cd tests/e2e && npx playwright test m7-product-flow.spec.ts
 
 beta-validator-rc: ## RC beta validation — staging health + 6 surfaces + context API
 	@bash bin/beta-validator-rc.sh
