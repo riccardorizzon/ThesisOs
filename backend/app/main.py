@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
     chapters,
@@ -23,6 +24,7 @@ from app.api import (
     writing_actions,
 )
 from app.core.logging import configure_logging
+from app.core.config import settings
 from app.graph.checkpointer import ensure_langgraph_schema
 from app.services.telemetry.setup import init_telemetry
 
@@ -41,6 +43,19 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="ThesisOS API", version="0.0.0", lifespan=lifespan)
+if settings.app_env == "local":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3001",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 app.include_router(system.router)
 app.include_router(jobs.router)
 app.include_router(chat.router)

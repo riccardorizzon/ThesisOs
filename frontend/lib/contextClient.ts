@@ -6,8 +6,7 @@ import {
   resolveProjectContextForSurface,
   type ProjectContext,
 } from "@/lib/projectContext";
-
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import { apiBaseUrl } from "@/lib/apiBase";
 
 export {
   DEFAULT_PRODUCT_ID,
@@ -99,7 +98,7 @@ function queryString(projectId: string, params?: ContextQuery): string {
 }
 
 async function request<T>(path: string): Promise<T> {
-  const r = await fetch(`${BASE}${path}`, { cache: "no-store" });
+  const r = await fetch(`${apiBaseUrl()}${path}`, { cache: "no-store" });
   if (!r.ok) {
     const body = (await r.json().catch(() => null)) as {
       code?: string;

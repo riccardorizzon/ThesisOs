@@ -2,8 +2,8 @@ import type { ConfidenceLevel, KnowledgeState } from "@/lib/knowledgeTypes";
 import type { SourceListItem, SourceListResponse } from "@/lib/sourcesTypes";
 
 import { getActiveProjectId } from "@/lib/projectPrefs";
+import { apiBaseUrl } from "@/lib/apiBase";
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const DEFAULT_PROJECT = "thesis-agent";
 
 function resolveProjectId(projectId?: string): string {
@@ -29,7 +29,8 @@ export async function listSources(
   if (options.includeDeprecated) params.set("include_deprecated", "true");
 
   const qs = params.toString();
-  const url = `${BASE}/projects/${projectId}/sources${qs ? `?${qs}` : ""}`;
+  const base = apiBaseUrl();
+  const url = `${base}/projects/${projectId}/sources${qs ? `?${qs}` : ""}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
@@ -48,7 +49,7 @@ export async function getSource(
 ): Promise<SourceListItem> {
   const pid = resolveProjectId(projectId);
   const res = await fetch(
-    `${BASE}/projects/${pid}/sources/${encodeURIComponent(slug)}`,
+    `${apiBaseUrl()}/projects/${pid}/sources/${encodeURIComponent(slug)}`,
     { cache: "no-store" }
   );
   if (!res.ok) {
@@ -67,7 +68,7 @@ export async function exportBibliography(
 ): Promise<Blob> {
   const pid = resolveProjectId(projectId);
   const res = await fetch(
-    `${BASE}/projects/${pid}/sources/bibliography/export?format=bibtex`,
+    `${apiBaseUrl()}/projects/${pid}/sources/bibliography/export?format=bibtex`,
     { cache: "no-store" }
   );
   if (!res.ok) throw new Error(`Bibliography export failed: ${res.status}`);
