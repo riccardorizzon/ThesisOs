@@ -148,7 +148,7 @@ ThesisOS ── primary ────┘         (done)              (done)      
 | 2026-07-07 | Wave 3 | 36ef13f8 | ☑ pass | P-BIBTEX-DB + P-EXPORT-MIN + P-M7-E2E |
 | 2026-07-08 | Wave 4 | 93403046 | ☑ pass | README + OpenAPI M7 + legacy redirects |
 | 2026-07-08 | M7.1 | 71fa72fb | ☑ pass | stub removal — API-only runtime |
-| 2026-07-08 | M7.2 | TBD | ☑ pass | UX polish — RC gate |
+| 2026-07-08 | M7.2 | 2dda483f | ☑ pass | UX polish — RC gate |
 
 ---
 
