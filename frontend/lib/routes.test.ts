@@ -38,9 +38,15 @@ describe("LEGACY_REDIRECTS", () => {
     expect(LEGACY_REDIRECTS.find((r) => r.source === "/workspace")?.destination).toBe(
       "/writing"
     );
+    expect(LEGACY_REDIRECTS.find((r) => r.source === "/outline")?.destination).toBe(
+      "/writing"
+    );
     expect(LEGACY_REDIRECTS.find((r) => r.source === "/memory")?.destination).toBe(
       "/knowledge"
     );
+    expect(
+      LEGACY_REDIRECTS.find((r) => r.source === "/memory/:path*")?.destination
+    ).toBe("/knowledge");
   });
 
   it("redirects /documents to /sources per PX3-EWO-001", () => {

@@ -123,24 +123,30 @@ export const LEGACY_REDIRECTS: LegacyRedirect[] = [
     permanent: false,
     adr: "ADR-0036 — outline becomes Writing left panel",
   },
-    {
-        source: "/memory",
-        destination: "/knowledge",
-        permanent: false,
-        adr: "ADR-0036 — memory admin split; primary → Knowledge",
-    },
-    {
-        source: "/documents",
-        destination: "/sources",
-        permanent: false,
-        adr: "ADR-0036 — documents absorbed into Sources (PX-3)",
-    },
-    {
-        source: "/documents/:path*",
-        destination: "/sources/:path*",
-        permanent: false,
-        adr: "ADR-0036 — documents/* → sources/* (PX-3)",
-    },
+  {
+    source: "/memory",
+    destination: "/knowledge",
+    permanent: false,
+    adr: "ADR-0036 — memory admin split; primary → Knowledge",
+  },
+  {
+    source: "/memory/:path*",
+    destination: "/knowledge",
+    permanent: false,
+    adr: "ADR-0036 — memory/* → Knowledge",
+  },
+  {
+    source: "/documents",
+    destination: "/sources",
+    permanent: false,
+    adr: "ADR-0036 — documents absorbed into Sources (PX-3)",
+  },
+  {
+    source: "/documents/:path*",
+    destination: "/sources/:path*",
+    permanent: false,
+    adr: "ADR-0036 — documents/* → sources/* (PX-3)",
+  },
 ];
 
 /** Next.js redirect shape */

@@ -4,7 +4,7 @@
 
 **Branch:** `m7-product-hardening`  
 **Architecture Lock:** ☑ PASS (date: 2026-07-07)  
-**M7 Gate:** ☑ PASS (date: 2026-07-07)
+**M7 Gate:** ☑ PASS (date: 2026-07-08)
 
 ---
 
@@ -31,8 +31,8 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | Wave 1b (4 agents) | 🟢 | all 4 packets merged, CI pass |
 | Wave 2 (domain FE) | 🟢 | all 5 packets merged, CI pass |
 | Wave 3 (E2E + export) | 🟢 | dogfood-m7 + Playwright pass |
-| Wave 4 (cleanup) | ⚪ | |
-| **M7 PASS** | 🟢 | G1–G9, G10 ☑ (redirects); G11 Wave 4 |
+| Wave 4 (cleanup) | 🟢 | README, OpenAPI, legacy redirects |
+| **M7 PASS** | 🟢 | G1–G11 ☑ |
 
 ---
 
@@ -68,13 +68,22 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 
 ---
 
-## Wave 3
+## Wave 3 — Export + E2E
 
 | Packet | Status | Branch | Merged | CI post-merge | Reviewer |
 |--------|--------|--------|--------|---------------|----------|
 | P-BIBTEX-DB | 🟢 | m7-product-hardening | 2026-07-07 | ☑ pass | |
 | P-EXPORT-MIN | 🟢 | m7-product-hardening | 2026-07-07 | ☑ pass | |
 | P-M7-E2E | 🟢 | m7-product-hardening | 2026-07-07 | ☑ pass | |
+
+---
+
+## Wave 4 — Cleanup
+
+| Packet | Status | Branch | Merged | CI post-merge | Reviewer |
+|--------|--------|--------|--------|---------------|----------|
+| P-LEGACY-ROUTES | 🟢 | m7-product-hardening | 2026-07-08 | ☑ pass | |
+| P-DOCS-SYNC | 🟢 | m7-product-hardening | 2026-07-08 | ☑ pass | |
 
 ---
 
@@ -92,7 +101,7 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | G8 | Review accept → DB | ☑ |
 | G9 | BibTeX export | ☑ |
 | G10 | No broken redirects | ☑ |
-| G11 | README updated | ☐ |
+| G11 | README updated | ☑ |
 
 ---
 
@@ -120,7 +129,8 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | 2026-07-07 | P-REVIEW-FE | f76e8375 | ☑ pass | review wired to proposals API |
 | 2026-07-07 | P-CHAT-FE | 25f84b93 | ☑ pass | persistent chat threads from API |
 | 2026-07-07 | Wave 3 | 36ef13f8 | ☑ pass | P-BIBTEX-DB + P-EXPORT-MIN + P-M7-E2E |
+| 2026-07-08 | Wave 4 | (pending) | ☑ pass | README + OpenAPI M7 + legacy redirects |
 
 ---
 
-*Last updated: 2026-07-07 (Wave 3 gate)*
+*Last updated: 2026-07-08 (Wave 4 gate — M7 PASS)*
