@@ -5,7 +5,9 @@
 **Branch:** `main`  
 **Architecture Lock:** ☑ PASS (date: 2026-07-07)  
 **M7 Gate:** ☑ PASS (date: 2026-07-08)  
-**M7.2 Gate:** ☑ PASS (date: 2026-07-08)
+**M7.2 Gate:** ☑ PASS (date: 2026-07-08)  
+**RC Gate:** ☑ PASS — `v2.0.0-rc.2` @ `5039df77` (date: 2026-07-08)  
+**Beta:** 🟢 OPEN — Day 0 validator PASS (cohort onboarding)
 
 ---
 
@@ -13,8 +15,8 @@
 
 ```text
 ASEP ── maintenance ──┐
-                        ├──► M7 Product Hardening ──► M7.1 Stub Removal ──► M7.2 UX Polish ──► RC
-ThesisOS ── primary ────┘         (done)              (done)                 (done)          ▲ NEXT
+                        ├──► M7 ──► M7.1 ──► M7.2 ──► RC ──► Beta ──► GA / M8
+ThesisOS ── primary ────┘    (done)  (done)  (done)  (done)  ▲ HERE   (future)
 ```
 
 **ASEP rule:** evolves only when ThesisOS requires it (ADR-0044).
@@ -36,6 +38,8 @@ ThesisOS ── primary ────┘         (done)              (done)      
 | **M7 PASS** | 🟢 | G1–G11 ☑ |
 | **M7.1 Stub Removal** | 🟢 | gate 0 stub refs, `make ci` |
 | **M7.2 UX Polish** | 🟢 | skeletons, lazy routes, coach marks, Playwright CI |
+| **Release Candidate** | 🟢 | `v2.0.0-rc.2` tagged, staging deploy, beta-validator Day 0 |
+| **Beta validation** | 🟢 | cohort open — 7-day window, triage tracker active |
 
 ---
 
@@ -122,6 +126,20 @@ ThesisOS ── primary ────┘         (done)              (done)      
 
 ---
 
+## Gate checklist (RC → Beta)
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| G1 | `make ci` green on RC commit | ☑ |
+| G2 | Staging deploy (docker compose) | ☑ |
+| G3 | Beta validator Day 0 (`make beta-validator-rc`) | ☑ |
+| G4 | RC bundle + approval certificate | ☑ |
+| G5 | Onboarding guide updated | ☑ |
+| G6 | Human cohort (5–10) | 🟡 open |
+| G7 | 7-day stability + triage | 🟡 in progress |
+
+---
+
 ## Blockers
 
 | Date | Packet | Blocker | Resolution |
@@ -149,7 +167,8 @@ ThesisOS ── primary ────┘         (done)              (done)      
 | 2026-07-08 | Wave 4 | 93403046 | ☑ pass | README + OpenAPI M7 + legacy redirects |
 | 2026-07-08 | M7.1 | 71fa72fb | ☑ pass | stub removal — API-only runtime |
 | 2026-07-08 | M7.2 | 2dda483f | ☑ pass | UX polish — RC gate |
+| 2026-07-08 | RC | 5039df77 | ☑ pass | v2.0.0-rc.2 tagged, beta Day 0 PASS |
 
 ---
 
-*Last updated: 2026-07-08 (M7.2 UX polish complete — RC ready)*
+*Last updated: 2026-07-08 (RC v2.0.0-rc.2 — Beta open)*

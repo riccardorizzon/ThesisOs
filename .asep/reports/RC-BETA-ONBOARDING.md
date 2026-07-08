@@ -1,45 +1,37 @@
-# RC Beta Onboarding — ThesisOS v2.0.0-rc.1
+# RC Beta Onboarding — ThesisOS v2.0.0-rc.2
 
 > **Audience:** beta testers (5–10)  
-> **Baseline:** `v2.0.0-rc.1` @ `fd23ad70`  
-> **Phase:** validation only — no new features
+> **Baseline:** `v2.0.0-rc.2` @ `5039df77` (M7 complete)  
+> **Phase:** validation only — no new features (M8 blocked until beta exit)
 
-## Access (public beta — attivo)
+## Access
 
-**URL da condividere:**
+### Local / dev VM (recommended for first cohort)
 
-### https://indexes-ghz-joan-stronger.trycloudflare.com
+```bash
+git checkout v2.0.0-rc.2   # or main @ 5039df77+
+make up
+# Frontend: http://localhost:3000
+# API:      http://localhost:8000
+```
 
-Frontend + API sulla stessa origine (nginx + Cloudflare Tunnel).  
-Funziona da qualsiasi browser, senza SSH.
+Cursor Remote-SSH: forward ports **3000** + **8000**.
 
-> Il tunnel quick Cloudflare **non ha uptime garantito** e l’URL cambia se riavvii
-> `bin/beta-public-open.sh`. Per ripristinare: `bash bin/beta-public-open.sh`
+### Public beta (optional — short sessions)
 
-### Ripristino / rigenerazione URL
+Regenerate Cloudflare tunnel URL:
 
 ```bash
 bash bin/beta-public-open.sh
 cat /tmp/thesisos-beta-public.env   # URL corrente
 ```
 
-### Opzioni alternative (solo dev)
+> Quick tunnel has **no uptime SLA**; URL changes on restart.
 
 <details>
-<summary>SSH / Cursor port forward (single-user)</summary>
+<summary>Previous rc.1 public URL (deprecated)</summary>
 
-### Option A — Cursor
-
-1. Remote-SSH → `thesisos-dev.europe-west1-b.thesisos-prod`
-2. Forward ports **3000** + **8000**
-3. http://localhost:3000
-
-### Option B — SSH tunnel
-
-```bash
-gcloud compute ssh thesisos-dev --zone=europe-west1-b --project=thesisos-prod \
-  -- -L 3000:127.0.0.1:3000 -L 8000:127.0.0.1:8000 -N
-```
+`https://indexes-ghz-joan-stronger.trycloudflare.com` — superseded by rc.2 baseline.
 
 </details>
 
@@ -78,7 +70,7 @@ Actual:
 Screenshot: (optional)
 ```
 
-Triage tracker: `.asep/reports/THESISOS-v2.0.0-rc.1-BETA-VALIDATION.md`
+Triage tracker: `.asep/reports/THESISOS-v2.0.0-rc.2-BETA-VALIDATION.md`
 
 ## Known limitations (accepted for RC)
 

@@ -6,11 +6,11 @@ production target: GCP (Cloud Run + Cloud SQL).
 
 ## Status
 
-**M7.2 UX Polish** — Release Candidate quality: error UX, empty states, loading
-skeletons, lazy routes, onboarding coach marks, Playwright in CI. See
-[docs/user/getting-started.md](docs/user/getting-started.md).
+**Beta — `v2.0.0-rc.2`** — M7 complete on `main`; RC tagged @ `5039df77`.
+Beta validation open (7-day window). Onboarding:
+[`.asep/reports/RC-BETA-ONBOARDING.md`](.asep/reports/RC-BETA-ONBOARDING.md).
 
-Next: Release Candidate → Beta.
+Next: GA approval after beta exit → M8 (new features).
 
 ## Product surfaces
 

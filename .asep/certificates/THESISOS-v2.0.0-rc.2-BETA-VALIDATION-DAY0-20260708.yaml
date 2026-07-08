@@ -1,0 +1,42 @@
+certificate_version: "1.0"
+certificate_type: rc-beta-validation
+issued_at: "2026-07-08T18:40:00+02:00"
+issued_by: release-manager
+
+product:
+  id: thesisos-v2.0.0-rc.2
+  tag: v2.0.0-rc.2
+  commit: 5039df77
+  program: m7-product-hardening
+
+validation:
+  day: 0
+  script: bin/beta-validator-rc.sh
+  report: .asep/reports/THESISOS-v2.0.0-rc.2-BETA-VALIDATION-RUN-20260708.md
+  onboarding: .asep/reports/RC-BETA-ONBOARDING.md
+
+staging:
+  frontend: http://127.0.0.1:3000
+  api: http://127.0.0.1:8000
+  containers: agentthesis-*
+
+checks:
+  health: PASS
+  http_routes: PASS
+  context_api: PASS
+  playwright_api: "2/2 PASS"
+  make_ci: PASS
+
+human_cohort:
+  status: open
+  target_users: "5-10"
+  duration_days: 7
+
+blockers: []
+
+verdict: PASS
+
+next:
+  - onboard beta users via RC-BETA-ONBOARDING.md
+  - rerun make beta-validator-rc daily
+  - triage feedback in BETA-VALIDATION tracker

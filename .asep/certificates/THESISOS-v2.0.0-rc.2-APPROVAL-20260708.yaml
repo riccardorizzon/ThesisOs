@@ -1,0 +1,29 @@
+certificate_version: "1.0"
+certificate_type: release-candidate-approval
+issued_at: "2026-07-08T18:35:00+02:00"
+issued_by: architect
+
+product:
+  id: thesisos-v2.0.0-rc.2
+  tag: v2.0.0-rc.2
+  commit: 5039df77
+  bundle: .asep/reports/THESISOS-v2.0.0-rc.2-M7-RC-BUNDLE.md
+
+gates:
+  m7: PASS
+  m7_1: PASS
+  m7_2: PASS
+  make_ci: PASS
+
+authorization:
+  staging_deploy: authorized
+  beta_onboarding: authorized
+  ga_release: not_authorized
+
+execution_report: .asep/reports/THESISOS-v2.0.0-rc.2-APPROVAL-EXECUTION-20260708.md
+
+actions:
+  - tag_v2.0.0-rc.2
+  - push_tag
+  - deploy_staging
+  - open_beta_cohort
