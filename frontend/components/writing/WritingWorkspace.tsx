@@ -7,6 +7,7 @@ import { dispatchOpenReview } from "@/components/review/reviewIntegration";
 import type { ContextPacket } from "@/lib/contextClient";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 import { parseWritingUrlState, saveSessionState, type PanelTab } from "@/lib/sessionState";
+import { EmptyStatePanel } from "@/components/ui/EmptyStatePanel";
 import { RightRail } from "@/components/writing/RightRail";
 import { type RailTabId } from "@/components/writing/RailTabs";
 import { WritingEditorShell } from "@/components/writing/WritingEditorShell";
@@ -76,6 +77,7 @@ export function WritingWorkspace({
   const [chapters, setChapters] = useState<WritingOutlineChapter[]>(
     chaptersProp ?? []
   );
+  const [chaptersLoaded, setChaptersLoaded] = useState(Boolean(chaptersProp?.length));
   const [sections, setSections] = useState<MarkdownSection[]>([]);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   const [selectionText, setSelectionText] = useState("");
@@ -100,6 +102,7 @@ export function WritingWorkspace({
   useEffect(() => {
     if (chaptersProp) {
       setChapters(chaptersProp);
+      setChaptersLoaded(true);
       return;
     }
     void chapterClient
@@ -108,7 +111,10 @@ export function WritingWorkspace({
         if (list.length > 0) setChapters(list.map(chapterToOutline));
       })
       .catch(() => {
-        /* keep stub fallback */
+        /* outline stays empty */
+      })
+      .finally(() => {
+        setChaptersLoaded(true);
       });
   }, [chaptersProp]);
 
@@ -195,6 +201,18 @@ export function WritingWorkspace({
   return (
     <div className={cn("space-y-3", className)} data-testid="writing-workspace">
       <DocumentIndexStatusBanner />
+
+      {chaptersLoaded && chapters.length === 0 ? (
+        <EmptyStatePanel
+          title="Nessun capitolo"
+          description="Crea il primo capitolo dalla API o importa la struttura della tesi per iniziare a scrivere."
+          actions={[
+            { href: "/sources/upload", label: "Importa documento", variant: "secondary" },
+            { href: "/", label: "Torna alla Home", variant: "secondary" },
+          ]}
+          testId="writing-chapters-empty"
+        />
+      ) : null}
 
       {readOnly && (
         <div

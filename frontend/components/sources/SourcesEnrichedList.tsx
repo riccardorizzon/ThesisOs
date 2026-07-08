@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
+import { EmptyStatePanel } from "@/components/ui/EmptyStatePanel";
 import { SourcesFilterRail } from "@/components/sources/SourcesFilterRail";
 import { BibliographyExportBar } from "@/components/sources/BibliographyExportBar";
 import { SourceKnowledgeCard } from "@/components/sources/SourceKnowledgeCard";
@@ -97,6 +98,30 @@ export function SourcesEnrichedList({
     const base = `/sources/${slug}`;
     return chapterContext ? `${base}?chapter=${chapterContext}` : base;
   };
+
+  if (initialSources.length === 0) {
+    return (
+      <div className={cn("mx-auto max-w-content", className)}>
+        {chapterContext && <ReturnToWritingPill chapterId={chapterContext} />}
+        <header className="mb-8">
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">Sources</h1>
+          <p className="mt-1 max-w-prose text-sm text-ink-muted">
+            La fonte come oggetto knowledge: metadati, lifecycle e collegamenti ai
+            concetti del corpus.
+          </p>
+        </header>
+        <EmptyStatePanel
+          title="Nessuna fonte nel corpus"
+          description="Importa il primo documento bibliografico per popolare la libreria e collegarlo ai concetti."
+          actions={[
+            { href: "/sources/upload", label: "Importa documento", variant: "primary" },
+            { href: "/knowledge", label: "Vai a Knowledge", variant: "secondary" },
+          ]}
+          testId="sources-corpus-empty"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={cn("mx-auto max-w-content", className)}>

@@ -10,7 +10,7 @@ production target: GCP (Cloud Run + Cloud SQL).
 Knowledge, Chat, Writing, Review), BibTeX export, chapter `.md` export, and E2E
 gates (`make dogfood-m7`, Playwright `m7-product-flow`).
 
-Next: M7.1 stub removal → M7.2 UX polish → Release Candidate.
+Next: M7.2 UX polish → Release Candidate. See [docs/user/getting-started.md](docs/user/getting-started.md).
 
 ## Product surfaces
 

@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { ApiErrorBanner } from "@/components/ui/ApiErrorBanner";
 import { cn } from "@/lib/cn";
 
 export type SourcesErrorStateProps = {
@@ -22,15 +21,14 @@ export function SourcesErrorState({
   return (
     <div className={cn("mx-auto max-w-content", className)}>
       <h1 className="text-2xl font-semibold text-ink">{title}</h1>
-      <p className="mt-2 text-sm text-ink-muted" data-testid="sources-error-message">
-        {message}
-      </p>
-      <Link
-        href={backHref}
-        className="mt-4 inline-block text-sm font-medium text-accent underline-offset-2 hover:underline cursor-pointer"
-      >
-        ← Torna a Sources
-      </Link>
+      <ApiErrorBanner
+        className="mt-4"
+        title="Impossibile caricare le fonti"
+        message={message}
+        backHref={backHref}
+        backLabel="← Torna a Sources"
+        testId="sources-error-banner"
+      />
     </div>
   );
 }

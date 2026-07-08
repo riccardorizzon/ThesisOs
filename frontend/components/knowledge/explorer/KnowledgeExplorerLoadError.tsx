@@ -1,3 +1,4 @@
+import { ApiErrorBanner } from "@/components/ui/ApiErrorBanner";
 import { cn } from "@/lib/cn";
 
 export type KnowledgeExplorerLoadErrorProps = {
@@ -20,19 +21,13 @@ export function KnowledgeExplorerLoadError({
         </p>
       </header>
 
-      <div
-        className="rounded-lg border border-red-200 bg-red-50 px-4 py-6 text-center"
-        role="alert"
-        data-testid="knowledge-load-error"
-      >
-        <p className="text-sm font-medium text-red-800">
-          Impossibile caricare i concetti
-        </p>
-        <p className="mt-2 text-sm text-red-700">{message}</p>
-        <p className="mt-3 text-xs text-red-600">
-          Verifica che il backend sia in esecuzione e riprova.
-        </p>
-      </div>
+      <ApiErrorBanner
+        title="Impossibile caricare i concetti"
+        message={message}
+        backHref="/"
+        backLabel="← Torna alla Home"
+        testId="knowledge-load-error"
+      />
     </div>
   );
 }

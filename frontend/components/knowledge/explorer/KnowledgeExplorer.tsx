@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
+import { EmptyStatePanel } from "@/components/ui/EmptyStatePanel";
 import { KnowledgeConceptCard } from "@/components/knowledge/explorer/KnowledgeConceptCard";
 import { KnowledgeExplorerFilters } from "@/components/knowledge/explorer/KnowledgeExplorerFilters";
 import { KnowledgeExplorerSearch } from "@/components/knowledge/explorer/KnowledgeExplorerSearch";
@@ -78,22 +79,15 @@ export function KnowledgeExplorer({
           </p>
         </header>
 
-        <div
-          className="rounded-md border border-dashed border-border bg-surface-muted p-10 text-center"
-          data-testid="knowledge-empty-state"
-        >
-          <p className="text-sm font-medium text-ink">Nessun concetto nel corpus</p>
-          <p className="mt-2 text-sm text-ink-muted">
-            Importa fonti in{" "}
-            <Link
-              href="/sources"
-              className="font-medium text-accent underline-offset-2 hover:underline cursor-pointer"
-            >
-              Sources
-            </Link>{" "}
-            per estrarre concetti dalla tua ricerca.
-          </p>
-        </div>
+        <EmptyStatePanel
+          title="Nessun concetto nel corpus"
+          description="Importa fonti bibliografiche per estrarre concetti dalla tua ricerca."
+          actions={[
+            { href: "/sources/upload", label: "Importa documento", variant: "primary" },
+            { href: "/sources", label: "Vai a Sources", variant: "secondary" },
+          ]}
+          testId="knowledge-empty-state"
+        />
       </div>
     );
   }

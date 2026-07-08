@@ -13,7 +13,8 @@
 ```text
 ASEP ── maintenance ──┐
                         ├──► M7 Product Hardening ──► M7.1 Stub Removal ──► M7.2 UX Polish
-ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC ──► Beta ──► M8 Features
+ThesisOS ── primary ────┘         (done)              (done)            ▲ YOU ARE HERE
+                                                                               RC ──► Beta
 ```
 
 **ASEP rule:** evolves only when ThesisOS requires it (ADR-0044).
@@ -33,6 +34,8 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | Wave 3 (E2E + export) | 🟢 | dogfood-m7 + Playwright pass |
 | Wave 4 (cleanup) | 🟢 | README, OpenAPI, legacy redirects |
 | **M7 PASS** | 🟢 | G1–G11 ☑ |
+| **M7.1 Stub Removal** | 🟢 | gate 0 stub refs, `make ci` |
+| **M7.2 UX Polish** | 🟡 | Error UX, empty states, getting-started |
 
 ---
 
@@ -130,7 +133,9 @@ ThesisOS ── primary ────┘         ▲ YOU ARE HERE              RC
 | 2026-07-07 | P-CHAT-FE | 25f84b93 | ☑ pass | persistent chat threads from API |
 | 2026-07-07 | Wave 3 | 36ef13f8 | ☑ pass | P-BIBTEX-DB + P-EXPORT-MIN + P-M7-E2E |
 | 2026-07-08 | Wave 4 | 93403046 | ☑ pass | README + OpenAPI M7 + legacy redirects |
+| 2026-07-08 | M7.1 | 71fa72fb | ☑ pass | stub removal — API-only runtime |
+| 2026-07-08 | M7.2 (WIP) | — | — | ApiErrorBanner, empty states, getting-started |
 
 ---
 
-*Last updated: 2026-07-08 (Wave 4 gate — M7 PASS)*
+*Last updated: 2026-07-08 (M7.1 merged — M7.2 UX polish in progress)*
