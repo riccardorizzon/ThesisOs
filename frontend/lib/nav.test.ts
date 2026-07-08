@@ -82,6 +82,18 @@ describe("buildBreadcrumbs", () => {
   it("handles settings route", () => {
     expect(buildBreadcrumbs("/settings")).toEqual([{ label: "Settings" }]);
   });
+
+  it("labels adjunct routes outside primary nav", () => {
+    expect(buildBreadcrumbs("/ai")).toEqual([{ label: "AI" }]);
+    expect(buildBreadcrumbs("/review")).toEqual([{ label: "Revisione" }]);
+  });
+
+  it("labels sources upload nested route", () => {
+    expect(buildBreadcrumbs("/sources/upload")).toEqual([
+      { label: "Sources", href: "/sources" },
+      { label: "Importa" },
+    ]);
+  });
 });
 
 describe("shouldShowBreadcrumbs", () => {

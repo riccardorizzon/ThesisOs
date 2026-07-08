@@ -2,9 +2,10 @@
 
 > Aggiornare **a ogni merge** di packet. Legenda: 🔴 blocked · 🟡 in progress · 🟢 done · ⚪ not started
 
-**Branch:** `m7-product-hardening`  
+**Branch:** `main`  
 **Architecture Lock:** ☑ PASS (date: 2026-07-07)  
-**M7 Gate:** ☑ PASS (date: 2026-07-08)
+**M7 Gate:** ☑ PASS (date: 2026-07-08)  
+**M7.2 Gate:** ☑ PASS (date: 2026-07-08)
 
 ---
 
@@ -12,9 +13,8 @@
 
 ```text
 ASEP ── maintenance ──┐
-                        ├──► M7 Product Hardening ──► M7.1 Stub Removal ──► M7.2 UX Polish
-ThesisOS ── primary ────┘         (done)              (done)            ▲ YOU ARE HERE
-                                                                               RC ──► Beta
+                        ├──► M7 Product Hardening ──► M7.1 Stub Removal ──► M7.2 UX Polish ──► RC
+ThesisOS ── primary ────┘         (done)              (done)                 (done)          ▲ NEXT
 ```
 
 **ASEP rule:** evolves only when ThesisOS requires it (ADR-0044).
@@ -35,7 +35,7 @@ ThesisOS ── primary ────┘         (done)              (done)      
 | Wave 4 (cleanup) | 🟢 | README, OpenAPI, legacy redirects |
 | **M7 PASS** | 🟢 | G1–G11 ☑ |
 | **M7.1 Stub Removal** | 🟢 | gate 0 stub refs, `make ci` |
-| **M7.2 UX Polish** | 🟡 | Error UX, empty states, getting-started |
+| **M7.2 UX Polish** | 🟢 | skeletons, lazy routes, coach marks, Playwright CI |
 
 ---
 
@@ -108,6 +108,20 @@ ThesisOS ── primary ────┘         (done)              (done)      
 
 ---
 
+## Gate checklist (M7.2 → RC)
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| G1 | ApiErrorBanner + retry on module errors | ☑ |
+| G2 | Empty states with actionable CTAs | ☑ |
+| G3 | Loading skeletons + lazy heavy routes | ☑ |
+| G4 | Coach marks extended (5 steps) | ☑ |
+| G5 | Breadcrumb edge cases (/ai, /review, upload) | ☑ |
+| G6 | Playwright `m7-product-flow` in CI | ☑ |
+| G7 | `docs/user/getting-started.md` | ☑ |
+
+---
+
 ## Blockers
 
 | Date | Packet | Blocker | Resolution |
@@ -134,8 +148,8 @@ ThesisOS ── primary ────┘         (done)              (done)      
 | 2026-07-07 | Wave 3 | 36ef13f8 | ☑ pass | P-BIBTEX-DB + P-EXPORT-MIN + P-M7-E2E |
 | 2026-07-08 | Wave 4 | 93403046 | ☑ pass | README + OpenAPI M7 + legacy redirects |
 | 2026-07-08 | M7.1 | 71fa72fb | ☑ pass | stub removal — API-only runtime |
-| 2026-07-08 | M7.2 (WIP) | — | — | ApiErrorBanner, empty states, getting-started |
+| 2026-07-08 | M7.2 | TBD | ☑ pass | UX polish — RC gate |
 
 ---
 
-*Last updated: 2026-07-08 (M7.1 merged — M7.2 UX polish in progress)*
+*Last updated: 2026-07-08 (M7.2 UX polish complete — RC ready)*

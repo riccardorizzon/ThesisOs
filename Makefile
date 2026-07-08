@@ -13,7 +13,7 @@ RUFF     := $(BACKEND)/.venv/bin/ruff
 .DEFAULT_GOAL := help
 
 .PHONY: help install ensure-test-db lint format format-fix typecheck unit unit-frontend unit-builder-engine test \
-        drift scope isolation check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5 qualify-m6 dogfood-m6 dogfood-m7
+        drift scope isolation check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5 qualify-m6 dogfood-m6 dogfood-m7 gate-m7.2
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -123,6 +123,11 @@ dogfood-m6: ## End-to-end M6 writing smoke: draft a chapter + save (requires: ma
 dogfood-m7: ## M7 full workflow smoke: API dogfood + Playwright UI (requires: stack or Vertex ADC for indexing)
 	@bash bin/dogfood-m7-run.sh
 	@cd tests/e2e && npx playwright test m7-product-flow.spec.ts
+
+gate-m7.2: ensure-test-db ## M7.2 UX polish gate — unit + Playwright product flow
+	$(MAKE) ci
+	@cd tests/e2e && npm ci && npx playwright install chromium
+	@cd tests/e2e && DATABASE_URL=postgresql+psycopg://thesisos:thesisos@127.0.0.1:5432/thesisos npx playwright test m7-product-flow.spec.ts
 
 beta-validator-rc: ## RC beta validation — staging health + 6 surfaces + context API
 	@bash bin/beta-validator-rc.sh

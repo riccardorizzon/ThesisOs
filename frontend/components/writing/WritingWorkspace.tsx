@@ -200,7 +200,7 @@ export function WritingWorkspace({
 
   return (
     <div className={cn("space-y-3", className)} data-testid="writing-workspace">
-      <DocumentIndexStatusBanner />
+      {!readOnly ? <DocumentIndexStatusBanner /> : null}
 
       {chaptersLoaded && chapters.length === 0 ? (
         <EmptyStatePanel

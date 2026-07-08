@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { WritingContextBar } from "@/components/context";
 import { WritingWorkspace } from "@/components/writing";
 import { ApiErrorBanner } from "@/components/ui/ApiErrorBanner";
+import { WritingWorkspaceSkeleton } from "@/components/ui/PageSkeleton";
 import { ContextApiError } from "@/lib/contextClient";
 import { loadContext } from "@/lib/contextLoad";
 
@@ -34,7 +35,7 @@ export default async function WritingPage() {
   return (
     <div className="space-y-6">
       <WritingContextBar packet={context} />
-      <Suspense fallback={<p className="text-sm text-ink-muted">Caricamento workspace…</p>}>
+      <Suspense fallback={<WritingWorkspaceSkeleton />}>
         <WritingWorkspace contextPacket={context} />
       </Suspense>
     </div>

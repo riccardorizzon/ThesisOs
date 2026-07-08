@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { WritingContextBar } from "@/components/context";
 import { WritingWorkspace } from "@/components/writing";
+import { WritingWorkspaceSkeleton } from "@/components/ui/PageSkeleton";
 import { ContextApiError } from "@/lib/contextClient";
 import { loadContext } from "@/lib/contextLoad";
 
@@ -39,7 +40,7 @@ export default async function WritingChapterPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <WritingContextBar packet={context} selectionAnchor={context.selection_anchor} />
-      <Suspense fallback={<p className="text-sm text-ink-muted">Caricamento workspace…</p>}>
+      <Suspense fallback={<WritingWorkspaceSkeleton />}>
         <WritingWorkspace chapterId={chapterId} contextPacket={context} />
       </Suspense>
     </div>

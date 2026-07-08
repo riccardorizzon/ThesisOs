@@ -36,7 +36,7 @@ describe("CoachMark", () => {
         onNext={vi.fn()}
         onSkip={vi.fn()}
         stepIndex={0}
-        totalSteps={3}
+        totalSteps={5}
       />
     );
 
@@ -62,7 +62,7 @@ describe("CoachMarkProvider", () => {
     expect(screen.queryByTestId("coach-mark-step-1")).toBeNull();
   });
 
-  it("limits onboarding to three steps", () => {
-    expect(PX2_COACH_STEPS).toHaveLength(3);
+  it("limits onboarding to five M7 steps", () => {
+    expect(PX2_COACH_STEPS).toHaveLength(5);
   });
 });

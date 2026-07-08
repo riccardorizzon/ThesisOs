@@ -156,6 +156,24 @@ export function AiChatView() {
           {messages.map((m, i) => (
             <MessageBubble key={i} message={m} />
           ))}
+          {streaming && (
+            <div
+              className="flex items-center gap-1 px-2 text-sm text-ink-muted"
+              data-testid="ai-chat-streaming"
+              aria-live="polite"
+              aria-label="Risposta in corso"
+            >
+              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+              <span
+                className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent"
+                style={{ animationDelay: "150ms" }}
+              />
+              <span
+                className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent"
+                style={{ animationDelay: "300ms" }}
+              />
+            </div>
+          )}
           {error && (
             <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}

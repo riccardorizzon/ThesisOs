@@ -1,6 +1,6 @@
 import {
   JobFsmObservationStrip,
-  KnowledgeGraphPanel,
+  KnowledgeGraphPanelLazy,
 } from "@/components/knowledge/graph";
 import { getJobFsmObservation, getKnowledgeGraph } from "@/lib/knowledgeClient";
 
@@ -28,7 +28,7 @@ export default async function KnowledgeGraphPage({
   return (
     <main className="mx-auto max-w-content space-y-6 px-4 py-8">
       <JobFsmObservationStrip observation={jobFsm} />
-      <KnowledgeGraphPanel graph={graph} />
+      <KnowledgeGraphPanelLazy graph={graph} />
     </main>
   );
 }

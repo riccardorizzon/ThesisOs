@@ -1,4 +1,4 @@
-import { ResearchCanvasShell } from "@/components/research/canvas/ResearchCanvasShell";
+import { ResearchCanvasShellLazy } from "@/components/research/ResearchCanvasShellLazy";
 import type { KnowledgeGraphResponse } from "@/lib/knowledgeTypes";
 
 export type ResearchCanvasPageProps = {
@@ -8,9 +8,9 @@ export type ResearchCanvasPageProps = {
 };
 
 /**
- * PX-5 canvas page — server wrapper for client shell (PX5-EWO-004).
+ * PX-5 canvas page — server wrapper for lazy client shell (M7.2).
  * Layer: Business (Product Plane)
  */
 export function ResearchCanvasPage({ graph, focus, view }: ResearchCanvasPageProps) {
-  return <ResearchCanvasShell graph={graph} focus={focus} view={view} />;
+  return <ResearchCanvasShellLazy graph={graph} focus={focus} view={view} />;
 }

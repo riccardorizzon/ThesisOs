@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { cn } from "@/lib/cn";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
-export const ONBOARDING_STORAGE_KEY = "thesisos-onboarding-px2";
+export const ONBOARDING_STORAGE_KEY = "thesisos-onboarding-m7";
 
 export type OnboardingState = {
   dismissed: boolean;
@@ -45,7 +45,24 @@ export const PX2_COACH_STEPS: CoachMarkStep[] = [
       pathname.startsWith("/sources") ||
       pathname.startsWith("/review"),
   },
+  {
+    id: 4,
+    target: '[data-testid="sources-search-input"]',
+    title: "Cerca nelle fonti",
+    body: "Filtra la bibliografia per titolo, autore o tag — tutto dal database del progetto.",
+    pathnameMatch: (pathname) => pathname === "/sources",
+  },
+  {
+    id: 5,
+    target: '[data-testid="home-import-cta"]',
+    title: "Importa la prima fonte",
+    body: "Carica PDF o Markdown per indicizzarli e collegarli ai concetti della tesi.",
+    pathnameMatch: (pathname) => pathname === "/",
+  },
 ];
+
+/** Full M7 onboarding sequence (PX-2 + M7.2 extensions). */
+export const ALL_COACH_STEPS: CoachMarkStep[] = PX2_COACH_STEPS;
 
 export function loadOnboardingState(): OnboardingState {
   if (typeof window === "undefined") {
@@ -172,12 +189,12 @@ export type CoachMarkProviderProps = {
 };
 
 /**
- * Shows at most one PX-2 coach mark per route visit (max 3 steps total).
+ * Shows at most one coach mark per route visit (M7 onboarding, max 5 steps).
  * Layer: Business (Product Plane)
  */
 export function CoachMarkProvider({
   pathname,
-  steps = PX2_COACH_STEPS,
+  steps = ALL_COACH_STEPS,
 }: CoachMarkProviderProps) {
   const [state, setState] = useState<OnboardingState>({
     dismissed: false,

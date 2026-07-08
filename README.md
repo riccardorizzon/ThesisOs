@@ -6,11 +6,11 @@ production target: GCP (Cloud Run + Cloud SQL).
 
 ## Status
 
-**M7 Product Hardening** — product surfaces wired to DB-backed APIs (Sources,
-Knowledge, Chat, Writing, Review), BibTeX export, chapter `.md` export, and E2E
-gates (`make dogfood-m7`, Playwright `m7-product-flow`).
+**M7.2 UX Polish** — Release Candidate quality: error UX, empty states, loading
+skeletons, lazy routes, onboarding coach marks, Playwright in CI. See
+[docs/user/getting-started.md](docs/user/getting-started.md).
 
-Next: M7.2 UX polish → Release Candidate. See [docs/user/getting-started.md](docs/user/getting-started.md).
+Next: Release Candidate → Beta.
 
 ## Product surfaces
 

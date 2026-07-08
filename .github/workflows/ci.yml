@@ -97,3 +97,49 @@ jobs:
             ! rg -n "^[[:space:]]*(from|import)[[:space:]]+backend([[:space:].]|$)" "$dir" 2>/dev/null \
               || { echo "isolation FAIL: $dir imports backend.app"; exit 1; }
           done
+
+  e2e-m7:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: thesisos
+          POSTGRES_PASSWORD: thesisos
+          POSTGRES_DB: thesisos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql+psycopg://thesisos:thesisos@localhost:5432/thesisos
+      PLAYWRIGHT_PORT: "3001"
+      PLAYWRIGHT_API_PORT: "8001"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install backend + migrate (e2e DB seed)
+        working-directory: backend
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -e ".[dev]"
+          .venv/bin/alembic upgrade head
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci
+      - name: Install Playwright
+        working-directory: tests/e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: M7 product flow (Playwright)
+        working-directory: tests/e2e
+        run: npx playwright test m7-product-flow.spec.ts

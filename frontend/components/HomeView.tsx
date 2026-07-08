@@ -245,6 +245,9 @@ export function HomeView({
                   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
                   "focus-visible:outline-accent cursor-pointer"
                 )}
+                data-testid={
+                  action.href === "/sources/upload" ? "home-import-cta" : undefined
+                }
               >
                 <span className="text-sm font-semibold text-ink">
                   {action.label}

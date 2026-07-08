@@ -37,6 +37,18 @@ const MODULE_LABEL_BY_ROOT = new Map(
   ])
 );
 
+/** Secondary routes outside PRIMARY_NAV — ADR-0036 adjunct surfaces. */
+const ROUTE_LABEL_OVERRIDES = new Map<string, string>([
+  ["/ai", "AI"],
+  ["/review", "Revisione"],
+  ["/library", "Library"],
+  ["/workspace", "Writing"],
+]);
+
+function moduleLabelForPath(rootPath: string): string | undefined {
+  return MODULE_LABEL_BY_ROOT.get(rootPath) ?? ROUTE_LABEL_OVERRIDES.get(rootPath);
+}
+
 /** Humanize dynamic route segments (chapter ids, concept slugs, etc.). */
 export function formatBreadcrumbLabel(segment: string): string {
   try {
@@ -56,7 +68,7 @@ export function buildBreadcrumbs(pathname: string): BreadcrumbSegment[] {
 
   const segments = normalized.split("/").filter(Boolean);
   const rootPath = `/${segments[0]}`;
-  const moduleLabel = MODULE_LABEL_BY_ROOT.get(rootPath);
+  const moduleLabel = moduleLabelForPath(rootPath);
 
   if (moduleLabel == null) {
     return segments.map((segment, index) => {
@@ -76,8 +88,13 @@ export function buildBreadcrumbs(pathname: string): BreadcrumbSegment[] {
   let path = rootPath;
   for (let index = 1; index < segments.length; index += 1) {
     path += `/${segments[index]}`;
+    const segment = segments[index];
+    const label =
+      index === segments.length - 1 && segment === "upload" && rootPath === "/sources"
+        ? "Importa"
+        : formatBreadcrumbLabel(segment);
     crumbs.push({
-      label: formatBreadcrumbLabel(segments[index]),
+      label,
       href: index < segments.length - 1 ? path : undefined,
     });
   }
