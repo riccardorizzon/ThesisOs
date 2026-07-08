@@ -1,29 +1,35 @@
 import Link from "next/link";
 import { EntityCard } from "@/components/EntityCard";
 import {
-  getSourceById,
   sourceStatusMeta,
   type LibraryConcept,
   type LibrarySource,
-} from "@/lib/libraryStub";
+} from "@/lib/libraryTypes";
 import { cn } from "@/lib/cn";
 
 export type KnowledgeDetailViewProps = {
   concept: LibraryConcept;
+  relatedSources?: LibrarySource[];
   className?: string;
 };
 
 /**
- * Concept detail stub — definition + related sources.
+ * Concept detail — definition + related sources.
  * Layer: Business (Product Plane)
  */
 export function KnowledgeDetailView({
   concept,
+  relatedSources: relatedSourcesProp,
   className,
 }: KnowledgeDetailViewProps) {
-  const relatedSources = concept.relatedSourceIds
-    .map((id) => getSourceById(id))
-    .filter((s): s is LibrarySource => s != null);
+  const relatedSources: LibrarySource[] =
+    relatedSourcesProp ??
+    concept.relatedSourceIds.map((id) => ({
+      id,
+      title: id,
+      status: "candidata" as const,
+      relatedConceptIds: [],
+    }));
 
   return (
     <div className={cn("mx-auto max-w-content", className)}>

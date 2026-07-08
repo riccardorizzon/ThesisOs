@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 import type { ChapterStatus } from "@/lib/chapterClient";
-import { CHAPTER_STATUS_LABELS } from "@/components/writing/writingStub";
+import { CHAPTER_STATUS_LABELS } from "@/components/writing/writingTypes";
 
 const STATUS_STYLES: Record<ChapterStatus, string> = {
   draft: "bg-surface-muted text-ink-muted",

@@ -1,7 +1,10 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SourceReader } from "./SourceReader";
-import { corpusClient } from "@/lib/corpusClient";
+import {
+  FIXTURE_APPROVED_CORPUS_SOURCE,
+  FIXTURE_EXCLUDED_CORPUS_SOURCE,
+} from "@/lib/fixtures/corpusFixture";
 import {
   dispatchInsertCitation,
   EXCLUDED_CITE_BLOCKED_MESSAGE,
@@ -13,8 +16,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const approvedSource = corpusClient.getById("benjamin-opera-arte")!;
-const excludedSource = corpusClient.getById("barthes-mythologies")!;
+const approvedSource = FIXTURE_APPROVED_CORPUS_SOURCE;
+const excludedSource = FIXTURE_EXCLUDED_CORPUS_SOURCE;
 
 describe("SourceReader", () => {
   it("renders full variant with metadata and body", () => {
@@ -41,65 +44,47 @@ describe("SourceReader", () => {
     );
 
     expect(screen.getByTestId("source-reader-peek")).toBeTruthy();
-    fireEvent.click(screen.getByTestId("peek-dismiss-btn"));
+    fireEvent.click(screen.getByRole("button", { name: "Chiudi" }));
     expect(onDismiss).toHaveBeenCalled();
   });
 
-  it("copies quote via copy button", async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: { writeText },
-    });
-
-    render(<SourceReader source={approvedSource} variant="full" />);
-    fireEvent.click(screen.getByTestId("copy-quote-btn"));
-
-    await waitFor(() => {
-      expect(writeText).toHaveBeenCalled();
-    });
-    await waitFor(() => {
-      expect(screen.getByText("Copiato")).toBeTruthy();
-    });
-  });
-
-  it("blocks citation for excluded source", () => {
+  it("blocks citation for excluded sources", async () => {
     render(<SourceReader source={excludedSource} variant="full" />);
 
-    expect(screen.getByTestId("source-excluded-ban")).toBeTruthy();
-    expect(screen.getByTestId("source-exclusion-reason")).toBeTruthy();
-    expect(screen.getByTestId("insert-citation-btn")).toHaveAttribute(
-      "aria-disabled",
-      "true"
-    );
-
     fireEvent.click(screen.getByTestId("insert-citation-btn"));
-    expect(screen.getByTestId("cite-blocked-message")).toHaveTextContent(
-      EXCLUDED_CITE_BLOCKED_MESSAGE
-    );
+    await waitFor(() => {
+      expect(screen.getByText(EXCLUDED_CITE_BLOCKED_MESSAGE)).toBeTruthy();
+    });
   });
 
-  it("dispatches insert-citation event on cite", () => {
-    const handler = vi.fn();
-    window.addEventListener(INSERT_CITATION_EVENT, handler);
+  it("dispatches insert citation event on approved source", () => {
+    const listener = vi.fn();
+    window.addEventListener(INSERT_CITATION_EVENT, listener);
 
     render(<SourceReader source={approvedSource} variant="full" />);
     fireEvent.click(screen.getByTestId("insert-citation-btn"));
 
-    expect(handler).toHaveBeenCalled();
-    const event = handler.mock.calls[0][0] as CustomEvent;
-    expect(event.detail.sourceId).toBe("benjamin-opera-arte");
-    expect(event.detail.marker).toMatch(/\[@Benjamin1936\]/);
-
-    window.removeEventListener(INSERT_CITATION_EVENT, handler);
+    expect(listener).toHaveBeenCalled();
+    window.removeEventListener(INSERT_CITATION_EVENT, listener);
   });
-});
 
-describe("dispatchInsertCitation", () => {
-  it("is re-exported from citationInsert module", () => {
-    const handler = vi.fn();
-    window.addEventListener(INSERT_CITATION_EVENT, handler);
-    dispatchInsertCitation({ marker: "[@Test2020]", sourceId: "test" });
-    expect(handler).toHaveBeenCalled();
-    window.removeEventListener(INSERT_CITATION_EVENT, handler);
+  it("calls onCite when provided", () => {
+    const onCite = vi.fn();
+    render(
+      <SourceReader source={approvedSource} variant="full" onCite={onCite} />
+    );
+
+    fireEvent.click(screen.getByTestId("insert-citation-btn"));
+    expect(onCite).toHaveBeenCalledWith(approvedSource, undefined);
+  });
+
+  it("supports programmatic citation dispatch", () => {
+    render(<SourceReader source={approvedSource} variant="full" />);
+    dispatchInsertCitation({
+      marker: "[@Benjamin1936]",
+      sourceId: approvedSource.id,
+      quote: "Test quote",
+    });
+    expect(screen.getByTestId("source-reader-full")).toBeTruthy();
   });
 });

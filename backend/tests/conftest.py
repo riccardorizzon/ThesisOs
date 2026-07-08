@@ -14,6 +14,7 @@ _DEFAULT_TEST_DB = "postgresql+psycopg://thesisos:thesisos@localhost:5432/thesis
 # Bind Settings + async engine to the test DB before any app import.
 os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL", _DEFAULT_TEST_DB)
 os.environ.setdefault("THESISOS_DISABLE_CONSOLE_TRACE", "1")
+os.environ.setdefault("THESISOS_DEV_CATALOG", "1")
 
 import pytest
 from sqlalchemy import text

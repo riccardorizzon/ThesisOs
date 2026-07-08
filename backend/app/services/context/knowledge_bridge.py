@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from app.db.session_async import AsyncSessionLocal
-from app.schemas.context import ConceptRef, DefinitionRef, KnowledgeNode, SourceRef
 from app.graph.corpus_query import CORPUS_PICKER_SOURCES
+from app.schemas.context import ConceptRef, DefinitionRef, KnowledgeNode, SourceRef
 from app.services.knowledge.catalog import CONCEPT_CATALOG
+from app.services.knowledge.dev_catalog import dev_catalog_enabled
 from app.services.knowledge.repository import ConceptRepository
 
 _MAX_CONCEPTS = 12
@@ -41,13 +42,19 @@ def _catalog_knowledge_node() -> KnowledgeNode:
     )
 
 
+def _empty_knowledge_node() -> KnowledgeNode:
+    return KnowledgeNode(concepts=[], definitions=[], sources=[])
+
+
 async def assemble_knowledge_node(project_id: str) -> KnowledgeNode:
-    """Load knowledge refs for ContextPacket — DB first, catalog fallback."""
+    """Load knowledge refs for ContextPacket — DB first, dev catalog when enabled."""
     try:
         async with AsyncSessionLocal() as session:
             repo = ConceptRepository()
             if await repo.count_for_project(session, project_id) == 0:
-                return _catalog_knowledge_node()
+                if dev_catalog_enabled():
+                    return _catalog_knowledge_node()
+                return _empty_knowledge_node()
 
             envelopes = await repo.list_concepts(session, project_id)
             core_first = sorted(
@@ -88,4 +95,6 @@ async def assemble_knowledge_node(project_id: str) -> KnowledgeNode:
                 sources=sources,
             )
     except Exception:
-        return _catalog_knowledge_node()
+        if dev_catalog_enabled():
+            return _catalog_knowledge_node()
+        return _empty_knowledge_node()

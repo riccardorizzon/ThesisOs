@@ -1,4 +1,3 @@
-import { LIBRARY_CONCEPTS, LIBRARY_SOURCES } from "@/lib/libraryStub";
 import type {
   KnowledgeGraphEdge,
   KnowledgeGraphNode,
@@ -53,30 +52,13 @@ export type CanvasLensContext = {
   conceptSlugsByAuthor: Map<string, Set<string>>;
 };
 
-/** Dev/catalog fallback when API enrichment is unavailable (PX5-EWO-006). */
-export function buildStubLensContext(): CanvasLensContext {
-  const sourceCountByConceptSlug = new Map<string, number>();
-  for (const concept of LIBRARY_CONCEPTS) {
-    sourceCountByConceptSlug.set(concept.id, concept.relatedSourceIds.length);
-  }
-
-  const conceptSlugsByAuthor = new Map<string, Set<string>>();
-  for (const source of LIBRARY_SOURCES) {
-    const author = source.subtitle?.trim();
-    if (author == null || author.length === 0) continue;
-    const bucket = conceptSlugsByAuthor.get(author) ?? new Set<string>();
-    for (const conceptId of source.relatedConceptIds) {
-      bucket.add(conceptId);
-    }
-    conceptSlugsByAuthor.set(author, bucket);
-  }
-
+export function emptyLensContext(): CanvasLensContext {
   return {
-    sourceCountByConceptSlug,
-    activeChapterConceptSlugs: new Set(["aura", "stigmata"]),
-    selectedAuthor: "Walter Benjamin",
-    unreadSourceSlugs: new Set(["benjamin-opera-arte"]),
-    conceptSlugsByAuthor,
+    sourceCountByConceptSlug: new Map(),
+    activeChapterConceptSlugs: new Set(),
+    selectedAuthor: null,
+    unreadSourceSlugs: new Set(),
+    conceptSlugsByAuthor: new Map(),
   };
 }
 
@@ -171,10 +153,11 @@ function slugsForLens(
     case "L-unread": {
       const slugs = new Set<string>();
       for (const sourceSlug of context.unreadSourceSlugs) {
-        const source = LIBRARY_SOURCES.find((item) => item.id === sourceSlug);
-        if (source == null) continue;
-        for (const conceptId of source.relatedConceptIds) {
-          if (all.has(conceptId)) slugs.add(conceptId);
+        for (const edge of graph.edges) {
+          if (edge.link_kind !== "concept_source") continue;
+          if (edge.target === sourceSlug && all.has(edge.source)) {
+            slugs.add(edge.source);
+          }
         }
       }
       return expandWithSatellites(graph, slugs);
@@ -189,7 +172,7 @@ export function filterGraphByLens(
   filters: CanvasFilterOptions,
   context: CanvasLensContext
 ): KnowledgeGraphResponse {
-  let allowed = slugsForLens(graph, filters.lensId, context);
+  const allowed = slugsForLens(graph, filters.lensId, context);
 
   const nodes = graph.nodes.filter((node) => {
     if (!allowed.has(node.slug)) return false;
@@ -229,4 +212,51 @@ export function filterGraphByLens(
 
 export function lensLabel(lensId: CanvasLensId): string {
   return CANVAS_LENSES.find((lens) => lens.id === lensId)?.label ?? lensId;
+}
+
+export function buildLensContextFromGraph(
+  graph: KnowledgeGraphResponse
+): CanvasLensContext {
+  const sourceCountByConceptSlug = new Map<string, number>();
+  const conceptSlugsByAuthor = new Map<string, Set<string>>();
+
+  for (const node of graph.nodes) {
+    if ((node.kind ?? "concept") !== "concept") continue;
+    const count = graph.edges.filter(
+      (edge) =>
+        edge.link_kind === "concept_source" &&
+        (edge.source === node.slug || edge.target === node.slug)
+    ).length;
+    sourceCountByConceptSlug.set(node.slug, count);
+  }
+
+  for (const node of graph.nodes) {
+    if (node.kind !== "author") continue;
+    const linked = graph.edges
+      .filter((edge) => edge.link_kind === "author_source" && edge.source === node.slug)
+      .map((edge) => edge.target);
+    const conceptSlugs = new Set<string>();
+    for (const sourceSlug of linked) {
+      for (const edge of graph.edges) {
+        if (edge.link_kind === "concept_source" && edge.target === sourceSlug) {
+          conceptSlugs.add(edge.source);
+        }
+      }
+    }
+    if (conceptSlugs.size > 0) {
+      conceptSlugsByAuthor.set(node.title, conceptSlugs);
+    }
+  }
+
+  const unreadSourceSlugs = new Set(
+    graph.nodes.filter((node) => node.kind === "source").map((node) => node.slug)
+  );
+
+  return {
+    sourceCountByConceptSlug,
+    activeChapterConceptSlugs: new Set(),
+    selectedAuthor: null,
+    unreadSourceSlugs,
+    conceptSlugsByAuthor,
+  };
 }

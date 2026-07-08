@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { WritingAiPanel } from "./WritingAiPanel";
-import { CONTEXT_STUB } from "@/lib/contextClient";
+import { FIXTURE_CONTEXT_PACKET } from "@/lib/fixtures/contextFixture";
 import {
   _resetProposalQueueForTests,
   getPendingProposalCount,
@@ -31,7 +31,7 @@ describe("WritingAiPanel", () => {
   it("disables selection-only actions when selection is empty", () => {
     render(
       <WritingAiPanel
-        contextPacket={CONTEXT_STUB}
+        contextPacket={FIXTURE_CONTEXT_PACKET}
         chapterContent="Contenuto del capitolo."
       />
     );
@@ -54,7 +54,7 @@ describe("WritingAiPanel", () => {
     render(
       <WritingAiPanel
         chapterId="3"
-        contextPacket={CONTEXT_STUB}
+        contextPacket={FIXTURE_CONTEXT_PACKET}
         selectionText="Passaggio di prova"
         chapterContent="Capitolo intero"
       />
@@ -87,7 +87,7 @@ describe("WritingAiPanel", () => {
 
     render(
       <WritingAiPanel
-        contextPacket={CONTEXT_STUB}
+        contextPacket={FIXTURE_CONTEXT_PACKET}
         selectionText="Selezione"
         chapterContent="Capitolo"
       />
@@ -117,7 +117,7 @@ describe("WritingAiPanel", () => {
 
     render(
       <WritingAiPanel
-        contextPacket={CONTEXT_STUB}
+        contextPacket={FIXTURE_CONTEXT_PACKET}
         selectionText="Selezione"
         chapterContent="Capitolo"
       />

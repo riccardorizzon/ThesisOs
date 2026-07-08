@@ -1,5 +1,5 @@
 import { SourcesEnrichedList } from "@/components/sources/SourcesEnrichedList";
-import type { LibrarySource } from "@/lib/libraryStub";
+import type { LibrarySource } from "@/lib/libraryTypes";
 import type { SourceListItem } from "@/lib/sourcesTypes";
 
 export type SourcesViewProps = {

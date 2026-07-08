@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildStubSerendipityContext,
   rankSerendipitySuggestions,
+  type SerendipityContext,
 } from "@/lib/canvasSerendipity";
+import { buildLensContextFromGraph } from "@/lib/canvasLenses";
 import type { KnowledgeGraphResponse } from "@/lib/knowledgeTypes";
 
 const SAMPLE_GRAPH: KnowledgeGraphResponse = {
@@ -44,27 +45,57 @@ const SAMPLE_GRAPH: KnowledgeGraphResponse = {
       is_core: false,
       degree: 1,
     },
+    {
+      id: "benjamin-opera-arte",
+      slug: "benjamin-opera-arte",
+      title: "L'opera d'arte nell'epoca della riproducibilità tecnica",
+      knowledge_state: "linked",
+      is_core: false,
+      degree: 1,
+      kind: "source",
+    },
   ],
   edges: [
     { source: "aura", target: "riproducibilita", relation: "supports" },
     { source: "aura", target: "stigmata", relation: "contradicts" },
     { source: "mito", target: "stigmata", relation: "contradicts" },
     { source: "mito", target: "riproducibilita", relation: "related" },
+    {
+      source: "aura",
+      target: "benjamin-opera-arte",
+      relation: "related",
+      link_kind: "concept_source",
+    },
   ],
   limits: {
     default_visible: 80,
     soft_limit: 150,
     hard_limit: 300,
-    visible_count: 4,
-    total_in_scope: 4,
+    visible_count: 5,
+    total_in_scope: 5,
     truncated: false,
     force_list_view: false,
     show_performance_banner: false,
   },
 };
 
+const TEST_SERENDIPITY_CONTEXT: SerendipityContext = {
+  ...buildLensContextFromGraph(SAMPLE_GRAPH),
+  activeChapterConceptSlugs: new Set(["aura", "stigmata"]),
+  unreadSourceSlugs: new Set(["benjamin-opera-arte"]),
+  decisions: [
+    {
+      id: "dec-012",
+      title: "DEC-012",
+      summary: "DEC-012 — vincolo metodologico sul corpus visivo",
+      binding: true,
+    },
+  ],
+  activeChapterLabel: "Cap. 3",
+};
+
 describe("canvasSerendipity", () => {
-  const context = buildStubSerendipityContext();
+  const context = TEST_SERENDIPITY_CONTEXT;
 
   it("returns at most five deterministic suggestions", () => {
     const first = rankSerendipitySuggestions(SAMPLE_GRAPH, context);
@@ -89,14 +120,104 @@ describe("canvasSerendipity", () => {
   });
 
   it("includes unread source suggestion from reading state", () => {
-    const suggestions = rankSerendipitySuggestions(SAMPLE_GRAPH, context);
+    const graph: KnowledgeGraphResponse = {
+      schema_version: 1,
+      focus_slug: "aura",
+      depth: 1,
+      view_mode: "graph",
+      nodes: [
+        {
+          id: "aura",
+          slug: "aura",
+          title: "Aura",
+          knowledge_state: "validated",
+          is_core: true,
+          degree: 1,
+        },
+        {
+          id: "benjamin-opera-arte",
+          slug: "benjamin-opera-arte",
+          title: "L'opera d'arte nell'epoca della riproducibilità tecnica",
+          knowledge_state: "linked",
+          is_core: false,
+          degree: 1,
+          kind: "source",
+        },
+      ],
+      edges: [
+        {
+          source: "aura",
+          target: "benjamin-opera-arte",
+          relation: "related",
+          link_kind: "concept_source",
+        },
+      ],
+      limits: {
+        default_visible: 80,
+        soft_limit: 150,
+        hard_limit: 300,
+        visible_count: 2,
+        total_in_scope: 2,
+        truncated: false,
+        force_list_view: false,
+        show_performance_banner: false,
+      },
+    };
+    const context: SerendipityContext = {
+      ...buildLensContextFromGraph(graph),
+      unreadSourceSlugs: new Set(["benjamin-opera-arte"]),
+      decisions: [],
+      activeChapterLabel: null,
+    };
+    const suggestions = rankSerendipitySuggestions(graph, context);
     const unread = suggestions.find((item) => item.type === "unread-source");
     expect(unread).toBeDefined();
-    expect(unread?.subtitle).toContain("Benjamin");
+    expect(unread?.subtitle).toContain("opera d'arte");
   });
 
   it("includes chapter gap for concepts outside active chapter", () => {
-    const suggestions = rankSerendipitySuggestions(SAMPLE_GRAPH, context);
+    const graph: KnowledgeGraphResponse = {
+      schema_version: 1,
+      focus_slug: "aura",
+      depth: 1,
+      view_mode: "graph",
+      nodes: [
+        {
+          id: "aura",
+          slug: "aura",
+          title: "Aura",
+          knowledge_state: "validated",
+          is_core: true,
+          degree: 0,
+        },
+        {
+          id: "mito",
+          slug: "mito",
+          title: "Mito",
+          knowledge_state: "validated",
+          is_core: false,
+          degree: 0,
+        },
+      ],
+      edges: [],
+      limits: {
+        default_visible: 80,
+        soft_limit: 150,
+        hard_limit: 300,
+        visible_count: 2,
+        total_in_scope: 2,
+        truncated: false,
+        force_list_view: false,
+        show_performance_banner: false,
+      },
+    };
+    const context: SerendipityContext = {
+      ...buildLensContextFromGraph(graph),
+      activeChapterConceptSlugs: new Set(["aura"]),
+      decisions: [],
+      activeChapterLabel: "Cap. 3",
+    };
+    const suggestions = rankSerendipitySuggestions(graph, context);
     const gap = suggestions.find((item) => item.type === "chapter-gap");
     expect(gap).toBeDefined();
     expect(gap?.subtitle).toContain("non cita");

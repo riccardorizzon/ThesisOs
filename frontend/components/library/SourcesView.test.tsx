@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, screen, cleanup, fireEvent, act } from "@testing-library/react";
 import { SourcesView } from "./SourcesView";
-import type { LibrarySource } from "@/lib/libraryStub";
+import type { LibrarySource } from "@/lib/libraryTypes";
 
 vi.mock("next/link", () => ({
   default: ({

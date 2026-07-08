@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ProgressRing } from "@/components/ProgressRing";
 import { EntityCard } from "@/components/EntityCard";
-import type { ActivityItem } from "@/lib/homeStub";
+import type { ActivityItem } from "@/lib/homeTypes";
 import { mergeContinuaTarget } from "@/lib/continuaLink";
 import type { ContinueTarget } from "@/lib/progress";
 import { progressPhaseLabel } from "@/lib/progress";

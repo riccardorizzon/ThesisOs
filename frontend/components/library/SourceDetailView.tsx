@@ -1,16 +1,15 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { EntityCard } from "@/components/EntityCard";
 import { SourceReader } from "@/components/sources/SourceReader";
-import { corpusClient } from "@/lib/corpusClient";
+import { corpusClient, type CorpusSource } from "@/lib/corpusClient";
 import {
-  getConceptById,
+  corpusStatusFromApi,
   sourceStatusMeta,
-  type LibraryConcept,
   type LibrarySource,
-} from "@/lib/libraryStub";
+} from "@/lib/libraryTypes";
 import type { RelatedConceptRef, SourceListItem } from "@/lib/sourcesTypes";
 import { cn } from "@/lib/cn";
 
@@ -20,6 +19,30 @@ export type SourceDetailViewProps = {
   chapterContext?: string;
   className?: string;
 };
+
+function corpusFromLibrarySource(source: LibrarySource): CorpusSource {
+  return {
+    ...source,
+    body: source.meta ?? "Estratto non disponibile.",
+  };
+}
+
+function corpusFromListItem(item: SourceListItem): CorpusSource {
+  const status = corpusStatusFromApi(item.corpus_status, item.knowledge_state);
+  return {
+    id: item.slug,
+    title: item.title,
+    subtitle: item.subtitle ?? undefined,
+    meta: item.summary ?? undefined,
+    status,
+    relatedConceptIds: item.related_concepts.map((c) => c.slug),
+    relatedConcepts: item.related_concepts.map((c) => ({
+      id: c.slug,
+      title: c.title,
+    })),
+    body: item.summary ?? "Estratto non disponibile.",
+  };
+}
 
 /**
  * Source detail — metadata, reader body, link-to-chapter.
@@ -31,8 +54,24 @@ export function SourceDetailView({
   chapterContext,
   className,
 }: SourceDetailViewProps) {
-  const sourceId = sourceItem?.id ?? source?.id ?? "";
-  const corpusSource = corpusClient.getById(sourceId);
+  const sourceId = sourceItem?.slug ?? sourceItem?.id ?? source?.id ?? "";
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void corpusClient.hydrate().finally(() => {
+      if (!cancelled) setHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const corpusSource = useMemo((): CorpusSource | undefined => {
+    if (sourceItem) return corpusFromListItem(sourceItem);
+    if (source) return corpusFromLibrarySource(source);
+    return corpusClient.getById(sourceId);
+  }, [source, sourceItem, sourceId, hydrated]);
 
   const relatedFromApi: RelatedConceptRef[] | undefined = sourceItem?.related_concepts;
   const relatedConcepts: Array<{ id: string; title: string; subtitle?: string; meta?: string }> =
@@ -43,16 +82,16 @@ export function SourceDetailView({
           subtitle: undefined,
           meta: undefined,
         }))
-      : (source?.relatedConceptIds ?? [])
-          .map((id) => getConceptById(id))
-          .filter((c): c is LibraryConcept => c != null);
+    : (corpusSource?.relatedConcepts ??
+      corpusSource?.relatedConceptIds.map((id) => ({ id, title: id })) ??
+      []);
 
   const displaySource = source ?? {
     id: sourceId,
     title: sourceItem?.title ?? sourceId,
     subtitle: sourceItem?.subtitle ?? "",
     meta: sourceItem?.summary ?? "",
-    status: (sourceItem?.corpus_status as LibrarySource["status"]) ?? "approvata",
+    status: corpusStatusFromApi(sourceItem?.corpus_status, sourceItem?.knowledge_state),
     relatedConceptIds: relatedFromApi?.map((c) => c.slug) ?? [],
   };
 

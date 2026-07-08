@@ -1,5 +1,6 @@
 """Knowledge search API tests."""
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -8,7 +9,12 @@ client = TestClient(app)
 PROJECT = "thesis-agent"
 
 
-def test_search_knowledge_aura():
+@pytest.mark.asyncio
+async def test_search_knowledge_aura(db_session):
+    client.post(
+        f"/projects/{PROJECT}/knowledge/concepts",
+        json={"slug": "aura", "title": "Aura", "summary": "Benjamin aura concept"},
+    )
     res = client.get(f"/projects/{PROJECT}/knowledge/search", params={"q": "aura"})
     assert res.status_code == 200
     body = res.json()

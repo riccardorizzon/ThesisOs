@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { WritingOutline } from "./WritingOutline";
-import { WRITING_OUTLINE_STUB } from "./writingStub";
+import { FIXTURE_WRITING_OUTLINE } from "@/lib/fixtures/writingFixture";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -27,7 +27,7 @@ afterEach(() => {
 
 describe("WritingOutline", () => {
   it("renders chapter list with links", () => {
-    render(<WritingOutline />);
+    render(<WritingOutline chapters={FIXTURE_WRITING_OUTLINE} />);
 
     expect(screen.getByRole("navigation", { name: "Outline capitoli" })).toBeTruthy();
     expect(screen.getByText("Cap. 1 — Introduzione")).toBeTruthy();
@@ -37,7 +37,7 @@ describe("WritingOutline", () => {
   });
 
   it("marks active chapter with aria-current", () => {
-    render(<WritingOutline activeChapterId="3" />);
+    render(<WritingOutline chapters={FIXTURE_WRITING_OUTLINE} activeChapterId="3" />);
 
     expect(
       screen.getByRole("link", { name: /Cap\. 3 — Metodologia/i })
@@ -45,7 +45,7 @@ describe("WritingOutline", () => {
   });
 
   it("shows StatusBadge for chapter lifecycle", () => {
-    render(<WritingOutline chapters={WRITING_OUTLINE_STUB} />);
+    render(<WritingOutline chapters={FIXTURE_WRITING_OUTLINE} />);
 
     expect(screen.getByTestId("status-badge-approved")).toBeTruthy();
     expect(screen.getByTestId("status-badge-review")).toBeTruthy();
@@ -53,7 +53,7 @@ describe("WritingOutline", () => {
   });
 
   it("filters chapters by status segment", () => {
-    render(<WritingOutline chapters={WRITING_OUTLINE_STUB} />);
+    render(<WritingOutline chapters={FIXTURE_WRITING_OUTLINE} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Da revisionare" }));
     expect(screen.getByText("Cap. 2 — Quadro teorico")).toBeTruthy();
@@ -63,6 +63,7 @@ describe("WritingOutline", () => {
   it("renders section links with ?section= query", () => {
     render(
       <WritingOutline
+        chapters={FIXTURE_WRITING_OUTLINE}
         activeChapterId="3"
         activeSectionId="metodo"
         sections={[

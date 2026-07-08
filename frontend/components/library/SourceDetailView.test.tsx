@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { SourceDetailView } from "./SourceDetailView";
-import type { LibrarySource } from "@/lib/libraryStub";
+import type { LibrarySource } from "@/lib/libraryTypes";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -43,8 +43,8 @@ describe("SourceDetailView", () => {
     ).toBeTruthy();
     expect(screen.getByText("Walter Benjamin")).toBeTruthy();
     expect(screen.getAllByText(/Approvata/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Aura").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Riproducibilità tecnica").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("aura").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("riproducibilita").length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /← Sources/i })).toHaveAttribute(
       "href",
       "/sources"
@@ -54,7 +54,7 @@ describe("SourceDetailView", () => {
   it("links related concepts to knowledge detail", () => {
     render(<SourceDetailView source={TEST_SOURCE} />);
 
-    expect(screen.getByRole("link", { name: /Aura/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /aura/i })).toHaveAttribute(
       "href",
       "/knowledge/aura"
     );

@@ -1,7 +1,8 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { KnowledgeDetailView } from "./KnowledgeDetailView";
-import type { LibraryConcept } from "@/lib/libraryStub";
+import type { LibraryConcept, LibrarySource } from "@/lib/libraryTypes";
+import { fixtureSourceById } from "@/lib/fixtures/libraryFixture";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -33,7 +34,14 @@ afterEach(() => {
 
 describe("KnowledgeDetailView", () => {
   it("renders concept definition and related sources", () => {
-    render(<KnowledgeDetailView concept={TEST_CONCEPT} />);
+    render(
+      <KnowledgeDetailView
+        concept={TEST_CONCEPT}
+        relatedSources={TEST_CONCEPT.relatedSourceIds
+          .map((id) => fixtureSourceById(id))
+          .filter((s): s is LibrarySource => s != null)}
+      />
+    );
 
     expect(screen.getByRole("heading", { name: "STIGMATA" })).toBeTruthy();
     expect(screen.getByText("Segno percettivo culturale.")).toBeTruthy();
@@ -48,7 +56,14 @@ describe("KnowledgeDetailView", () => {
   });
 
   it("links related sources to source detail", () => {
-    render(<KnowledgeDetailView concept={TEST_CONCEPT} />);
+    render(
+      <KnowledgeDetailView
+        concept={TEST_CONCEPT}
+        relatedSources={TEST_CONCEPT.relatedSourceIds
+          .map((id) => fixtureSourceById(id))
+          .filter((s): s is LibrarySource => s != null)}
+      />
+    );
 
     expect(
       screen.getByRole("link", {

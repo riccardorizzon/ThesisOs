@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { WritingContextBar } from "@/components/context";
-import { CONTEXT_STUB, contextClient } from "@/lib/contextClient";
+import { contextClient, type ContextPacket } from "@/lib/contextClient";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 import {
   getPendingProposals,
@@ -23,12 +23,12 @@ import {
   ReviewWorkflowSteps,
   type ReviewWorkflowStep,
 } from "./ReviewWorkflowSteps";
-import type { ReviewChapter } from "./reviewStub";
-import { reviewStatusLabel } from "./reviewStub";
+import type { ReviewChapter } from "./reviewTypes";
+import { reviewStatusLabel } from "./reviewTypes";
 
 export type ReviewModeProps = {
   className?: string;
-  contextPacket?: typeof CONTEXT_STUB;
+  contextPacket: ContextPacket;
 };
 
 function chapterToReviewItem(ch: Chapter, pendingCount: number): ReviewChapter {
@@ -51,7 +51,7 @@ function chapterToReviewItem(ch: Chapter, pendingCount: number): ReviewChapter {
  * Distinct from /ai power mode (ADR-0039).
  * Layer: Business (Product Plane)
  */
-export function ReviewMode({ className, contextPacket = CONTEXT_STUB }: ReviewModeProps) {
+export function ReviewMode({ className, contextPacket }: ReviewModeProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const chapterParam = searchParams.get("chapter");

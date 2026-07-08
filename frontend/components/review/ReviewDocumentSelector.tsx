@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReviewChapter } from "./reviewStub";
-import { reviewStatusLabel } from "./reviewStub";
+import type { ReviewChapter } from "./reviewTypes";
+import { reviewStatusLabel } from "./reviewTypes";
 
 export type ReviewDocumentSelectorProps = {
   chapters: ReviewChapter[];

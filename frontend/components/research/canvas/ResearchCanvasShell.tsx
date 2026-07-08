@@ -35,7 +35,7 @@ import {
   type CanvasSavedView,
 } from "@/lib/canvasSavedViews";
 import {
-  buildStubLensContext,
+  buildLensContextFromGraph,
   DEFAULT_CANVAS_FILTERS,
   filterGraphByLens,
   lensLabel,
@@ -45,7 +45,6 @@ import {
   type CanvasLensId,
 } from "@/lib/canvasLenses";
 import {
-  buildStubSerendipityContext,
   rankSerendipitySuggestions,
   type SerendipityContext,
   type SerendipitySuggestion,
@@ -90,10 +89,14 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
   );
   const [transform, setTransform] = useState<CanvasTransform>(DEFAULT_CANVAS_TRANSFORM);
   const [filters, setFilters] = useState<CanvasFilterOptions>(DEFAULT_CANVAS_FILTERS);
-  const [lensContext, setLensContext] = useState<CanvasLensContext>(() => buildStubLensContext());
-  const [serendipityContext, setSerendipityContext] = useState<SerendipityContext>(() =>
-    buildStubSerendipityContext()
+  const [lensContext, setLensContext] = useState<CanvasLensContext>(() =>
+    buildLensContextFromGraph(graph)
   );
+  const [serendipityContext, setSerendipityContext] = useState<SerendipityContext>(() => ({
+    ...buildLensContextFromGraph(graph),
+    decisions: [],
+    activeChapterLabel: null,
+  }));
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const [lensLoading, setLensLoading] = useState(false);
   const [highlightSlugs, setHighlightSlugs] = useState<string[]>([]);
@@ -189,7 +192,7 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
           }
         }
 
-        const base = buildStubLensContext();
+        const base = buildLensContextFromGraph(graph);
         const chapterLabel =
           contextPacket.entity?.type === "chapter"
             ? contextPacket.entity.title
@@ -197,8 +200,7 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
 
         setLensContext({
           ...base,
-          activeChapterConceptSlugs:
-            chapterConceptSlugs.size > 0 ? chapterConceptSlugs : base.activeChapterConceptSlugs,
+          activeChapterConceptSlugs: chapterConceptSlugs,
           sourceCountByConceptSlug:
             knowledgeList != null
               ? mergeSourceCounts(base.sourceCountByConceptSlug, knowledgeList.objects)
@@ -206,8 +208,7 @@ export function ResearchCanvasShell({ graph, focus, view }: ResearchCanvasShellP
         });
         setSerendipityContext({
           ...base,
-          activeChapterConceptSlugs:
-            chapterConceptSlugs.size > 0 ? chapterConceptSlugs : base.activeChapterConceptSlugs,
+          activeChapterConceptSlugs: chapterConceptSlugs,
           sourceCountByConceptSlug:
             knowledgeList != null
               ? mergeSourceCounts(base.sourceCountByConceptSlug, knowledgeList.objects)

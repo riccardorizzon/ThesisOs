@@ -1,5 +1,6 @@
 """Knowledge Graph tests (PX3-EWO-009, px3-knowledge-experience-v2 §10)."""
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -7,6 +8,7 @@ from app.schemas.knowledge_graph import DEFAULT_VISIBLE_NODES, HARD_NODE_LIMIT
 from app.services.knowledge.graph import build_knowledge_graph
 
 client = TestClient(app)
+PROJECT = "thesis-agent"
 
 
 def test_knowledge_graph_default_limit():
@@ -58,9 +60,22 @@ def test_knowledge_graph_read_only():
     assert post.status_code == 405
 
 
-def test_knowledge_graph_canvas_profile_includes_satellites():
+@pytest.mark.asyncio
+async def test_knowledge_graph_canvas_profile_includes_satellites(db_session):
+    create = client.post(
+        f"/projects/{PROJECT}/knowledge/concepts",
+        json={
+            "slug": "stigmata",
+            "title": "STIGMATA",
+            "summary": "Framework centrale",
+            "source_slugs": ["benjamin-opera-arte"],
+            "is_core": True,
+        },
+    )
+    assert create.status_code == 201
+
     body = client.get(
-        "/projects/thesis-agent/knowledge/graph?profile=canvas&focus=stigmata&depth=2"
+        f"/projects/{PROJECT}/knowledge/graph?profile=canvas&focus=stigmata&depth=2"
     ).json()
     kinds = {node["kind"] for node in body["nodes"]}
     assert "concept" in kinds

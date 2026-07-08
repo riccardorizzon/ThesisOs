@@ -1,43 +1,8 @@
-/**
- * Library module stub data — Sources + Knowledge (PX-1)
- * Layer: Business (Product Plane)
- * Replaced by API in PX-3 (sources) / PX-4 (concepts).
- */
+/** Test-only library catalog data (M7.1). Not imported from product runtime paths. */
 
-export type SourceStatus = "candidata" | "approvata" | "esclusa";
+import type { LibraryConcept, LibrarySource } from "@/lib/libraryTypes";
 
-export const SOURCE_STATUS_LABELS: Record<SourceStatus, string> = {
-  candidata: "Candidata",
-  approvata: "Approvata",
-  esclusa: "Esclusa",
-};
-
-export const SOURCE_STATUS_OPTIONS: SourceStatus[] = [
-  "candidata",
-  "approvata",
-  "esclusa",
-];
-
-export type LibrarySource = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  meta?: string;
-  status: SourceStatus;
-  relatedConceptIds: string[];
-};
-
-export type LibraryConcept = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  meta?: string;
-  definition?: string;
-  relatedSourceIds: string[];
-};
-
-/** PX-1 corpus preview — aligned with thesis-agent knowledge base */
-export const LIBRARY_SOURCES: LibrarySource[] = [
+export const FIXTURE_LIBRARY_SOURCES: LibrarySource[] = [
   {
     id: "benjamin-opera-arte",
     title: "L'opera d'arte nell'epoca della riproducibilità tecnica",
@@ -80,7 +45,7 @@ export const LIBRARY_SOURCES: LibrarySource[] = [
   },
 ];
 
-export const LIBRARY_CONCEPTS: LibraryConcept[] = [
+export const FIXTURE_LIBRARY_CONCEPTS: LibraryConcept[] = [
   {
     id: "stigmata",
     title: "STIGMATA",
@@ -140,30 +105,10 @@ export const LIBRARY_CONCEPTS: LibraryConcept[] = [
   },
 ];
 
-export function getSourceById(id: string): LibrarySource | undefined {
-  return LIBRARY_SOURCES.find((s) => s.id === id);
+export function fixtureSourceById(id: string): LibrarySource | undefined {
+  return FIXTURE_LIBRARY_SOURCES.find((s) => s.id === id);
 }
 
-export function getConceptById(id: string): LibraryConcept | undefined {
-  return LIBRARY_CONCEPTS.find((c) => c.id === id);
-}
-
-export function getConceptsForSource(sourceId: string): LibraryConcept[] {
-  const source = getSourceById(sourceId);
-  if (source == null) return [];
-  return source.relatedConceptIds
-    .map((id) => getConceptById(id))
-    .filter((c): c is LibraryConcept => c != null);
-}
-
-export function getSourcesForConcept(conceptId: string): LibrarySource[] {
-  const concept = getConceptById(conceptId);
-  if (concept == null) return [];
-  return concept.relatedSourceIds
-    .map((id) => getSourceById(id))
-    .filter((s): s is LibrarySource => s != null);
-}
-
-export function sourceStatusMeta(status: SourceStatus): string {
-  return SOURCE_STATUS_LABELS[status];
+export function fixtureConceptById(id: string): LibraryConcept | undefined {
+  return FIXTURE_LIBRARY_CONCEPTS.find((c) => c.id === id);
 }

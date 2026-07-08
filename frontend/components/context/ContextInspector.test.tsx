@@ -1,13 +1,13 @@
 import { describe, expect, it, afterEach } from "vitest";
 import { render, screen, within, cleanup } from "@testing-library/react";
 import { ContextInspector } from "@/components/context/ContextInspector";
-import { CONTEXT_STUB } from "@/lib/contextClient";
+import { FIXTURE_CONTEXT_PACKET } from "@/lib/fixtures/contextFixture";
 
 afterEach(() => cleanup());
 
 describe("ContextInspector", () => {
   it("renders accordion sections without decision cards", () => {
-    render(<ContextInspector packet={CONTEXT_STUB} />);
+    render(<ContextInspector packet={FIXTURE_CONTEXT_PACKET} />);
     expect(screen.getByTestId("context-inspector")).toBeInTheDocument();
     expect(screen.getByTestId("inspector-ambito")).toBeInTheDocument();
     expect(screen.getByTestId("inspector-vincoli")).toBeInTheDocument();
@@ -21,7 +21,7 @@ describe("ContextInspector", () => {
     render(
       <ContextInspector
         packet={{
-          ...CONTEXT_STUB,
+          ...FIXTURE_CONTEXT_PACKET,
           entity: {
             type: "chapter",
             id: "3",
@@ -44,7 +44,7 @@ describe("ContextInspector", () => {
     render(
       <ContextInspector
         packet={{
-          ...CONTEXT_STUB,
+          ...FIXTURE_CONTEXT_PACKET,
           corpus_constraints: [],
           definitions: [],
           relevant_sources: [],
@@ -78,7 +78,7 @@ describe("ContextInspector", () => {
     render(
       <ContextInspector
         packet={{
-          ...CONTEXT_STUB,
+          ...FIXTURE_CONTEXT_PACKET,
           definitions: [{ term: "Aura", definition: "Unicità dell'opera d'arte." }],
           relevant_sources: [{ id: "src-1", title: "Benjamin (1936)" }],
           writing_rules: ["Italiano accademico"],

@@ -1,5 +1,5 @@
-import { ResearchGuidedStub } from "@/components/research/ResearchGuidedStub";
+import { ResearchGuidedPlaceholder } from "@/components/research/ResearchGuidedPlaceholder";
 
 export default function ResearchGuidedPage() {
-  return <ResearchGuidedStub />;
+  return <ResearchGuidedPlaceholder />;
 }

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.graph.corpus_query import CORPUS_PICKER_SOURCES
+from app.services.knowledge.dev_catalog import dev_catalog_enabled
 from app.schemas.knowledge import (
     KnowledgeObjectEnvelope,
     KnowledgeObjectType,
@@ -174,6 +175,9 @@ def list_knowledge_objects(
     object_type: KnowledgeObjectType | None = None,
     include_deprecated: bool = False,
 ) -> list[KnowledgeObjectEnvelope]:
+    if not dev_catalog_enabled():
+        return []
+
     items: list[KnowledgeObjectEnvelope] = []
 
     if object_type in (None, "source"):
@@ -187,6 +191,8 @@ def list_knowledge_objects(
 
 
 def get_knowledge_object(slug: str) -> KnowledgeObjectEnvelope | None:
+    if not dev_catalog_enabled():
+        return None
     for raw in CORPUS_PICKER_SOURCES:
         if raw["id"] == slug:
             return build_source_envelope(raw)

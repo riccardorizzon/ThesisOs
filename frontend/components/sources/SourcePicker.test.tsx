@@ -1,7 +1,12 @@
 import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { cleanup, fireEvent, render, screen, act } from "@testing-library/react";
 import { SourcePicker } from "./SourcePicker";
-import { corpusClient } from "@/lib/corpusClient";
+import { corpusClient, _resetCorpusCacheForTests, _seedCorpusCacheForTests } from "@/lib/corpusClient";
+import {
+  FIXTURE_APPROVED_CORPUS_SOURCE,
+  FIXTURE_EXCLUDED_CORPUS_SOURCE,
+} from "@/lib/fixtures/corpusFixture";
+import { FIXTURE_LIBRARY_SOURCES } from "@/lib/fixtures/libraryFixture";
 import { EXCLUDED_CITE_BLOCKED_MESSAGE } from "@/lib/citationInsert";
 
 afterEach(() => {
@@ -13,6 +18,16 @@ afterEach(() => {
 describe("SourcePicker", () => {
   beforeEach(() => {
     localStorage.clear();
+    _seedCorpusCacheForTests(
+      FIXTURE_LIBRARY_SOURCES.map((source) => ({
+        ...source,
+        body: "Test body",
+      }))
+    );
+  });
+
+  afterEach(() => {
+    _resetCorpusCacheForTests();
   });
 
   it("does not render when closed", () => {

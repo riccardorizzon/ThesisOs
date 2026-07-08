@@ -5,7 +5,7 @@ import {
   SOURCE_STATUS_LABELS,
   SOURCE_STATUS_OPTIONS,
   type SourceStatus,
-} from "@/lib/libraryStub";
+} from "@/lib/libraryTypes";
 
 export type LibraryFilterValue = SourceStatus | "all";
 

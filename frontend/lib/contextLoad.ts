@@ -1,42 +1,10 @@
-import {
-  CONTEXT_STUB,
-  contextClient,
-  type ContextPacket,
-  type ContextQuery,
-} from "@/lib/contextClient";
+import { contextClient, type ContextPacket, type ContextQuery } from "@/lib/contextClient";
 import {
   projectContextToQuery,
   resolveProjectContextForSurface,
 } from "@/lib/projectContext";
 
-function stubFallback(
-  resolved: ReturnType<typeof resolveProjectContextForSurface>,
-  params?: ContextQuery
-): ContextPacket {
-  return {
-    ...CONTEXT_STUB,
-    project_context: {
-      project_id: resolved.project_id,
-      product_id: resolved.product_id,
-      workspace_id: resolved.workspace_id,
-      session_id: resolved.session_id,
-    },
-    presentation: { surface: resolved.surface },
-    selection_anchor: params?.selectionAnchor ?? null,
-    entity:
-      params?.entityType === "chapter" && params.entityId
-        ? {
-            type: "chapter",
-            id: params.entityId,
-            title: `Capitolo ${params.entityId}`,
-          }
-        : CONTEXT_STUB.entity,
-  };
-}
-
-export async function loadContext(
-  params?: ContextQuery
-): Promise<ContextPacket> {
+export async function loadContext(params?: ContextQuery): Promise<ContextPacket> {
   const surface = params?.surface;
   const resolved = resolveProjectContextForSurface(
     surface === "home" ? "home" : "writing",
@@ -54,12 +22,5 @@ export async function loadContext(
     userIntent: params?.userIntent,
   });
 
-  try {
-    return await contextClient.get(resolved.project_id, query);
-  } catch (err) {
-    if (resolved.surface === "writing") {
-      throw err;
-    }
-    return stubFallback(resolved, params);
-  }
+  return contextClient.get(resolved.project_id, query);
 }

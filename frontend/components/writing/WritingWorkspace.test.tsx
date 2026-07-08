@@ -1,6 +1,7 @@
 import { describe, expect, it, afterEach, vi, beforeEach } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
-import { CONTEXT_STUB } from "@/lib/contextClient";
+import { FIXTURE_CONTEXT_PACKET } from "@/lib/fixtures/contextFixture";
+import { FIXTURE_WRITING_OUTLINE } from "@/lib/fixtures/writingFixture";
 import { WritingWorkspace } from "./WritingWorkspace";
 
 vi.mock("next/navigation", () => ({
@@ -79,7 +80,7 @@ describe("WritingWorkspace", () => {
   });
 
   it("renders three-panel shell with outline, editor, and AI panel", () => {
-    render(<WritingWorkspace chapterId="1" contextPacket={CONTEXT_STUB} />);
+    render(<WritingWorkspace chapterId="1" contextPacket={FIXTURE_CONTEXT_PACKET} />);
 
     expect(screen.getByTestId("writing-workspace")).toBeTruthy();
     expect(screen.getByRole("navigation", { name: "Outline capitoli" })).toBeTruthy();
@@ -90,7 +91,13 @@ describe("WritingWorkspace", () => {
   });
 
   it("highlights active chapter in outline", () => {
-    render(<WritingWorkspace chapterId="4" contextPacket={CONTEXT_STUB} />);
+    render(
+      <WritingWorkspace
+        chapterId="4"
+        contextPacket={FIXTURE_CONTEXT_PACKET}
+        chapters={FIXTURE_WRITING_OUTLINE}
+      />
+    );
 
     expect(
       screen.getByRole("link", { name: /Cap\. 4 — Analisi/i })
@@ -98,7 +105,7 @@ describe("WritingWorkspace", () => {
   });
 
   it("uses panel width tokens on outline and rail", () => {
-    render(<WritingWorkspace chapterId="2" contextPacket={CONTEXT_STUB} />);
+    render(<WritingWorkspace chapterId="2" contextPacket={FIXTURE_CONTEXT_PACKET} />);
 
     const outlinePanel = document.getElementById("writing-outline-panel");
     const railPanel = document.getElementById("writing-rail-panel");
@@ -118,12 +125,12 @@ describe("WritingWorkspace", () => {
       })),
     });
 
-    render(<WritingWorkspace chapterId="1" contextPacket={CONTEXT_STUB} />);
+    render(<WritingWorkspace chapterId="1" contextPacket={FIXTURE_CONTEXT_PACKET} />);
     expect(screen.getByTestId("writing-readonly-banner")).toBeTruthy();
   });
 
   it("toggles outline panel on small screens", () => {
-    render(<WritingWorkspace chapterId="2" contextPacket={CONTEXT_STUB} />);
+    render(<WritingWorkspace chapterId="2" contextPacket={FIXTURE_CONTEXT_PACKET} />);
 
     const outlineToggle = screen.getByRole("button", { name: "Outline" });
     const outlinePanel = document.getElementById("writing-outline-panel");
@@ -136,7 +143,7 @@ describe("WritingWorkspace", () => {
   });
 
   it("renders linked sources footer with count", () => {
-    render(<WritingWorkspace chapterId="3" contextPacket={CONTEXT_STUB} />);
+    render(<WritingWorkspace chapterId="3" contextPacket={FIXTURE_CONTEXT_PACKET} />);
     const footer = screen.getByTestId("linked-sources-footer");
     expect(footer).toBeTruthy();
     expect(footer).toHaveTextContent(/Fonti collegate \(\d+\)/);

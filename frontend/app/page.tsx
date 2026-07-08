@@ -1,6 +1,5 @@
 import { HomeView } from "@/components/HomeView";
 import { chapterClient } from "@/lib/chapterClient";
-import { HOME_ACTIVITY_STUB, STUB_CHAPTERS } from "@/lib/homeStub";
 import {
   computeProgressPct,
   findContinueTarget,
@@ -10,14 +9,13 @@ import {
 async function loadChapters(): Promise<ProgressChapter[]> {
   try {
     const list = await chapterClient.list();
-    if (list.length === 0) return STUB_CHAPTERS;
     return list.map((c) => ({
       id: c.id,
       title: c.title,
       status: c.status,
     }));
   } catch {
-    return STUB_CHAPTERS;
+    return [];
   }
 }
 
@@ -30,7 +28,7 @@ export default async function Home() {
     <HomeView
       progressPct={progressPct}
       continueTarget={continueTarget}
-      activity={HOME_ACTIVITY_STUB}
+      activity={[]}
     />
   );
 }

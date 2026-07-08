@@ -16,8 +16,7 @@ import {
 import {
   sourceStatusMeta,
   type SourceStatus,
-} from "@/lib/libraryStub";
-import { getConceptById } from "@/lib/libraryStub";
+} from "@/lib/libraryTypes";
 
 export type SourceReaderProps = {
   source: CorpusSource;
@@ -69,9 +68,10 @@ export function SourceReader({
   const [copied, setCopied] = useState(false);
 
   const isExcluded = !canCiteSource(source.status);
-  const conceptTags = source.relatedConceptIds
-    .map((id) => getConceptById(id))
-    .filter(Boolean);
+  const conceptTags = source.relatedConcepts ?? source.relatedConceptIds.map((id) => ({
+    id,
+    title: id,
+  }));
 
   const navIndex = resultIds?.indexOf(source.id) ?? -1;
   const prevId = navIndex > 0 ? resultIds?.[navIndex - 1] : undefined;

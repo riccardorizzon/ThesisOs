@@ -1,4 +1,4 @@
-import type { SourceStatus } from "@/lib/libraryStub";
+import type { SourceStatus } from "@/lib/libraryTypes";
 
 export const INSERT_CITATION_EVENT = "thesisos:insert-citation";
 

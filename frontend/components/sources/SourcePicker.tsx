@@ -55,6 +55,10 @@ export function SourcePicker({
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [tab, setTab] = useState<SourcePickerTab>("recenti");
+  useEffect(() => {
+    if (!open) return;
+    void corpusClient.hydrate();
+  }, [open]);
   const [remoteResults, setRemoteResults] = useState<CorpusSource[]>([]);
   const [blockedMsg, setBlockedMsg] = useState<string | null>(null);
 

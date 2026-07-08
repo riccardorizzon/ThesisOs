@@ -1,8 +1,7 @@
 import type { CanvasLensContext } from "@/lib/canvasLenses";
-import { buildStubLensContext } from "@/lib/canvasLenses";
+import { emptyLensContext } from "@/lib/canvasLenses";
 import type { DecisionRef } from "@/lib/contextClient";
 import { formatDecisionDisplayId } from "@/lib/decisionClient";
-import { LIBRARY_SOURCES } from "@/lib/libraryStub";
 import type { KnowledgeGraphEdge, KnowledgeGraphResponse } from "@/lib/knowledgeTypes";
 
 export type SerendipitySuggestionType =
@@ -36,18 +35,11 @@ const TYPE_RANK: Record<SerendipitySuggestionType, number> = {
   "chapter-gap": 4,
 };
 
-export function buildStubSerendipityContext(): SerendipityContext {
+export function emptySerendipityContext(): SerendipityContext {
   return {
-    ...buildStubLensContext(),
-    decisions: [
-      {
-        id: "dec-012",
-        title: "DEC-012",
-        summary: "DEC-012 — vincolo metodologico sul corpus visivo",
-        binding: true,
-      },
-    ],
-    activeChapterLabel: "Cap. 3",
+    ...emptyLensContext(),
+    decisions: [],
+    activeChapterLabel: null,
   };
 }
 
@@ -130,20 +122,27 @@ function findUnreadSourceSuggestions(
 
   const unreadSlugs = [...context.unreadSourceSlugs].sort();
   for (const sourceSlug of unreadSlugs) {
-    const source = LIBRARY_SOURCES.find((item) => item.id === sourceSlug);
-    if (source == null) continue;
+    const sourceNode = graph.nodes.find(
+      (node) => node.slug === sourceSlug && node.kind === "source"
+    );
+    if (sourceNode == null) continue;
 
-    const conceptSlugs = source.relatedConceptIds
-      .filter((slug) => graphSlugs.has(slug))
+    const conceptSlugs = graph.edges
+      .filter(
+        (edge) =>
+          edge.link_kind === "concept_source" &&
+          edge.target === sourceSlug &&
+          graphSlugs.has(edge.source)
+      )
+      .map((edge) => edge.source)
       .sort();
     if (conceptSlugs.length === 0) continue;
 
-    const author = source.subtitle?.trim() ?? "Fonte";
     suggestions.push({
       id: `unread:${sourceSlug}`,
       type: "unread-source",
       title: "Fonte non letta",
-      subtitle: `${author} — ${source.title}`,
+      subtitle: sourceNode.title,
       actionLabel: "Apri",
       targetSlugs: conceptSlugs.slice(0, 2),
       targetEdgeKeys: [],

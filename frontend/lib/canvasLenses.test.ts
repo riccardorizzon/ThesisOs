@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildStubLensContext,
+  buildLensContextFromGraph,
   DEFAULT_CANVAS_FILTERS,
   filterGraphByLens,
+  type CanvasLensContext,
 } from "@/lib/canvasLenses";
 import type { KnowledgeGraphResponse } from "@/lib/knowledgeTypes";
 
@@ -63,8 +64,19 @@ const SAMPLE_GRAPH: KnowledgeGraphResponse = {
   },
 };
 
+const TEST_LENS_CONTEXT: CanvasLensContext = {
+  ...buildLensContextFromGraph(SAMPLE_GRAPH),
+  sourceCountByConceptSlug: new Map([
+    ["aura", 1],
+    ["riproducibilita", 1],
+    ["stigmata", 4],
+    ["mito", 1],
+  ]),
+  activeChapterConceptSlugs: new Set(["aura", "stigmata"]),
+};
+
 describe("canvasLenses", () => {
-  const context = buildStubLensContext();
+  const context = TEST_LENS_CONTEXT;
 
   it("L-all returns all non-deprecated nodes by default", () => {
     const result = filterGraphByLens(SAMPLE_GRAPH, DEFAULT_CANVAS_FILTERS, context);

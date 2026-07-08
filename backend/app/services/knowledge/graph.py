@@ -24,6 +24,7 @@ from app.schemas.knowledge_graph import (
     KnowledgeGraphResponse,
 )
 from app.services.knowledge.catalog import CONCEPT_CATALOG, build_concept_envelope, build_source_envelope
+from app.services.knowledge.dev_catalog import dev_catalog_enabled
 from app.services.knowledge.repository import ConceptRepository
 
 
@@ -33,15 +34,6 @@ def _author_slug(author_name: str) -> str:
     return f"author-{allowed.strip('-')}"
 
 
-_CANVAS_DECISION_STUBS: tuple[dict[str, str], ...] = (
-    {"id": "decision-aura-repro", "title": "Tensione aura/riproducibilità", "concept_slug": "aura"},
-    {"id": "decision-stigmata-scope", "title": "Scope STIGMATA", "concept_slug": "stigmata"},
-)
-
-_CANVAS_CHAPTER_STUBS: tuple[dict[str, str], ...] = (
-    {"id": "ch-1-intro", "title": "Cap. 1 — Introduzione", "concept_slug": "stigmata"},
-    {"id": "ch-2-percezione", "title": "Cap. 2 — Percezione", "concept_slug": "percezione"},
-)
 
 _MAX_SATELLITES: dict[str, int] = {
     "source": 40,
@@ -52,6 +44,8 @@ _MAX_SATELLITES: dict[str, int] = {
 
 
 def _catalog_entries() -> list[dict[str, Any]]:
+    if not dev_catalog_enabled():
+        return []
     return list(CONCEPT_CATALOG)
 
 
@@ -248,9 +242,13 @@ def _build_graph_response(
         )
 
     if canvas_profile:
+        source_map = {
+            str(entry["id"]): tuple(str(x) for x in entry.get("related_source_ids", ()))
+            for entry in entries
+        }
         satellite_nodes, satellite_edges = _enrich_canvas_satellites(
             concept_slugs=selected,
-            concept_edges=visible_edges,
+            source_map=source_map,
         )
         nodes.extend(satellite_nodes)
         visible_edges = [*visible_edges, *satellite_edges]
@@ -285,7 +283,7 @@ def _source_entry_by_id(source_id: str) -> dict[str, str] | None:
 def _enrich_canvas_satellites(
     *,
     concept_slugs: set[str],
-    concept_edges: list[KnowledgeGraphEdge],
+    source_map: dict[str, tuple[str, ...]],
 ) -> tuple[list[KnowledgeGraphNode], list[KnowledgeGraphEdge]]:
     satellite_nodes: list[KnowledgeGraphNode] = []
     satellite_edges: list[KnowledgeGraphEdge] = []
@@ -293,7 +291,7 @@ def _enrich_canvas_satellites(
 
     source_ids: set[str] = set()
     for concept_slug in concept_slugs:
-        for source_id in _source_ids_for_concept_slug(concept_slug):
+        for source_id in source_map.get(concept_slug, ()):
             source_ids.add(source_id)
 
     source_count = 0
@@ -310,7 +308,7 @@ def _enrich_canvas_satellites(
         linked_concepts = [
             slug
             for slug in concept_slugs
-            if source_id in _source_ids_for_concept_slug(slug)
+            if source_id in source_map.get(slug, ())
         ]
         for concept_slug in linked_concepts:
             satellite_edges.append(
@@ -379,70 +377,7 @@ def _enrich_canvas_satellites(
         )
         author_count += 1
 
-    decision_count = 0
-    for stub in _CANVAS_DECISION_STUBS:
-        if decision_count >= _MAX_SATELLITES["decision"]:
-            break
-        if stub["concept_slug"] not in concept_slugs or stub["id"] in seen_slugs:
-            continue
-        seen_slugs.add(stub["id"])
-        satellite_edges.append(
-            KnowledgeGraphEdge(
-                source=stub["concept_slug"],
-                target=stub["id"],
-                relation="related",
-                link_kind="concept_decision",
-            )
-        )
-        satellite_nodes.append(
-            KnowledgeGraphNode(
-                id=stub["id"],
-                slug=stub["id"],
-                title=stub["title"],
-                knowledge_state="validated",
-                is_core=False,
-                degree=1,
-                kind="decision",
-            )
-        )
-        decision_count += 1
-
-    chapter_count = 0
-    for stub in _CANVAS_CHAPTER_STUBS:
-        if chapter_count >= _MAX_SATELLITES["chapter"]:
-            break
-        if stub["concept_slug"] not in concept_slugs or stub["id"] in seen_slugs:
-            continue
-        seen_slugs.add(stub["id"])
-        satellite_edges.append(
-            KnowledgeGraphEdge(
-                source=stub["concept_slug"],
-                target=stub["id"],
-                relation="related",
-                link_kind="concept_chapter",
-            )
-        )
-        satellite_nodes.append(
-            KnowledgeGraphNode(
-                id=stub["id"],
-                slug=stub["id"],
-                title=stub["title"],
-                knowledge_state="referenced",
-                is_core=False,
-                degree=1,
-                kind="chapter",
-            )
-        )
-        chapter_count += 1
-
     return satellite_nodes, satellite_edges
-
-
-def _source_ids_for_concept_slug(concept_slug: str) -> tuple[str, ...]:
-    for entry in CONCEPT_CATALOG:
-        if entry["id"] == concept_slug:
-            return tuple(str(x) for x in entry.get("related_source_ids", ()))
-    return ()
 
 
 def build_knowledge_graph(

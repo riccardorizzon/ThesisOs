@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { streamWritingAction } from "@/lib/aiActions";
-import { CONTEXT_STUB } from "@/lib/contextClient";
+import { FIXTURE_CONTEXT_PACKET } from "@/lib/fixtures/contextFixture";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -23,7 +23,7 @@ describe("Writing aiActions", () => {
       {
         actionId: "verify",
         chapterId: "1",
-        contextPacket: CONTEXT_STUB,
+        contextPacket: FIXTURE_CONTEXT_PACKET,
       },
       (event) => {
         if (event.event === "error") {
@@ -44,7 +44,7 @@ describe("Writing aiActions", () => {
         actionId: "rewrite",
         chapterId: "1",
         selectionText: "test",
-        contextPacket: CONTEXT_STUB,
+        contextPacket: FIXTURE_CONTEXT_PACKET,
       },
       (event) => {
         if (event.event === "error") {

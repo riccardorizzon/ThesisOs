@@ -8,10 +8,8 @@ export { RailTabs, RAIL_TABS, railTabFromShortcut, type RailTabId, type RailTabs
 export { SourcePeekSlot, type SourcePeekSlotProps } from "@/components/writing/SourcePeekSlot";
 export { useRightRailEvents, bindRightRailEvents, type RightRailEventHandlers } from "@/components/writing/rightRailIntegration";
 export {
-  WRITING_OUTLINE_STUB,
   WRITING_AI_ACTIONS,
   CHAPTER_STATUS_LABELS,
-  chapterTitle,
   type WritingOutlineChapter,
   type WritingAiAction,
-} from "@/components/writing/writingStub";
+} from "@/components/writing/writingTypes";

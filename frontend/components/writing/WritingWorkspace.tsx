@@ -15,9 +15,8 @@ import { LinkedSourcesFooter } from "@/components/writing/LinkedSourcesFooter";
 import { DocumentIndexStatusBanner } from "@/components/writing/DocumentIndexStatusBanner";
 import type { MarkdownSection } from "@/components/writing/MarkdownEditor";
 import {
-  WRITING_OUTLINE_STUB,
   type WritingOutlineChapter,
-} from "@/components/writing/writingStub";
+} from "@/components/writing/writingTypes";
 import {
   useOutlineSectionChrome,
   useWritingPanelChrome,
@@ -75,7 +74,7 @@ export function WritingWorkspace({
   const [showOutline, setShowOutline] = useState(false);
   const [showRail, setShowRail] = useState(false);
   const [chapters, setChapters] = useState<WritingOutlineChapter[]>(
-    chaptersProp ?? WRITING_OUTLINE_STUB
+    chaptersProp ?? []
   );
   const [sections, setSections] = useState<MarkdownSection[]>([]);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);

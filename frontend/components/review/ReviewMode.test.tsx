@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/react";
 import { ReviewMode } from "./ReviewMode";
+import { FIXTURE_CONTEXT_PACKET } from "@/lib/fixtures/contextFixture";
 import {
   _resetProposalQueueForTests,
   _seedProposalQueueForTests,
@@ -112,7 +113,7 @@ describe("ReviewMode", () => {
     _seedProposalQueueForTests([SAMPLE_PROPOSAL]);
     vi.mocked(refreshProposalsFromApi).mockResolvedValue([SAMPLE_PROPOSAL]);
 
-    render(<ReviewMode />);
+    render(<ReviewMode contextPacket={FIXTURE_CONTEXT_PACKET} />);
 
     expect(screen.getByRole("heading", { name: "Revisione" })).toBeTruthy();
     expect(screen.getByRole("navigation", { name: "Passi revisione" })).toBeTruthy();
@@ -123,12 +124,12 @@ describe("ReviewMode", () => {
   });
 
   it("links to /ai as distinct power mode", () => {
-    render(<ReviewMode />);
+    render(<ReviewMode contextPacket={FIXTURE_CONTEXT_PACKET} />);
     expect(screen.getByRole("link", { name: "/ai" })).toHaveAttribute("href", "/ai");
   });
 
   it("shows empty state when no pending proposals", async () => {
-    render(<ReviewMode />);
+    render(<ReviewMode contextPacket={FIXTURE_CONTEXT_PACKET} />);
     await waitFor(() => {
       expect(screen.getByTestId("review-empty-state")).toBeTruthy();
       expect(screen.getByText(/Nessuna revisione in sospeso/i)).toBeTruthy();
@@ -139,7 +140,7 @@ describe("ReviewMode", () => {
     _seedProposalQueueForTests([SAMPLE_PROPOSAL]);
     vi.mocked(refreshProposalsFromApi).mockResolvedValue([SAMPLE_PROPOSAL]);
 
-    render(<ReviewMode />);
+    render(<ReviewMode contextPacket={FIXTURE_CONTEXT_PACKET} />);
 
     await waitFor(() => {
       expect(screen.getByText("Capitolo 1 — Introduzione")).toBeTruthy();

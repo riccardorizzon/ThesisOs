@@ -6,9 +6,8 @@ import { cn } from "@/lib/cn";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { MarkdownSection } from "@/components/writing/MarkdownEditor";
 import {
-  WRITING_OUTLINE_STUB,
   type WritingOutlineChapter,
-} from "@/components/writing/writingStub";
+} from "@/components/writing/writingTypes";
 import { chapterClient } from "@/lib/chapterClient";
 
 export type OutlineFilter = "all" | "in_progress" | "needs_review";
@@ -68,7 +67,7 @@ function chapterHref(chapterId: string, sectionId?: string): string {
  * Outline tree — left panel with status badges, section nav, drag reorder (PX-6).
  */
 export function WritingOutline({
-  chapters = WRITING_OUTLINE_STUB,
+  chapters = [],
   activeChapterId,
   activeSectionId,
   sections = [],

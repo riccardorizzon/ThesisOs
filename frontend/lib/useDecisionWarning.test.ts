@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { CONTEXT_STUB } from "@/lib/contextClient";
+import { FIXTURE_CONTEXT_PACKET } from "@/lib/fixtures/contextFixture";
 import { parseDecision } from "@/lib/decisionClient";
 import {
   computeDecisionWarning,
@@ -9,7 +9,7 @@ import {
 
 describe("computeDecisionWarning", () => {
   it("returns inactive when no binding conflict", () => {
-    const result = computeDecisionWarning({ packet: CONTEXT_STUB });
+    const result = computeDecisionWarning({ packet: FIXTURE_CONTEXT_PACKET });
     expect(result).toEqual({ active: false, message: null });
   });
 
@@ -23,7 +23,7 @@ describe("computeDecisionWarning", () => {
     });
 
     const packet = {
-      ...CONTEXT_STUB,
+      ...FIXTURE_CONTEXT_PACKET,
       decisions: [
         {
           id: decision.id,
@@ -51,7 +51,7 @@ describe("computeDecisionWarning", () => {
 
   it("stays inactive when chapter matches but selection does not overlap", () => {
     const packet = {
-      ...CONTEXT_STUB,
+      ...FIXTURE_CONTEXT_PACKET,
       decisions: [
         {
           id: "dec-012",
@@ -80,14 +80,14 @@ describe("useDecisionWarning", () => {
   it("memoizes warning state from packet input", () => {
     const { result, rerender } = renderHook(
       ({ packet }) => useDecisionWarning({ packet }),
-      { initialProps: { packet: CONTEXT_STUB } }
+      { initialProps: { packet: FIXTURE_CONTEXT_PACKET } }
     );
 
     expect(result.current.active).toBe(false);
 
     rerender({
       packet: {
-        ...CONTEXT_STUB,
+        ...FIXTURE_CONTEXT_PACKET,
         entity: {
           type: "chapter",
           id: "2",

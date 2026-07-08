@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ReviewDocumentSelector } from "./ReviewDocumentSelector";
-import type { ReviewChapter } from "./reviewStub";
+import type { ReviewChapter } from "./reviewTypes";
 
 afterEach(() => {
   cleanup();

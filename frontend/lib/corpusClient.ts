@@ -1,9 +1,10 @@
 import {
-  LIBRARY_SOURCES,
-  getSourceById,
+  corpusStatusFromApi,
   type LibrarySource,
   type SourceStatus,
-} from "@/lib/libraryStub";
+} from "@/lib/libraryTypes";
+import { listSources } from "@/lib/sourcesClient";
+import type { SourceListItem } from "@/lib/sourcesTypes";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -11,6 +12,7 @@ export type CorpusSource = LibrarySource & {
   body: string;
   year?: string;
   exclusionReason?: string;
+  relatedConcepts?: Array<{ id: string; title: string }>;
 };
 
 export const LINKED_SOURCES_CHANGED = "thesisos:linked-sources-changed";
@@ -47,18 +49,47 @@ const SOURCE_BODIES: Record<
   },
 };
 
-function parseYear(meta?: string): string | undefined {
+let sourceCache: Map<string, CorpusSource> | null = null;
+let hydratePromise: Promise<void> | null = null;
+
+/** Test-only — seed in-memory corpus cache. */
+export function _seedCorpusCacheForTests(sources: CorpusSource[]): void {
+  sourceCache = new Map(sources.map((source) => [source.id, source]));
+  hydratePromise = null;
+}
+
+/** Test-only — reset corpus cache between tests. */
+export function _resetCorpusCacheForTests(): void {
+  sourceCache = null;
+  hydratePromise = null;
+}
+
+function parseYear(meta?: string | null): string | undefined {
   const match = meta?.match(/\b(19|20)\d{2}\b/);
   return match?.[0];
 }
 
-function toCorpusSource(source: LibrarySource): CorpusSource {
-  const extra = SOURCE_BODIES[source.id];
+function toCorpusSource(item: SourceListItem): CorpusSource {
+  const status = corpusStatusFromApi(item.corpus_status, item.knowledge_state);
+  const extra = SOURCE_BODIES[item.slug];
+  const relatedConceptIds = item.related_concepts.map((c) => c.slug);
   return {
-    ...source,
-    body: extra?.body ?? "Estratto non disponibile — contenuto completo in PX-3.",
-    year: parseYear(source.meta),
-    exclusionReason: extra?.exclusionReason,
+    id: item.slug,
+    title: item.title,
+    subtitle: item.subtitle ?? undefined,
+    meta: item.summary ?? undefined,
+    status,
+    relatedConceptIds,
+    relatedConcepts: item.related_concepts.map((c) => ({
+      id: c.slug,
+      title: c.title,
+    })),
+    body:
+      extra?.body ??
+      item.summary ??
+      "Estratto non disponibile — contenuto completo nel reader.",
+    year: parseYear(item.summary),
+    exclusionReason: status === "esclusa" ? extra?.exclusionReason : undefined,
   };
 }
 
@@ -94,20 +125,49 @@ function writeLinkedMap(map: LinkedMap): void {
   dispatchLinkedChanged();
 }
 
+async function hydrateFromApi(): Promise<void> {
+  if (sourceCache != null) return;
+  if (hydratePromise != null) {
+    await hydratePromise;
+    return;
+  }
+  hydratePromise = listSources({ includeDeprecated: true })
+    .then((res) => {
+      sourceCache = new Map();
+      for (const item of res.sources) {
+        sourceCache.set(item.slug, toCorpusSource(item));
+      }
+    })
+    .catch(() => {
+      sourceCache = new Map();
+    })
+    .finally(() => {
+      hydratePromise = null;
+    });
+  await hydratePromise;
+}
+
+function cachedList(): CorpusSource[] {
+  return [...(sourceCache?.values() ?? [])];
+}
+
 export const corpusClient = {
+  async hydrate(): Promise<void> {
+    await hydrateFromApi();
+  },
+
   list(): CorpusSource[] {
-    return LIBRARY_SOURCES.map(toCorpusSource);
+    return cachedList();
   },
 
   getById(id: string): CorpusSource | undefined {
-    const source = getSourceById(id);
-    return source ? toCorpusSource(source) : undefined;
+    return sourceCache?.get(id);
   },
 
   /** Search corpus — excluded sources omitted unless includeExcluded (IR-4). */
   search(query: string, options?: { includeExcluded?: boolean }): CorpusSource[] {
     const q = query.trim().toLowerCase();
-    let results = this.list();
+    let results = cachedList();
     if (!options?.includeExcluded) {
       results = results.filter((s) => s.status !== "esclusa");
     }
@@ -122,6 +182,7 @@ export const corpusClient = {
   },
 
   async searchRemote(query: string, limit = 12): Promise<CorpusSource[]> {
+    await hydrateFromApi();
     const q = query.trim();
     if (!q) return [];
     try {
@@ -141,9 +202,10 @@ export const corpusClient = {
           .filter(Boolean)
       );
       if (titles.size === 0) return this.search(q);
-      return this.search(q).filter((s) =>
-        titles.has(s.title.toLowerCase()) ||
-        titles.has(s.subtitle?.toLowerCase() ?? "")
+      return this.search(q).filter(
+        (s) =>
+          titles.has(s.title.toLowerCase()) ||
+          titles.has(s.subtitle?.toLowerCase() ?? "")
       );
     } catch {
       return this.search(q);
@@ -199,3 +261,5 @@ export const corpusClient = {
     return (map[chapterId] ?? []).includes(sourceId);
   },
 };
+
+export type { SourceStatus };

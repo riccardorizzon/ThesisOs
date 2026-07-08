@@ -1,20 +1,20 @@
 import { describe, expect, it, afterEach, vi } from "vitest";
+import {
+  CONTEXT_OPEN_CONTESTO_EVENT,
+  contextBarCounts,
+  formatContextBarLabel,
+} from "@/lib/contextClient";
 import { fireEvent, render, screen, cleanup } from "@testing-library/react";
 import { ContextBar } from "@/components/context/ContextBar";
 import { ConstraintChip } from "@/components/context/ConstraintChip";
 import { DecisionBadge } from "@/components/context/DecisionBadge";
-import {
-  CONTEXT_OPEN_CONTESTO_EVENT,
-  CONTEXT_STUB,
-  contextBarCounts,
-  formatContextBarLabel,
-} from "@/lib/contextClient";
+import { FIXTURE_CONTEXT_PACKET } from "@/lib/fixtures/contextFixture";
 
 afterEach(() => cleanup());
 
 describe("contextBarCounts", () => {
   it("derives counts from packet fields", () => {
-    expect(contextBarCounts(CONTEXT_STUB)).toEqual({
+    expect(contextBarCounts(FIXTURE_CONTEXT_PACKET)).toEqual({
       sources: 0,
       concepts: 0,
       decisions: 2,
@@ -25,7 +25,7 @@ describe("contextBarCounts", () => {
 
 describe("formatContextBarLabel", () => {
   it("matches Spec §6.4 pattern with voci ordering", () => {
-    expect(formatContextBarLabel(contextBarCounts(CONTEXT_STUB))).toBe(
+    expect(formatContextBarLabel(contextBarCounts(FIXTURE_CONTEXT_PACKET))).toBe(
       "0 fonti · 2 decisioni · 0 voci · 0 citazioni"
     );
   });
@@ -46,7 +46,7 @@ describe("ConstraintChip", () => {
 
 describe("DecisionBadge", () => {
   it("shows binding decision count", () => {
-    render(<DecisionBadge decisions={CONTEXT_STUB.decisions} />);
+    render(<DecisionBadge decisions={FIXTURE_CONTEXT_PACKET.decisions} />);
     expect(screen.getByTestId("decision-badge")).toHaveTextContent(
       "2 decisioni vincolanti"
     );
@@ -64,7 +64,7 @@ describe("DecisionBadge", () => {
 
 describe("ContextBar", () => {
   it("renders live counts and project phase when unscoped", () => {
-    render(<ContextBar packet={CONTEXT_STUB} />);
+    render(<ContextBar packet={FIXTURE_CONTEXT_PACKET} />);
     expect(
       screen.getByText("0 fonti · 2 decisioni · 0 voci · 0 citazioni")
     ).toBeInTheDocument();
@@ -77,7 +77,7 @@ describe("ContextBar", () => {
     render(
       <ContextBar
         packet={{
-          ...CONTEXT_STUB,
+          ...FIXTURE_CONTEXT_PACKET,
           entity: {
             type: "chapter",
             id: "2",
@@ -100,7 +100,7 @@ describe("ContextBar", () => {
 
   it("calls onScopeClick when scope chip clicked", () => {
     const onScopeClick = vi.fn();
-    render(<ContextBar packet={CONTEXT_STUB} onScopeClick={onScopeClick} />);
+    render(<ContextBar packet={FIXTURE_CONTEXT_PACKET} onScopeClick={onScopeClick} />);
     fireEvent.click(screen.getByTestId("context-scope-chip"));
     expect(onScopeClick).toHaveBeenCalledOnce();
   });
@@ -111,7 +111,7 @@ describe("ContextBar", () => {
     window.addEventListener(CONTEXT_OPEN_CONTESTO_EVENT, listener);
 
     render(
-      <ContextBar packet={CONTEXT_STUB} onOpenContestoTab={onOpenContestoTab} />
+      <ContextBar packet={FIXTURE_CONTEXT_PACKET} onOpenContestoTab={onOpenContestoTab} />
     );
     fireEvent.click(screen.getByTestId("context-summary"));
     expect(onOpenContestoTab).toHaveBeenCalledOnce();
@@ -123,7 +123,7 @@ describe("ContextBar", () => {
   it("applies warning styling when warningState active", () => {
     render(
       <ContextBar
-        packet={CONTEXT_STUB}
+        packet={FIXTURE_CONTEXT_PACKET}
         warningState={{ active: true, message: "Decisione vincolante attiva" }}
       />
     );
@@ -137,7 +137,7 @@ describe("ContextBar", () => {
     render(
       <ContextBar
         packet={{
-          ...CONTEXT_STUB,
+          ...FIXTURE_CONTEXT_PACKET,
           relevant_sources: [{ id: "s1", title: "Benjamin" }],
           concepts: Array.from({ length: 18 }, (_, i) => ({
             id: `c${i}`,
