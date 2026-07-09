@@ -6,22 +6,34 @@ import {
   type ProgressChapter,
 } from "@/lib/progress";
 
-async function loadChapters(): Promise<ProgressChapter[]> {
+type ChaptersLoadResult = {
+  chapters: ProgressChapter[];
+  error: string | null;
+};
+
+async function loadChapters(): Promise<ChaptersLoadResult> {
   try {
     const list = await chapterClient.list();
-    return list.map((c) => ({
-      id: c.id,
-      title: c.title,
-      status: c.status,
-    }));
-  } catch {
-    return [];
+    return {
+      chapters: list.map((c) => ({
+        id: c.id,
+        title: c.title,
+        status: c.status,
+      })),
+      error: null,
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Impossibile caricare i capitoli dal server.";
+    return { chapters: [], error: message };
   }
 }
 
 export default async function Home() {
-  const chapters = await loadChapters();
-  const progressPct = computeProgressPct(chapters);
+  const { chapters, error } = await loadChapters();
+  const progressPct = error != null ? 0 : computeProgressPct(chapters);
   const continueTarget = findContinueTarget(chapters);
 
   return (
@@ -29,6 +41,7 @@ export default async function Home() {
       progressPct={progressPct}
       continueTarget={continueTarget}
       activity={[]}
+      chaptersLoadError={error}
     />
   );
 }

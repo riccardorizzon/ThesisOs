@@ -1,7 +1,6 @@
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 import type { Chapter } from "@/lib/chapterClient";
-
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import { apiBaseUrl } from "@/lib/apiBase";
 
 export type ProposalApiStatus = "pending" | "accepted" | "rejected";
 
@@ -46,7 +45,7 @@ export class ProposalApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(`${BASE}${path}`, { ...init, cache: "no-store" });
+  const r = await fetch(`${apiBaseUrl()}${path}`, { ...init, cache: "no-store" });
   if (!r.ok) {
     const body = (await r.json().catch(() => null)) as { code?: string; message?: string } | null;
     throw new ProposalApiError(r.status, body?.code ?? "unknown", body?.message ?? r.statusText);

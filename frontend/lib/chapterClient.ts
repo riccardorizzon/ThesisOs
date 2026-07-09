@@ -1,4 +1,4 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import { apiBaseUrl } from "@/lib/apiBase";
 
 export type ChapterStatus = "draft" | "review" | "approved" | "published";
 export type ChapterChangeKind = "WRITE" | "EDIT" | "PROMOTE" | "MERGE" | "RESTORE";
@@ -65,7 +65,7 @@ export class ChapterApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(`${BASE}${path}`, { ...init, cache: "no-store" });
+  const r = await fetch(`${apiBaseUrl()}${path}`, { ...init, cache: "no-store" });
   if (!r.ok) {
     const body = (await r.json().catch(() => null)) as { code?: string; message?: string } | null;
     throw new ChapterApiError(r.status, body?.code ?? "unknown", body?.message ?? r.statusText);
@@ -108,7 +108,7 @@ export const chapterClient = {
     return request<ChapterVersion[]>(`/chapters/${id}/versions`);
   },
   async exportMarkdown(id: string): Promise<Blob> {
-    const r = await fetch(`${BASE}/export/chapters/${id}.md`, { cache: "no-store" });
+    const r = await fetch(`${apiBaseUrl()}/export/chapters/${id}.md`, { cache: "no-store" });
     if (!r.ok) {
       const body = (await r.json().catch(() => null)) as { code?: string; message?: string } | null;
       throw new ChapterApiError(r.status, body?.code ?? "unknown", body?.message ?? r.statusText);

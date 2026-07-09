@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
+import { ApiDegradedBanner } from "@/components/ui/ApiDegradedBanner";
 import { ResearchResumeSection } from "@/components/research/ResearchResumeSection";
 
 export type ResearchHubPageProps = {
   conceptCount: number;
+  /** Error Contract v1 — distinguish API failure from true empty graph */
+  conceptCountStatus?: "ok" | "empty" | "unavailable";
 };
 
 type ModeCardProps = {
@@ -85,8 +88,12 @@ function ModeCard({ title, description, href, cta, icon, isDisabled = false }: M
  * PX-5 Research hub — mode selection entry point.
  * Layer: Business (Product Plane)
  */
-export function ResearchHubPage({ conceptCount }: ResearchHubPageProps) {
+export function ResearchHubPage({
+  conceptCount,
+  conceptCountStatus = "ok",
+}: ResearchHubPageProps) {
   const hasConcepts = conceptCount > 0;
+  const countUnavailable = conceptCountStatus === "unavailable";
 
   return (
     <div className="mx-auto max-w-content space-y-8">
@@ -98,6 +105,13 @@ export function ResearchHubPage({ conceptCount }: ResearchHubPageProps) {
         </p>
       </header>
 
+      {countUnavailable ? (
+        <ApiDegradedBanner
+          message="Impossibile verificare i concetti Knowledge. La mappa potrebbe essere disponibile comunque."
+          testId="research-concept-count-degraded"
+        />
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <ModeCard
           title="Mappa concettuale"
@@ -105,7 +119,7 @@ export function ResearchHubPage({ conceptCount }: ResearchHubPageProps) {
           href="/research/canvas"
           cta="Apri mappa →"
           icon="map"
-          isDisabled={!hasConcepts}
+          isDisabled={!hasConcepts && !countUnavailable}
         />
         <ModeCard
           title="Esplorazione guidata"
@@ -116,7 +130,7 @@ export function ResearchHubPage({ conceptCount }: ResearchHubPageProps) {
         />
       </div>
 
-      {!hasConcepts ? (
+      {!hasConcepts && !countUnavailable ? (
         <p className="text-sm text-ink-muted">
           Popola prima il grafo Knowledge per abilitare la mappa.{" "}
           <Link href="/knowledge" className="font-medium text-accent hover:underline cursor-pointer">
@@ -124,12 +138,12 @@ export function ResearchHubPage({ conceptCount }: ResearchHubPageProps) {
           </Link>
           .
         </p>
-      ) : (
+      ) : hasConcepts ? (
         <section aria-label="Riprendi">
           <h2 className="text-sm font-medium text-ink">Riprendi</h2>
           <ResearchResumeSection />
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

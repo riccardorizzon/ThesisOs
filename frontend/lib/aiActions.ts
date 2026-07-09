@@ -1,6 +1,5 @@
 import type { ContextPacket } from "@/lib/contextClient";
-
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import { apiBaseUrl } from "@/lib/apiBase";
 
 export type WritingActionId = "rewrite" | "verify" | "find-sources" | "expand";
 
@@ -178,7 +177,7 @@ export async function streamWritingAction(
   signal?: AbortSignal
 ): Promise<void> {
   try {
-    const r = await fetch(`${BASE}/writing/actions`, {
+    const r = await fetch(`${apiBaseUrl()}/writing/actions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

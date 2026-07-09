@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ProgressRing } from "@/components/ProgressRing";
 import { EntityCard } from "@/components/EntityCard";
+import { ApiDegradedBanner } from "@/components/ui/ApiDegradedBanner";
 import type { ActivityItem } from "@/lib/homeTypes";
 import { mergeContinuaTarget } from "@/lib/continuaLink";
 import type { ContinueTarget } from "@/lib/progress";
@@ -40,6 +41,8 @@ export type HomeViewProps = {
   activity?: ActivityItem[];
   /** PX-2 activity feed with proposal types */
   activityFeed?: HomeActivityItem[];
+  /** Error Contract v1 — API load failed; do not treat as zero progress */
+  chaptersLoadError?: string | null;
 };
 
 const ACTIVITY_LABELS: Record<ActivityFeedKind, string> = {
@@ -146,6 +149,7 @@ export function HomeView({
   continueTarget,
   activity = [],
   activityFeed,
+  chaptersLoadError = null,
 }: HomeViewProps) {
   const phase = progressPhaseLabel(progressPct);
   const [continua, setContinua] = useState(continueTarget);
@@ -186,6 +190,14 @@ export function HomeView({
           </span>
         )}
       </header>
+
+      {chaptersLoadError ? (
+        <ApiDegradedBanner
+          message={chaptersLoadError}
+          className="mb-6"
+          testId="home-chapters-load-degraded"
+        />
+      ) : null}
 
       <section
         aria-labelledby="home-progress-heading"

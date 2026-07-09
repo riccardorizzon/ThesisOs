@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { setActiveProjectId, getActiveProjectId } from "@/lib/projectPrefs";
 import { createProject, listProjects, type ProjectEntry } from "@/lib/projectsClient";
+import { ApiDegradedBanner } from "@/components/ui/ApiDegradedBanner";
 
 /**
  * PX-6 project switcher — multi-project selection with persistence.
@@ -12,6 +13,7 @@ export function ProjectSwitcher() {
   const [projects, setProjects] = useState<ProjectEntry[]>([]);
   const [activeId, setActiveId] = useState("thesis-agent");
   const [open, setOpen] = useState(false);
+  const [projectsLoadError, setProjectsLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -21,11 +23,13 @@ export function ProjectSwitcher() {
         if (!active) return;
         setProjects(items);
         setActiveId(getActiveProjectId());
-      } catch {
+        setProjectsLoadError(null);
+      } catch (err) {
         if (!active) return;
-        setProjects([
-          { id: "thesis-agent", display_name: "Tesi di laurea", created_at: "" },
-        ]);
+        setProjects([]);
+        setProjectsLoadError(
+          err instanceof Error ? err.message : "Impossibile caricare i progetti."
+        );
       }
     })();
     return () => {
@@ -53,6 +57,13 @@ export function ProjectSwitcher() {
 
   return (
     <div className="relative space-y-1">
+      {projectsLoadError ? (
+        <ApiDegradedBanner
+          title="Progetti non disponibili"
+          message={projectsLoadError}
+          testId="project-switcher-degraded"
+        />
+      ) : null}
       <span className="text-xs font-medium uppercase tracking-wide text-ink-subtle">
         Progetto
       </span>

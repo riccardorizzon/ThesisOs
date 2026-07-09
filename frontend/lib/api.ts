@@ -1,7 +1,7 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import { apiBaseUrl } from "@/lib/apiBase";
 
 export async function getHealth(): Promise<{ status: string }> {
-  const r = await fetch(`${BASE}/health`, { cache: "no-store" });
+  const r = await fetch(`${apiBaseUrl()}/health`, { cache: "no-store" });
   if (!r.ok) throw new Error(`health ${r.status}`);
   return r.json();
 }
@@ -17,7 +17,7 @@ export async function postChatStream(
   onEvent: (e: ChatEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const r = await fetch(`${BASE}/chat`, {
+  const r = await fetch(`${apiBaseUrl()}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

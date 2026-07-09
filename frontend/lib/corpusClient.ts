@@ -5,8 +5,7 @@ import {
 } from "@/lib/libraryTypes";
 import { listSources } from "@/lib/sourcesClient";
 import type { SourceListItem } from "@/lib/sourcesTypes";
-
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+import { apiBaseUrl } from "@/lib/apiBase";
 
 export type CorpusSource = LibrarySource & {
   body: string;
@@ -186,7 +185,7 @@ export const corpusClient = {
     const q = query.trim();
     if (!q) return [];
     try {
-      const r = await fetch(`${BASE}/search`, {
+      const r = await fetch(`${apiBaseUrl()}/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: q, limit }),

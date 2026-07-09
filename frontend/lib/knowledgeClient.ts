@@ -10,8 +10,8 @@ import type {
   KnowledgeObjectType,
   ProgramGraphObservation,
 } from "@/lib/knowledgeTypes";
+import { apiBaseUrl } from "@/lib/apiBase";
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const DEFAULT_PROJECT = "thesis-agent";
 
 export async function listKnowledgeObjects(
@@ -27,7 +27,7 @@ export async function listKnowledgeObjects(
   if (options.includeDeprecated) params.set("include_deprecated", "true");
 
   const qs = params.toString();
-  const url = `${BASE}/projects/${projectId}/knowledge/objects${qs ? `?${qs}` : ""}`;
+  const url = `${apiBaseUrl()}/projects/${projectId}/knowledge/objects${qs ? `?${qs}` : ""}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Knowledge list failed: ${res.status}`);
@@ -40,7 +40,7 @@ export async function getKnowledgeObject(
   projectId: string = DEFAULT_PROJECT
 ): Promise<KnowledgeObjectEnvelope> {
   const res = await fetch(
-    `${BASE}/projects/${projectId}/knowledge/objects/${encodeURIComponent(slug)}`,
+    `${apiBaseUrl()}/projects/${projectId}/knowledge/objects/${encodeURIComponent(slug)}`,
     { cache: "no-store" }
   );
   if (!res.ok) {
@@ -54,7 +54,7 @@ export async function getConceptHeader(
   projectId: string = DEFAULT_PROJECT
 ): Promise<ConceptHeaderEnvelope> {
   const res = await fetch(
-    `${BASE}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}/header`,
+    `${apiBaseUrl()}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}/header`,
     { cache: "no-store" }
   );
   if (res.status === 404) {
@@ -71,7 +71,7 @@ export async function getConceptDefinition(
   projectId: string = DEFAULT_PROJECT
 ): Promise<ConceptDefinitionEnvelope> {
   const res = await fetch(
-    `${BASE}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}/definition`,
+    `${apiBaseUrl()}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}/definition`,
     { cache: "no-store" }
   );
   if (res.status === 404) {
@@ -88,7 +88,7 @@ export async function getConceptDetail(
   projectId: string = DEFAULT_PROJECT
 ): Promise<ConceptDetailEnvelope> {
   const res = await fetch(
-    `${BASE}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}`,
+    `${apiBaseUrl()}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}`,
     { cache: "no-store" }
   );
   if (res.status === 404) {
@@ -108,7 +108,7 @@ export async function searchKnowledge(
   const params = new URLSearchParams({ q: query });
   if (options.limit != null) params.set("limit", String(options.limit));
   const res = await fetch(
-    `${BASE}/projects/${projectId}/knowledge/search?${params}`,
+    `${apiBaseUrl()}/projects/${projectId}/knowledge/search?${params}`,
     { cache: "no-store" }
   );
   if (!res.ok) {
@@ -125,7 +125,7 @@ export async function getConformanceProjection(
   projectId: string = DEFAULT_PROJECT
 ): Promise<ConformanceProjection> {
   const res = await fetch(
-    `${BASE}/projects/${projectId}/conformance/projection`,
+    `${apiBaseUrl()}/projects/${projectId}/conformance/projection`,
     { cache: "no-store" }
   );
   if (!res.ok) {
@@ -138,7 +138,7 @@ export async function getProgramGraphObservation(
   projectId: string = DEFAULT_PROJECT
 ): Promise<ProgramGraphObservation> {
   const res = await fetch(
-    `${BASE}/projects/${projectId}/conformance/program-graph`,
+    `${apiBaseUrl()}/projects/${projectId}/conformance/program-graph`,
     { cache: "no-store" }
   );
   if (!res.ok) {
@@ -166,7 +166,7 @@ export async function getKnowledgeGraph(
   if (options.profile === "canvas") params.set("profile", "canvas");
 
   const qs = params.toString();
-  const url = `${BASE}/projects/${projectId}/knowledge/graph${qs ? `?${qs}` : ""}`;
+  const url = `${apiBaseUrl()}/projects/${projectId}/knowledge/graph${qs ? `?${qs}` : ""}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Knowledge graph fetch failed: ${res.status}`);
@@ -178,7 +178,7 @@ export async function getJobFsmObservation(
   projectId: string = DEFAULT_PROJECT
 ): Promise<JobFsmObservation> {
   const res = await fetch(
-    `${BASE}/projects/${projectId}/conformance/job-fsm`,
+    `${apiBaseUrl()}/projects/${projectId}/conformance/job-fsm`,
     { cache: "no-store" }
   );
   if (!res.ok) {

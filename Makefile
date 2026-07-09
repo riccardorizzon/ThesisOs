@@ -13,7 +13,7 @@ RUFF     := $(BACKEND)/.venv/bin/ruff
 .DEFAULT_GOAL := help
 
 .PHONY: help install ensure-test-db lint format format-fix typecheck unit unit-frontend unit-builder-engine test \
-        drift scope isolation check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5 qualify-m6 dogfood-m6 dogfood-m7 gate-m7.2
+        drift scope isolation ap001-guard ap002-guard check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5 qualify-m6 dogfood-m6 dogfood-m7 gate-m7.2
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -65,15 +65,21 @@ isolation: ## build-time sidecars must not import the runtime (ADR-0019/0023)
 			|| { echo "isolation FAIL: $$dir imports backend.app"; exit 1; }; \
 	done
 
+ap001-guard: ## AP-001 — forbid NEXT_PUBLIC_API_BASE_URL outside apiBase.ts (Theme A)
+	@bash bin/check-ap001-ssr-base-url.sh
+
+ap002-guard: ## AP-002 — forbid silent SSR empty fallback on API loaders (Theme B)
+	@bash bin/check-ap002-error-contract.sh
+
 # --- aggregates --------------------------------------------------------------
 # NOTE: `format` is intentionally NOT in `check`/`ci` yet — the M0–M2 code
 # predates ruff-format. Adopt it deliberately: run `make format-fix`, commit the
 # reformat as one isolated change, then add `format` back to the gate below.
-check: lint typecheck unit drift isolation ## Fast local gate (pre-commit / pre-push)
+check: lint typecheck unit drift isolation ap001-guard ap002-guard ## Fast local gate (pre-commit / pre-push)
 
 test: unit unit-frontend unit-builder-engine ## All unit suites
 
-ci: lint typecheck unit unit-frontend unit-builder-engine drift scope isolation validate-platform-classification ## Full CI gate
+ci: lint typecheck unit unit-frontend unit-builder-engine drift scope isolation ap001-guard ap002-guard validate-platform-classification ## Full CI gate
 
 validate-platform-classification: ## ASEP registry ↔ proposal platform_contract (governance)
 	cd builder_engine && (test -d .venv || python3 -m venv .venv) \

@@ -8,6 +8,7 @@ import type { ContextPacket } from "@/lib/contextClient";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 import { parseWritingUrlState, saveSessionState, type PanelTab } from "@/lib/sessionState";
 import { EmptyStatePanel } from "@/components/ui/EmptyStatePanel";
+import { ApiDegradedBanner } from "@/components/ui/ApiDegradedBanner";
 import { RightRail } from "@/components/writing/RightRail";
 import { type RailTabId } from "@/components/writing/RailTabs";
 import { WritingEditorShell } from "@/components/writing/WritingEditorShell";
@@ -78,6 +79,7 @@ export function WritingWorkspace({
     chaptersProp ?? []
   );
   const [chaptersLoaded, setChaptersLoaded] = useState(Boolean(chaptersProp?.length));
+  const [chaptersLoadError, setChaptersLoadError] = useState<string | null>(null);
   const [sections, setSections] = useState<MarkdownSection[]>([]);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   const [selectionText, setSelectionText] = useState("");
@@ -103,15 +105,19 @@ export function WritingWorkspace({
     if (chaptersProp) {
       setChapters(chaptersProp);
       setChaptersLoaded(true);
+      setChaptersLoadError(null);
       return;
     }
     void chapterClient
       .list()
       .then((list) => {
+        setChaptersLoadError(null);
         if (list.length > 0) setChapters(list.map(chapterToOutline));
       })
-      .catch(() => {
-        /* outline stays empty */
+      .catch((err) => {
+        setChaptersLoadError(
+          err instanceof Error ? err.message : "Impossibile caricare l'outline."
+        );
       })
       .finally(() => {
         setChaptersLoaded(true);
@@ -202,7 +208,14 @@ export function WritingWorkspace({
     <div className={cn("space-y-3", className)} data-testid="writing-workspace">
       {!readOnly ? <DocumentIndexStatusBanner /> : null}
 
-      {chaptersLoaded && chapters.length === 0 ? (
+      {chaptersLoadError ? (
+        <ApiDegradedBanner
+          message={chaptersLoadError}
+          testId="writing-outline-load-degraded"
+        />
+      ) : null}
+
+      {chaptersLoaded && !chaptersLoadError && chapters.length === 0 ? (
         <EmptyStatePanel
           title="Nessun capitolo"
           description="Crea il primo capitolo dalla API o importa la struttura della tesi per iniziare a scrivere."

@@ -1,6 +1,5 @@
+import { apiBaseUrl } from "@/lib/apiBase";
 import { getActiveProjectId } from "@/lib/projectPrefs";
-
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const DEFAULT_PROJECT = "thesis-agent";
 
 export type ConversationSummary = {
@@ -47,7 +46,7 @@ export async function listConversations(
 ): Promise<ConversationSummary[]> {
   const pid = resolveProjectId(projectId);
   const res = await fetch(
-    `${BASE}/conversations?${new URLSearchParams({ project_id: pid })}`,
+    `${apiBaseUrl()}/conversations?${new URLSearchParams({ project_id: pid })}`,
     { cache: "no-store" }
   );
   if (!res.ok) await parseError(res, "Conversation list failed");
@@ -59,7 +58,7 @@ export async function createConversation(
   options: { projectId?: string; title?: string } = {}
 ): Promise<ConversationSummary> {
   const pid = resolveProjectId(options.projectId);
-  const res = await fetch(`${BASE}/conversations`, {
+  const res = await fetch(`${apiBaseUrl()}/conversations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ project_id: pid, title: options.title ?? null }),
@@ -71,7 +70,7 @@ export async function createConversation(
 export async function getConversationMessages(
   conversationId: string
 ): Promise<ConversationMessage[]> {
-  const res = await fetch(`${BASE}/conversations/${conversationId}/messages`, {
+  const res = await fetch(`${apiBaseUrl()}/conversations/${conversationId}/messages`, {
     cache: "no-store",
   });
   if (!res.ok) await parseError(res, "Load messages failed");

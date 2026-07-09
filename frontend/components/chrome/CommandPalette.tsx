@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { ApiDegradedBanner } from "@/components/ui/ApiDegradedBanner";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 import { PRIMARY_NAV } from "@/lib/nav";
 import { dispatchOpenReview } from "@/components/review/reviewIntegration";
@@ -85,6 +86,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const reducedMotion = useReducedMotion();
   const [query, setQuery] = useState("");
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [chaptersLoadError, setChaptersLoadError] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -92,10 +94,19 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     if (!open) return;
     setQuery("");
     setActiveIndex(0);
+    setChaptersLoadError(null);
     chapterClient
       .list()
-      .then(setChapters)
-      .catch(() => setChapters([]));
+      .then((list) => {
+        setChapters(list);
+        setChaptersLoadError(null);
+      })
+      .catch((err) => {
+        setChapters([]);
+        setChaptersLoadError(
+          err instanceof Error ? err.message : "Impossibile caricare i capitoli."
+        );
+      });
     const frame = requestAnimationFrame(() => inputRef.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [open]);
@@ -349,6 +360,14 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             data-testid="command-palette-input"
           />
         </div>
+
+        {chaptersLoadError ? (
+          <ApiDegradedBanner
+            message={chaptersLoadError}
+            className="mx-3 mt-2"
+            testId="command-palette-chapters-degraded"
+          />
+        ) : null}
 
         <div
           className="max-h-80 overflow-y-auto py-1"
