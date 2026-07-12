@@ -13,6 +13,7 @@ class ProjectEntry(BaseModel):
     id: str
     display_name: str
     created_at: str
+    kind: str = "owned"
 
 
 class ProjectListResponse(BaseModel):
@@ -32,13 +33,15 @@ def _slugify(name: str) -> str:
 _DEFAULT: list[ProjectEntry] = [
     ProjectEntry(
         id="thesis-agent",
-        display_name="Tesi di laurea",
+        display_name="Demo (esempio)",
         created_at="2026-07-01T00:00:00Z",
+        kind="demo",
     ),
     ProjectEntry(
         id="demo-thesis",
         display_name="Progetto dimostrativo",
         created_at="2026-07-07T00:00:00Z",
+        kind="demo",
     ),
 ]
 

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 const API = process.env.E2E_API_BASE_URL ?? "http://127.0.0.1:8001";
 const PROJECT = "thesis-agent";
@@ -34,19 +34,11 @@ test.describe("M7 gate walkthrough G5 G6 G9 G10", () => {
   });
 
   test("G5 — search from writing source picker", async ({ page, request }) => {
-    let chapterId: string | null = null;
-    const chapters = await request.get(`${API}/chapters`);
-    if (chapters.ok()) {
-      const items = (await chapters.json()) as Array<{ id: string }>;
-      chapterId = items[0]?.id ?? null;
-    }
-    if (!chapterId) {
-      const created = await request.post(`${API}/chapters`, {
-        data: { title: "G5 walkthrough", content_md: "# G5\n\nPicker search." },
-      });
-      expect(created.ok()).toBeTruthy();
-      chapterId = ((await created.json()) as { id: string }).id;
-    }
+    const created = await request.post(`${API}/chapters`, {
+      data: { title: "G5 walkthrough", content_md: "# G5\n\nPicker search." },
+    });
+    expect(created.ok()).toBeTruthy();
+    const chapterId = ((await created.json()) as { id: string }).id;
 
     await page.goto(`/writing/${chapterId}`);
     await expect(page.getByTestId("writing-workspace")).toBeVisible();

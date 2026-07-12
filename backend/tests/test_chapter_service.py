@@ -13,6 +13,7 @@ from app.schemas.chapter import (
     ChapterMetadataUpdate,
 )
 from app.services.chapter import (
+    ChapterNotDeletableError,
     ChapterNotFoundError,
     ChapterService,
     ChapterWriteConflictError,
@@ -182,3 +183,90 @@ async def test_list_versions_returns_ordered_change_stream(db_session):
 
     history = await svc.list_versions(rec.id, session=db_session)
     assert [(v.version, v.change_kind) for v in history] == [(1, "WRITE"), (2, "EDIT")]
+
+
+@pytest.mark.asyncio
+async def test_user_chapter_is_deletable_and_can_be_deleted(db_session):
+    svc = ChapterService()
+    rec = await svc.create(ChapterCreate(title="Introduzione"), session=db_session)
+    await db_session.commit()
+
+    loaded = await svc.get(rec.id, session=db_session)
+    assert loaded.deletable is True
+
+    await svc.delete(rec.id, session=db_session)
+    await db_session.commit()
+
+    with pytest.raises(ChapterNotFoundError):
+        await svc.get(rec.id, session=db_session)
+
+
+@pytest.mark.asyncio
+async def test_dogfood_chapter_not_deletable(db_session):
+    svc = ChapterService()
+    rec = await svc.create(
+        ChapterCreate(title="Craftsmanship (dogfood M6)", content_md="seed"),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    assert (await svc.get(rec.id, session=db_session)).deletable is False
+
+    with pytest.raises(ChapterNotDeletableError):
+        await svc.delete(rec.id, session=db_session)
+
+
+@pytest.mark.asyncio
+async def test_chapter_with_children_not_deletable(db_session):
+    svc = ChapterService()
+    parent = await svc.create(ChapterCreate(title="Parent"), session=db_session)
+    await db_session.commit()
+    await svc.create(
+        ChapterCreate(title="Child", parent_id=parent.id, order_index=0),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    with pytest.raises(ChapterNotDeletableError):
+        await svc.delete(parent.id, session=db_session)
+
+
+@pytest.mark.asyncio
+async def test_list_scope_owned_excludes_dogfood(db_session):
+    svc = ChapterService()
+    owned = await svc.create(ChapterCreate(title="Mio capitolo"), session=db_session)
+    await svc.create(
+        ChapterCreate(title="Craftsmanship (dogfood M6)", content_md="seed"),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    owned_list = await svc.list(ChapterListFilters(scope="owned"), session=db_session)
+    demo_list = await svc.list(ChapterListFilters(scope="demo"), session=db_session)
+
+    assert {c.id for c in owned_list} == {owned.id}
+    assert all(not c.deletable for c in demo_list)
+    assert owned.id not in {c.id for c in demo_list}
+
+
+@pytest.mark.asyncio
+async def test_copy_demo_structure_creates_empty_owned_titles(db_session):
+    svc = ChapterService()
+    await svc.create(
+        ChapterCreate(title="Introduzione (dogfood demo)", content_md="contenuto dogfood lungo"),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    result = await svc.copy_demo_structure(session=db_session)
+    await db_session.commit()
+
+    assert len(result.created) == 1
+    assert result.created[0].title == "Introduzione"
+    assert result.created[0].content_md == ""
+    assert result.created[0].deletable is True
+
+    second = await svc.copy_demo_structure(session=db_session)
+    await db_session.commit()
+    assert second.created == []
+    assert second.skipped_titles == ["Introduzione (dogfood demo)"]

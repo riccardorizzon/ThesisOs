@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 const API_BASE = process.env.E2E_API_BASE_URL ?? "http://127.0.0.1:8001";
 const PROJECT_ID = "thesis-agent";
@@ -16,7 +16,7 @@ test.describe("M7 product flow @m7", () => {
 
   test("Upload UI renders import form", async ({ page }) => {
     await page.goto("/sources/upload");
-    await expect(page.getByRole("heading", { name: /Importa documento/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Aggiungi fonte/i })).toBeVisible();
     await expect(page.getByTestId("source-upload-form")).toBeVisible();
     await expect(page.getByTestId("source-file-input")).toBeVisible();
   });

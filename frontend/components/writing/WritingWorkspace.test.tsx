@@ -55,6 +55,7 @@ vi.mock("@/lib/chapterClient", () => ({
       updated_at: "2026-01-01T00:00:00Z",
     }),
     update: vi.fn(),
+    create: vi.fn(),
   },
   ChapterApiError: class ChapterApiError extends Error {
     status = 409;
@@ -147,5 +148,13 @@ describe("WritingWorkspace", () => {
     const footer = screen.getByTestId("linked-sources-footer");
     expect(footer).toBeTruthy();
     expect(footer).toHaveTextContent(/Fonti collegate \(\d+\)/);
+  });
+
+  it("shows create-chapter empty state when no chapters", async () => {
+    render(<WritingWorkspace contextPacket={FIXTURE_CONTEXT_PACKET} />);
+
+    expect(await screen.findByTestId("writing-chapters-empty")).toBeTruthy();
+    expect(screen.getByTestId("writing-create-chapter-cta")).toHaveTextContent("Crea capitolo");
+    expect(screen.getByTestId("writing-outline-add-chapter")).toBeTruthy();
   });
 });

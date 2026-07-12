@@ -251,3 +251,32 @@ def test_export_bibliography_bibtex_from_db():
     assert "Benjamin" in text
     assert "Hollander" in text
     assert "Barthes" not in text
+
+
+def test_delete_catalog_source_forbidden():
+    res = client.delete("/projects/thesis-agent/sources/benjamin-opera-arte")
+    assert res.status_code == 403
+    assert res.json()["code"] == "source_not_deletable"
+
+
+def test_delete_upload_source_round_trip():
+    upload = client.post(
+        "/upload",
+        files={"file": ("delete-me.pdf", b"%PDF-1.4", "application/pdf")},
+        data={"title": "Fonte da eliminare"},
+    )
+    assert upload.status_code == 201
+    doc_id = upload.json()["id"]
+
+    listed = client.get("/projects/thesis-agent/sources")
+    assert listed.status_code == 200
+    assert any(s["slug"] == doc_id for s in listed.json()["sources"])
+
+    deleted = client.delete(f"/projects/thesis-agent/sources/{doc_id}")
+    assert deleted.status_code == 204
+
+    missing = client.get(f"/projects/thesis-agent/sources/{doc_id}")
+    assert missing.status_code == 404
+
+    doc = client.get(f"/documents/{doc_id}")
+    assert doc.status_code == 404

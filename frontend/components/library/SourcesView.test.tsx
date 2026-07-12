@@ -8,12 +8,14 @@ vi.mock("next/link", () => ({
     children,
     href,
     className,
+    ...rest
   }: {
     children: React.ReactNode;
     href: string;
     className?: string;
+    [key: string]: unknown;
   }) => (
-    <a href={href} className={className}>
+    <a href={href} className={className} {...rest}>
       {children}
     </a>
   ),
@@ -48,6 +50,24 @@ afterEach(() => {
 });
 
 describe("SourcesView", () => {
+  it("shows add-source CTA in header linking to upload", () => {
+    render(<SourcesView sources={TEST_SOURCES} />);
+
+    const cta = screen.getByTestId("sources-add-source-cta");
+    expect(cta).toHaveAttribute("href", "/sources/upload");
+    expect(cta).toHaveTextContent("Aggiungi fonte");
+  });
+
+  it("shows actionable empty state with add-source CTA", () => {
+    render(<SourcesView sources={[]} />);
+
+    expect(screen.getByTestId("sources-corpus-empty")).toBeTruthy();
+    expect(screen.getByTestId("sources-add-source-cta")).toHaveAttribute(
+      "href",
+      "/sources/upload"
+    );
+  });
+
   it("renders enriched source cards and cross-link to Knowledge", () => {
     render(<SourcesView sources={TEST_SOURCES} />);
 

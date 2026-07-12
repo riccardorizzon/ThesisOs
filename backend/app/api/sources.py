@@ -1,11 +1,20 @@
 """Sources module API (PX3-EWO-002; PX4-EWO-008)."""
 
 from fastapi import APIRouter, Query
-from fastapi.responses import PlainTextResponse, JSONResponse
+from fastapi.responses import PlainTextResponse, JSONResponse, Response
 
-from app.schemas.knowledge import ConfidenceLevel, KnowledgeState
+from app.schemas.knowledge import (
+    ConfidenceLevel,
+    KnowledgeState,
+    SourceListItem,
+    SourceListResponse,
+)
 from app.services.sources.bibliography import export_bibliography_bibtex
-from app.services.sources.service import SourceNotFoundError, SourcesService
+from app.services.sources.service import (
+    SourceNotDeletableError,
+    SourceNotFoundError,
+    SourcesService,
+)
 
 router = APIRouter()
 _service = SourcesService()
@@ -32,7 +41,7 @@ async def export_bibliography(
     )
 
 
-@router.get("/projects/{project_id}/sources")
+@router.get("/projects/{project_id}/sources", response_model=SourceListResponse)
 async def list_sources(
     project_id: str,
     q: str = Query(default=""),
@@ -49,9 +58,24 @@ async def list_sources(
     )
 
 
-@router.get("/projects/{project_id}/sources/{slug}")
-async def get_source(project_id: str, slug: str):
+@router.get("/projects/{project_id}/sources/{slug}", response_model=SourceListItem)
+async def get_source(project_id: str, slug: str) -> SourceListItem:
     try:
         return await _service.get_source(project_id, slug)
     except SourceNotFoundError:
         return _err(404, "source_not_found", f"Unknown source: {slug}")
+
+
+@router.delete("/projects/{project_id}/sources/{slug}", status_code=204, response_model=None)
+async def delete_source(project_id: str, slug: str):
+    try:
+        await _service.delete_source(project_id, slug)
+        return Response(status_code=204)
+    except SourceNotFoundError:
+        return _err(404, "source_not_found", f"Unknown source: {slug}")
+    except SourceNotDeletableError:
+        return _err(
+            403,
+            "source_not_deletable",
+            "Solo le fonti caricate dall'utente possono essere eliminate.",
+        )

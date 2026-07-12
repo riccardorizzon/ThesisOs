@@ -160,6 +160,15 @@ ThesisOS Product v2 explicitly **does not** aim to:
 
 ---
 
+## Product Playbook (operational reference)
+
+Principi prodotto, journey ufficiali (UJ-001–003), metriche permanenti e north star orientato allo studente:
+[`product-playbook.md`](product-playbook.md).
+
+This vision document defines **strategic positioning** (Research OS). The playbook defines **how we validate and evolve** the product with user evidence.
+
+---
+
 ## Constitution alignment
 
 This vision is governed by:

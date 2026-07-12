@@ -3,6 +3,10 @@ import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { WritingOutline } from "./WritingOutline";
 import { FIXTURE_WRITING_OUTLINE } from "@/lib/fixtures/writingFixture";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
+
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -76,5 +80,16 @@ describe("WritingOutline", () => {
       "href",
       "/writing/3?section=metodo"
     );
+  });
+
+  it("shows add-chapter control when onChapterCreated is provided", () => {
+    render(
+      <WritingOutline
+        chapters={FIXTURE_WRITING_OUTLINE}
+        onChapterCreated={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId("writing-outline-add-chapter")).toBeTruthy();
   });
 });

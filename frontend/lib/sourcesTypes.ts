@@ -33,6 +33,8 @@ export type SourceListItem = {
   is_core: boolean;
   related_concepts: RelatedConceptRef[];
   corpus_status?: string | null;
+  document_id?: string | null;
+  deletable?: boolean;
 };
 
 export type SourceListResponse = {

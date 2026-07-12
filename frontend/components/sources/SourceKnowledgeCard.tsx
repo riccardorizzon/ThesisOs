@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { KnowledgeObjectCard } from "@/components/knowledge/shared";
+import { SourceDeleteButton } from "@/components/sources/SourceDeleteButton";
 import { cn } from "@/lib/cn";
+import { isUserUploadedSource } from "@/lib/isUserUploadedSource";
 import type { SourceListItem } from "@/lib/sourcesTypes";
 
 export type SourceKnowledgeCardProps = {
@@ -15,6 +20,8 @@ export function SourceKnowledgeCard({
   href,
   className,
 }: SourceKnowledgeCardProps) {
+  const router = useRouter();
+
   return (
     <div className={cn("space-y-3", className)}>
       <KnowledgeObjectCard object={source} href={href} />
@@ -37,6 +44,17 @@ export function SourceKnowledgeCard({
               {concept.title}
             </Link>
           ))}
+        </div>
+      )}
+      {isUserUploadedSource(source) && (
+        <div className="px-1">
+          <SourceDeleteButton
+            slug={source.slug}
+            title={source.title}
+            redirectTo={null}
+            onDeleted={() => router.refresh()}
+            variant="card"
+          />
         </div>
       )}
     </div>

@@ -48,6 +48,31 @@ def svc(tmp_path, db_available) -> DocumentService:
     return DocumentService(storage=LocalStorageAdapter(tmp_path))
 
 
+async def test_upload_registers_source_in_corpus(svc):
+    rec = await svc.upload(
+        filename="corpus.pdf",
+        data=b"%PDF-1.4 fake",
+        meta=None,
+    )
+
+    async with AsyncSessionLocal() as session:
+        row = await session.execute(
+            text(
+                """
+                SELECT slug, title, document_id, created_by
+                FROM sources
+                WHERE project_id = 'thesis-agent' AND slug = :slug
+                """
+            ),
+            {"slug": rec.id},
+        )
+        source = row.one()
+        assert source.slug == rec.id
+        assert source.document_id == rec.id
+        assert source.title == rec.title
+        assert source.created_by == "importazione"
+
+
 async def test_upload_parse_list_round_trip(svc):
     rec = await svc.upload(filename="round.pdf", data=b"%PDF-1.4 fake")
     assert rec.status == "uploaded"

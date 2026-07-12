@@ -17,14 +17,21 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://thesisos:thesisos@db:5432/thesisos
       APP_ENV: local
+    volumes:
+      - ./.asep:/.asep:ro
     command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     depends_on:
       db: { condition: service_healthy }
     ports: ["8000:8000"]
   frontend:
-    build: { context: ., dockerfile: docker/frontend.Dockerfile }
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+        INTERNAL_API_BASE_URL: http://backend:8000
     environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
       INTERNAL_API_BASE_URL: http://backend:8000
     depends_on: [backend]
     ports: ["3000:3000"]

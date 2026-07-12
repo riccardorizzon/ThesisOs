@@ -18,6 +18,32 @@ export type SourcesEnrichedListProps = {
 
 const SEARCH_DEBOUNCE_MS = 200;
 
+function SourcesPageHeader() {
+  return (
+    <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">Sources</h1>
+        <p className="mt-1 max-w-prose text-sm text-ink-muted">
+          La fonte come oggetto knowledge: metadati, lifecycle e collegamenti ai
+          concetti del corpus.
+        </p>
+      </div>
+      <Link
+        href="/sources/upload"
+        className={cn(
+          "inline-flex shrink-0 items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white",
+          "transition-colors duration-200 hover:bg-accent-muted",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
+        )}
+        data-testid="sources-add-source-cta"
+      >
+        <span aria-hidden="true">+</span>
+        Aggiungi fonte
+      </Link>
+    </header>
+  );
+}
+
 function ReturnToWritingPill({ chapterId }: { chapterId: string }) {
   return (
     <Link
@@ -103,18 +129,12 @@ export function SourcesEnrichedList({
     return (
       <div className={cn("mx-auto max-w-content", className)}>
         {chapterContext && <ReturnToWritingPill chapterId={chapterContext} />}
-        <header className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">Sources</h1>
-          <p className="mt-1 max-w-prose text-sm text-ink-muted">
-            La fonte come oggetto knowledge: metadati, lifecycle e collegamenti ai
-            concetti del corpus.
-          </p>
-        </header>
+        <SourcesPageHeader />
         <EmptyStatePanel
-          title="Nessuna fonte nel corpus"
-          description="Importa il primo documento bibliografico per popolare la libreria e collegarlo ai concetti."
+          title="Nessuna fonte ancora"
+          description="Aggiungi la tua prima fonte per iniziare a costruire la tua knowledge."
           actions={[
-            { href: "/sources/upload", label: "Importa documento", variant: "primary" },
+            { href: "/sources/upload", label: "Aggiungi fonte", variant: "primary" },
             { href: "/knowledge", label: "Vai a Knowledge", variant: "secondary" },
           ]}
           testId="sources-corpus-empty"
@@ -127,13 +147,7 @@ export function SourcesEnrichedList({
     <div className={cn("mx-auto max-w-content", className)}>
       {chapterContext && <ReturnToWritingPill chapterId={chapterContext} />}
 
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">Sources</h1>
-        <p className="mt-1 max-w-prose text-sm text-ink-muted">
-          La fonte come oggetto knowledge: metadati, lifecycle e collegamenti ai
-          concetti del corpus.
-        </p>
-      </header>
+      <SourcesPageHeader />
 
       <BibliographyExportBar />
 

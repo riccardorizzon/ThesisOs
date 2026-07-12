@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import models
@@ -26,12 +26,39 @@ from app.schemas.chapter import (
     ChapterRecord,
     ChapterReorderRequest,
     ChapterVersionRecord,
+    CopyDemoStructureResponse,
 )
 from app.services.chapter.exceptions import (
+    ChapterNotDeletableError,
     ChapterNotFoundError,
     ChapterWriteConflictError,
     InvalidChapterStatusError,
 )
+
+_PROTECTED_TITLE_MARKERS = ("(dogfood", "[kimi-claw")
+_PROTECTED_EXACT_TITLES = frozenset({"e2e export"})
+
+
+def _sanitize_demo_title(title: str) -> str:
+    lowered = title.lower()
+    cut_at = len(title)
+    for marker in _PROTECTED_TITLE_MARKERS:
+        idx = lowered.find(marker)
+        if idx != -1:
+            cut_at = min(cut_at, idx)
+    cleaned = title[:cut_at].strip(" \t-–—(")
+    return cleaned or title.strip()
+
+
+def _chapter_is_deletable(row: models.Chapter) -> bool:
+    title = row.title.strip().lower()
+    if title in _PROTECTED_EXACT_TITLES:
+        return False
+    if any(marker in title for marker in _PROTECTED_TITLE_MARKERS):
+        return False
+    if (row.content_md or "").lstrip().startswith("<!-- migration_slug:"):
+        return False
+    return True
 
 
 def _word_count(content_md: str | None) -> int:
@@ -124,6 +151,32 @@ class ChapterService:
                 await s.rollback()
                 raise
 
+    async def copy_demo_structure(
+        self, *, session: AsyncSession | None = None
+    ) -> CopyDemoStructureResponse:
+        if session is not None:
+            return await self._copy_demo_structure(session)
+        async with AsyncSessionLocal() as s:
+            try:
+                result = await self._copy_demo_structure(s)
+                await s.commit()
+                return result
+            except Exception:
+                await s.rollback()
+                raise
+
+    async def delete(self, chapter_id: str, *, session: AsyncSession | None = None) -> None:
+        if session is not None:
+            await self._delete(session, chapter_id)
+            return
+        async with AsyncSessionLocal() as s:
+            try:
+                await self._delete(s, chapter_id)
+                await s.commit()
+            except Exception:
+                await s.rollback()
+                raise
+
     # ------------------------------------------------------------------
     # Internals (operate on an injected session)
     # ------------------------------------------------------------------
@@ -169,7 +222,41 @@ class ChapterService:
             .offset(filters.offset)
         )
         rows = (await session.execute(stmt)).scalars().all()
-        return [self._to_record(r) for r in rows]
+        scoped = self._apply_scope(rows, filters.scope)
+        return [self._to_record(r) for r in scoped]
+
+    async def _copy_demo_structure(self, session: AsyncSession) -> CopyDemoStructureResponse:
+        rows = (await session.execute(select(models.Chapter))).scalars().all()
+        demo_rows = sorted(
+            [r for r in rows if not _chapter_is_deletable(r)],
+            key=lambda r: (r.order_index, r.created_at),
+        )
+        owned_titles = {
+            r.title.strip().lower() for r in rows if _chapter_is_deletable(r)
+        }
+        created: list[ChapterRecord] = []
+        skipped: list[str] = []
+        for row in demo_rows:
+            sanitized_title = _sanitize_demo_title(row.title)
+            title_key = row.title.strip().lower()
+            san_key = sanitized_title.strip().lower()
+            if title_key in owned_titles or san_key in owned_titles:
+                skipped.append(row.title)
+                continue
+            record = await self._create(
+                session,
+                ChapterCreate(
+                    title=sanitized_title,
+                    parent_id=None,
+                    order_index=row.order_index,
+                    status="draft",
+                    content_md="",
+                    summary=None,
+                ),
+            )
+            created.append(record)
+            owned_titles.add(san_key)
+        return CopyDemoStructureResponse(created=created, skipped_titles=skipped)
 
     async def _update_content(
         self, session: AsyncSession, chapter_id: str, data: ChapterContentUpdate
@@ -223,6 +310,34 @@ class ChapterService:
         )
         return [self._to_version_record(r) for r in rows]
 
+    async def _delete(self, session: AsyncSession, chapter_id: str) -> None:
+        row = await session.get(models.Chapter, chapter_id)
+        if row is None:
+            raise ChapterNotFoundError(chapter_id)
+        if not _chapter_is_deletable(row):
+            raise ChapterNotDeletableError(chapter_id)
+
+        child = (
+            await session.execute(
+                select(models.Chapter.id)
+                .where(models.Chapter.parent_id == chapter_id)
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        if child is not None:
+            raise ChapterNotDeletableError(chapter_id)
+
+        await session.execute(
+            delete(models.Proposal).where(models.Proposal.chapter_id == chapter_id)
+        )
+        await session.execute(
+            update(models.Citation)
+            .where(models.Citation.chapter_id == chapter_id)
+            .values(chapter_id=None)
+        )
+        await session.delete(row)
+        await session.flush()
+
     async def _reorder(
         self, session: AsyncSession, data: ChapterReorderRequest
     ) -> list[ChapterRecord]:
@@ -241,6 +356,14 @@ class ChapterService:
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _apply_scope(rows: list[models.Chapter], scope: str) -> list[models.Chapter]:
+        if scope == "owned":
+            return [r for r in rows if _chapter_is_deletable(r)]
+        if scope == "demo":
+            return [r for r in rows if not _chapter_is_deletable(r)]
+        return rows
 
     @staticmethod
     def _require_version(
@@ -283,6 +406,7 @@ class ChapterService:
             version=row.version,
             created_at=row.created_at,
             updated_at=row.updated_at,
+            deletable=_chapter_is_deletable(row),
         )
 
     @staticmethod

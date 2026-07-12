@@ -30,6 +30,7 @@ class ChapterRecord(BaseModel):
     version: int
     created_at: datetime
     updated_at: datetime
+    deletable: bool = False
 
 
 class ChapterVersionRecord(BaseModel):
@@ -82,8 +83,14 @@ class ChapterUpdate(BaseModel):
 class ChapterListFilters(BaseModel):
     parent_id: str | None = None
     q: str | None = None
+    scope: str = "all"
     limit: int = Field(default=100, ge=1, le=500)
     offset: int = Field(default=0, ge=0)
+
+
+class CopyDemoStructureResponse(BaseModel):
+    created: list[ChapterRecord] = Field(default_factory=list)
+    skipped_titles: list[str] = Field(default_factory=list)
 
 
 class ChapterReorderRequest(BaseModel):

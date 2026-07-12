@@ -36,7 +36,7 @@ export default function SourceUploadPage() {
         author: author || null,
         language: language || null,
       });
-      router.push(`/sources/${created.id}`);
+      router.push("/sources");
     } catch {
       // error surfaced via store/banner
     }
@@ -53,10 +53,10 @@ export default function SourceUploadPage() {
 
       <header className="mt-4 mb-8">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Importa documento
+          Aggiungi fonte
         </h1>
         <p className="mt-1 max-w-prose text-sm text-ink-muted">
-          PDF, EPUB o DOCX. Dopo il caricamento la fonte viene analizzata
+          Carica un PDF, EPUB o DOCX. Dopo il caricamento la fonte viene analizzata
           automaticamente e aggiunta al corpus.
         </p>
       </header>
@@ -137,7 +137,7 @@ export default function SourceUploadPage() {
               "disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             )}
           >
-            {loading ? "Caricamento…" : "Importa"}
+            {loading ? "Caricamento…" : "Aggiungi fonte"}
           </button>
         </form>
       </section>

@@ -4,6 +4,7 @@ export type ProjectEntry = {
   id: string;
   display_name: string;
   created_at: string;
+  kind?: "demo" | "owned";
 };
 
 export async function listProjects(): Promise<ProjectEntry[]> {

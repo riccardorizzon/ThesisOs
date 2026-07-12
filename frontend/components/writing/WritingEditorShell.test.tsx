@@ -3,6 +3,10 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { WritingEditorShell } from "./WritingEditorShell";
 import { chapterClient } from "@/lib/chapterClient";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+}));
+
 vi.mock("@/lib/chapterClient", () => ({
   chapterClient: {
     get: vi.fn(),
@@ -56,5 +60,26 @@ describe("WritingEditorShell", () => {
         "# Capitolo 2\n\nContenuto."
       )
     );
+  });
+
+  it("shows delete button for deletable chapters", async () => {
+    vi.mocked(chapterClient.get).mockResolvedValue({
+      id: "user-ch",
+      parent_id: null,
+      order_index: 0,
+      title: "Introduzione",
+      status: "draft",
+      content_md: "",
+      summary: null,
+      word_count: 0,
+      version: 1,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+      deletable: true,
+    });
+
+    render(<WritingEditorShell chapterId="user-ch" />);
+
+    expect(await screen.findByTestId("chapter-delete-trigger")).toBeTruthy();
   });
 });

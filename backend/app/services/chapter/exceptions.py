@@ -32,3 +32,11 @@ class InvalidChapterStatusError(ChapterServiceError):
     def __init__(self, status: str):
         self.status = status
         super().__init__(f"invalid_status: {status!r}")
+
+
+class ChapterNotDeletableError(ChapterServiceError):
+    """Chapter is seeded or has dependents — maps to 403."""
+
+    def __init__(self, chapter_id: str):
+        self.chapter_id = chapter_id
+        super().__init__(f"chapter_not_deletable: {chapter_id}")

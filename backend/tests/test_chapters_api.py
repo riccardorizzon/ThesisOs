@@ -15,6 +15,7 @@ from app.schemas.chapter import (
     ChapterVersionRecord,
 )
 from app.services.chapter import (
+    ChapterNotDeletableError,
     ChapterNotFoundError,
     ChapterWriteConflictError,
     InvalidChapterStatusError,
@@ -35,7 +36,7 @@ class FakeChapterService:
     async def create(self, data, *, session=None):
         if data.status not in ("draft", "review", "approved", "published"):
             raise InvalidChapterStatusError(data.status)
-        return _record(title=data.title, status=data.status, parent_id=data.parent_id)
+        return _record(title=data.title, status=data.status, parent_id=data.parent_id, deletable=True)
 
     async def list(self, filters=None, *, session=None):
         return [_record()]
@@ -43,7 +44,15 @@ class FakeChapterService:
     async def get(self, chapter_id, *, session=None):
         if chapter_id == "missing":
             raise ChapterNotFoundError(chapter_id)
-        return _record(id=chapter_id)
+        if chapter_id == "protected":
+            return _record(id=chapter_id, deletable=False)
+        return _record(id=chapter_id, deletable=True)
+
+    async def delete(self, chapter_id, *, session=None):
+        if chapter_id == "missing":
+            raise ChapterNotFoundError(chapter_id)
+        if chapter_id == "protected":
+            raise ChapterNotDeletableError(chapter_id)
 
     async def update_content(self, chapter_id, data: ChapterContentUpdate, *, session=None):
         if chapter_id == "missing":
@@ -69,6 +78,9 @@ class FakeChapterService:
                 status="draft", content_md=None, summary=None, word_count=0, changed_at=now,
             )
         ]
+
+    async def copy_demo_structure(self, *, session=None):
+        return {"created": [_record(title="Capitolo demo")], "skipped_titles": []}
 
 
 @pytest.fixture
@@ -133,6 +145,31 @@ def test_list_versions(client):
     r = client.get("/chapters/ch-1/versions")
     assert r.status_code == 200
     assert r.json()[0]["change_kind"] == "WRITE"
+
+
+def test_delete_chapter_204(client):
+    r = client.delete("/chapters/ch-9")
+    assert r.status_code == 204
+
+
+def test_delete_chapter_404(client):
+    r = client.delete("/chapters/missing")
+    assert r.status_code == 404
+    assert r.json()["code"] == "chapter_not_found"
+
+
+def test_delete_protected_chapter_403(client):
+    r = client.delete("/chapters/protected")
+    assert r.status_code == 403
+    assert r.json()["code"] == "chapter_not_deletable"
+
+
+def test_copy_demo_structure_201(client):
+    r = client.post("/chapters/copy-demo-structure")
+    assert r.status_code == 201
+    body = r.json()
+    assert len(body["created"]) == 1
+    assert body["created"][0]["title"] == "Capitolo demo"
 
 
 def test_outline_not_wired_in_m6():

@@ -3,7 +3,11 @@ import { defineConfig, devices } from "@playwright/test";
 const frontendPort = Number(process.env.PLAYWRIGHT_PORT ?? 3001);
 const backendPort = Number(process.env.PLAYWRIGHT_API_PORT ?? 8001);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${frontendPort}`;
-const apiBase = process.env.E2E_API_BASE_URL ?? `http://127.0.0.1:${backendPort}`;
+const apiBase =
+  process.env.E2E_API_BASE_URL ??
+  (process.env.PLAYWRIGHT_SKIP_WEBSERVER
+    ? "http://127.0.0.1:8000"
+    : `http://127.0.0.1:${backendPort}`);
 const repoRoot = `${__dirname}/../..`;
 const frontendDir = `${repoRoot}/frontend`;
 const backendDir = `${repoRoot}/backend`;

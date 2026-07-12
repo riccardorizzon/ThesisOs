@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 /** ADR-0036 INV-IA-1 — six primary modules + Settings (Review is module route, not sidebar). */
 const SIDEBAR_LABELS = [
@@ -14,7 +14,9 @@ test.describe("PX1 UI smoke @ui", () => {
   test("Home loads as default route", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Home", level: 1 })).toBeVisible();
-    await expect(page.getByText("Riprendi da dove hai lasciato")).toBeVisible();
+    await expect(
+      page.getByRole("main").getByText(/Riprendi da dove hai lasciato/)
+    ).toBeVisible();
   });
 
   test("sidebar IA matches ADR-0036", async ({ page }) => {
@@ -28,7 +30,7 @@ test.describe("PX1 UI smoke @ui", () => {
   test("Writing workspace shell renders", async ({ page }) => {
     await page.goto("/writing");
     await expect(page.getByTestId("writing-workspace")).toBeVisible();
-    await expect(page.getByTestId("writing-editor-placeholder")).toBeVisible();
+    await expect(page.getByTestId("writing-outline")).toBeVisible();
     await expect(page.getByTestId("context-summary")).toBeVisible();
   });
 

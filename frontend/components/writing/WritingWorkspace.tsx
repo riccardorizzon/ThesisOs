@@ -7,8 +7,8 @@ import { dispatchOpenReview } from "@/components/review/reviewIntegration";
 import type { ContextPacket } from "@/lib/contextClient";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 import { parseWritingUrlState, saveSessionState, type PanelTab } from "@/lib/sessionState";
-import { EmptyStatePanel } from "@/components/ui/EmptyStatePanel";
 import { ApiDegradedBanner } from "@/components/ui/ApiDegradedBanner";
+import { CreateChapterButton } from "@/components/writing/CreateChapterButton";
 import { RightRail } from "@/components/writing/RightRail";
 import { type RailTabId } from "@/components/writing/RailTabs";
 import { WritingEditorShell } from "@/components/writing/WritingEditorShell";
@@ -28,6 +28,7 @@ export type WritingWorkspaceProps = {
   chapterId?: string;
   contextPacket: ContextPacket;
   chapters?: WritingOutlineChapter[];
+  chapterScope?: "all" | "owned" | "demo";
   className?: string;
 };
 
@@ -64,6 +65,7 @@ export function WritingWorkspace({
   chapterId,
   contextPacket,
   chapters: chaptersProp,
+  chapterScope = "all",
   className,
 }: WritingWorkspaceProps) {
   const searchParams = useSearchParams();
@@ -109,10 +111,11 @@ export function WritingWorkspace({
       return;
     }
     void chapterClient
-      .list()
+      .list({ scope: chapterScope })
       .then((list) => {
         setChaptersLoadError(null);
         if (list.length > 0) setChapters(list.map(chapterToOutline));
+        else setChapters([]);
       })
       .catch((err) => {
         setChaptersLoadError(
@@ -122,7 +125,7 @@ export function WritingWorkspace({
       .finally(() => {
         setChaptersLoaded(true);
       });
-  }, [chaptersProp]);
+  }, [chaptersProp, chapterScope]);
 
   useEffect(() => {
     if (!chapterId) return;
@@ -168,6 +171,28 @@ export function WritingWorkspace({
       return copy;
     });
   }, []);
+
+  const handleChapterCreated = useCallback((ch: Chapter) => {
+    setChapters((prev) => {
+      const next = chapterToOutline(ch);
+      if (prev.some((c) => c.id === ch.id)) return prev;
+      return [...prev, next];
+    });
+    setActiveChapter(ch);
+  }, []);
+
+  const handleChapterDeleted = useCallback(
+    (deletedId: string) => {
+      setChapters((prev) => prev.filter((c) => c.id !== deletedId));
+      if (activeChapter?.id === deletedId) {
+        setActiveChapter(null);
+      }
+      if (chapterId === deletedId) {
+        router.push("/writing");
+      }
+    },
+    [activeChapter?.id, chapterId, router]
+  );
 
   const handleSectionsChange = useCallback((next: MarkdownSection[]) => {
     setSections(next);
@@ -216,15 +241,18 @@ export function WritingWorkspace({
       ) : null}
 
       {chaptersLoaded && !chaptersLoadError && chapters.length === 0 ? (
-        <EmptyStatePanel
-          title="Nessun capitolo"
-          description="Crea il primo capitolo dalla API o importa la struttura della tesi per iniziare a scrivere."
-          actions={[
-            { href: "/sources/upload", label: "Importa documento", variant: "secondary" },
-            { href: "/", label: "Torna alla Home", variant: "secondary" },
-          ]}
-          testId="writing-chapters-empty"
-        />
+        <div
+          className="rounded-lg border border-dashed border-border bg-surface-muted p-10 text-center"
+          data-testid="writing-chapters-empty"
+        >
+          <p className="text-sm font-medium text-ink">Nessun capitolo ancora</p>
+          <p className="mt-2 text-sm text-ink-muted">
+            Crea il tuo primo capitolo per iniziare a scrivere.
+          </p>
+          <div className="mt-6 flex justify-center">
+            <CreateChapterButton onCreated={handleChapterCreated} />
+          </div>
+        </div>
       ) : null}
 
       {readOnly && (
@@ -286,6 +314,7 @@ export function WritingWorkspace({
             activeChapterId={resolvedChapterId}
             activeSectionId={activeSectionId}
             sections={sections}
+            onChapterCreated={readOnly ? undefined : handleChapterCreated}
           />
         </div>
 
@@ -296,6 +325,7 @@ export function WritingWorkspace({
             activeSectionId={activeSectionId}
             readOnly={readOnly}
             onChapterUpdated={handleChapterUpdated}
+            onChapterDeleted={handleChapterDeleted}
             onSectionsChange={handleSectionsChange}
           />
         </div>

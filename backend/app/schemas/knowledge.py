@@ -100,6 +100,8 @@ class RelatedConceptRef(BaseModel):
 class SourceListItem(KnowledgeObjectEnvelope):
     related_concepts: list[RelatedConceptRef] = Field(default_factory=list)
     corpus_status: str | None = None
+    document_id: str | None = None
+    deletable: bool = False
 
 
 class SourceListResponse(BaseModel):

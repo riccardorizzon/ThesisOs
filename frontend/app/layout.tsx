@@ -1,7 +1,7 @@
 import { Crimson_Pro, Atkinson_Hyperlegible } from "next/font/google";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
-import { AppShell } from "@/components/AppShell";
+import { ShellRouter } from "@/components/ShellRouter";
 
 const crimsonPro = Crimson_Pro({
   subsets: ["latin"],
@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="it" className={`${crimsonPro.variable} ${atkinson.variable}`}>
       <body>
-        <AppShell>{children}</AppShell>
+        <ShellRouter>{children}</ShellRouter>
       </body>
     </html>
   );

@@ -4,11 +4,13 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 
 import { EntityCard } from "@/components/EntityCard";
+import { SourceDeleteButton } from "@/components/sources/SourceDeleteButton";
 import {
   KnowledgeConfidenceChip,
   KnowledgeLifecycleBadge,
 } from "@/components/knowledge/shared/KnowledgeBadges";
 import { corpusClient } from "@/lib/corpusClient";
+import { isUserUploadedSource } from "@/lib/isUserUploadedSource";
 import { KNOWLEDGE_TYPE_LABELS } from "@/lib/knowledgeTypes";
 import { cn } from "@/lib/cn";
 import type { SourceListItem } from "@/lib/sourcesTypes";
@@ -122,6 +124,16 @@ export function SourceApiDetailView({
           <p className="mt-4 text-sm leading-relaxed text-ink">{source.summary}</p>
         )}
       </article>
+
+      {isUserUploadedSource(source) && (
+        <section className="mt-6" aria-label="Azioni fonte">
+          <SourceDeleteButton
+            slug={source.slug}
+            title={source.title}
+            redirectTo={backHref}
+          />
+        </section>
+      )}
 
       <section aria-labelledby="source-concepts-heading" className="mt-10">
         <h2

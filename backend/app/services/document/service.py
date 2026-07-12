@@ -36,6 +36,7 @@ from app.services.document.exceptions import (
 from app.services.document.parsers import Parser, parse_document
 from app.services.document.storage import StorageAdapter, build_storage_adapter, storage_key
 from app.services.events.bus import publish
+from app.services.sources.repository import register_uploaded_document
 
 
 class DocumentService:
@@ -241,6 +242,13 @@ class DocumentService:
         row.gcs_uri = self._storage.put(storage_key(row.id, filename), data)
         await session.flush()
         await self._append_version_snapshot(session, row, change_reason="metadata")
+        await register_uploaded_document(
+            session,
+            document_id=row.id,
+            title=row.title,
+            author=row.author,
+            source_type=resolved,
+        )
         await publish(
             "DocumentUploaded",
             {"document_id": row.id},

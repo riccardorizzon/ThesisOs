@@ -74,3 +74,22 @@ export async function exportBibliography(
   if (!res.ok) throw new Error(`Bibliography export failed: ${res.status}`);
   return res.blob();
 }
+
+export async function deleteSource(
+  slug: string,
+  projectId?: string
+): Promise<void> {
+  const pid = resolveProjectId(projectId);
+  const res = await fetch(
+    `${apiBaseUrl()}/projects/${pid}/sources/${encodeURIComponent(slug)}`,
+    { method: "DELETE" }
+  );
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(
+      detail
+        ? `Source delete failed (${res.status}): ${detail}`
+        : `Source delete failed (${res.status})`
+    );
+  }
+}

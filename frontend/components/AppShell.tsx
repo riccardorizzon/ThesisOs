@@ -15,6 +15,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 import { listPendingProposals } from "@/lib/proposalQueue";
 import { PRIMARY_NAV, isNavActive } from "@/lib/nav";
+import { chapterScopeForMode, getWorkspaceMode } from "@/lib/workspacePrefs";
 import { cn } from "@/lib/cn";
 
 type AppShellProps = {
@@ -52,8 +53,9 @@ export function AppShell({ children, rightPanel }: AppShellProps) {
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
 
   const refreshBadges = useCallback(() => {
+    const scope = chapterScopeForMode(getWorkspaceMode());
     chapterClient
-      .list()
+      .list({ scope })
       .then(setChapters)
       .catch(() => setChapters([]));
     setPendingReviewCount(listPendingProposals().length);

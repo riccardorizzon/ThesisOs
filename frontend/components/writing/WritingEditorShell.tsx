@@ -15,6 +15,7 @@ import { SourcePicker } from "@/components/sources/SourcePicker";
 import { corpusClient } from "@/lib/corpusClient";
 import { dispatchOpenFontePeek } from "@/components/writing/rightRailIntegration";
 import { ExportMenu } from "@/components/writing/ExportMenu";
+import { ChapterDeleteButton } from "@/components/writing/ChapterDeleteButton";
 import { useWritingEditorChrome } from "@/lib/writingChromeIntegration";
 
 function sectionWordCount(content: string, sectionId: string): number {
@@ -33,6 +34,7 @@ export type WritingEditorShellProps = {
   activeSectionId?: string;
   readOnly?: boolean;
   onChapterUpdated?: (chapter: Chapter) => void;
+  onChapterDeleted?: (chapterId: string) => void;
   onSectionsChange?: (sections: ReturnType<typeof parseMarkdownSections>) => void;
   className?: string;
 };
@@ -134,6 +136,7 @@ export function WritingEditorShell({
   activeSectionId,
   readOnly = false,
   onChapterUpdated,
+  onChapterDeleted,
   onSectionsChange,
   className,
 }: WritingEditorShellProps) {
@@ -341,6 +344,13 @@ export function WritingEditorShell({
             disabled={readOnly}
             onError={() => setSaveState("error")}
           />
+          {!readOnly && chapter?.deletable ? (
+            <ChapterDeleteButton
+              chapterId={chapter.id}
+              title={chapter.title}
+              onDeleted={() => onChapterDeleted?.(chapter.id)}
+            />
+          ) : null}
           <SaveIndicator state={saveState} />
         </div>
       </header>

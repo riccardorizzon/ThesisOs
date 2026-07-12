@@ -8,7 +8,8 @@ import type { MarkdownSection } from "@/components/writing/MarkdownEditor";
 import {
   type WritingOutlineChapter,
 } from "@/components/writing/writingTypes";
-import { chapterClient } from "@/lib/chapterClient";
+import { chapterClient, type Chapter } from "@/lib/chapterClient";
+import { CreateChapterButton } from "@/components/writing/CreateChapterButton";
 
 export type OutlineFilter = "all" | "in_progress" | "needs_review";
 
@@ -17,6 +18,7 @@ export type WritingOutlineProps = {
   activeChapterId?: string;
   activeSectionId?: string;
   sections?: MarkdownSection[];
+  onChapterCreated?: (chapter: Chapter) => void;
   className?: string;
 };
 
@@ -71,6 +73,7 @@ export function WritingOutline({
   activeChapterId,
   activeSectionId,
   sections = [],
+  onChapterCreated,
   className,
 }: WritingOutlineProps) {
   const [filter, setFilter] = useState<OutlineFilter>("all");
@@ -116,8 +119,19 @@ export function WritingOutline({
       data-testid="writing-outline"
     >
       <header className="border-b border-border px-3 py-2">
-        <h2 className="text-sm font-semibold text-ink">Outline</h2>
-        <p className="mt-0.5 text-xs text-ink-subtle">Trascina per riordinare</p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-ink">Outline</h2>
+            <p className="mt-0.5 text-xs text-ink-subtle">Trascina per riordinare</p>
+          </div>
+          {onChapterCreated ? (
+            <CreateChapterButton
+              variant="icon"
+              onCreated={onChapterCreated}
+              testId="writing-outline-add-chapter"
+            />
+          ) : null}
+        </div>
         <div
           className="mt-2 flex rounded-md border border-border bg-surface-muted p-0.5"
           role="group"

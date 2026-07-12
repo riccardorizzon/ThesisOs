@@ -26,6 +26,10 @@ import type {
 
 export type ExplainPageShellProps = {
   conceptSlug: string;
+  initialHeader?: ConceptHeaderEnvelope | null;
+  initialDefinition?: ConceptDefinitionEnvelope | null;
+  initialNotFound?: boolean;
+  initialError?: string | null;
 };
 
 type PageState =
@@ -36,15 +40,37 @@ type PageState =
   | "not_found"
   | "error";
 
+function initialPageState(props: ExplainPageShellProps): PageState {
+  if (props.initialNotFound) return "not_found";
+  if (props.initialError) return "error";
+  if (props.initialHeader && props.initialDefinition) return "ready";
+  if (props.initialHeader) return "header_ready";
+  return "loading";
+}
+
 /**
  * Explain Page — progressive load with Supervisor Interaction Observation (PX3-EWO-006).
  * Region A loads first; region B waits when §10 WAIT blocks progression (INV-R-16).
  */
-export function ExplainPageShell({ conceptSlug }: ExplainPageShellProps) {
-  const [pageState, setPageState] = useState<PageState>("loading");
-  const [header, setHeader] = useState<ConceptHeaderEnvelope | null>(null);
+export function ExplainPageShell({
+  conceptSlug,
+  initialHeader = null,
+  initialDefinition = null,
+  initialNotFound = false,
+  initialError = null,
+}: ExplainPageShellProps) {
+  const [pageState, setPageState] = useState<PageState>(() =>
+    initialPageState({
+      conceptSlug,
+      initialHeader,
+      initialDefinition,
+      initialNotFound,
+      initialError,
+    })
+  );
+  const [header, setHeader] = useState<ConceptHeaderEnvelope | null>(initialHeader);
   const [definition, setDefinition] = useState<ConceptDefinitionEnvelope | null>(
-    null
+    initialDefinition
   );
   const [projection, setProjection] = useState<ConformanceProjection | null>(
     null
@@ -52,6 +78,10 @@ export function ExplainPageShell({ conceptSlug }: ExplainPageShellProps) {
   const [waitMessage, setWaitMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (initialHeader || initialNotFound || initialError) {
+      return;
+    }
+
     let cancelled = false;
 
     async function loadDefinitionWhenAllowed(
@@ -108,7 +138,7 @@ export function ExplainPageShell({ conceptSlug }: ExplainPageShellProps) {
     return () => {
       cancelled = true;
     };
-  }, [conceptSlug]);
+  }, [conceptSlug, initialHeader, initialNotFound, initialError]);
 
   useEffect(() => {
     if (pageState !== "wait_supervisor") return;
@@ -151,7 +181,9 @@ export function ExplainPageShell({ conceptSlug }: ExplainPageShellProps) {
   if (pageState === "error" || header == null) {
     return (
       <div className="mx-auto max-w-content" data-testid="explain-error">
-        <p className="text-sm text-ink-muted">Errore nel caricamento del concetto.</p>
+        <p className="text-sm text-ink-muted">
+          {initialError ?? "Errore nel caricamento del concetto."}
+        </p>
         <Link href="/knowledge" className="mt-4 inline-block text-sm text-accent hover:underline">
           ← Torna a Knowledge
         </Link>

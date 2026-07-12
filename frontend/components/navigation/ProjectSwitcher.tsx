@@ -94,6 +94,9 @@ export function ProjectSwitcher() {
                 className="w-full px-3 py-2 text-left text-sm hover:bg-accent-subtle/30 cursor-pointer"
               >
                 {p.display_name}
+                {p.kind === "demo" ? (
+                  <span className="ml-1 text-xs text-warning">(demo)</span>
+                ) : null}
                 <span className="block font-mono text-xs text-ink-subtle">{p.id}</span>
               </button>
             </li>

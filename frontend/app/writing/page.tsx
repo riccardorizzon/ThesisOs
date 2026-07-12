@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { Suspense } from "react";
-import { WritingContextBar } from "@/components/context";
-import { WritingWorkspace } from "@/components/writing";
+import { WritingPageClient } from "@/components/writing/WritingPageClient";
 import { ApiErrorBanner } from "@/components/ui/ApiErrorBanner";
 import { WritingWorkspaceSkeleton } from "@/components/ui/PageSkeleton";
 import { ContextApiError } from "@/lib/contextClient";
@@ -33,11 +31,8 @@ export default async function WritingPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <WritingContextBar packet={context} />
-      <Suspense fallback={<WritingWorkspaceSkeleton />}>
-        <WritingWorkspace contextPacket={context} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<WritingWorkspaceSkeleton />}>
+      <WritingPageClient context={context} />
+    </Suspense>
   );
 }

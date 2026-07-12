@@ -120,4 +120,18 @@ describe("ExplainPageShell progressive load", () => {
     expect(screen.getByTestId("explain-supervisor-observation")).toBeTruthy();
     expect(getConceptDefinition).not.toHaveBeenCalled();
   });
+
+  it("renders SSR-provided header and definition without client fetch", () => {
+    render(
+      <ExplainPageShell
+        conceptSlug="aura"
+        initialHeader={HEADER}
+        initialDefinition={DEFINITION}
+      />
+    );
+
+    expect(screen.getByTestId("explain-ready")).toBeTruthy();
+    expect(getConceptHeader).not.toHaveBeenCalled();
+    expect(getConceptDefinition).not.toHaveBeenCalled();
+  });
 });

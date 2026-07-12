@@ -1,4 +1,5 @@
 import { apiBaseUrl } from "@/lib/apiBase";
+import type { ChapterListScope } from "@/lib/workspacePrefs";
 
 export type ChapterStatus = "draft" | "review" | "approved" | "published";
 export type ChapterChangeKind = "WRITE" | "EDIT" | "PROMOTE" | "MERGE" | "RESTORE";
@@ -15,6 +16,7 @@ export type Chapter = {
   version: number;
   created_at: string;
   updated_at: string;
+  deletable?: boolean;
 };
 
 export type ChapterVersion = {
@@ -50,6 +52,7 @@ export type ChapterUpdateInput = {
 export type ChapterListParams = {
   parent_id?: string;
   q?: string;
+  scope?: ChapterListScope;
 };
 
 export class ChapterApiError extends Error {
@@ -79,6 +82,7 @@ function queryString(params?: ChapterListParams): string {
   const sp = new URLSearchParams();
   if (params.parent_id) sp.set("parent_id", params.parent_id);
   if (params.q) sp.set("q", params.q);
+  if (params.scope) sp.set("scope", params.scope);
   const qs = sp.toString();
   return qs ? `?${qs}` : "";
 }
@@ -121,5 +125,14 @@ export const chapterClient = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ordered_ids: orderedIds }),
     });
+  },
+  delete(id: string) {
+    return request<void>(`/chapters/${id}`, { method: "DELETE" });
+  },
+  copyDemoStructure() {
+    return request<{ created: Chapter[]; skipped_titles: string[] }>(
+      "/chapters/copy-demo-structure",
+      { method: "POST" }
+    );
   },
 };

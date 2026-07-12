@@ -16,6 +16,7 @@ from app.schemas.chapter import (
     ChapterUpdate,
 )
 from app.services.chapter import (
+    ChapterNotDeletableError,
     ChapterNotFoundError,
     ChapterService,
     ChapterWriteConflictError,
@@ -50,11 +51,19 @@ async def create_chapter(body: ChapterCreate):
 async def list_chapters(
     parent_id: str | None = None,
     q: str | None = None,
+    scope: str = Query(default="all", pattern="^(all|owned|demo)$"),
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
 ):
-    filters = ChapterListFilters(parent_id=parent_id, q=q, limit=limit, offset=offset)
+    filters = ChapterListFilters(
+        parent_id=parent_id, q=q, scope=scope, limit=limit, offset=offset
+    )
     return await _service.list(filters)
+
+
+@router.post("/chapters/copy-demo-structure", status_code=201)
+async def copy_demo_structure():
+    return await _service.copy_demo_structure()
 
 
 @router.get("/chapters/{chapter_id}")
@@ -101,3 +110,13 @@ async def list_chapter_versions(chapter_id: str):
         return await _service.list_versions(chapter_id)
     except ChapterNotFoundError as exc:
         return _err(404, "chapter_not_found", str(exc))
+
+
+@router.delete("/chapters/{chapter_id}", status_code=204)
+async def delete_chapter(chapter_id: str):
+    try:
+        await _service.delete(chapter_id)
+    except ChapterNotFoundError as exc:
+        return _err(404, "chapter_not_found", str(exc))
+    except ChapterNotDeletableError as exc:
+        return _err(403, "chapter_not_deletable", str(exc))
