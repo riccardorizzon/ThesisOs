@@ -13,8 +13,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-vi.mock("@/lib/contextLoad", () => ({
-  loadContext: vi.fn(async () => ({
+vi.mock("@/lib/contextLoadClient", () => ({
+  loadContextClient: vi.fn(async () => ({
     schema_version: "1",
     project_context: {
       project_id: "thesis-agent",

@@ -1,21 +1,19 @@
-import { cookies } from "next/headers";
 import { contextClient, type ContextPacket, type ContextQuery } from "@/lib/contextClient";
 import {
-  DEFAULT_PROJECT_ID,
   projectContextToQuery,
   resolveProjectContextForSurface,
 } from "@/lib/projectContext";
-import { readActiveProjectIdCookie } from "@/lib/projectPrefs";
+import { getActiveProjectId } from "@/lib/projectPrefs";
 
-export async function loadContext(params?: ContextQuery): Promise<ContextPacket> {
+/** Browser-side context load scoped to the active project id. */
+export async function loadContextClient(
+  params?: ContextQuery,
+): Promise<ContextPacket> {
   const surface = params?.surface;
-  const cookieStore = await cookies();
-  const activeProjectId =
-    readActiveProjectIdCookie(cookieStore.toString()) ?? DEFAULT_PROJECT_ID;
   const resolved = resolveProjectContextForSurface(
     surface === "home" ? "home" : "writing",
     {
-      projectId: activeProjectId,
+      projectId: getActiveProjectId(),
       productId: params?.productId,
       workspaceId: params?.workspaceId,
       sessionId: params?.sessionId,
@@ -28,6 +26,5 @@ export async function loadContext(params?: ContextQuery): Promise<ContextPacket>
     selectionAnchor: params?.selectionAnchor,
     userIntent: params?.userIntent,
   });
-
   return contextClient.get(resolved.project_id, query);
 }

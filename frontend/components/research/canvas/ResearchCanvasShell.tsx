@@ -13,7 +13,7 @@ import { ResearchInspectorRail } from "@/components/research/canvas/ResearchInsp
 import { ResearchLensRail } from "@/components/research/canvas/ResearchLensRail";
 import { SaveViewModal } from "@/components/research/canvas/SaveViewModal";
 import { SerendipityStrip } from "@/components/research/canvas/SerendipityStrip";
-import { loadContext } from "@/lib/contextLoad";
+import { loadContextClient as loadContext } from "@/lib/contextLoadClient";
 import {
   addToCanvasBasket,
   basketItemsFromSlugs,
