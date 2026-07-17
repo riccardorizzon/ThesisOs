@@ -1,4 +1,6 @@
 import { apiBaseUrl } from "@/lib/apiBase";
+import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
+import { getActiveProjectId } from "@/lib/projectPrefs";
 import type { ChapterListScope } from "@/lib/workspacePrefs";
 
 export type ChapterStatus = "draft" | "review" | "approved" | "published";
@@ -80,15 +82,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return r.json() as Promise<T>;
 }
 
+function resolveListProjectId(projectId?: string): string {
+  if (projectId && projectId.trim()) return projectId.trim();
+  if (typeof window !== "undefined") return getActiveProjectId();
+  return DEFAULT_PROJECT_ID;
+}
+
 function queryString(params?: ChapterListParams): string {
-  if (!params) return "";
   const sp = new URLSearchParams();
-  if (params.project_id) sp.set("project_id", params.project_id);
-  if (params.parent_id) sp.set("parent_id", params.parent_id);
-  if (params.q) sp.set("q", params.q);
-  if (params.scope) sp.set("scope", params.scope);
-  const qs = sp.toString();
-  return qs ? `?${qs}` : "";
+  sp.set("project_id", resolveListProjectId(params?.project_id));
+  if (params?.parent_id) sp.set("parent_id", params.parent_id);
+  if (params?.q) sp.set("q", params.q);
+  if (params?.scope) sp.set("scope", params.scope);
+  return `?${sp.toString()}`;
 }
 
 export const chapterClient = {

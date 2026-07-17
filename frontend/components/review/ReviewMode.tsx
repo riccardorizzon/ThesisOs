@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { WritingContextBar } from "@/components/context";
 import { contextClient, type ContextPacket } from "@/lib/contextClient";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
+import { getActiveProjectId } from "@/lib/projectPrefs";
 import {
   getPendingProposals,
   getPendingProposalsForChapter,
@@ -90,7 +91,7 @@ export function ReviewMode({ className, contextPacket }: ReviewModeProps) {
     let cancelled = false;
     setLoadingChapters(true);
     chapterClient
-      .list()
+      .list({ project_id: getActiveProjectId() })
       .then((list) => {
         if (!cancelled) setChapters(list);
       })

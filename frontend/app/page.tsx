@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { HomeView } from "@/components/HomeView";
 import { chapterClient } from "@/lib/chapterClient";
+import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 import {
   computeProgressPct,
   findContinueTarget,
@@ -18,7 +19,8 @@ type ChaptersLoadResult = {
 
 async function loadChapters(scope: "all" | "owned" | "demo"): Promise<ChaptersLoadResult> {
   try {
-    const list = await chapterClient.list({ scope });
+    // SSR has no localStorage; scope to the product default until client remounts.
+    const list = await chapterClient.list({ project_id: DEFAULT_PROJECT_ID, scope });
     return {
       chapters: list.map((c) => ({
         id: c.id,

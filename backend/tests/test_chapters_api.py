@@ -104,8 +104,18 @@ def test_create_invalid_status_422(client):
     assert r.json()["code"] == "invalid_status"
 
 
-def test_list_chapters(client):
+def test_list_chapters_requires_project_id(client):
     r = client.get("/chapters")
+    assert r.status_code == 422
+
+
+def test_list_chapters_rejects_blank_project_id(client):
+    r = client.get("/chapters", params={"project_id": ""})
+    assert r.status_code == 422
+
+
+def test_list_chapters_scoped(client):
+    r = client.get("/chapters", params={"project_id": "thesis-agent"})
     assert r.status_code == 200
     assert len(r.json()) == 1
 

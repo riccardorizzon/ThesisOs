@@ -7,18 +7,31 @@ describe("chapterClient", () => {
     vi.restoreAllMocks();
   });
 
-  it("lists with parent_id/q params", async () => {
+  it("lists with project_id/parent_id/q params", async () => {
     const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue({
       ok: true,
       status: 200,
       json: async () => [{ id: "1" }],
     } as Response);
 
-    await chapterClient.list({ parent_id: "p1", q: "intro" });
+    await chapterClient.list({ project_id: "proj-a", parent_id: "p1", q: "intro" });
     const url = fetchMock.mock.calls[0][0] as string;
     expect(url).toContain("/chapters?");
+    expect(url).toContain("project_id=proj-a");
     expect(url).toContain("parent_id=p1");
     expect(url).toContain("q=intro");
+  });
+
+  it("defaults project_id when list params omit it", async () => {
+    const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => [],
+    } as Response);
+
+    await chapterClient.list({ q: "intro" });
+    const url = fetchMock.mock.calls[0][0] as string;
+    expect(url).toContain("project_id=");
   });
 
   it("creates via JSON POST", async () => {

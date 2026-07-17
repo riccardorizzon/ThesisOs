@@ -14,6 +14,7 @@ export const API_PROXY_PREFIXES = [
   "memory",
   "chapters",
   "conversations",
+  "proposals",
   "export",
 ] as const;
 

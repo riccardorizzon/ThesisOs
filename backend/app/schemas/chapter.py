@@ -83,6 +83,7 @@ class ChapterUpdate(BaseModel):
 
 
 class ChapterListFilters(BaseModel):
+    # HTTP GET /chapters requires project_id; internal callers may still omit.
     project_id: str | None = None
     parent_id: str | None = None
     q: str | None = None

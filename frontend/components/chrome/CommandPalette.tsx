@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { ApiDegradedBanner } from "@/components/ui/ApiDegradedBanner";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
+import { getActiveProjectId } from "@/lib/projectPrefs";
 import { PRIMARY_NAV } from "@/lib/nav";
 import { dispatchOpenReview } from "@/components/review/reviewIntegration";
 import { OPEN_COMMAND_PALETTE_EVENT } from "@/hooks/useKeyboardShortcuts";
@@ -96,7 +97,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     setActiveIndex(0);
     setChaptersLoadError(null);
     chapterClient
-      .list()
+      .list({ project_id: getActiveProjectId() })
       .then((list) => {
         setChapters(list);
         setChaptersLoadError(null);

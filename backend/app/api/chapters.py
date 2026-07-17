@@ -49,13 +49,14 @@ async def create_chapter(body: ChapterCreate):
 
 @router.get("/chapters")
 async def list_chapters(
-    project_id: str | None = Query(default=None),
+    project_id: str = Query(min_length=1),
     parent_id: str | None = None,
     q: str | None = None,
     scope: str = Query(default="all", pattern="^(all|owned|demo)$"),
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
 ):
+    """List chapters for one project only — project_id is required (no cross-project dump)."""
     filters = ChapterListFilters(
         project_id=project_id,
         parent_id=parent_id,
