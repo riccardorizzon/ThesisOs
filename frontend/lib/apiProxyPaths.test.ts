@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -20,11 +20,14 @@ describe("API_PROXY_PREFIXES", () => {
     expect(API_PROXY_EXACT_PATHS).toContain("writing/actions");
   });
 
-  it("keeps nginx public ingress in sync for proposals", () => {
-    const nginx = readFileSync(
-      resolve(__dirname, "../../infra/dev-vm/nginx-beta-public.conf"),
-      "utf8"
-    );
+  it("keeps nginx public ingress in sync for proposals when repo infra is present", () => {
+    // Frontend Docker image only copies frontend/; skip there. Host/CI checkout has infra/.
+    const nginxPath = resolve(__dirname, "../../infra/dev-vm/nginx-beta-public.conf");
+    if (!existsSync(nginxPath)) {
+      expect(API_PROXY_PREFIXES).toContain("proposals");
+      return;
+    }
+    const nginx = readFileSync(nginxPath, "utf8");
     expect(nginx).toMatch(/\|proposals\|/);
   });
 });
