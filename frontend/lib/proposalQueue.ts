@@ -1,4 +1,5 @@
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
+import { getActiveProjectId } from "@/lib/projectPrefs";
 import {
   proposalClient,
   type ProposalApiRecord,
@@ -69,7 +70,7 @@ export function mapApiProposal(record: ProposalApiRecord): WritingProposal {
 
 export function mapWritingProposalToCreate(
   input: Omit<WritingProposal, "id" | "status" | "createdAt">,
-  projectId: string = DEFAULT_PROJECT_ID
+  projectId: string = typeof window !== "undefined" ? getActiveProjectId() : DEFAULT_PROJECT_ID
 ): ProposalCreateBody {
   return {
     project_id: projectId,
@@ -109,7 +110,7 @@ export async function refreshProposalsFromApi(
 
   refreshPromise = (async () => {
     const { items } = await proposalClient.list({
-      project_id: params.projectId ?? DEFAULT_PROJECT_ID,
+      project_id: params.projectId ?? (typeof window !== "undefined" ? getActiveProjectId() : DEFAULT_PROJECT_ID),
       chapter_id: params.chapterId,
     });
     const mapped = items.map(mapApiProposal).filter((p) => p.status === "pending");
@@ -144,7 +145,7 @@ export function addProposal(
   cache.push(optimistic);
 
   void proposalClient
-    .create(mapWritingProposalToCreate(input))
+    .create(mapWritingProposalToCreate(input, getActiveProjectId()))
     .then((record) => {
       removeFromCache(optimistic.id);
       upsertCache(mapApiProposal(record));

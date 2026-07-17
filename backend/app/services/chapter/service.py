@@ -35,14 +35,38 @@ from app.services.chapter.exceptions import (
     InvalidChapterStatusError,
 )
 
-_PROTECTED_TITLE_MARKERS = ("(dogfood", "[kimi-claw")
-_PROTECTED_EXACT_TITLES = frozenset({"e2e export"})
+# Migration seeds stay non-deletable, but must appear in personal/owned outline.
+_MIGRATION_TITLE_MARKERS = ("[kimi-claw",)
+# Dogfood / lab noise — quarantined from student-facing lists (owned + default all).
+_DOGFOOD_TITLE_MARKERS = (
+    "(dogfood",
+    "dogfood m",
+    "dogfood chapter",
+    "dogfood demo",
+    "g5 walkthrough",
+    "g5 test",
+    "m7 dogfood",
+    "reti neurali",
+)
+_DOGFOOD_EXACT_TITLES = frozenset(
+    {
+        "e2e export",
+        "craftsmanship",
+        "g5 walkthrough",
+        "g5 test",
+        "m7 dogfood chapter",
+        "prova",
+    }
+)
+# Back-compat alias used when sanitizing demo titles for copy_demo_structure.
+_PROTECTED_TITLE_MARKERS = _DOGFOOD_TITLE_MARKERS + _MIGRATION_TITLE_MARKERS
+_PROTECTED_EXACT_TITLES = _DOGFOOD_EXACT_TITLES
 
 
 def _sanitize_demo_title(title: str) -> str:
     lowered = title.lower()
     cut_at = len(title)
-    for marker in _PROTECTED_TITLE_MARKERS:
+    for marker in _DOGFOOD_TITLE_MARKERS:
         idx = lowered.find(marker)
         if idx != -1:
             cut_at = min(cut_at, idx)
@@ -50,13 +74,24 @@ def _sanitize_demo_title(title: str) -> str:
     return cleaned or title.strip()
 
 
-def _chapter_is_deletable(row: models.Chapter) -> bool:
+def _is_quarantined_dogfood(row: models.Chapter) -> bool:
+    """True for lab/demo noise that must not appear on the thesis outline."""
     title = row.title.strip().lower()
-    if title in _PROTECTED_EXACT_TITLES:
-        return False
-    if any(marker in title for marker in _PROTECTED_TITLE_MARKERS):
-        return False
-    if (row.content_md or "").lstrip().startswith("<!-- migration_slug:"):
+    if title in _DOGFOOD_EXACT_TITLES:
+        return True
+    return any(marker in title for marker in _DOGFOOD_TITLE_MARKERS)
+
+
+def _is_migration_seed(row: models.Chapter) -> bool:
+    title = row.title.strip().lower()
+    if any(marker in title for marker in _MIGRATION_TITLE_MARKERS):
+        return True
+    return (row.content_md or "").lstrip().startswith("<!-- migration_slug:")
+
+
+def _chapter_is_deletable(row: models.Chapter) -> bool:
+    """Protected seeds (migration + dogfood) cannot be deleted from the UI."""
+    if _is_quarantined_dogfood(row) or _is_migration_seed(row):
         return False
     return True
 
@@ -186,6 +221,7 @@ class ChapterService:
         if status not in VALID_CHAPTER_STATUSES:
             raise InvalidChapterStatusError(status)
         row = models.Chapter(
+            project_id=data.project_id or "thesis-agent",
             parent_id=data.parent_id,
             order_index=data.order_index,
             title=data.title,
@@ -211,6 +247,8 @@ class ChapterService:
         self, session: AsyncSession, filters: ChapterListFilters
     ) -> list[ChapterRecord]:
         stmt = select(models.Chapter)
+        if filters.project_id is not None:
+            stmt = stmt.where(models.Chapter.project_id == filters.project_id)
         if filters.parent_id is not None:
             stmt = stmt.where(models.Chapter.parent_id == filters.parent_id)
         if filters.q:
@@ -227,12 +265,13 @@ class ChapterService:
 
     async def _copy_demo_structure(self, session: AsyncSession) -> CopyDemoStructureResponse:
         rows = (await session.execute(select(models.Chapter))).scalars().all()
+        # Copy only quarantined dogfood templates — never thesis migration seeds.
         demo_rows = sorted(
-            [r for r in rows if not _chapter_is_deletable(r)],
+            [r for r in rows if _is_quarantined_dogfood(r)],
             key=lambda r: (r.order_index, r.created_at),
         )
         owned_titles = {
-            r.title.strip().lower() for r in rows if _chapter_is_deletable(r)
+            r.title.strip().lower() for r in rows if not _is_quarantined_dogfood(r)
         }
         created: list[ChapterRecord] = []
         skipped: list[str] = []
@@ -359,11 +398,14 @@ class ChapterService:
 
     @staticmethod
     def _apply_scope(rows: list[models.Chapter], scope: str) -> list[models.Chapter]:
+        # owned/personal: thesis + user chapters (incl. protected kimi seeds)
+        # demo: quarantined dogfood only
+        # all: student-safe default — hide dogfood (CUR-8 /chapters leak)
         if scope == "owned":
-            return [r for r in rows if _chapter_is_deletable(r)]
+            return [r for r in rows if not _is_quarantined_dogfood(r)]
         if scope == "demo":
-            return [r for r in rows if not _chapter_is_deletable(r)]
-        return rows
+            return [r for r in rows if _is_quarantined_dogfood(r)]
+        return [r for r in rows if not _is_quarantined_dogfood(r)]
 
     @staticmethod
     def _require_version(
@@ -396,6 +438,7 @@ class ChapterService:
     def _to_record(row: models.Chapter) -> ChapterRecord:
         return ChapterRecord(
             id=row.id,
+            project_id=getattr(row, "project_id", None) or "thesis-agent",
             parent_id=row.parent_id,
             order_index=row.order_index,
             title=row.title,

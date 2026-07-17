@@ -108,7 +108,7 @@ def test_get_context_returns_packet_subset(client):
     assert r.status_code == 200
     body = r.json()
     assert body["schema_version"] == "0.2"
-    assert body["project"]["title"] == "STIGMATA — Design e processo creativo"
+    assert body["project"]["title"] == "Demo (esempio)"
     assert body["project"]["progress_pct"] == 85
     assert body["project_context"]["project_id"] == DEFAULT_PROJECT_ID
     assert body["project_context"]["product_id"] == DEFAULT_PRODUCT_ID
@@ -164,6 +164,26 @@ def test_unknown_project_returns_404(client):
     r = client.get("/projects/unknown-project/context")
     assert r.status_code == 404
     assert r.json()["code"] == "project_not_found"
+
+
+def test_demo_project_context_ok(client):
+    r = client.get("/projects/demo-thesis/context?surface=writing")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["project_context"]["project_id"] == "demo-thesis"
+    assert body["decisions"] == []
+
+
+def test_created_project_context_ok(client):
+    created = client.post("/projects", json={"display_name": "Nuova tesi CUR-7"}).json()
+    pid = created["id"]
+    r = client.get(f"/projects/{pid}/context?surface=agent")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["project_context"]["project_id"] == pid
+    assert body["project"]["title"] == "Nuova tesi CUR-7"
+    assert body["decisions"] == []
+    assert body["corpus_constraints"] == []
 
 
 def test_surface_is_presentation_hint_not_assembly_driver(client):

@@ -122,6 +122,7 @@ class Citation(Base):
 class Chapter(Base):
     __tablename__ = "chapters"
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
+    project_id: Mapped[str] = mapped_column(String(64), default="thesis-agent", server_default=text("'thesis-agent'"))
     parent_id: Mapped[str | None] = mapped_column(ForeignKey("chapters.id"), nullable=True)
     order_index: Mapped[int] = mapped_column(Integer, default=0)
     title: Mapped[str] = mapped_column(Text)

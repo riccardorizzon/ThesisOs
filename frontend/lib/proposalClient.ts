@@ -1,4 +1,5 @@
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
+import { getActiveProjectId } from "@/lib/projectPrefs";
 import type { Chapter } from "@/lib/chapterClient";
 import { apiBaseUrl } from "@/lib/apiBase";
 
@@ -65,7 +66,7 @@ function queryString(params: Record<string, string | undefined>): string {
 
 export const proposalClient = {
   list(params: { project_id?: string; chapter_id?: string } = {}) {
-    const project_id = params.project_id ?? DEFAULT_PROJECT_ID;
+    const project_id = params.project_id ?? (typeof window !== "undefined" ? getActiveProjectId() : DEFAULT_PROJECT_ID);
     return request<{ items: ProposalApiRecord[] }>(
       `/proposals${queryString({ project_id, chapter_id: params.chapter_id })}`
     );

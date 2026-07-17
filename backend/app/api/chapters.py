@@ -49,6 +49,7 @@ async def create_chapter(body: ChapterCreate):
 
 @router.get("/chapters")
 async def list_chapters(
+    project_id: str | None = Query(default=None),
     parent_id: str | None = None,
     q: str | None = None,
     scope: str = Query(default="all", pattern="^(all|owned|demo)$"),
@@ -56,7 +57,12 @@ async def list_chapters(
     offset: int = Query(default=0, ge=0),
 ):
     filters = ChapterListFilters(
-        parent_id=parent_id, q=q, scope=scope, limit=limit, offset=offset
+        project_id=project_id,
+        parent_id=parent_id,
+        q=q,
+        scope=scope,
+        limit=limit,
+        offset=offset,
     )
     return await _service.list(filters)
 

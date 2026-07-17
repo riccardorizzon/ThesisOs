@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { setActiveProjectId, getActiveProjectId } from "@/lib/projectPrefs";
+import { setActiveProjectId, getActiveProjectId, saveProjectPrefs } from "@/lib/projectPrefs";
 import { createProject, listProjects, type ProjectEntry } from "@/lib/projectsClient";
 import { ApiDegradedBanner } from "@/components/ui/ApiDegradedBanner";
 
@@ -13,6 +13,9 @@ export function ProjectSwitcher() {
   const [projects, setProjects] = useState<ProjectEntry[]>([]);
   const [activeId, setActiveId] = useState("thesis-agent");
   const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
   const [projectsLoadError, setProjectsLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,16 +46,34 @@ export function ProjectSwitcher() {
     setActiveProjectId(id);
     setActiveId(id);
     setOpen(false);
+    setCreating(false);
     window.location.reload();
   };
 
   const handleCreate = async () => {
-    const name = window.prompt("Nome nuovo progetto");
-    if (!name?.trim()) return;
-    const created = await createProject(name.trim());
-    const items = await listProjects();
-    setProjects(items);
-    handleSelect(created.id);
+    const name = newName.trim();
+    if (!name) {
+      setCreateError("Inserisci un nome per il progetto.");
+      return;
+    }
+    setCreateError(null);
+    try {
+      const created = await createProject(name);
+      saveProjectPrefs({
+        displayName: created.display_name,
+        citationStyle: "author-date",
+        exportFormat: "bibtex",
+      });
+      const items = await listProjects();
+      setProjects(items);
+      setNewName("");
+      setCreating(false);
+      handleSelect(created.id);
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : "Creazione progetto fallita."
+      );
+    }
   };
 
   return (
@@ -101,14 +122,70 @@ export function ProjectSwitcher() {
               </button>
             </li>
           ))}
-          <li className="border-t border-border">
-            <button
-              type="button"
-              onClick={() => void handleCreate()}
-              className="w-full px-3 py-2 text-left text-sm text-accent cursor-pointer"
-            >
-              + Nuovo progetto
-            </button>
+          <li className="border-t border-border px-3 py-2">
+            {creating ? (
+              <div className="space-y-2" data-testid="project-create-form">
+                <label className="block text-xs font-medium text-ink-muted" htmlFor="new-project-name">
+                  Nome nuovo progetto
+                </label>
+                <input
+                  id="new-project-name"
+                  data-testid="project-create-input"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void handleCreate();
+                    }
+                    if (e.key === "Escape") {
+                      setCreating(false);
+                      setCreateError(null);
+                    }
+                  }}
+                  className="w-full rounded-md border border-border bg-bg px-2 py-1.5 text-sm text-ink"
+                  placeholder="Es. Tesi STEM"
+                  autoFocus
+                />
+                {createError ? (
+                  <p className="text-xs text-amber-800" role="alert">
+                    {createError}
+                  </p>
+                ) : null}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    data-testid="project-create-submit"
+                    onClick={() => void handleCreate()}
+                    className="rounded-md bg-accent px-2 py-1 text-xs font-medium text-white"
+                  >
+                    Crea
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreating(false);
+                      setCreateError(null);
+                    }}
+                    className="rounded-md border border-border px-2 py-1 text-xs text-ink-muted"
+                  >
+                    Annulla
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                data-testid="project-create-open"
+                onClick={() => {
+                  setCreating(true);
+                  setCreateError(null);
+                }}
+                className="w-full text-left text-sm text-accent cursor-pointer"
+              >
+                + Nuovo progetto
+              </button>
+            )}
           </li>
         </ul>
       )}

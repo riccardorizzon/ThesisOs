@@ -10,9 +10,11 @@ import {
   useCommandPalette,
 } from "@/components/chrome/CommandPalette";
 import { OfflineBanner } from "@/components/chrome/OfflineBanner";
+import { DemoBanner } from "@/components/chrome/DemoBanner";
 import { CoachMarkProvider } from "@/components/onboarding/CoachMark";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
+import { getActiveProjectId } from "@/lib/projectPrefs";
 import { listPendingProposals } from "@/lib/proposalQueue";
 import { PRIMARY_NAV, isNavActive } from "@/lib/nav";
 import { chapterScopeForMode, getWorkspaceMode } from "@/lib/workspacePrefs";
@@ -54,8 +56,9 @@ export function AppShell({ children, rightPanel }: AppShellProps) {
 
   const refreshBadges = useCallback(() => {
     const scope = chapterScopeForMode(getWorkspaceMode());
+    const projectId = getActiveProjectId();
     chapterClient
-      .list({ scope })
+      .list({ scope, project_id: projectId })
       .then(setChapters)
       .catch(() => setChapters([]));
     setPendingReviewCount(listPendingProposals().length);
@@ -77,6 +80,7 @@ export function AppShell({ children, rightPanel }: AppShellProps) {
   return (
     <div className="flex min-h-screen bg-bg text-ink">
       <OfflineBanner />
+      <DemoBanner />
       <CommandPalette open={open} onClose={closePalette} />
       <CoachMarkProvider pathname={pathname} />
 

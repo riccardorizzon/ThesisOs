@@ -6,6 +6,7 @@ export type ChapterChangeKind = "WRITE" | "EDIT" | "PROMOTE" | "MERGE" | "RESTOR
 
 export type Chapter = {
   id: string;
+  project_id?: string;
   parent_id: string | null;
   order_index: number;
   title: string;
@@ -34,6 +35,7 @@ export type ChapterVersion = {
 
 export type ChapterCreateInput = {
   title: string;
+  project_id?: string;
   parent_id?: string | null;
   order_index?: number;
   status?: ChapterStatus;
@@ -50,6 +52,7 @@ export type ChapterUpdateInput = {
 };
 
 export type ChapterListParams = {
+  project_id?: string;
   parent_id?: string;
   q?: string;
   scope?: ChapterListScope;
@@ -80,6 +83,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 function queryString(params?: ChapterListParams): string {
   if (!params) return "";
   const sp = new URLSearchParams();
+  if (params.project_id) sp.set("project_id", params.project_id);
   if (params.parent_id) sp.set("parent_id", params.parent_id);
   if (params.q) sp.set("q", params.q);
   if (params.scope) sp.set("scope", params.scope);

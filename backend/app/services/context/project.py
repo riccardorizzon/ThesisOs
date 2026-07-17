@@ -1,15 +1,16 @@
-"""Project scope resolution stub — PX1-EWO-006."""
+"""Project scope resolution — registry-backed (CUR-7 hard isolation)."""
 
 from __future__ import annotations
 
-from app.schemas.context import DEFAULT_PROJECT_ID, ProjectContext
+from app.schemas.context import ProjectContext
 from app.services.context.exceptions import ProjectNotFoundError
+from app.services.project_registry import ProjectRegistryService
 
-KNOWN_PROJECTS = frozenset({DEFAULT_PROJECT_ID})
+_registry = ProjectRegistryService()
 
 
 def resolve_project_context(project: ProjectContext) -> ProjectContext:
-    """PX-1 stub: validate known projects. Multi-tenant resolution deferred to PX-2+."""
-    if project.project_id not in KNOWN_PROJECTS:
+    """Validate project_id against the live project registry."""
+    if not _registry.has(project.project_id):
         raise ProjectNotFoundError(project.project_id)
     return project

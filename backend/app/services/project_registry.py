@@ -1,4 +1,4 @@
-"""Project registry (PX6-EWO-007)."""
+"""Project registry (PX6-EWO-007) — CUR-7 hard isolation."""
 
 from __future__ import annotations
 
@@ -7,6 +7,9 @@ import re
 import uuid
 
 from pydantic import BaseModel, Field
+
+THESIS_AGENT_ID = "thesis-agent"
+DEMO_THESIS_ID = "demo-thesis"
 
 
 class ProjectEntry(BaseModel):
@@ -32,13 +35,13 @@ def _slugify(name: str) -> str:
 
 _DEFAULT: list[ProjectEntry] = [
     ProjectEntry(
-        id="thesis-agent",
+        id=THESIS_AGENT_ID,
         display_name="Demo (esempio)",
         created_at="2026-07-01T00:00:00Z",
         kind="demo",
     ),
     ProjectEntry(
-        id="demo-thesis",
+        id=DEMO_THESIS_ID,
         display_name="Progetto dimostrativo",
         created_at="2026-07-07T00:00:00Z",
         kind="demo",
@@ -52,6 +55,15 @@ class ProjectRegistryService:
     def list_projects(self) -> ProjectListResponse:
         return ProjectListResponse(items=list(_registry))
 
+    def get(self, project_id: str) -> ProjectEntry | None:
+        for entry in _registry:
+            if entry.id == project_id:
+                return entry
+        return None
+
+    def has(self, project_id: str) -> bool:
+        return self.get(project_id) is not None
+
     def create_project(self, body: ProjectCreateRequest) -> ProjectEntry:
         base = _slugify(body.display_name)
         project_id = base
@@ -62,6 +74,7 @@ class ProjectRegistryService:
             id=project_id,
             display_name=body.display_name.strip(),
             created_at=datetime.now(timezone.utc).isoformat(),
+            kind="owned",
         )
         _registry.append(entry)
         return entry

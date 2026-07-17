@@ -56,8 +56,12 @@ export function defaultProjectContext(): ProjectContext {
 export function resolveProjectContext(
   options: ResolveProjectContextOptions = {}
 ): ProjectContext {
+  const fallback =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("thesisos:active-project-id") ?? DEFAULT_PROJECT_ID)
+      : DEFAULT_PROJECT_ID;
   return {
-    project_id: options.projectId ?? DEFAULT_PROJECT_ID,
+    project_id: options.projectId ?? fallback,
     product_id: options.productId ?? DEFAULT_PRODUCT_ID,
     workspace_id: options.workspaceId ?? null,
     session_id: options.sessionId ?? null,

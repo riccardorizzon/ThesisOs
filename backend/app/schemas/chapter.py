@@ -20,6 +20,7 @@ CHANGE_KINDS = frozenset({"WRITE", "EDIT", "PROMOTE", "MERGE", "RESTORE"})
 
 class ChapterRecord(BaseModel):
     id: str
+    project_id: str = "thesis-agent"
     parent_id: str | None = None
     order_index: int
     title: str
@@ -48,6 +49,7 @@ class ChapterVersionRecord(BaseModel):
 
 class ChapterCreate(BaseModel):
     title: str
+    project_id: str = "thesis-agent"
     parent_id: str | None = None
     order_index: int = 0
     status: str = "draft"
@@ -81,6 +83,7 @@ class ChapterUpdate(BaseModel):
 
 
 class ChapterListFilters(BaseModel):
+    project_id: str | None = None
     parent_id: str | None = None
     q: str | None = None
     scope: str = "all"

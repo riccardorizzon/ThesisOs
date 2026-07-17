@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { getActiveProjectId } from "@/lib/projectPrefs";
 import { dispatchOpenReview } from "@/components/review/reviewIntegration";
 import type { ContextPacket } from "@/lib/contextClient";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
@@ -111,7 +112,7 @@ export function WritingWorkspace({
       return;
     }
     void chapterClient
-      .list({ scope: chapterScope })
+      .list({ project_id: getActiveProjectId(), scope: chapterScope })
       .then((list) => {
         setChaptersLoadError(null);
         if (list.length > 0) setChapters(list.map(chapterToOutline));

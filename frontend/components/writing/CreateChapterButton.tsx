@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 
 import { cn } from "@/lib/cn";
+import { getActiveProjectId } from "@/lib/projectPrefs";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 
 export const DEFAULT_CHAPTER_TITLE = "Introduzione";
@@ -55,7 +56,7 @@ export function CreateChapterButton({
     setBusy(true);
     setError(null);
     try {
-      const chapter = await chapterClient.create({ title: trimmed });
+      const chapter = await chapterClient.create({ project_id: getActiveProjectId(), title: trimmed });
       onCreated?.(chapter);
       resetForm();
       router.push(`/writing/${chapter.id}`);

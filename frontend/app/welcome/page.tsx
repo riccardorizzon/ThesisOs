@@ -1,25 +1,62 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { createProject } from "@/lib/projectsClient";
+import {
+  saveProjectPrefs,
+  setActiveProjectId,
+} from "@/lib/projectPrefs";
 import {
   markWelcomeComplete,
   setWorkspaceMode,
 } from "@/lib/workspacePrefs";
 
+const DEMO_THESIS_PROJECT_ID = "demo-thesis";
+
 export default function WelcomePage() {
   const router = useRouter();
+  const [busy, setBusy] = useState<"personal" | "demo" | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const startPersonal = () => {
-    setWorkspaceMode("personal");
-    markWelcomeComplete();
-    router.push("/writing");
+  const startPersonal = async () => {
+    setBusy("personal");
+    setError(null);
+    try {
+      const stamp = new Date().toISOString().slice(0, 10);
+      const created = await createProject(`Nuova tesi ${stamp}`);
+      setActiveProjectId(created.id);
+      saveProjectPrefs({
+        displayName: created.display_name,
+        citationStyle: "author-date",
+        exportFormat: "bibtex",
+      });
+      setWorkspaceMode("personal");
+      markWelcomeComplete();
+      router.push("/");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Impossibile creare il nuovo progetto."
+      );
+      setBusy(null);
+    }
   };
 
   const startDemo = () => {
+    setBusy("demo");
+    setError(null);
+    setActiveProjectId(DEMO_THESIS_PROJECT_ID);
+    saveProjectPrefs({
+      displayName: "Progetto dimostrativo",
+      citationStyle: "author-date",
+      exportFormat: "bibtex",
+    });
     setWorkspaceMode("demo");
     markWelcomeComplete();
-    router.push("/writing");
+    router.push("/");
   };
 
   return (
@@ -38,45 +75,53 @@ export default function WelcomePage() {
           Scegli come entrare — il tuo workspace personale è separato dalla demo.
         </p>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        {error ? (
+          <p
+            className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+            data-testid="welcome-error"
+            role="alert"
+          >
+            {error}
+          </p>
+        ) : null}
+
+        <div className="mt-10 grid gap-4 text-left sm:grid-cols-2">
           <button
             type="button"
-            onClick={startPersonal}
+            onClick={() => void startPersonal()}
+            disabled={busy !== null}
             className={cn(
-              "rounded-lg border-2 border-accent bg-surface p-6 text-left shadow-sm transition-colors",
-              "hover:bg-accent-subtle/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              "rounded-lg border border-border bg-surface p-6 text-left shadow-sm transition-colors",
+              "hover:border-border-strong hover:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+              "disabled:opacity-60"
             )}
             data-testid="welcome-new-thesis"
           >
-            <span className="inline-block rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
-              Consigliato
-            </span>
-            <h2 className="mt-3 text-lg font-semibold">Nuova tesi</h2>
+            <h2 className="text-lg font-semibold">Nuova tesi</h2>
             <p className="mt-1 text-sm text-ink-muted">
-              Inizia da zero con il tuo workspace personale — 0%, nessun testo
-              precaricato.
+              {busy === "personal"
+                ? "Creazione progetto isolato…"
+                : "Crea un nuovo project id — workspace vuoto, nessun testo precaricato."}
             </p>
           </button>
 
           <button
             type="button"
             onClick={startDemo}
+            disabled={busy !== null}
             className={cn(
               "rounded-lg border border-dashed border-border bg-surface p-6 text-left shadow-sm transition-colors",
-              "hover:border-border-strong hover:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              "hover:border-border-strong hover:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+              "disabled:opacity-60"
             )}
             data-testid="welcome-explore-demo"
           >
             <h2 className="text-lg font-semibold">Esplora demo</h2>
             <p className="mt-1 text-sm text-ink-muted">
-              Vedi un esempio completo di tesi con contenuti di dimostrazione.
+              Forza il progetto {DEMO_THESIS_PROJECT_ID} con contenuti di dimostrazione.
             </p>
           </button>
         </div>
-
-        <p className="mt-8 text-xs text-ink-subtle">
-          Questo è il tuo spazio — non un esempio altrui.
-        </p>
       </div>
     </main>
   );

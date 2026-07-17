@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from app.schemas.context import (
+    DEFAULT_PROJECT_ID,
     ConstraintsNode,
     ContextGraph,
     ContextRequest,
@@ -21,6 +22,7 @@ from app.schemas.memory import PromptContextFilters
 from app.services.chapter import ChapterNotFoundError, ChapterService
 from app.services.context.knowledge_bridge import assemble_knowledge_node
 from app.services.memory import MemoryService
+from app.services.project_registry import ProjectRegistryService
 
 _STATUS_FACTOR = {"draft": 0.4, "review": 0.7, "approved": 1.0, "published": 1.0}
 
@@ -92,57 +94,64 @@ async def assemble_context_graph(
     chapter_service: ChapterService,
 ) -> ContextGraph:
     """Build full context graph — surface/presentation does not affect assembly."""
-    binding_ctx = await memory_service.load_prompt_context(
-        filters=PromptContextFilters(
-            include_binding_decisions=True,
-            include_editable=False,
-            include_pinned_user=False,
-            include_pinned_thesis=False,
+    project_id = request.project.project_id
+    is_primary = project_id == DEFAULT_PROJECT_ID
+    registry = ProjectRegistryService()
+    registry_entry = registry.get(project_id)
+
+    if is_primary:
+        binding_ctx = await memory_service.load_prompt_context(
+            filters=PromptContextFilters(
+                include_binding_decisions=True,
+                include_editable=False,
+                include_pinned_user=False,
+                include_pinned_thesis=False,
+            )
         )
-    )
-    decisions = _decisions_from_prompt(binding_ctx)
-    decisions_content = "\n".join(d.summary for d in decisions)
+        decisions = _decisions_from_prompt(binding_ctx)
+        decisions_content = "\n".join(d.summary for d in decisions)
+        corpus = _extract_corpus_constraints(decisions_content)
+        writing_rules = list(_DEFAULT_WRITING_RULES)
+    else:
+        # Hard isolation: do not leak thesis-agent decisions/rules into other projects.
+        decisions = []
+        corpus = []
+        writing_rules = []
 
     entity: EntityScope | None = None
     if request.entity_type == "chapter" and request.entity_id:
         try:
             chapter = await chapter_service.get(request.entity_id)
-            snippet = chapter.summary
-            if snippet is None and chapter.content_md:
-                snippet = chapter.content_md[:200]
-            entity = EntityScope(
-                type="chapter",
-                id=chapter.id,
-                title=chapter.title,
-                snippet=snippet,
-            )
+            if chapter.project_id == project_id:
+                snippet = chapter.summary
+                if snippet is None and chapter.content_md:
+                    snippet = chapter.content_md[:200]
+                entity = EntityScope(
+                    type="chapter",
+                    id=chapter.id,
+                    title=chapter.title,
+                    snippet=snippet,
+                )
         except ChapterNotFoundError:
             pass
 
-    chapters = await chapter_service.list(ChapterListFilters())
+    chapters = await chapter_service.list(ChapterListFilters(project_id=project_id))
     progress_pct = _compute_progress_pct(chapters)
 
-    knowledge = await assemble_knowledge_node(request.project.project_id)
+    knowledge = await assemble_knowledge_node(project_id)
 
-    thesis_ctx = await memory_service.load_prompt_context(
-        filters=PromptContextFilters(
-            include_binding_decisions=False,
-            include_editable=False,
-            include_pinned_user=False,
-            include_pinned_thesis=True,
-        )
-    )
-    project_title = "Tesi STIGMATA"
-    if thesis_ctx.thesis:
-        first = thesis_ctx.thesis[0]
-        if first.title:
-            project_title = first.title
+    if registry_entry is not None:
+        project_title = registry_entry.display_name
+    elif is_primary:
+        project_title = "Tesi STIGMATA"
+    else:
+        project_title = project_id
 
     return ContextGraph(
         decisions=DecisionsNode(binding=decisions),
         constraints=ConstraintsNode(
-            corpus=_extract_corpus_constraints(decisions_content),
-            writing_rules=list(_DEFAULT_WRITING_RULES),
+            corpus=corpus,
+            writing_rules=writing_rules,
         ),
         knowledge=knowledge,
         workspace=WorkspaceNode(
