@@ -66,7 +66,16 @@ describe("findContinueTarget", () => {
 
 describe("progressPhaseLabel", () => {
   it("returns phase strings for progress bands", () => {
-    expect(progressPhaseLabel(0)).toBe("Prima dei dieci minuti");
+    expect(progressPhaseLabel(0)).toBe("Progetto vuoto");
+    expect(progressPhaseLabel(0, { fashionEmptyPhase: true })).toBe(
+      "Prima dei dieci minuti"
+    );
     expect(progressPhaseLabel(100)).toBe("Capitoli approvati");
+  });
+
+  it("keeps fashion empty copy only when opted in", () => {
+    expect(progressPhaseLabel(0, { fashionEmptyPhase: true })).toBe(
+      "Prima dei dieci minuti"
+    );
   });
 });

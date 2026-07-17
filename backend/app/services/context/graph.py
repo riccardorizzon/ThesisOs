@@ -56,9 +56,9 @@ def _compute_progress_pct(chapters) -> int:
     return round((weighted / total_weight) * 100)
 
 
-def _phase_label(pct: int) -> str:
+def _phase_label(pct: int, *, fashion_empty: bool = False) -> str:
     if pct == 0:
-        return "Prima dei dieci minuti"
+        return "Prima dei dieci minuti" if fashion_empty else "Progetto vuoto"
     if pct < 40:
         return "Struttura e impostazione"
     if pct < 70:
@@ -157,7 +157,7 @@ async def assemble_context_graph(
         workspace=WorkspaceNode(
             project=ProjectSummary(
                 title=project_title,
-                phase=_phase_label(progress_pct),
+                phase=_phase_label(progress_pct, fashion_empty=is_primary),
                 progress_pct=progress_pct,
             ),
             entity=entity,

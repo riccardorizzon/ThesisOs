@@ -52,9 +52,18 @@ export function findContinueTarget(chapters: ProgressChapter[]): ContinueTarget 
   return { href: "/writing", label: "Inizia a scrivere" };
 }
 
-/** Phase label stub from outline metadata — PX-1 placeholder */
-export function progressPhaseLabel(pct: number): string {
-  if (pct === 0) return "Prima dei dieci minuti";
+/** Phase label stub from outline metadata — PX-1 placeholder.
+ * Fashion empty copy is only for the primary thesis project.
+ */
+export function progressPhaseLabel(
+  pct: number,
+  options?: { fashionEmptyPhase?: boolean }
+): string {
+  if (pct === 0) {
+    return options?.fashionEmptyPhase === true
+      ? "Prima dei dieci minuti"
+      : "Progetto vuoto";
+  }
   if (pct < 40) return "Struttura e impostazione";
   if (pct < 70) return "Sviluppo argomentativo";
   if (pct < 100) return "Revisione e rifinitura";

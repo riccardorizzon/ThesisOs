@@ -43,6 +43,8 @@ export type HomeViewProps = {
   activityFeed?: HomeActivityItem[];
   /** Error Contract v1 — API load failed; do not treat as zero progress */
   chaptersLoadError?: string | null;
+  /** When false, empty progress uses neutral copy (no fashion thesis phase). */
+  fashionEmptyPhase?: boolean;
 };
 
 const ACTIVITY_LABELS: Record<ActivityFeedKind, string> = {
@@ -150,8 +152,9 @@ export function HomeView({
   activity = [],
   activityFeed,
   chaptersLoadError = null,
+  fashionEmptyPhase = false,
 }: HomeViewProps) {
-  const phase = progressPhaseLabel(progressPct);
+  const phase = progressPhaseLabel(progressPct, { fashionEmptyPhase });
   const [continua, setContinua] = useState(continueTarget);
   const [pendingCount, setPendingCount] = useState(0);
 

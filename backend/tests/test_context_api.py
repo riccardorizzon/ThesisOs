@@ -17,6 +17,7 @@ from app.schemas.context import (
     ProjectContext,
 )
 from app.schemas.memory import PromptContext, PromptContextFilters, PromptMemoryItem
+from uuid import uuid4
 
 
 def _chapter(**kwargs) -> ChapterRecord:
@@ -78,6 +79,10 @@ class FakeMemoryService:
 
 class FakeChapterService:
     async def list(self, filters: ChapterListFilters | None = None, *, session=None):
+        filters = filters or ChapterListFilters()
+        # Primary / unspecified fixtures keep the progress sample; other projects are empty.
+        if filters.project_id not in (None, DEFAULT_PROJECT_ID, "thesis-agent"):
+            return []
         return [
             _chapter(id="ch-1", status="approved"),
             _chapter(id="ch-2", status="review", title="Quadro teorico"),
@@ -175,14 +180,19 @@ def test_demo_project_context_ok(client):
 
 
 def test_created_project_context_ok(client):
-    created = client.post("/projects", json={"display_name": "Nuova tesi CUR-7"}).json()
+    stamp = uuid4().hex[:8]
+    display_name = f"Nuova tesi CUR-7 {stamp}"
+    created = client.post("/projects", json={"display_name": display_name}).json()
     pid = created["id"]
     r = client.get(f"/projects/{pid}/context?surface=agent")
     assert r.status_code == 200
     body = r.json()
     assert body["project_context"]["project_id"] == pid
-    assert body["project"]["title"] == "Nuova tesi CUR-7"
+    assert body["project"]["title"] == display_name
+    assert body["project"]["progress_pct"] == 0
+    assert body["project"]["phase"] == "Progetto vuoto"
     assert body["decisions"] == []
+    assert body["writing_rules"] == []
     assert body["corpus_constraints"] == []
 
 

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { chapterClient } from "@/lib/chapterClient";
+import { createProject } from "@/lib/projectsClient";
+import { saveProjectPrefs, setActiveProjectId } from "@/lib/projectPrefs";
 import { setWorkspaceMode } from "@/lib/workspacePrefs";
 
 export function DemoWorkspaceBanner() {
@@ -11,10 +13,30 @@ export function DemoWorkspaceBanner() {
   const [copying, setCopying] = useState(false);
   const [copyError, setCopyError] = useState<string | null>(null);
 
-  const handleCreateEmpty = () => {
-    setWorkspaceMode("personal");
-    router.push("/writing");
-    router.refresh();
+  const handleCreateEmpty = async () => {
+    setCopying(true);
+    setCopyError(null);
+    try {
+      const stamp = new Date().toISOString().slice(0, 10);
+      const created = await createProject(`Nuova tesi ${stamp}`);
+      setActiveProjectId(created.id);
+      saveProjectPrefs({
+        displayName: created.display_name,
+        citationStyle: "author-date",
+        exportFormat: "bibtex",
+      });
+      setWorkspaceMode("personal");
+      router.push("/writing");
+      router.refresh();
+    } catch (err) {
+      setCopyError(
+        err instanceof Error
+          ? err.message
+          : "Impossibile creare il nuovo progetto."
+      );
+    } finally {
+      setCopying(false);
+    }
   };
 
   const handleCopy = async () => {
@@ -52,7 +74,7 @@ export function DemoWorkspaceBanner() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={handleCreateEmpty}
+            onClick={() => void handleCreateEmpty()}
             className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:border-accent hover:text-accent cursor-pointer"
             data-testid="demo-create-empty-thesis"
           >

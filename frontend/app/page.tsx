@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { HomeView } from "@/components/HomeView";
 import { chapterClient } from "@/lib/chapterClient";
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
+import { readActiveProjectIdCookie } from "@/lib/projectPrefs";
 import {
   computeProgressPct,
   findContinueTarget,
@@ -17,10 +18,12 @@ type ChaptersLoadResult = {
   error: string | null;
 };
 
-async function loadChapters(scope: "all" | "owned" | "demo"): Promise<ChaptersLoadResult> {
+async function loadChapters(
+  projectId: string,
+  scope: "all" | "owned" | "demo",
+): Promise<ChaptersLoadResult> {
   try {
-    // SSR has no localStorage; scope to the product default until client remounts.
-    const list = await chapterClient.list({ project_id: DEFAULT_PROJECT_ID, scope });
+    const list = await chapterClient.list({ project_id: projectId, scope });
     return {
       chapters: list.map((c) => ({
         id: c.id,
@@ -40,9 +43,12 @@ async function loadChapters(scope: "all" | "owned" | "demo"): Promise<ChaptersLo
 
 export default async function Home() {
   const cookieStore = await cookies();
-  const mode = readWorkspaceModeCookie(cookieStore.toString());
+  const cookieHeader = cookieStore.toString();
+  const mode = readWorkspaceModeCookie(cookieHeader);
   const scope = chapterScopeForMode(mode);
-  const { chapters, error } = await loadChapters(scope);
+  const projectId =
+    readActiveProjectIdCookie(cookieHeader) ?? DEFAULT_PROJECT_ID;
+  const { chapters, error } = await loadChapters(projectId, scope);
   const progressPct = error != null ? 0 : computeProgressPct(chapters);
   const continueTarget = findContinueTarget(chapters);
 
@@ -52,6 +58,7 @@ export default async function Home() {
       continueTarget={continueTarget}
       activity={[]}
       chaptersLoadError={error}
+      fashionEmptyPhase={projectId === DEFAULT_PROJECT_ID}
     />
   );
 }
