@@ -1,5 +1,8 @@
 {
   "version": 1,
+  "envelope": {
+    "project_id": "string (optional, additive — thesis workspace scope, ADR-0047)"
+  },
   "events": [
     { "name": "DocumentUploaded", "milestone": "M3", "payload": { "document_id": "string" } },
     { "name": "ChunkCreated", "milestone": "M3", "payload": { "chunk_id": "string", "document_id": "string", "chunk_hash": "string" } },

@@ -42,14 +42,14 @@ def _merge_results(
 def make_retriever_node(retrieval_service: RetrievalService | None = None):
     service = retrieval_service or RetrievalService()
 
-    async def retriever_node(state: GraphState, config: RunnableConfig) -> dict:
+    async def retriever_node(state: GraphState, config: RunnableConfig | None = None) -> dict:
         query = _last_user_message(state.messages)
         if not query:
             return {"retrieved_context": [], "errors": list(state.errors)}
 
         # INV-MTW-2: RAG reads only the active thesis corpus (project from
         # LangGraph config, never GraphState — ADR-0014).
-        configurable = config.get("configurable") or {}
+        configurable = (config or {}).get("configurable") or {}
         scope = SearchFilters(project_id=configurable.get("project_id"))
 
         try:

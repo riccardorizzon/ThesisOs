@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import models
 from app.db.session_async import AsyncSessionLocal
+from app.services.project_scope import resolve_project_id
 
 _CATALOG_PATH = (
     Path(__file__).resolve().parents[4] / "contracts" / "events" / "events.json"
@@ -38,6 +39,7 @@ async def publish(
     session: AsyncSession | None = None,
     source: str | None = None,
     correlation_id: str | None = None,
+    project_id: str | None = None,
 ) -> models.Event:
     """Persist a catalog event to the outbox table."""
     if event_name not in _catalog_event_names():
@@ -48,6 +50,7 @@ async def publish(
         payload=payload,
         source=source,
         correlation_id=correlation_id,
+        project_id=resolve_project_id(project_id),
     )
     if session is not None:
         session.add(row)

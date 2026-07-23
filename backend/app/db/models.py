@@ -176,7 +176,10 @@ class ChapterVersion(Base):
 
 class Note(Base):
     __tablename__ = "notes"
+    __table_args__ = (Index("idx_notes_project_id", "project_id"),)
+
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
+    project_id: Mapped[str] = mapped_column(String(64), default="thesis-agent", server_default=text("'thesis-agent'"))
     document_id: Mapped[str | None] = mapped_column(ForeignKey("documents.id"), nullable=True)
     chapter_id: Mapped[str | None] = mapped_column(ForeignKey("chapters.id"), nullable=True)
     kind: Mapped[str] = mapped_column(String(16))
@@ -237,7 +240,10 @@ class Message(Base):
 
 class Task(Base):
     __tablename__ = "tasks"
+    __table_args__ = (Index("idx_tasks_project_id", "project_id"),)
+
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
+    project_id: Mapped[str] = mapped_column(String(64), default="thesis-agent", server_default=text("'thesis-agent'"))
     parent_task_id: Mapped[str | None] = mapped_column(ForeignKey("tasks.id"), nullable=True)
     title: Mapped[str] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -251,7 +257,10 @@ class Task(Base):
 
 class Event(Base):
     __tablename__ = "events"
+    __table_args__ = (Index("idx_events_project_id", "project_id"),)
+
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
+    project_id: Mapped[str] = mapped_column(String(64), default="thesis-agent", server_default=text("'thesis-agent'"))
     type: Mapped[str] = mapped_column(String(64))
     payload: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
     source: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -262,7 +271,10 @@ class Event(Base):
 
 class AgentRun(Base):
     __tablename__ = "agent_runs"
+    __table_args__ = (Index("idx_agent_runs_project_id", "project_id"),)
+
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
+    project_id: Mapped[str] = mapped_column(String(64), default="thesis-agent", server_default=text("'thesis-agent'"))
     conversation_id: Mapped[str | None] = mapped_column(ForeignKey("conversations.id"), nullable=True)
     graph: Mapped[str | None] = mapped_column(String(64), nullable=True)
     trigger: Mapped[str | None] = mapped_column(String(64), nullable=True)

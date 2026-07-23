@@ -53,7 +53,14 @@ class ConversationService:
             [AgentStepsSubscriber(), LoggingSubscriber()]
         )
 
-    async def _emit(self, event_type: EventType, rc: RunContext | None, **metadata) -> None:
+    async def _emit(
+        self,
+        event_type: EventType,
+        rc: RunContext | None,
+        *,
+        project_id: str | None = None,
+        **metadata,
+    ) -> None:
         if rc is None:
             return
         await emit_safely(
@@ -62,6 +69,7 @@ class ConversationService:
                 event_type=event_type,
                 run_id=rc.agent_run_id,
                 correlation_id=rc.trace_id,
+                project_id=project_id,
                 metadata=metadata,
             ),
         )
@@ -218,6 +226,7 @@ class ConversationService:
                 }
                 run = models.AgentRun(
                     id=run_id,
+                    project_id=effective_project_id,
                     conversation_id=conv_id,
                     graph="orchestrated_conversation",
                     trigger="chat",
@@ -252,7 +261,7 @@ class ConversationService:
         state = GraphState(messages=history)
         parts: list[str] = []
         task_id: str | None = None
-        await self._emit(EventType.RUN_STARTED, rc, conversation_id=conv_id, trace_id=rc.trace_id)
+        await self._emit(EventType.RUN_STARTED, rc, project_id=effective_project_id, conversation_id=conv_id, trace_id=rc.trace_id)
         try:
             try:
                 async with open_checkpointer() as saver:
@@ -293,21 +302,21 @@ class ConversationService:
                 message_id = await self._persist_assistant(conv_id, "".join(parts))
                 await self._finalize(run_id, conv_id, status="done", usage=usage, task_id=task_id)
                 finalized = True
-                await self._emit(EventType.RUN_COMPLETED, rc, status="done", task_id=task_id)
+                await self._emit(EventType.RUN_COMPLETED, rc, project_id=effective_project_id, status="done", task_id=task_id)
                 yield {"event": "done", "data": {"conversation_id": conv_id,
                                                  "message_id": message_id, "usage": usage}}
             except NotImplementedError:
                 await self._safe_finalize(run_id, conv_id, status="error", usage=usage,
                                           error="llm_not_configured")
                 finalized = True
-                await self._emit(EventType.RUN_COMPLETED, rc, status="error", error="llm_not_configured")
+                await self._emit(EventType.RUN_COMPLETED, rc, project_id=effective_project_id, status="error", error="llm_not_configured")
                 yield {"event": "error", "data": {"code": "llm_not_configured",
                                                   "message": "LLM runtime not configured"}}
             except Exception as e:  # mid-stream / persistence failure
                 logger.exception("chat stream failed for conversation %s", conv_id)
                 await self._safe_finalize(run_id, conv_id, status="error", usage=usage, error=str(e))
                 finalized = True
-                await self._emit(EventType.RUN_COMPLETED, rc, status="error")
+                await self._emit(EventType.RUN_COMPLETED, rc, project_id=effective_project_id, status="error")
                 yield {"event": "error", "data": {"code": "stream_error",
                                                   "message": "An error occurred while streaming the response"}}
         finally:
@@ -318,7 +327,7 @@ class ConversationService:
                     await asyncio.shield(
                         self._finalize(run_id, conv_id, status="cancelled", usage=usage, error="interrupted")
                     )
-                    await asyncio.shield(self._emit(EventType.RUN_COMPLETED, rc, status="cancelled"))
+                    await asyncio.shield(self._emit(EventType.RUN_COMPLETED, rc, project_id=effective_project_id, status="cancelled"))
                 except Exception:
                     logger.exception("failed to finalize interrupted run %s", run_id)
 

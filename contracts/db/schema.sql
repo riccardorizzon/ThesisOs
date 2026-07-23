@@ -82,6 +82,7 @@ CREATE TABLE embeddings (
 
 CREATE TABLE events (
 	id UUID DEFAULT gen_random_uuid() NOT NULL,
+	project_id VARCHAR(64) DEFAULT 'thesis-agent' NOT NULL,
 	type VARCHAR(64) NOT NULL,
 	payload JSONB DEFAULT '{}'::jsonb NOT NULL,
 	source VARCHAR(64),
@@ -120,6 +121,7 @@ CREATE TABLE projects (
 
 CREATE TABLE tasks (
 	id UUID DEFAULT gen_random_uuid() NOT NULL,
+	project_id VARCHAR(64) DEFAULT 'thesis-agent' NOT NULL,
 	parent_task_id UUID,
 	title TEXT NOT NULL,
 	description TEXT,
@@ -135,6 +137,7 @@ CREATE TABLE tasks (
 
 CREATE TABLE agent_runs (
 	id UUID DEFAULT gen_random_uuid() NOT NULL,
+	project_id VARCHAR(64) DEFAULT 'thesis-agent' NOT NULL,
 	conversation_id UUID,
 	graph VARCHAR(64),
 	trigger VARCHAR(64),
@@ -251,6 +254,7 @@ CREATE TABLE messages (
 
 CREATE TABLE notes (
 	id UUID DEFAULT gen_random_uuid() NOT NULL,
+	project_id VARCHAR(64) DEFAULT 'thesis-agent' NOT NULL,
 	document_id UUID,
 	chapter_id UUID,
 	kind VARCHAR(16) NOT NULL,

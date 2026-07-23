@@ -257,6 +257,7 @@ class DocumentService:
             {"document_id": row.id},
             session=session,
             source="document_service",
+            project_id=row.project_id,
         )
         await session.flush()
         return self._to_record(row)
@@ -444,6 +445,7 @@ class DocumentService:
                 },
                 session=session,
                 source="document_service",
+                project_id=getattr(row, "project_id", None),
             )
         await self._append_version_snapshot(session, row, change_reason="parse")
         await session.flush()

@@ -63,4 +63,6 @@ class RuntimeEvent(BaseModel):
     run_id: str
     timestamp: datetime = Field(default_factory=_utcnow)
     correlation_id: str | None = None
+    #: Thesis workspace scope (ADR-0047). Additive, optional — C5 compatible.
+    project_id: str | None = None
     metadata: dict = Field(default_factory=dict)

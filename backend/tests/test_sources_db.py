@@ -117,8 +117,10 @@ async def test_migration_seeds_sources(_test_db_ready):
         env=env,
         check=True,
     )
+    # Re-upgrade to head (not just 0007): later suites rely on the full schema
+    # (ADR-0047 project_id columns) — leaving the DB at 0007 poisoned them.
     subprocess.run(
-        [str(alembic), "upgrade", "0007_sources_populated"],
+        [str(alembic), "upgrade", "head"],
         cwd=backend,
         env=env,
         check=True,
