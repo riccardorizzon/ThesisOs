@@ -149,6 +149,29 @@ async def test_prompt_context_isolated_per_project(db_session):
     assert other_ctx.thesis == []
 
 
+async def test_conversations_isolated_per_project(db_session):
+    from app.services.conversation.exceptions import ConversationProjectMismatchError
+    from app.services.conversation.service import ConversationService
+
+    svc = ConversationService()
+    main = await svc.create_conversation("thesis-agent", title="Sessione moda")
+    other = await svc.create_conversation("thesis-002", title="Sessione diritto")
+    assert main.project_id == "thesis-agent"
+    assert other.project_id == "thesis-002"
+
+    main_list = await svc.list_conversations("thesis-agent")
+    assert {c.id for c in main_list.items} == {main.id}
+    other_list = await svc.list_conversations("thesis-002")
+    assert {c.id for c in other_list.items} == {other.id}
+
+    # A thread can never migrate to another thesis (INV-MTW-2).
+    from app.db.session_async import AsyncSessionLocal
+
+    async with AsyncSessionLocal() as s:
+        with pytest.raises(ConversationProjectMismatchError):
+            await svc._get_or_create_conversation(s, main.id, project_id="thesis-002")
+
+
 async def test_upload_registers_source_in_same_project(doc_svc, db_session):
     from sqlalchemy import text
 

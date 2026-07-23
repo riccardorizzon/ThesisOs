@@ -6,7 +6,7 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
 
-from sqlalchemy import exists, select
+from sqlalchemy import select
 
 from app.db import models
 from app.db.session_async import AsyncSessionLocal
@@ -30,6 +30,7 @@ from app.services.conversation.exceptions import (
     ConversationNotFoundError,
     ConversationProjectMismatchError,
 )
+from app.services.project_scope import resolve_project_id
 from app.services.task.service import TaskService
 
 logger = logging.getLogger("app.services.conversation")
@@ -70,73 +71,46 @@ class ConversationService:
         session,
         conversation_id: str | None,
         *,
+        project_id: str | None = None,
         title: str | None = None,
     ) -> models.Conversation:
+        """Load or create a conversation inside one thesis workspace (ADR-0047).
+
+        The `conversations.project_id` column is the single source of scope; a
+        conversation can never migrate to another project (INV-MTW-2).
+        """
         if conversation_id:
             conv = await session.get(models.Conversation, conversation_id)
             if conv:
+                self._ensure_project_scope(conv, project_id)
                 return conv
         conv = models.Conversation(
             id=conversation_id or str(uuid.uuid4()),
+            project_id=resolve_project_id(project_id),
             title=title or "New Conversation",
         )
         session.add(conv)
         await session.flush()
         return conv
 
-    async def _record_project_scope(
-        self,
-        session,
-        conversation_id: str,
-        project_id: str,
+    @staticmethod
+    def _ensure_project_scope(
+        conv: models.Conversation, requested_project_id: str | None
     ) -> None:
-        """Associate a conversation with a project without altering the conversations table."""
-        scope_rows = (
-            await session.execute(
-                select(models.AgentRun.input["project_id"].as_string()).where(
-                    models.AgentRun.conversation_id == conversation_id,
-                    models.AgentRun.trigger == "scope",
-                )
-            )
-        ).scalars().all()
-        existing_scopes = {scope for scope in scope_rows if scope}
-        if existing_scopes and existing_scopes != {project_id}:
-            raise ConversationProjectMismatchError(
-                conversation_id,
-                expected_project_id=", ".join(sorted(existing_scopes)),
-                requested_project_id=project_id,
-            )
-
-        scoped = (
-            await session.execute(
-                select(models.AgentRun.id)
-                .where(
-                    models.AgentRun.conversation_id == conversation_id,
-                    models.AgentRun.input["project_id"].as_string() == project_id,
-                )
-                .limit(1)
-            )
-        ).scalar_one_or_none()
-        if scoped is not None:
+        if not requested_project_id:
             return
-        now = datetime.now(timezone.utc)
-        session.add(
-            models.AgentRun(
-                conversation_id=conversation_id,
-                graph="conversation",
-                trigger="scope",
-                status="done",
-                started_at=now,
-                finished_at=now,
-                input={"project_id": project_id},
+        actual = resolve_project_id(getattr(conv, "project_id", None))
+        if actual != requested_project_id:
+            raise ConversationProjectMismatchError(
+                conv.id,
+                expected_project_id=actual,
+                requested_project_id=requested_project_id,
             )
-        )
-        await session.flush()
 
-    def _summary(self, conv: models.Conversation, project_id: str) -> ConversationSummary:
+    def _summary(self, conv: models.Conversation) -> ConversationSummary:
         return ConversationSummary(
             id=conv.id,
-            project_id=project_id,
+            project_id=resolve_project_id(getattr(conv, "project_id", None)),
             title=conv.title,
             created_at=conv.created_at,
         )
@@ -146,17 +120,12 @@ class ConversationService:
             rows = (
                 await session.execute(
                     select(models.Conversation)
-                    .where(
-                        exists().where(
-                            models.AgentRun.conversation_id == models.Conversation.id,
-                            models.AgentRun.input["project_id"].as_string() == project_id,
-                        )
-                    )
+                    .where(models.Conversation.project_id == resolve_project_id(project_id))
                     .order_by(models.Conversation.created_at.desc())
                 )
             ).scalars().all()
             return ConversationListResponse(
-                items=[self._summary(conv, project_id) for conv in rows]
+                items=[self._summary(conv) for conv in rows]
             )
 
     async def create_conversation(
@@ -166,10 +135,11 @@ class ConversationService:
         title: str | None = None,
     ) -> ConversationSummary:
         async with AsyncSessionLocal() as session:
-            conv = await self._get_or_create_conversation(session, None, title=title)
-            await self._record_project_scope(session, conv.id, project_id)
+            conv = await self._get_or_create_conversation(
+                session, None, project_id=project_id, title=title
+            )
             await session.commit()
-            return self._summary(conv, project_id)
+            return self._summary(conv)
 
     async def list_messages(self, conversation_id: str) -> ConversationMessagesResponse:
         async with AsyncSessionLocal() as session:
@@ -224,10 +194,16 @@ class ConversationService:
         # --- Setup (guarded): persist the user message + open the AgentRun, load history.
         try:
             async with AsyncSessionLocal() as session:
-                conv = await self._get_or_create_conversation(session, conversation_id)
+                conv = await self._get_or_create_conversation(
+                    session, conversation_id, project_id=project_id
+                )
                 conv_id = conv.id
-                if project_id:
-                    await self._record_project_scope(session, conv_id, project_id)
+                # The conversation's own scope drives the turn: RAG, memory and
+                # companion nodes always see the thesis this thread belongs to,
+                # even when the caller omitted project_id (ADR-0047).
+                effective_project_id = resolve_project_id(
+                    getattr(conv, "project_id", None) or project_id
+                )
                 session.add(models.Message(conversation_id=conv_id, role="user", content=user_text))
                 rc = RunContext(
                     conversation_id=conv_id,
@@ -235,9 +211,11 @@ class ConversationService:
                     trace_id=str(uuid.uuid4()),
                     request_id=str(uuid.uuid4()),
                 )
-                run_input: dict = {"trace_id": rc.trace_id, "request_id": rc.request_id}
-                if project_id:
-                    run_input["project_id"] = project_id
+                run_input: dict = {
+                    "trace_id": rc.trace_id,
+                    "request_id": rc.request_id,
+                    "project_id": effective_project_id,
+                }
                 run = models.AgentRun(
                     id=run_id,
                     conversation_id=conv_id,
@@ -291,7 +269,7 @@ class ConversationService:
                         "configurable": {
                             "thread_id": conv_id,
                             "run_context": rc.model_dump(),
-                            "project_id": project_id,
+                            "project_id": effective_project_id,
                         }
                     }
                     async for chunk in graph.astream(state, cfg, stream_mode="custom"):

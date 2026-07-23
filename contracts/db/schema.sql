@@ -39,6 +39,7 @@ CREATE TABLE concepts (
 
 CREATE TABLE conversations (
 	id UUID DEFAULT gen_random_uuid() NOT NULL,
+	project_id VARCHAR(64) DEFAULT 'thesis-agent' NOT NULL,
 	title TEXT,
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
 	PRIMARY KEY (id)
