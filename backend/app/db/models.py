@@ -10,6 +10,19 @@ from app.db.base import Base
 EMBEDDING_DIM = 768
 
 
+class Project(Base):
+    """Thesis workspace registry — durable SoR (ADR-0047)."""
+
+    __tablename__ = "projects"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    display_name: Mapped[str] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(String(16), default="owned", server_default=text("'owned'"))
+    status: Mapped[str] = mapped_column(String(16), default="active", server_default=text("'active'"))
+    settings: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
+
+
 class Document(Base):
     __tablename__ = "documents"
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
