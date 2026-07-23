@@ -1,6 +1,6 @@
 import { apiBaseUrl } from "@/lib/apiBase";
 import { getActiveProjectId } from "@/lib/projectPrefs";
-const DEFAULT_PROJECT = "thesis-agent";
+import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 
 export type ConversationSummary = {
   id: string;
@@ -27,7 +27,7 @@ export type ConversationMessagesResponse = {
 function resolveProjectId(projectId?: string): string {
   if (projectId) return projectId;
   if (typeof window !== "undefined") return getActiveProjectId();
-  return DEFAULT_PROJECT;
+  return DEFAULT_PROJECT_ID;
 }
 
 async function parseError(res: Response, action: string): Promise<never> {

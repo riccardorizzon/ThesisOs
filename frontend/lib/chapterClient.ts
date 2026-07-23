@@ -1,6 +1,7 @@
 import { apiBaseUrl } from "@/lib/apiBase";
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 import { getActiveProjectId } from "@/lib/projectPrefs";
+import { withProject } from "@/lib/projectScope";
 import type { ChapterListScope } from "@/lib/workspacePrefs";
 
 export type ChapterStatus = "draft" | "review" | "approved" | "published";
@@ -102,7 +103,7 @@ export const chapterClient = {
     return request<Chapter[]>(`/chapters${queryString(params)}`);
   },
   get(id: string) {
-    return request<Chapter>(`/chapters/${id}`);
+    return request<Chapter>(withProject(`/chapters/${id}`));
   },
   create(input: ChapterCreateInput) {
     return request<Chapter>("/chapters", {
@@ -112,14 +113,14 @@ export const chapterClient = {
     });
   },
   update(id: string, body: ChapterUpdateInput) {
-    return request<Chapter>(`/chapters/${id}`, {
+    return request<Chapter>(withProject(`/chapters/${id}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
   },
   listVersions(id: string) {
-    return request<ChapterVersion[]>(`/chapters/${id}/versions`);
+    return request<ChapterVersion[]>(withProject(`/chapters/${id}/versions`));
   },
   async exportMarkdown(id: string): Promise<Blob> {
     const r = await fetch(`${apiBaseUrl()}/export/chapters/${id}.md`, { cache: "no-store" });
@@ -137,11 +138,11 @@ export const chapterClient = {
     });
   },
   delete(id: string) {
-    return request<void>(`/chapters/${id}`, { method: "DELETE" });
+    return request<void>(withProject(`/chapters/${id}`), { method: "DELETE" });
   },
   copyDemoStructure() {
     return request<{ created: Chapter[]; skipped_titles: string[] }>(
-      "/chapters/copy-demo-structure",
+      withProject("/chapters/copy-demo-structure"),
       { method: "POST" }
     );
   },

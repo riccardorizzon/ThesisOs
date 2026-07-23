@@ -1,5 +1,6 @@
 import type { ContextPacket } from "@/lib/contextClient";
 import { apiBaseUrl } from "@/lib/apiBase";
+import { activeProjectScope } from "@/lib/projectScope";
 
 export type WritingActionId = "rewrite" | "verify" | "find-sources" | "expand";
 
@@ -182,6 +183,7 @@ export async function streamWritingAction(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: params.actionId,
+        project_id: activeProjectScope(),
         chapter_id: params.chapterId,
         selection_text: params.selectionText ?? null,
         chapter_content: params.chapterContent ?? "",

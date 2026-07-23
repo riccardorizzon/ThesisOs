@@ -11,8 +11,7 @@ import type {
   ProgramGraphObservation,
 } from "@/lib/knowledgeTypes";
 import { apiBaseUrl } from "@/lib/apiBase";
-
-const DEFAULT_PROJECT = "thesis-agent";
+import { activeProjectScope } from "@/lib/projectScope";
 
 export async function listKnowledgeObjects(
   options: {
@@ -21,7 +20,7 @@ export async function listKnowledgeObjects(
     includeDeprecated?: boolean;
   } = {}
 ): Promise<KnowledgeObjectListResponse> {
-  const projectId = options.projectId ?? DEFAULT_PROJECT;
+  const projectId = activeProjectScope(options.projectId);
   const params = new URLSearchParams();
   if (options.type != null) params.set("type", options.type);
   if (options.includeDeprecated) params.set("include_deprecated", "true");
@@ -37,7 +36,7 @@ export async function listKnowledgeObjects(
 
 export async function getKnowledgeObject(
   slug: string,
-  projectId: string = DEFAULT_PROJECT
+  projectId: string = activeProjectScope()
 ): Promise<KnowledgeObjectEnvelope> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/knowledge/objects/${encodeURIComponent(slug)}`,
@@ -51,7 +50,7 @@ export async function getKnowledgeObject(
 
 export async function getConceptHeader(
   slug: string,
-  projectId: string = DEFAULT_PROJECT
+  projectId: string = activeProjectScope()
 ): Promise<ConceptHeaderEnvelope> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}/header`,
@@ -68,7 +67,7 @@ export async function getConceptHeader(
 
 export async function getConceptDefinition(
   slug: string,
-  projectId: string = DEFAULT_PROJECT
+  projectId: string = activeProjectScope()
 ): Promise<ConceptDefinitionEnvelope> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}/definition`,
@@ -85,7 +84,7 @@ export async function getConceptDefinition(
 
 export async function getConceptDetail(
   slug: string,
-  projectId: string = DEFAULT_PROJECT
+  projectId: string = activeProjectScope()
 ): Promise<ConceptDetailEnvelope> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}`,
@@ -104,7 +103,7 @@ export async function searchKnowledge(
   query: string,
   options: { projectId?: string; limit?: number } = {}
 ): Promise<{ query: string; results: KnowledgeObjectEnvelope[]; total: number }> {
-  const projectId = options.projectId ?? DEFAULT_PROJECT;
+  const projectId = activeProjectScope(options.projectId);
   const params = new URLSearchParams({ q: query });
   if (options.limit != null) params.set("limit", String(options.limit));
   const res = await fetch(
@@ -122,7 +121,7 @@ export async function searchKnowledge(
 }
 
 export async function getConformanceProjection(
-  projectId: string = DEFAULT_PROJECT
+  projectId: string = activeProjectScope()
 ): Promise<ConformanceProjection> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/conformance/projection`,
@@ -135,7 +134,7 @@ export async function getConformanceProjection(
 }
 
 export async function getProgramGraphObservation(
-  projectId: string = DEFAULT_PROJECT
+  projectId: string = activeProjectScope()
 ): Promise<ProgramGraphObservation> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/conformance/program-graph`,
@@ -157,7 +156,7 @@ export async function getKnowledgeGraph(
     profile?: "canvas" | "navigation";
   } = {}
 ): Promise<KnowledgeGraphResponse> {
-  const projectId = options.projectId ?? DEFAULT_PROJECT;
+  const projectId = activeProjectScope(options.projectId);
   const params = new URLSearchParams();
   if (options.focus != null) params.set("focus", options.focus);
   if (options.depth != null) params.set("depth", String(options.depth));
@@ -175,7 +174,7 @@ export async function getKnowledgeGraph(
 }
 
 export async function getJobFsmObservation(
-  projectId: string = DEFAULT_PROJECT
+  projectId: string = activeProjectScope()
 ): Promise<JobFsmObservation> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/conformance/job-fsm`,

@@ -1,15 +1,15 @@
 import type { ConfidenceLevel, KnowledgeState } from "@/lib/knowledgeTypes";
 import type { SourceListItem, SourceListResponse } from "@/lib/sourcesTypes";
+import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 
 import { getActiveProjectId } from "@/lib/projectPrefs";
 import { apiBaseUrl } from "@/lib/apiBase";
 
-const DEFAULT_PROJECT = "thesis-agent";
 
 function resolveProjectId(projectId?: string): string {
   if (projectId) return projectId;
   if (typeof window !== "undefined") return getActiveProjectId();
-  return DEFAULT_PROJECT;
+  return DEFAULT_PROJECT_ID;
 }
 
 export async function listSources(

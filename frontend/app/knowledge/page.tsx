@@ -1,6 +1,10 @@
+import { cookies } from "next/headers";
+
 import { KnowledgeExplorer } from "@/components/knowledge/explorer";
 import { KnowledgeExplorerLoadError } from "@/components/knowledge/explorer/KnowledgeExplorerLoadError";
 import { listKnowledgeObjects } from "@/lib/knowledgeClient";
+import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
+import { readActiveProjectIdCookie } from "@/lib/projectPrefs";
 
 function knowledgeLoadMessage(err: unknown): string {
   if (err instanceof Error) {
@@ -14,7 +18,10 @@ function knowledgeLoadMessage(err: unknown): string {
 
 export default async function KnowledgePage() {
   try {
-    const res = await listKnowledgeObjects({ type: "concept" });
+    const cookieStore = await cookies();
+    const projectId =
+      readActiveProjectIdCookie(cookieStore.toString()) ?? DEFAULT_PROJECT_ID;
+    const res = await listKnowledgeObjects({ type: "concept", projectId });
     return <KnowledgeExplorer concepts={res.objects} />;
   } catch (err) {
     return <KnowledgeExplorerLoadError message={knowledgeLoadMessage(err)} />;

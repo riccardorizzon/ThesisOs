@@ -1,4 +1,5 @@
 import { apiBaseUrl } from "@/lib/apiBase";
+import { activeProjectScope, withProject } from "@/lib/projectScope";
 
 export type MemoryKind =
   | "user"
@@ -91,30 +92,30 @@ function queryString(params?: MemoryListParams): string {
 
 export const memoryClient = {
   list(params?: MemoryListParams) {
-    return request<Memory[]>(`/memory${queryString(params)}`);
+    return request<Memory[]>(withProject(`/memory${queryString(params)}`));
   },
   get(id: string) {
-    return request<Memory>(`/memory/${id}`);
+    return request<Memory>(withProject(`/memory/${id}`));
   },
   create(body: MemoryCreateInput) {
     return request<Memory>("/memory", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ project_id: activeProjectScope(), ...body }),
     });
   },
   update(id: string, body: MemoryUpdateInput) {
-    return request<Memory>(`/memory/${id}`, {
+    return request<Memory>(withProject(`/memory/${id}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
   },
   delete(id: string) {
-    return request<void>(`/memory/${id}`, { method: "DELETE" });
+    return request<void>(withProject(`/memory/${id}`), { method: "DELETE" });
   },
   listVersions(id: string) {
-    return request<MemoryVersion[]>(`/memory/${id}/versions`);
+    return request<MemoryVersion[]>(withProject(`/memory/${id}/versions`));
   },
 };
 

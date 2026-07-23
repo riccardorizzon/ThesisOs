@@ -1,4 +1,5 @@
 import { apiBaseUrl } from "@/lib/apiBase";
+import { activeProjectScope, withProject } from "@/lib/projectScope";
 
 export type DocumentSourceType = "pdf" | "epub" | "docx";
 export type DocumentStatus = "uploaded" | "processing" | "parsed" | "failed";
@@ -110,10 +111,10 @@ function queryString(params?: DocumentListParams): string {
 
 export const documentClient = {
   list(params?: DocumentListParams) {
-    return request<Document[]>(`/documents${queryString(params)}`);
+    return request<Document[]>(withProject(`/documents${queryString(params)}`));
   },
   get(id: string) {
-    return request<Document>(`/documents/${id}`);
+    return request<Document>(withProject(`/documents/${id}`));
   },
   upload(input: DocumentUploadInput) {
     const form = new FormData();
@@ -121,29 +122,31 @@ export const documentClient = {
     if (input.title) form.append("title", input.title);
     if (input.author) form.append("author", input.author);
     if (input.language) form.append("language", input.language);
+    form.append("project_id", activeProjectScope());
     // No Content-Type header: the browser sets the multipart boundary.
     return request<Document>("/upload", { method: "POST", body: form });
   },
   update(id: string, body: DocumentUpdateInput) {
-    return request<Document>(`/documents/${id}`, {
+    return request<Document>(withProject(`/documents/${id}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
   },
   delete(id: string) {
-    return request<void>(`/documents/${id}`, { method: "DELETE" });
+    return request<void>(withProject(`/documents/${id}`), { method: "DELETE" });
   },
   listChunks(id: string) {
-    return request<DocumentChunk[]>(`/documents/${id}/chunks`);
+    return request<DocumentChunk[]>(withProject(`/documents/${id}/chunks`));
   },
   listVersions(id: string) {
-    return request<DocumentVersion[]>(`/documents/${id}/versions`);
+    return request<DocumentVersion[]>(withProject(`/documents/${id}/versions`));
   },
   reparse(id: string) {
-    return request<{ document_id: string; status: string }>(`/documents/${id}/reparse`, {
-      method: "POST",
-    });
+    return request<{ document_id: string; status: string }>(
+      withProject(`/documents/${id}/reparse`),
+      { method: "POST" },
+    );
   },
 };
 
