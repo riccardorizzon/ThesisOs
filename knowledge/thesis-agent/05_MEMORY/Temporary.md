@@ -6,7 +6,8 @@ Contesto di sessione. Sicuro da svuotare o sovrascrivere.
 
 - **Obiettivo:** migrare cervello agente Kimi → ThesisOS (`knowledge/thesis-agent/`).
 - **Non in corso:** stesura nuovi paragrafi tesi (salvo richiesta esplicita).
-- **§3.1:** bozza in chat, PRONTO PER REVISIONE — non in repo.
+- **Focus corrente:** §3.6 in bozza, materializzata nel repo e nel runtime.
+- **§3.1–§3.5:** sezioni presenti nel repo e nel runtime, in revisione.
 
 ## Domande aperte
 

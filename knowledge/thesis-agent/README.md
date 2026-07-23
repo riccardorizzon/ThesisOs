@@ -71,6 +71,6 @@ Materializzati in `03_PROJECT/` (checksum in front-matter dove applicabile):
 |----------|------|-------|
 | Cap. 1 (§1.1–1.3) | `chapters/ch01/` × 3 | Congelato · promosso M6 |
 | Cap. 2 (§2.1–2.4) | `chapters/ch02/` × 4 | Congelato · promosso M6 |
-| Cap. 3 metodologico | `chapters/ch03/CAP03_progettazione_metodologica.md` | Progettazione approvata · §3.1 **PRONTO PER REVISIONE** |
+| Cap. 3 metodologico | `chapters/ch03/` | §3.1–§3.5 in revisione · §3.6 bozza e focus corrente |
 
 Dettaglio runtime: `03_PROJECT/Thesis-State.md` · promozione: `_migration/promotion-log.md`.

@@ -62,11 +62,16 @@ su STIGMATA; cap. 6 = risposta alla domanda generale.
 | §2.3 | Congelato | |
 | §2.4 | Congelato | |
 
-### Capitolo 3 (stesura parziale in repo)
+### Capitolo 3 (sezioni operative sincronizzate)
 
 | Sezione | Stato | Note |
 |---------|-------|------|
-| §3.x (file `CAP03_progettazione_metodologica.md`) | PRONTO PER REVISIONE / in corso | Bozza allineata a porzione outline cap. 3; §3.1 Albers |
+| §3.1 La palette | Revisione | 345 parole runtime; mirror `chapters/ch03/3.1_La_palette.md` |
+| §3.2 La silhouette | Revisione | 281 parole runtime; mirror `chapters/ch03/3.2_La_silhouette.md` |
+| §3.3 Sistema di segni | Revisione | 368 parole runtime; mirror `chapters/ch03/3.3_Sistema_di_segni.md` |
+| §3.4 Norma, deviazione, mediazione | Revisione | 260 parole runtime; mirror `chapters/ch03/3.4_Norma_deviazione_mediazione.md` |
+| §3.5 Estetica del difetto | Revisione | 234 parole runtime; mirror `chapters/ch03/3.5_Estetica_del_difetto.md` |
+| §3.6 Sintesi | Bozza — focus corrente | 177 parole runtime; proposta `approved_for_continuation` in memoria, da verificare con audit REV-006 prima della promozione |
 
 ### Capitoli 4–6
 
@@ -80,13 +85,15 @@ su STIGMATA; cap. 6 = risposta alla domanda generale.
 
 - `chapters/ch01/` — §1.1, §1.2, §1.3
 - `chapters/ch02/` — §2.1–§2.4
-- `chapters/ch03/` — `CAP03_progettazione_metodologica.md`
+- `chapters/ch03/` — progettazione metodologica + mirror §3.1–§3.6
 
 ## Prossimo lavoro tesi (quando ripreso)
 
-1. Revisione §3.1 con feedback utente/relatrice.
-2. Congelamento §3.1 → proseguire per outline cap. 3.
-3. Evidence-first STIGMATA quando cap. 5 avviato.
+1. Eseguire audit REV-006 su §3.6 e decidere se integrare la proposta salvata.
+2. Revisionare e completare §3.6.
+3. Revisione finale §3.1–§3.5 con feedback utente/relatrice.
+4. Congelare il Capitolo 3 dopo approvazione.
+5. Evidence-first STIGMATA quando cap. 5 avviato.
 
 ## Prossimo lavoro agente (programma migrazione)
 

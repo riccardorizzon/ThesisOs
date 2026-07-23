@@ -42,7 +42,10 @@ Backlog agente + tesi. Priorità in cima.
 
 - [x] Capitoli congelati 1–2 (+ ch03) in `chapters/` (mirror markdown)
 - [x] Import capitoli in ThesisOS `ChapterService` (M6) — 8 chapter rows promossi 2026-06-30
-- [ ] §3.1: revisione utente → congelamento
+- [x] Materializzare §3.1–§3.6 dal runtime nei mirror Markdown (2026-07-23)
+- [ ] §3.6: audit REV-006 e decisione sulla proposta `approved_for_continuation`
+- [ ] §3.6: integrazione approvata, revisione e completamento
+- [ ] §3.1–§3.5: revisione finale utente/relatrice
 - [x] PDF + scansioni relatrice in `04_KNOWLEDGE/Relatrice/`
 
 ## P2 — Regole istituzionali
@@ -50,10 +53,13 @@ Backlog agente + tesi. Priorità in cima.
 - [x] Compilare `University-Rules.md` da guida → **UNI-01 approvato** 2026-06-30
 - [x] Compilare `Relatrice-Rules.md` → **REL-01 approvato** 2026-06-30
 
-## P3 — Ripresa scrittura (quando richiesto)
+## P3 — Ripresa scrittura
 
-- [ ] Revisione e congelamento §3.1
-- [ ] §3.2+ secondo outline
+- [ ] Audit REV-006 su §3.6 e decisione sulla proposta salvata
+- [ ] Revisionare e completare §3.6
+- [ ] Revisione finale §3.1–§3.5
+- [ ] Congelare il Capitolo 3
+- [ ] Capitolo 4 secondo outline
 - [ ] Capitolo STIGMATA con evidence-first
 
 ## Completato
