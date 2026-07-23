@@ -4,9 +4,10 @@ import {
   type CanvasLensId,
 } from "@/lib/canvasLenses";
 import type { CanvasTransform } from "@/lib/canvasTransform";
+import { getProjectStorageItem, setProjectStorageItem } from "@/lib/projectScope";
 
-export const CANVAS_SAVED_VIEWS_KEY = "thesisos:canvas-saved-views";
-export const CANVAS_LAST_VIEW_KEY = "thesisos:canvas-last-view-id";
+export const CANVAS_SAVED_VIEWS_KEY = "canvas-saved-views";
+export const CANVAS_LAST_VIEW_KEY = "canvas-last-view-id";
 
 export type CanvasSavedView = {
   id: string;
@@ -28,7 +29,7 @@ function isBrowser(): boolean {
 export function loadCanvasSavedViews(): CanvasSavedView[] {
   if (!isBrowser()) return [];
   try {
-    const raw = localStorage.getItem(CANVAS_SAVED_VIEWS_KEY);
+    const raw = getProjectStorageItem(CANVAS_SAVED_VIEWS_KEY);
     if (raw == null) return [];
     const parsed = JSON.parse(raw) as CanvasSavedView[];
     return Array.isArray(parsed) ? parsed : [];
@@ -39,7 +40,7 @@ export function loadCanvasSavedViews(): CanvasSavedView[] {
 
 function persistViews(views: CanvasSavedView[]): void {
   if (!isBrowser()) return;
-  localStorage.setItem(CANVAS_SAVED_VIEWS_KEY, JSON.stringify(views));
+  setProjectStorageItem(CANVAS_SAVED_VIEWS_KEY, JSON.stringify(views));
 }
 
 export function saveCanvasView(
@@ -54,7 +55,7 @@ export function saveCanvasView(
   const next = [view, ...views].slice(0, 20);
   persistViews(next);
   if (isBrowser()) {
-    localStorage.setItem(CANVAS_LAST_VIEW_KEY, view.id);
+    setProjectStorageItem(CANVAS_LAST_VIEW_KEY, view.id);
   }
   return next;
 }

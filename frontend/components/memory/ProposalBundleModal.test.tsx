@@ -1,7 +1,9 @@
 import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ProposalBundleModal } from "./ProposalBundleModal";
-import { PROPOSALS_STORAGE_KEY } from "@/lib/sessionState";
+import { projectStorageKey } from "@/lib/projectScope";
+
+const PROPOSALS_STORAGE_KEY = projectStorageKey("proposals");
 
 afterEach(() => {
   cleanup();

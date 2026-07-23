@@ -3,9 +3,17 @@
  * Layer: Business (Product Plane)
  */
 
-export const SESSION_STATE_STORAGE_KEY = "thesisos:session-state";
+export const SESSION_STATE_STORAGE_KEY = "thesisos:session-state"; // legacy literal (docs/tests)
+const SESSION_STATE_NAME = "session-state";
 /** Integration B / PX2-EWO-003 — shared proposal queue key when proposalQueue.ts absent */
-export const PROPOSALS_STORAGE_KEY = "thesisos:proposals";
+export const PROPOSALS_STORAGE_KEY = "thesisos:proposals"; // legacy literal (docs/tests)
+const PROPOSALS_NAME = "proposals";
+
+import {
+  getProjectStorageItem,
+  removeProjectStorageItem,
+  setProjectStorageItem,
+} from "@/lib/projectScope";
 
 export type PanelTab = "ai" | "contesto" | "fonte" | "revisione";
 
@@ -86,7 +94,7 @@ export function serializeWritingUrlState(
 export function loadSessionState(): SessionPersistedState | null {
   if (!isBrowser()) return null;
   try {
-    const raw = localStorage.getItem(SESSION_STATE_STORAGE_KEY);
+    const raw = getProjectStorageItem(SESSION_STATE_NAME);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SessionPersistedState;
     if (!parsed.updatedAt) return null;
@@ -108,7 +116,7 @@ export function saveSessionState(
     startedAt: partial.startedAt ?? existing?.startedAt ?? now,
   };
   if (isBrowser()) {
-    localStorage.setItem(SESSION_STATE_STORAGE_KEY, JSON.stringify(next));
+    setProjectStorageItem(SESSION_STATE_NAME, JSON.stringify(next));
   }
   return next;
 }
@@ -119,7 +127,7 @@ export function touchSessionActivity(fields: Partial<SessionPersistedState>): Se
 
 export function clearSessionState(): void {
   if (isBrowser()) {
-    localStorage.removeItem(SESSION_STATE_STORAGE_KEY);
+    removeProjectStorageItem(SESSION_STATE_NAME);
   }
 }
 
@@ -142,7 +150,7 @@ export function formatSessionDuration(
 function readProposalsFromStorage(): PendingProposal[] {
   if (!isBrowser()) return [];
   try {
-    const raw = localStorage.getItem(PROPOSALS_STORAGE_KEY);
+    const raw = getProjectStorageItem(PROPOSALS_NAME);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as PendingProposal[] | { items?: PendingProposal[] };
     if (Array.isArray(parsed)) return parsed;
@@ -155,7 +163,7 @@ function readProposalsFromStorage(): PendingProposal[] {
 
 function writeProposalsToStorage(proposals: PendingProposal[]): void {
   if (!isBrowser()) return;
-  localStorage.setItem(PROPOSALS_STORAGE_KEY, JSON.stringify(proposals));
+  setProjectStorageItem(PROPOSALS_NAME, JSON.stringify(proposals));
 }
 
 /**

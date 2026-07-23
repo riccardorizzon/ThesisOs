@@ -1,7 +1,12 @@
 import type { CanvasNodeKind } from "@/lib/knowledgeTypes";
+import {
+  getProjectStorageItem,
+  removeProjectStorageItem,
+  setProjectStorageItem,
+} from "@/lib/projectScope";
 
-export const CANVAS_BASKET_STORAGE_KEY = "thesisos:canvas-basket";
-export const CANVAS_BASKET_HANDOFF_KEY = "thesisos:canvas-basket-handoff";
+export const CANVAS_BASKET_STORAGE_KEY = "canvas-basket";
+export const CANVAS_BASKET_HANDOFF_KEY = "canvas-basket-handoff";
 
 export type CanvasBasketItem = {
   slug: string;
@@ -16,7 +21,7 @@ function isBrowser(): boolean {
 export function loadCanvasBasket(): CanvasBasketItem[] {
   if (!isBrowser()) return [];
   try {
-    const raw = sessionStorage.getItem(CANVAS_BASKET_STORAGE_KEY);
+    const raw = getProjectStorageItem(CANVAS_BASKET_STORAGE_KEY, { session: true });
     if (raw == null) return [];
     const parsed = JSON.parse(raw) as CanvasBasketItem[];
     return Array.isArray(parsed) ? parsed : [];
@@ -27,7 +32,7 @@ export function loadCanvasBasket(): CanvasBasketItem[] {
 
 export function saveCanvasBasket(items: readonly CanvasBasketItem[]): void {
   if (!isBrowser()) return;
-  sessionStorage.setItem(CANVAS_BASKET_STORAGE_KEY, JSON.stringify(items));
+  setProjectStorageItem(CANVAS_BASKET_STORAGE_KEY, JSON.stringify(items), { session: true });
 }
 
 export function addToCanvasBasket(
@@ -54,7 +59,7 @@ export function removeFromCanvasBasket(
 
 export function clearCanvasBasket(): void {
   if (!isBrowser()) return;
-  sessionStorage.removeItem(CANVAS_BASKET_STORAGE_KEY);
+  removeProjectStorageItem(CANVAS_BASKET_STORAGE_KEY, { session: true });
 }
 
 export function basketItemsFromSlugs(
@@ -74,13 +79,13 @@ export function basketItemsFromSlugs(
 
 export function stageCanvasBasketHandoff(items: readonly CanvasBasketItem[]): void {
   if (!isBrowser()) return;
-  sessionStorage.setItem(CANVAS_BASKET_HANDOFF_KEY, JSON.stringify(items));
+  setProjectStorageItem(CANVAS_BASKET_HANDOFF_KEY, JSON.stringify(items), { session: true });
 }
 
 export function peekCanvasBasketHandoff(): CanvasBasketItem[] | null {
   if (!isBrowser()) return null;
   try {
-    const raw = sessionStorage.getItem(CANVAS_BASKET_HANDOFF_KEY);
+    const raw = getProjectStorageItem(CANVAS_BASKET_HANDOFF_KEY, { session: true });
     if (raw == null) return null;
     const parsed = JSON.parse(raw) as CanvasBasketItem[];
     return Array.isArray(parsed) ? parsed : null;
@@ -92,7 +97,7 @@ export function peekCanvasBasketHandoff(): CanvasBasketItem[] | null {
 export function consumeCanvasBasketHandoff(): CanvasBasketItem[] {
   const items = peekCanvasBasketHandoff() ?? [];
   if (isBrowser()) {
-    sessionStorage.removeItem(CANVAS_BASKET_HANDOFF_KEY);
+    removeProjectStorageItem(CANVAS_BASKET_HANDOFF_KEY, { session: true });
   }
   return items;
 }

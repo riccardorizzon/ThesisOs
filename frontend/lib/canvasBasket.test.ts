@@ -8,6 +8,7 @@ import {
   loadCanvasBasket,
   stageCanvasBasketHandoff,
 } from "@/lib/canvasBasket";
+import { projectStorageKey } from "@/lib/projectScope";
 
 describe("canvasBasket", () => {
   beforeEach(() => {
@@ -25,7 +26,9 @@ describe("canvasBasket", () => {
 
   it("stages and consumes handoff payload", () => {
     stageCanvasBasketHandoff([{ slug: "aura", title: "Aura", kind: "concept" }]);
-    expect(sessionStorage.getItem(CANVAS_BASKET_HANDOFF_KEY)).not.toBeNull();
+    expect(
+      sessionStorage.getItem(projectStorageKey(CANVAS_BASKET_HANDOFF_KEY))
+    ).not.toBeNull();
     const items = consumeCanvasBasketHandoff();
     expect(items).toHaveLength(1);
     expect(consumeCanvasBasketHandoff()).toHaveLength(0);
@@ -33,6 +36,8 @@ describe("canvasBasket", () => {
 
   it("persists basket in session storage", () => {
     addToCanvasBasket([], [{ slug: "stigmata", title: "STIGMATA", kind: "concept" }]);
-    expect(sessionStorage.getItem(CANVAS_BASKET_STORAGE_KEY)).toContain("stigmata");
+    expect(
+      sessionStorage.getItem(projectStorageKey(CANVAS_BASKET_STORAGE_KEY))
+    ).toContain("stigmata");
   });
 });

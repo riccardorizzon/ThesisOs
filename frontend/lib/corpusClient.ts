@@ -6,7 +6,11 @@ import {
 import { listSources } from "@/lib/sourcesClient";
 import type { SourceListItem } from "@/lib/sourcesTypes";
 import { apiBaseUrl } from "@/lib/apiBase";
-import { activeProjectScope } from "@/lib/projectScope";
+import {
+  activeProjectScope,
+  getProjectStorageItem,
+  setProjectStorageItem,
+} from "@/lib/projectScope";
 
 export type CorpusSource = LibrarySource & {
   body: string;
@@ -17,8 +21,8 @@ export type CorpusSource = LibrarySource & {
 
 export const LINKED_SOURCES_CHANGED = "thesisos:linked-sources-changed";
 
-const RECENT_KEY = "thesisos:recent-sources";
-const LINKED_KEY = "thesisos:chapter-linked-sources";
+const RECENT_KEY = "recent-sources";
+const LINKED_KEY = "chapter-linked-sources";
 const MAX_RECENT = 10;
 
 const SOURCE_BODIES: Record<
@@ -94,9 +98,8 @@ function toCorpusSource(item: SourceListItem): CorpusSource {
 }
 
 function readJson<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
   try {
-    const raw = window.localStorage.getItem(key);
+    const raw = getProjectStorageItem(key);
     if (!raw) return fallback;
     return JSON.parse(raw) as T;
   } catch {
@@ -105,8 +108,7 @@ function readJson<T>(key: string, fallback: T): T {
 }
 
 function writeJson(key: string, value: unknown): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, JSON.stringify(value));
+  setProjectStorageItem(key, JSON.stringify(value));
 }
 
 function dispatchLinkedChanged(): void {

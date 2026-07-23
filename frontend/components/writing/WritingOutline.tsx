@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { getProjectStorageItem, setProjectStorageItem } from "@/lib/projectScope";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -22,7 +23,7 @@ export type WritingOutlineProps = {
   className?: string;
 };
 
-const ORDER_KEY = "thesisos:outline-order";
+const ORDER_KEY = "outline-order";
 
 const FILTER_OPTIONS: { id: OutlineFilter; label: string }[] = [
   { id: "all", label: "Tutti" },
@@ -47,7 +48,7 @@ function filterChapters(
 function applyStoredOrder(chapters: WritingOutlineChapter[]): WritingOutlineChapter[] {
   if (typeof window === "undefined") return chapters;
   try {
-    const raw = localStorage.getItem(ORDER_KEY);
+    const raw = getProjectStorageItem(ORDER_KEY);
     if (!raw) return chapters;
     const order: string[] = JSON.parse(raw);
     const byId = new Map(chapters.map((c) => [c.id, c]));
@@ -86,7 +87,7 @@ export function WritingOutline({
 
   const persistOrder = useCallback(async (next: WritingOutlineChapter[]) => {
     const ids = next.map((c) => c.id);
-    localStorage.setItem(ORDER_KEY, JSON.stringify(ids));
+    setProjectStorageItem(ORDER_KEY, JSON.stringify(ids));
     setOrdered(next);
     try {
       await chapterClient.reorder(ids);

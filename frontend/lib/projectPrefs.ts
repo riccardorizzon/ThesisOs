@@ -38,10 +38,23 @@ export function readActiveProjectIdCookie(cookieHeader: string | null): string |
   }
 }
 
+/** Per-project prefs key (ADR-0047 §8) — one prefs blob per thesis. */
+function scopedPrefsKey(): string {
+  return `thesisos:${getActiveProjectId()}:project-prefs`;
+}
+
 export function loadProjectPrefs(): ProjectPrefs {
   if (typeof window === "undefined") return DEFAULT_PREFS;
   try {
-    const raw = localStorage.getItem(PREFS_KEY);
+    let raw = localStorage.getItem(scopedPrefsKey());
+    if (!raw && getActiveProjectId() === "thesis-agent") {
+      // One-time migration: the legacy shared blob belongs to the Default Thesis.
+      raw = localStorage.getItem(PREFS_KEY);
+      if (raw) {
+        localStorage.setItem(scopedPrefsKey(), raw);
+        localStorage.removeItem(PREFS_KEY);
+      }
+    }
     if (!raw) return DEFAULT_PREFS;
     return { ...DEFAULT_PREFS, ...JSON.parse(raw) };
   } catch {
@@ -51,5 +64,5 @@ export function loadProjectPrefs(): ProjectPrefs {
 
 export function saveProjectPrefs(prefs: ProjectPrefs): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  localStorage.setItem(scopedPrefsKey(), JSON.stringify(prefs));
 }
