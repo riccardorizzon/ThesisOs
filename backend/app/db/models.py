@@ -112,6 +112,11 @@ class Embedding(Base):
 
 class Source(Base):
     __tablename__ = "sources"
+    __table_args__ = (
+        UniqueConstraint("project_id", "slug", name="uq_sources_project_slug"),
+        Index("idx_sources_project_corpus_status", "project_id", "corpus_status"),
+    )
+
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
     document_id: Mapped[str | None] = mapped_column(
         ForeignKey("documents.id", ondelete="CASCADE"), nullable=True
@@ -124,6 +129,16 @@ class Source(Base):
     doi: Mapped[str | None] = mapped_column(Text, nullable=True)
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    # M7 sources corpus columns (Alembic 0007) — kept in sync for the schema contract.
+    project_id: Mapped[str] = mapped_column(String(64), default="thesis-agent", server_default=text("'thesis-agent'"))
+    slug: Mapped[str] = mapped_column(String(128), default="", server_default=text("''"))
+    corpus_status: Mapped[str] = mapped_column(String(32), default="candidata", server_default=text("'candidata'"))
+    subtitle: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    confidence: Mapped[str] = mapped_column(String(32), default="non_valutata", server_default=text("'non_valutata'"))
+    knowledge_state: Mapped[str] = mapped_column(String(32), default="candidate", server_default=text("'candidate'"))
+    is_core: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    created_by: Mapped[str] = mapped_column(String(32), default="importazione", server_default=text("'importazione'"))
 
 
 class Citation(Base):

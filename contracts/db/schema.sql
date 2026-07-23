@@ -291,7 +291,17 @@ CREATE TABLE sources (
 	doi TEXT,
 	url TEXT,
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+	project_id VARCHAR(64) DEFAULT 'thesis-agent' NOT NULL,
+	slug VARCHAR(128) DEFAULT '' NOT NULL,
+	corpus_status VARCHAR(32) DEFAULT 'candidata' NOT NULL,
+	subtitle TEXT,
+	summary TEXT,
+	confidence VARCHAR(32) DEFAULT 'non_valutata' NOT NULL,
+	knowledge_state VARCHAR(32) DEFAULT 'candidate' NOT NULL,
+	is_core BOOLEAN DEFAULT false NOT NULL,
+	created_by VARCHAR(32) DEFAULT 'importazione' NOT NULL,
 	PRIMARY KEY (id),
+	CONSTRAINT uq_sources_project_slug UNIQUE (project_id, slug),
 	FOREIGN KEY(document_id) REFERENCES documents (id) ON DELETE CASCADE
 );
 

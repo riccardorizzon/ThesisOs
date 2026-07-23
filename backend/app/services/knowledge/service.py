@@ -60,7 +60,9 @@ class KnowledgeService:
         if typed in (None, "concept"):
             items.extend(await self._load_db_concepts(project_id, include_deprecated))
 
-        if typed in (None, "source"):
+        # The static catalog is the Default Thesis blueprint corpus (STIGMATA).
+        # Other theses must start empty — no cross-thesis leakage (INV-MTW-2).
+        if typed in (None, "source") and project_id == DEFAULT_PROJECT_ID:
             for raw in list_knowledge_objects(object_type="source", include_deprecated=include_deprecated):
                 items.append(raw)
 
@@ -86,6 +88,9 @@ class KnowledgeService:
                 project_id,
                 slug,
             )
+        # Catalog fallback belongs to the Default Thesis only (INV-MTW-2).
+        if project_id != DEFAULT_PROJECT_ID:
+            raise KnowledgeObjectNotFoundError(slug)
         obj = get_knowledge_object(slug)
         if obj is None:
             raise KnowledgeObjectNotFoundError(slug)
@@ -113,6 +118,9 @@ class KnowledgeService:
                 project_id,
                 slug,
             )
+        # Catalog fallback belongs to the Default Thesis only (INV-MTW-2).
+        if project_id != DEFAULT_PROJECT_ID:
+            raise KnowledgeObjectNotFoundError(slug)
         return self.get_concept_detail(slug)
 
     def get_concept_header(self, slug: str) -> ConceptHeaderEnvelope:
