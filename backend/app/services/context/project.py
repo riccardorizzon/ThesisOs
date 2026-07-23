@@ -9,8 +9,8 @@ from app.services.project_registry import ProjectRegistryService
 _registry = ProjectRegistryService()
 
 
-def resolve_project_context(project: ProjectContext) -> ProjectContext:
-    """Validate project_id against the live project registry."""
-    if not _registry.has(project.project_id):
+async def resolve_project_context(project: ProjectContext) -> ProjectContext:
+    """Validate project_id against the durable project registry (ADR-0047)."""
+    if not await _registry.has(project.project_id):
         raise ProjectNotFoundError(project.project_id)
     return project

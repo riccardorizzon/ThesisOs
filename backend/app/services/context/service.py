@@ -23,7 +23,7 @@ class ContextService:
         self._chapters = chapter_service or ChapterService()
 
     async def assemble(self, request: ContextRequest) -> ContextPacket:
-        resolve_project_context(request.project)
+        await resolve_project_context(request.project)
 
         graph = await assemble_context_graph(
             request,

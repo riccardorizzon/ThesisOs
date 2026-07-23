@@ -69,13 +69,13 @@ async def get_companion_resume(project_id: str):
     from app.services.project_registry import ProjectRegistryService
 
     registry = ProjectRegistryService()
-    if not registry.has(project_id):
+    if not await registry.has(project_id):
         return _err(404, "project_not_found", f"Unknown project: {project_id}")
 
     if project_id != DEFAULT_PROJECT_ID:
         from app.schemas.companion_resume import CompanionResume
 
-        entry = registry.get(project_id)
+        entry = await registry.get(project_id)
         return CompanionResumePacket(
             project_id=project_id,
             title=entry.display_name if entry else project_id,

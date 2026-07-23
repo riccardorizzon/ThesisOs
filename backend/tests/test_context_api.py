@@ -223,15 +223,15 @@ def test_project_context_query_params(client):
     assert ctx["session_id"] == "sess-1"
 
 
-def test_resolve_project_context_stub():
+async def test_resolve_project_context_registry(db_session):
     from app.services.context.exceptions import ProjectNotFoundError
     from app.services.context.project import resolve_project_context
 
     ctx = ProjectContext(project_id=DEFAULT_PROJECT_ID, product_id=DEFAULT_PRODUCT_ID)
-    assert resolve_project_context(ctx) == ctx
+    assert await resolve_project_context(ctx) == ctx
 
     with pytest.raises(ProjectNotFoundError):
-        resolve_project_context(ProjectContext(project_id="unknown"))
+        await resolve_project_context(ProjectContext(project_id="unknown"))
 
 
 def test_flatten_context_packet_maps_graph_nodes():
