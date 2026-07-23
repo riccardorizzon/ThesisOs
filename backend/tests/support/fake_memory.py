@@ -15,13 +15,19 @@ from app.schemas.memory import (
 class FakeMemoryService:
     """Supports list/create/update + load_prompt_context; can simulate write failures."""
 
-    def __init__(self, *, fail_writes: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        fail_writes: bool = False,
+        prompt_context: PromptContext | None = None,
+    ) -> None:
         self.rows: list[SimpleNamespace] = []
         self.fail_writes = fail_writes
+        self.prompt_context = prompt_context or PromptContext()
         self._next_id = 1
 
     async def load_prompt_context(self, **kwargs) -> PromptContext:
-        return PromptContext()
+        return self.prompt_context
 
     async def list(self, filters: MemoryListFilters) -> list[SimpleNamespace]:
         rows = [

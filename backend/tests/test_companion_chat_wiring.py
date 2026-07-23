@@ -12,6 +12,7 @@ from app.graph.conversation import build_graph
 from app.runtime.events import EventType
 from app.schemas.companion_resume import CompanionResume
 from app.schemas.graph_state import GraphState, Message
+from app.schemas.memory import PromptContext, PromptMemoryItem
 from app.schemas.run_context import RunContext
 from app.schemas.workspace_snapshot import WorkspaceSnapshot
 from app.services.conversation.service import ConversationService
@@ -309,6 +310,52 @@ async def test_non_primary_project_does_not_receive_thesis_companion_context():
     assert "Thesis Companion" not in system
     assert "[COMPANION RESUME]" not in system
     assert "§3.6" not in system
+
+
+def _thesis_prompt_context() -> PromptContext:
+    return PromptContext(
+        thesis=[
+            PromptMemoryItem(
+                id="t1",
+                kind="thesis",
+                title="Tesi",
+                content="Capitolo 3 §3.6 — contenuto riservato della tesi",
+                version=1,
+                pinned=True,
+            )
+        ]
+    )
+
+
+@pytest.mark.asyncio
+async def test_non_primary_project_does_not_receive_thesis_memory_context():
+    """INV-COMP-6: pinned thesis memory must never leak into demo/other projects."""
+    loader = _FakeWorkspaceLoader()
+    memory = FakeMemoryService(prompt_context=_thesis_prompt_context())
+
+    llm, _ = await _run_graph(
+        project_id="demo-thesis", loader=loader, memory=memory
+    )
+
+    joined = " ".join(
+        m["content"] for m in llm.last_stream_messages if m["role"] == "system"
+    )
+    assert "contenuto riservato" not in joined
+
+
+@pytest.mark.asyncio
+async def test_primary_project_still_receives_thesis_memory_context():
+    loader = _FakeWorkspaceLoader()
+    memory = FakeMemoryService(prompt_context=_thesis_prompt_context())
+
+    llm, _ = await _run_graph(
+        project_id=THESIS_AGENT_PROJECT_ID, loader=loader, memory=memory
+    )
+
+    joined = " ".join(
+        m["content"] for m in llm.last_stream_messages if m["role"] == "system"
+    )
+    assert "contenuto riservato" in joined
 
 
 @pytest.mark.asyncio
