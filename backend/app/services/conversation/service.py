@@ -26,7 +26,10 @@ from app.schemas.conversation import (
 )
 from app.schemas.graph_state import GraphState, Message
 from app.schemas.run_context import RunContext
-from app.services.conversation.exceptions import ConversationNotFoundError
+from app.services.conversation.exceptions import (
+    ConversationNotFoundError,
+    ConversationProjectMismatchError,
+)
 from app.services.task.service import TaskService
 
 logger = logging.getLogger("app.services.conversation")
@@ -88,6 +91,22 @@ class ConversationService:
         project_id: str,
     ) -> None:
         """Associate a conversation with a project without altering the conversations table."""
+        scope_rows = (
+            await session.execute(
+                select(models.AgentRun.input["project_id"].as_string()).where(
+                    models.AgentRun.conversation_id == conversation_id,
+                    models.AgentRun.trigger == "scope",
+                )
+            )
+        ).scalars().all()
+        existing_scopes = {scope for scope in scope_rows if scope}
+        if existing_scopes and existing_scopes != {project_id}:
+            raise ConversationProjectMismatchError(
+                conversation_id,
+                expected_project_id=", ".join(sorted(existing_scopes)),
+                requested_project_id=project_id,
+            )
+
         scoped = (
             await session.execute(
                 select(models.AgentRun.id)
@@ -231,6 +250,19 @@ class ConversationService:
                 session.add(run)
                 await session.commit()
                 history = await self._load_messages(session, conv_id)
+        except ConversationProjectMismatchError as exc:
+            logger.warning("%s", exc)
+            yield {
+                "event": "error",
+                "data": {
+                    "code": "project_scope_mismatch",
+                    "message": (
+                        "Questa conversazione appartiene a un altro progetto. "
+                        "Apri o crea una conversazione nel progetto attivo."
+                    ),
+                },
+            }
+            return
         except Exception:
             logger.exception("chat setup failed for conversation %s", conversation_id)
             await self._safe_finalize(run_id, conv_id, status="error", usage={}, error="setup_failed")

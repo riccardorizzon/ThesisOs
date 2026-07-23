@@ -136,6 +136,43 @@ def test_chat_appends_to_same_thread(chat_client):
     assert [m["content"] for m in messages if m["role"] == "user"] == ["first", "second"]
 
 
+def test_chat_rejects_reusing_thread_under_another_project(chat_client):
+    """A conversation is owned by one project; history must never cross that boundary."""
+    created = chat_client.post(
+        "/conversations",
+        json={"project_id": _PROJECT, "title": "Private thesis thread"},
+    ).json()
+    conv_id = created["id"]
+    first = chat_client.post(
+        "/chat",
+        json={
+            "message": "private thesis detail",
+            "conversation_id": conv_id,
+            "project_id": _PROJECT,
+        },
+    )
+    assert "event: done" in first.text
+
+    crossed = chat_client.post(
+        "/chat",
+        json={
+            "message": "what were we doing?",
+            "conversation_id": conv_id,
+            "project_id": "demo-thesis",
+        },
+    )
+
+    # Use the existing SSE error contract so the frontend can display it.
+    assert "event: error" in crossed.text
+    assert '"code": "project_scope_mismatch"' in crossed.text
+    assert "altro progetto" in crossed.text
+    messages = chat_client.get(f"/conversations/{conv_id}/messages").json()["items"]
+    assert [m["content"] for m in messages if m["role"] == "user"] == [
+        "private thesis detail"
+    ]
+    assert all("what were we doing?" != m["content"] for m in messages)
+
+
 def test_chat_lists_under_project_after_turn(chat_client):
     stream = chat_client.post(
         "/chat",

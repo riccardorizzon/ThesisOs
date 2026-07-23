@@ -86,6 +86,24 @@ async def test_persist_turn_work_artifact_prefers_prior_proposal():
 
 
 @pytest.mark.asyncio
+async def test_persist_turn_refuses_work_artifact_without_prior_proposal():
+    """A SAVE intent cannot turn its own generated acknowledgement into an artifact."""
+    memory = FakeMemoryService()
+
+    outcome = await persist_turn(
+        memory,
+        tier=PersistenceTier.WORK_ARTIFACT,
+        user_text="La salvo",
+        assistant_text="Ho salvato questa versione per continuare domani.",
+        prior_assistant=None,
+    )
+
+    assert outcome.persisted is False
+    assert outcome.error == "missing_work_artifact"
+    assert memory.rows == []
+
+
+@pytest.mark.asyncio
 async def test_persist_turn_reports_failure_instead_of_raising():
     memory = FakeMemoryService(fail_writes=True)
 

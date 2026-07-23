@@ -39,6 +39,13 @@ _CONFIRM = re.compile(
     r")\s*[.!?]?\s*$"
 )
 
+_REJECT = re.compile(
+    r"(?i)\b("
+    r"no\b|non\s+(?:salvar|memorizzar|registrar)\w*|"
+    r"non\s+tenerla|lascia\s+perdere|annulla"
+    r")\b"
+)
+
 # Avoid treating CONTINUE / PRESERVE as learning
 _NOT_LEARNING = re.compile(
     r"(?i)\b(basta\s+per\s+oggi|chiudiamo|continuiamo\s+da|ciao\b|vuoi\s+continuare)\b"
@@ -201,6 +208,12 @@ async def process_learning_turn(
 
     if pending and is_learning_confirmation(text):
         await append_learned_rule(memory, pending)
+        await clear_pending_rule(memory)
+        return None
+
+    if pending and _REJECT.search(text):
+        # Consent was explicitly denied. Leaving the proposal pending would
+        # let a later unrelated «sì» persist it accidentally.
         await clear_pending_rule(memory)
         return None
 

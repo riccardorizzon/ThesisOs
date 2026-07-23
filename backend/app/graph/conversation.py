@@ -42,11 +42,13 @@ from app.services.retrieval.service import RetrievalService
 from app.services.task.service import TaskService
 from app.services.workspace.persistence import (
     PersistenceTier,
+    claims_successful_persistence,
     classify_persistence,
     focus_from_resume,
     next_action_from_resume,
+    non_persistence_claim_text,
     persist_turn,
-    persistence_failure_text,
+    persistence_clarification_text,
 )
 from app.services.workspace.snapshot import WorkspaceLoader
 from app.services.workspace.thesis_sor import THESIS_AGENT_PROJECT_ID
@@ -156,9 +158,15 @@ def make_conversation_node(
                     next_action=next_action_from_resume(system_contents),
                 )
                 if not outcome.persisted:
-                    text = persistence_failure_text(tier, focus=focus)
+                    text = persistence_clarification_text(outcome, focus=focus)
                     writer({"type": "replace", "text": text})
                     errors.append(f"persistence_failed:{tier.value}")
+            elif claims_successful_persistence(text):
+                # NO WRITE = NO SAVE is global: even a non-SAVE turn cannot
+                # ship an invented success claim from the model.
+                text = non_persistence_claim_text(focus=focus)
+                writer({"type": "replace", "text": text})
+                errors.append("persistence_claim_without_write")
         else:
             text, usage, _retried = await generate_with_citation_enforcement(
                 llm,

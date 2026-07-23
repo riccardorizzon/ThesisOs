@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from app.db import models
 from app.graph.conversation import build_graph
+from app.graph.companion.prompts import COMPANION_SYSTEM
 from app.runtime.events import EventType
 from app.schemas.companion_resume import CompanionResume
 from app.schemas.graph_state import GraphState, Message
@@ -37,6 +38,12 @@ class _FakeWorkspaceLoader:
                 key_decisions=["Mantenere il difetto come dispositivo critico"],
             ),
         )
+
+
+def test_companion_opening_script_is_scoped_to_explicit_opening_hint():
+    """An ordinary first question must not trigger a full Resume ceremony."""
+    assert "ONLY when the 09:00 EXPERIENCE hint is present" in COMPANION_SYSTEM
+    assert "answer the user's request directly" in COMPANION_SYSTEM
 
 
 class _FakeEmitter:
@@ -258,6 +265,48 @@ async def test_la_salvo_writes_work_artifact_from_prior_proposal():
 
 
 @pytest.mark.asyncio
+async def test_la_salvo_without_prior_proposal_asks_what_to_save():
+    loader = _FakeWorkspaceLoader()
+    memory = FakeMemoryService()
+
+    _, chunks = await _run_graph(
+        project_id=THESIS_AGENT_PROJECT_ID,
+        loader=loader,
+        user_text="La salvo",
+        stream_parts=["Ho salvato questa versione per continuare domani."],
+        memory=memory,
+    )
+
+    assert memory.row("companion_work_artifact") is None
+    final = [c for c in chunks if c.get("type") in {"token", "replace"}][-1]
+    assert final["type"] == "replace"
+    assert "non ho una proposta" in final["text"].lower()
+    assert "quale testo" in final["text"].lower()
+
+
+@pytest.mark.asyncio
+async def test_non_persistence_turn_cannot_claim_a_save():
+    """NO WRITE = NO SAVE applies globally, even when the LLM invents the claim."""
+    loader = _FakeWorkspaceLoader()
+    memory = FakeMemoryService()
+
+    _, chunks = await _run_graph(
+        project_id=THESIS_AGENT_PROJECT_ID,
+        loader=loader,
+        user_text="Salva tutto quello che abbiamo fatto oggi",
+        stream_parts=["Ho salvato tutto quello che abbiamo fatto oggi."],
+        memory=memory,
+    )
+
+    assert memory.row("companion_session") is None
+    assert memory.row("companion_work_artifact") is None
+    final = [c for c in chunks if c.get("type") in {"token", "replace"}][-1]
+    assert final["type"] == "replace"
+    assert "non ho salvato" in final["text"].lower()
+    assert "quale" in final["text"].lower()
+
+
+@pytest.mark.asyncio
 async def test_failed_write_never_confirms_a_save():
     """NO WRITE = NO SAVE: when persistence fails, the reply must say so honestly."""
     loader = _FakeWorkspaceLoader()
@@ -269,6 +318,13 @@ async def test_failed_write_never_confirms_a_save():
         user_text="La salvo",
         stream_parts=["Salvata per continuità: riprendiamo domani da qui."],
         memory=memory,
+        history=[
+            Message(role="user", content="Proponi una frase"),
+            Message(
+                role="assistant",
+                content="> Una proposta concreta da salvare per la continuità.",
+            ),
+        ],
     )
 
     assert memory.rows == []

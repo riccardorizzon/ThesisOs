@@ -37,6 +37,17 @@ from app.services.workspace.work_artifact import extract_proposal, save_work_art
 logger = logging.getLogger("app.services.workspace.persistence")
 
 DEFAULT_FOCUS = "§3.6"
+MISSING_WORK_ARTIFACT = "missing_work_artifact"
+
+_SUCCESSFUL_PERSISTENCE_CLAIM = re.compile(
+    r"(?i)\b("
+    r"ho\s+(?:salvat[oa]|registrat[oa]|memorizzat[oa])|"
+    r"(?:la\s+proposta|il\s+punto|tutto|questa\s+versione)\s+"
+    r"(?:è|e')\s+(?:stat[oa]\s+)?(?:salvat[oa]|registrat[oa]|memorizzat[oa])|"
+    r"salvat[oa]\s+(?:come|per\s+la\s+continuità)|"
+    r"(?:è|e')\s+registrat[oa]\s+per"
+    r")\b"
+)
 
 
 class PersistenceTier(str, Enum):
@@ -91,6 +102,11 @@ def next_action_from_resume(system_contents: Iterable[str]) -> str | None:
     return None
 
 
+def claims_successful_persistence(text: str | None) -> bool:
+    """Detect a concrete success claim, not discussion of saving in general."""
+    return bool(text and _SUCCESSFUL_PERSISTENCE_CLAIM.search(text))
+
+
 async def persist_turn(
     memory: MemoryService,
     *,
@@ -121,8 +137,14 @@ async def persist_turn(
             return PersistenceOutcome(tier=tier, persisted=False, error=str(exc))
 
     if tier is PersistenceTier.WORK_ARTIFACT:
+        if not (prior_assistant or "").strip():
+            return PersistenceOutcome(
+                tier=tier,
+                persisted=False,
+                error=MISSING_WORK_ARTIFACT,
+            )
         try:
-            proposal = extract_proposal(prior_assistant, fallback=assistant_text)
+            proposal = extract_proposal(prior_assistant)
             await save_work_artifact(memory, proposal=proposal, focus=focus)
             return PersistenceOutcome(tier=tier, persisted=True)
         except Exception as exc:
@@ -130,6 +152,33 @@ async def persist_turn(
             return PersistenceOutcome(tier=tier, persisted=False, error=str(exc))
 
     return PersistenceOutcome(tier=tier, persisted=False)
+
+
+def persistence_clarification_text(
+    outcome: PersistenceOutcome,
+    *,
+    focus: str = DEFAULT_FOCUS,
+) -> str:
+    """Honest reply when intent exists but there is no persistable object."""
+    if outcome.error == MISSING_WORK_ARTIFACT:
+        return (
+            "Non ho salvato nulla: in questa conversazione non ho una proposta "
+            "di lavoro precedente da trasformare in artefatto.\n\n"
+            f"Indicami quale testo o proposta vuoi conservare per {focus}, "
+            "poi potrò salvarla per la continuità."
+        )
+    return persistence_failure_text(outcome.tier, focus=focus)
+
+
+def non_persistence_claim_text(*, focus: str = DEFAULT_FOCUS) -> str:
+    """Correct an LLM save claim when this turn performed no persistence."""
+    return (
+        "Non ho salvato nulla: la richiesta non identifica in modo univoco "
+        "se vuoi conservare lo stato della sessione, una proposta di lavoro "
+        "o una memoria persistente.\n\n"
+        f"Dimmi quale elemento vuoi conservare per {focus}; lo salverò solo "
+        "dopo averlo identificato chiaramente."
+    )
 
 
 def persistence_failure_text(tier: PersistenceTier, *, focus: str = DEFAULT_FOCUS) -> str:
