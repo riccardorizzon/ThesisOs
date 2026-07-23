@@ -46,6 +46,7 @@ CREATE TABLE conversations (
 
 CREATE TABLE documents (
 	id UUID DEFAULT gen_random_uuid() NOT NULL,
+	project_id VARCHAR(64) DEFAULT 'thesis-agent' NOT NULL,
 	title TEXT NOT NULL,
 	author TEXT,
 	source_type VARCHAR(16) NOT NULL,

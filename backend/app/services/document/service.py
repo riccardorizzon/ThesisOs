@@ -36,6 +36,7 @@ from app.services.document.exceptions import (
 from app.services.document.parsers import Parser, parse_document
 from app.services.document.storage import StorageAdapter, build_storage_adapter, storage_key
 from app.services.events.bus import publish
+from app.services.project_scope import resolve_project_id
 from app.services.sources.repository import register_uploaded_document
 
 
@@ -225,6 +226,7 @@ class DocumentService:
         now = datetime.now(timezone.utc)
 
         row = models.Document(
+            project_id=resolve_project_id(meta.project_id),
             title=meta.title or _title_from_filename(filename),
             author=meta.author,
             source_type=resolved,
@@ -248,6 +250,7 @@ class DocumentService:
             title=row.title,
             author=row.author,
             source_type=resolved,
+            project_id=row.project_id,
         )
         await publish(
             "DocumentUploaded",
@@ -278,7 +281,9 @@ class DocumentService:
     async def _list(
         self, session: AsyncSession, filters: DocumentListFilters
     ) -> list[DocumentRecord]:
-        stmt = select(models.Document)
+        stmt = select(models.Document).where(
+            models.Document.project_id == resolve_project_id(filters.project_id)
+        )
         if filters.source_type is not None:
             stmt = stmt.where(models.Document.source_type == filters.source_type)
         if filters.status is not None:
@@ -504,6 +509,7 @@ class DocumentService:
     def _to_record(row: models.Document) -> DocumentRecord:
         return DocumentRecord(
             id=row.id,
+            project_id=resolve_project_id(getattr(row, "project_id", None)),
             title=row.title,
             author=row.author,
             source_type=row.source_type,

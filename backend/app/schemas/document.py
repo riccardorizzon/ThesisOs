@@ -50,6 +50,7 @@ class DocumentChunk(BaseModel):
 
 class DocumentRecord(BaseModel):
     id: str
+    project_id: str = "thesis-agent"
     title: str
     author: str | None = None
     source_type: str
@@ -72,6 +73,7 @@ class DocumentUploadMetadata(BaseModel):
     title: str | None = None
     author: str | None = None
     language: str | None = None
+    project_id: str | None = None  # ADR-0047: None ⇒ Default Thesis
     metadata: dict = Field(default_factory=dict)
 
 
@@ -84,6 +86,7 @@ class DocumentUpdate(BaseModel):
 
 
 class DocumentListFilters(BaseModel):
+    project_id: str | None = None  # ADR-0047: None ⇒ Default Thesis
     source_type: str | None = None
     status: str | None = None
     q: str | None = None

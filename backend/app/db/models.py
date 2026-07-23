@@ -25,7 +25,10 @@ class Project(Base):
 
 class Document(Base):
     __tablename__ = "documents"
+    __table_args__ = (Index("idx_documents_project_id", "project_id"),)
+
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
+    project_id: Mapped[str] = mapped_column(String(64), default="thesis-agent", server_default=text("'thesis-agent'"))
     title: Mapped[str] = mapped_column(Text)
     author: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_type: Mapped[str] = mapped_column(String(16))

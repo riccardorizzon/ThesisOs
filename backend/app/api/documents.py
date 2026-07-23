@@ -58,9 +58,12 @@ async def upload_document(
     title: str | None = Form(default=None),
     author: str | None = Form(default=None),
     language: str | None = Form(default=None),
+    project_id: str | None = Form(default=None),
 ):
     data = await file.read()
-    meta = DocumentUploadMetadata(title=title, author=author, language=language)
+    meta = DocumentUploadMetadata(
+        title=title, author=author, language=language, project_id=project_id
+    )
     try:
         record = await _service.upload(
             filename=file.filename or "upload", data=data, meta=meta
@@ -73,6 +76,7 @@ async def upload_document(
 
 @router.get("/documents")
 async def list_documents(
+    project_id: str | None = None,
     source_type: str | None = None,
     status: str | None = None,
     q: str | None = None,
@@ -80,7 +84,12 @@ async def list_documents(
     offset: int = Query(default=0, ge=0),
 ):
     filters = DocumentListFilters(
-        source_type=source_type, status=status, q=q, limit=limit, offset=offset
+        project_id=project_id,
+        source_type=source_type,
+        status=status,
+        q=q,
+        limit=limit,
+        offset=offset,
     )
     return await _service.list(filters)
 
