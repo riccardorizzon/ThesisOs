@@ -15,13 +15,13 @@ function formatWhen(iso: string) {
 
 export function MemoryList({ items }: { items: Memory[] }) {
   if (items.length === 0) {
-    return <p className="text-sm text-gray-500">No memories found.</p>;
+    return <p className="text-sm text-ink-muted">No memories found.</p>;
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200 text-sm" data-testid="memory-list">
-        <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+    <div className="overflow-hidden rounded-lg border border-border">
+      <table className="min-w-full divide-y divide-border text-sm" data-testid="memory-list">
+        <thead className="bg-surface-muted text-left text-xs uppercase tracking-wide text-ink-muted">
           <tr>
             <th className="px-4 py-3">Title</th>
             <th className="px-4 py-3">Kind</th>
@@ -30,20 +30,20 @@ export function MemoryList({ items }: { items: Memory[] }) {
             <th className="px-4 py-3">Pinned</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
+        <tbody className="divide-y divide-border bg-surface">
           {items.map((m) => (
-            <tr key={m.id} className="hover:bg-gray-50">
+            <tr key={m.id} className="hover:bg-surface-muted">
               <td className="px-4 py-3">
-                <Link href={`/memory/${m.id}`} className="font-medium text-gray-900 hover:underline">
+                <Link href={`/memory/${m.id}`} className="font-medium text-ink hover:underline">
                   {memoryDisplayTitle(m)}
                 </Link>
               </td>
               <td className="px-4 py-3">
                 <MemoryKindBadge kind={m.kind} />
               </td>
-              <td className="px-4 py-3 text-gray-600">v{m.version}</td>
-              <td className="px-4 py-3 text-gray-600">{formatWhen(m.updated_at)}</td>
-              <td className="px-4 py-3 text-gray-600">{m.pinned ? "yes" : "—"}</td>
+              <td className="px-4 py-3 text-ink-muted">v{m.version}</td>
+              <td className="px-4 py-3 text-ink-muted">{formatWhen(m.updated_at)}</td>
+              <td className="px-4 py-3 text-ink-muted">{m.pinned ? "yes" : "—"}</td>
             </tr>
           ))}
         </tbody>

@@ -29,37 +29,37 @@ export function DocumentForm({ document, onSubmit, loading }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4" data-testid="document-form">
       <label className="block text-sm">
-        <span className="mb-1 block font-medium text-gray-700">Title</span>
+        <span className="mb-1 block font-medium text-ink">Title</span>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2"
+          className="w-full rounded border border-border-strong px-3 py-2"
         />
       </label>
 
       <label className="block text-sm">
-        <span className="mb-1 block font-medium text-gray-700">Author</span>
+        <span className="mb-1 block font-medium text-ink">Author</span>
         <input
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2"
+          className="w-full rounded border border-border-strong px-3 py-2"
         />
       </label>
 
       <label className="block text-sm">
-        <span className="mb-1 block font-medium text-gray-700">Language</span>
+        <span className="mb-1 block font-medium text-ink">Language</span>
         <input
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
           placeholder="e.g. it, en"
-          className="w-full rounded border border-gray-300 px-3 py-2"
+          className="w-full rounded border border-border-strong px-3 py-2"
         />
       </label>
 
       <button
         type="submit"
         disabled={loading}
-        className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+        className="rounded bg-accent px-4 py-2 text-sm font-medium text-ink-inverse hover:bg-accent-muted disabled:opacity-50"
       >
         Save changes
       </button>

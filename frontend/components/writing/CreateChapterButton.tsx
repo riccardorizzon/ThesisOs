@@ -99,7 +99,7 @@ export function CreateChapterButton({
           <button
             type="submit"
             disabled={busy}
-            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50 cursor-pointer"
+            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-ink-inverse hover:bg-accent/90 disabled:opacity-50 cursor-pointer"
             data-testid="writing-create-chapter-submit"
           >
             {busy ? "Creazione…" : "Crea e scrivi"}
@@ -146,7 +146,7 @@ export function CreateChapterButton({
       onClick={handleOpen}
       disabled={disabled}
       className={cn(
-        "inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-white",
+        "inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-ink-inverse",
         "transition-colors hover:bg-accent/90",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer",
         disabled && "opacity-50",

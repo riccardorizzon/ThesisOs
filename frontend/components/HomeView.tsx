@@ -185,7 +185,7 @@ export function HomeView({
         </div>
         {pendingCount > 0 && (
           <span
-            className="inline-flex shrink-0 items-center rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-white"
+            className="inline-flex shrink-0 items-center rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-ink-inverse"
             data-testid="home-pending-badge"
             aria-label={`${pendingCount} proposte in sospeso`}
           >
@@ -229,7 +229,7 @@ export function HomeView({
           href={continua.href}
           className={cn(
             "inline-flex shrink-0 items-center justify-center gap-2 rounded-md",
-            "bg-accent px-5 py-2.5 text-sm font-medium text-white",
+            "bg-accent px-5 py-2.5 text-sm font-medium text-ink-inverse",
             "transition-colors duration-200 hover:bg-accent-muted",
             "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
             "focus-visible:outline-accent cursor-pointer"

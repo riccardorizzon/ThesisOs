@@ -251,7 +251,7 @@ export function SourceReader({
               "rounded-md px-3 py-1.5 text-xs font-medium cursor-pointer",
               isExcluded
                 ? "border border-danger/30 text-danger hover:bg-danger/5"
-                : "bg-accent text-white hover:bg-accent-muted"
+                : "bg-accent text-ink-inverse hover:bg-accent-muted"
             )}
             data-testid="insert-citation-btn"
             aria-disabled={isExcluded}

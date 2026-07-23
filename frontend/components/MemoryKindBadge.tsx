@@ -1,12 +1,12 @@
 import type { MemoryKind } from "@/lib/memoryClient";
 
 const KIND_STYLES: Record<MemoryKind, string> = {
-  user: "bg-blue-100 text-blue-800",
-  thesis: "bg-violet-100 text-violet-800",
-  editable: "bg-emerald-100 text-emerald-800",
-  decision: "bg-amber-100 text-amber-800",
-  concept: "bg-sky-100 text-sky-800",
-  citation: "bg-rose-100 text-rose-800",
+  user: "bg-blue-400/10 text-blue-300",
+  thesis: "bg-violet-400/10 text-violet-300",
+  editable: "bg-emerald-400/10 text-emerald-300",
+  decision: "bg-amber-400/10 text-amber-300",
+  concept: "bg-sky-400/10 text-sky-300",
+  citation: "bg-rose-400/10 text-rose-300",
 };
 
 export function MemoryKindBadge({ kind }: { kind: MemoryKind }) {

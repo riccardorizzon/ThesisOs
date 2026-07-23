@@ -27,7 +27,7 @@ export function ReviewDocumentSelector({
     >
       <h2
         id="review-selector-heading"
-        className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500"
+        className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted"
       >
         Capitoli in revisione
       </h2>
@@ -44,14 +44,14 @@ export function ReviewDocumentSelector({
                 className={[
                   "w-full rounded-lg border px-4 py-3 text-left transition-colors cursor-pointer",
                   selected
-                    ? "border-blue-800 bg-blue-50 ring-1 ring-blue-800"
-                    : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50",
+                    ? "border-accent bg-accent-subtle ring-1 ring-accent"
+                    : "border-border bg-surface hover:border-border-strong hover:bg-surface-muted",
                 ].join(" ")}
               >
-                <span className="block text-sm font-medium text-gray-900">
+                <span className="block text-sm font-medium text-ink">
                   {chapter.title}
                 </span>
-                <span className="mt-1 block text-xs text-gray-500">
+                <span className="mt-1 block text-xs text-ink-muted">
                   {reviewStatusLabel(chapter.status)}
                   {chapter.pendingChanges > 0
                     ? ` · ${chapter.pendingChanges} modifiche in sospeso`

@@ -56,7 +56,7 @@ function WaveCard({ wave }: { wave: ProgramGraphWave }) {
             className={cn(
               "rounded-md border px-2 py-1 font-mono text-xs",
               node.node_type === "integration"
-                ? "border-amber-200 bg-amber-50 text-amber-900"
+                ? "border-warning/30 bg-warning/10 text-warning"
                 : "border-border bg-muted text-ink"
             )}
             data-testid={`node-${node.node_id}`}

@@ -54,11 +54,11 @@ export function MemoryForm(props: Props) {
     <form onSubmit={handleSubmit} className="space-y-4" data-testid="memory-form">
       {isCreate && (
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-gray-700">Kind</span>
+          <span className="mb-1 block font-medium text-ink">Kind</span>
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value as MemoryKind)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
           >
             {MEMORY_KINDS.map((k) => (
               <option key={k} value={k}>
@@ -70,33 +70,33 @@ export function MemoryForm(props: Props) {
       )}
 
       <label className="block text-sm">
-        <span className="mb-1 block font-medium text-gray-700">Title</span>
+        <span className="mb-1 block font-medium text-ink">Title</span>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2"
+          className="w-full rounded border border-border-strong px-3 py-2"
         />
       </label>
 
       {isCreate && (
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-gray-700">Key (optional slug)</span>
+          <span className="mb-1 block font-medium text-ink">Key (optional slug)</span>
           <input
             value={key}
             onChange={(e) => setKey(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
           />
         </label>
       )}
 
       <label className="block text-sm">
-        <span className="mb-1 block font-medium text-gray-700">Content</span>
+        <span className="mb-1 block font-medium text-ink">Content</span>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           required
           rows={8}
-          className="w-full rounded border border-gray-300 px-3 py-2 font-mono text-sm"
+          className="w-full rounded border border-border-strong px-3 py-2 font-mono text-sm"
         />
       </label>
 
@@ -108,7 +108,7 @@ export function MemoryForm(props: Props) {
       <button
         type="submit"
         disabled={props.loading}
-        className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+        className="rounded bg-accent px-4 py-2 text-sm font-medium text-ink-inverse hover:bg-accent-muted disabled:opacity-50"
       >
         {isCreate ? "Create memory" : "Save changes"}
       </button>

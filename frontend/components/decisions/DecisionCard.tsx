@@ -149,7 +149,7 @@ export function DecisionCard({
           </button>
           <button
             type="button"
-            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-muted"
+            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-ink-inverse hover:bg-accent-muted"
             onClick={() => dispatchAskReviewer(decision.id)}
             data-testid="ask-reviewer-button"
           >

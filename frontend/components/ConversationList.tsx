@@ -90,7 +90,7 @@ export function ConversationList({
         </div>
       )}
       {error && (
-        <div className="rounded-lg bg-red-50 px-2 py-1 text-xs text-red-700">{error}</div>
+        <div className="rounded-lg bg-danger/10 px-2 py-1 text-xs text-danger">{error}</div>
       )}
       {!loading && !error && items.length === 0 && (
         <div className="text-xs text-ink-muted">Nessuna conversazione.</div>

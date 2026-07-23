@@ -14,7 +14,7 @@ export function InputBox({ disabled, onSend }: { disabled: boolean; onSend: (t: 
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
       />
-      <button className="rounded-lg bg-blue-600 px-4 text-sm text-white disabled:opacity-50"
+      <button className="rounded-lg bg-accent px-4 text-sm text-ink-inverse disabled:opacity-50"
               disabled={disabled} onClick={submit}>Invia</button>
     </div>
   );

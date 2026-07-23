@@ -26,7 +26,7 @@ export function ReviewActionBar({
     >
       <h2
         id="review-actions-heading"
-        className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500"
+        className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted"
       >
         Decisione revisione
       </h2>
@@ -38,8 +38,8 @@ export function ReviewActionBar({
           className={[
             "rounded-md px-4 py-2 text-sm font-medium transition-colors cursor-pointer",
             enabled
-              ? "bg-green-700 text-white hover:bg-green-800"
-              : "cursor-not-allowed bg-gray-200 text-gray-400",
+              ? "bg-success text-ink-inverse hover:bg-success/90"
+              : "cursor-not-allowed bg-surface-muted text-ink-subtle",
           ].join(" ")}
         >
           Accetta revisione
@@ -51,8 +51,8 @@ export function ReviewActionBar({
           className={[
             "rounded-md border px-4 py-2 text-sm font-medium transition-colors cursor-pointer",
             enabled
-              ? "border-red-700 text-red-700 hover:bg-red-50"
-              : "cursor-not-allowed border-gray-200 text-gray-400",
+              ? "border-danger text-danger hover:bg-danger/10"
+              : "cursor-not-allowed border-border text-ink-subtle",
           ].join(" ")}
         >
           Rifiuta
@@ -61,12 +61,12 @@ export function ReviewActionBar({
       {feedback ? (
         <p
           role="status"
-          className="mt-3 text-sm text-gray-600"
+          className="mt-3 text-sm text-ink-muted"
         >
           {feedback}
         </p>
       ) : !enabled ? (
-        <p className="mt-3 text-sm text-gray-500">
+        <p className="mt-3 text-sm text-ink-muted">
           Completa il confronto per abilitare accettazione o rifiuto.
         </p>
       ) : null}

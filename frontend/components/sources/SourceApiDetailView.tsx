@@ -86,7 +86,7 @@ export function SourceApiDetailView({
             <button
               type="button"
               onClick={handleLinkToChapter}
-              className="mt-3 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-muted cursor-pointer"
+              className="mt-3 rounded-md bg-accent px-4 py-2 text-sm font-medium text-ink-inverse hover:bg-accent-muted cursor-pointer"
               data-testid="link-to-chapter-btn"
             >
               Collega al capitolo

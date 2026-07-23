@@ -130,7 +130,7 @@ export function ProposalBundleModal({
               <button
                 type="button"
                 className={cn(
-                  "rounded-md px-4 py-2 text-sm font-medium text-white transition-colors duration-200",
+                  "rounded-md px-4 py-2 text-sm font-medium text-ink-inverse transition-colors duration-200",
                   "bg-accent hover:bg-accent-muted cursor-pointer",
                   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
                   "focus-visible:outline-accent"
@@ -145,7 +145,7 @@ export function ProposalBundleModal({
             <button
               type="button"
               className={cn(
-                "rounded-md px-4 py-2 text-sm font-medium text-white transition-colors duration-200",
+                "rounded-md px-4 py-2 text-sm font-medium text-ink-inverse transition-colors duration-200",
                 "bg-accent hover:bg-accent-muted cursor-pointer",
                 "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
                 "focus-visible:outline-accent"

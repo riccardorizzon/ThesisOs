@@ -306,7 +306,7 @@ export function ReviewCompare({
           type="button"
           onClick={() => setConfirmKind("accept-all")}
           disabled={changeHunks.length === 0 || persisting}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-ink-inverse hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
         >
           Accetta tutto
         </button>
@@ -350,7 +350,7 @@ export function ReviewCompare({
               type="button"
               onClick={() => void handleConfirm()}
               disabled={persisting}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50 cursor-pointer"
+              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-ink-inverse hover:bg-accent/90 disabled:opacity-50 cursor-pointer"
               data-testid="review-confirm-yes"
             >
               {persisting ? "Salvataggio…" : "Conferma"}

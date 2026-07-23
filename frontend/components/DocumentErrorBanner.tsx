@@ -11,7 +11,7 @@ export function DocumentErrorBanner({ message, code, status }: Props) {
 
   return (
     <div
-      className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+      className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger"
       role="alert"
       data-testid="document-error-banner"
     >

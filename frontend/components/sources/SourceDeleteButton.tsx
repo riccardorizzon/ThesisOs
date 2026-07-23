@@ -70,7 +70,7 @@ export function SourceDeleteButton({
             type="button"
             disabled={busy}
             onClick={() => void handleDelete()}
-            className="rounded-md bg-warning px-3 py-1.5 text-sm font-medium text-white hover:bg-warning/90 disabled:opacity-50 cursor-pointer"
+            className="rounded-md bg-warning px-3 py-1.5 text-sm font-medium text-ink-inverse hover:bg-warning/90 disabled:opacity-50 cursor-pointer"
             data-testid="source-delete-confirm-yes"
           >
             {busy ? "Eliminazione…" : "Elimina"}

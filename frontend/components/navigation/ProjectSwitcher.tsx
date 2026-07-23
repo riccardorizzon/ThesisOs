@@ -148,7 +148,7 @@ export function ProjectSwitcher() {
                   autoFocus
                 />
                 {createError ? (
-                  <p className="text-xs text-amber-800" role="alert">
+                  <p className="text-xs text-warning" role="alert">
                     {createError}
                   </p>
                 ) : null}
@@ -157,7 +157,7 @@ export function ProjectSwitcher() {
                     type="button"
                     data-testid="project-create-submit"
                     onClick={() => void handleCreate()}
-                    className="rounded-md bg-accent px-2 py-1 text-xs font-medium text-white"
+                    className="rounded-md bg-accent px-2 py-1 text-xs font-medium text-ink-inverse"
                   >
                     Crea
                   </button>

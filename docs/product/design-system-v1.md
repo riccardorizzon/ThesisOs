@@ -8,7 +8,7 @@
 ## Principles
 
 - **Minimal cognitive friction** — calm surfaces, one accent, clear hierarchy
-- **Research workspace** — paper-like neutrals, ink-blue accent (not chat-app purple)
+- **Research workspace** — dark neutral surfaces (Cursor-like), green accent (not chat-app purple)
 - **Template-neutral** — no thesis-specific chrome; project content fills modules
 - **System fonts v1** — no custom font loading until PX-6 polish
 
@@ -16,21 +16,34 @@
 
 ## Color tokens
 
+Dark theme. Tokens are stored as space-separated RGB channels (e.g. `20 20 20`)
+so Tailwind opacity modifiers work (`bg-warning/10` → `rgb(var(--color-warning) / 0.1)`).
+
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--color-bg` | `#fafaf9` | Page background |
-| `--color-surface` | `#ffffff` | Cards, active nav, panels |
-| `--color-surface-muted` | `#f5f5f4` | Sidebar, secondary panels |
-| `--color-border` | `#e7e5e4` | Dividers, card borders |
-| `--color-border-strong` | `#d6d3d1` | Emphasized borders |
-| `--color-ink` | `#1c1917` | Primary text |
-| `--color-ink-muted` | `#57534e` | Secondary text |
-| `--color-ink-subtle` | `#78716c` | Labels, meta |
-| `--color-accent` | `#1e4d6b` | Links, progress ring, focus |
-| `--color-accent-subtle` | `#e8f0f5` | Accent backgrounds |
-| `--color-success` | `#166534` | Approved status |
-| `--color-warning` | `#a16207` | Review / pending |
-| `--color-danger` | `#b91c1c` | Errors, blocked |
+| `--color-bg` | `#141414` | Page background |
+| `--color-surface` | `#1c1c1c` | Cards, active nav, panels |
+| `--color-surface-muted` | `#232323` | Sidebar, secondary panels |
+| `--color-border` | `#2e2e2e` | Dividers, card borders |
+| `--color-border-strong` | `#4d4d4d` | Emphasized borders |
+| `--color-ink` | `#ededed` | Primary text |
+| `--color-ink-muted` | `#a8a8a8` | Secondary text |
+| `--color-ink-subtle` | `#8c8c8c` | Labels, meta |
+| `--color-ink-inverse` | `#0f1210` | Text on solid accent/status fills |
+| `--color-accent` | `#2ea043` | Links, primary buttons, focus |
+| `--color-accent-muted` | `#3bb54f` | Hover on primary buttons |
+| `--color-accent-subtle` | `#16281b` | Accent-tinted backgrounds |
+| `--color-accent-ring` | `#46c55a` | Focus ring, progress ring |
+| `--color-success` | `#3fb950` | Approved status |
+| `--color-warning` | `#d29922` | Review / pending |
+| `--color-danger` | `#f85149` | Errors, blocked |
+
+Contrast rules (verified WCAG AA):
+
+- All ink tones hit ≥4.5:1 on every surface tone.
+- `text-accent` / status text hit ≥4.5:1 on `bg`, `surface`, and their own `/10` tints.
+- Solid accent/status fills (buttons, badges) use `text-ink-inverse` (dark label),
+  **not** `text-white` — white fails AA on the green/amber/red fills.
 
 Source: `frontend/styles/tokens.css`
 

@@ -62,7 +62,7 @@ export function KnowledgeExplorerSearch({
       />
       {error != null && (
         <p
-          className="mt-2 text-sm text-red-700"
+          className="mt-2 text-sm text-danger"
           role="alert"
           data-testid="knowledge-search-error"
         >

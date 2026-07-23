@@ -29,7 +29,7 @@ export function ConstraintChip({ constraint, className }: ConstraintChipProps) {
   return (
     <span
       className={cn(
-        "inline-flex max-w-full items-center gap-1 rounded-full border border-warning/30 bg-amber-50 px-2 py-0.5 text-xs font-medium text-warning",
+        "inline-flex max-w-full items-center gap-1 rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning",
         className
       )}
       title={label}

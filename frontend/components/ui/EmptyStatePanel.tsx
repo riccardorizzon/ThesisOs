@@ -45,7 +45,7 @@ export function EmptyStatePanel({
               className={cn(
                 "inline-flex rounded-md px-4 py-2 text-sm font-medium cursor-pointer",
                 action.variant === "primary"
-                  ? "bg-accent text-white hover:bg-accent/90"
+                  ? "bg-accent text-ink-inverse hover:bg-accent/90"
                   : "border border-border bg-surface text-ink hover:bg-surface-muted"
               )}
             >

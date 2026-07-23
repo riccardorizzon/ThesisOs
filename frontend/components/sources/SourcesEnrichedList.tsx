@@ -31,7 +31,7 @@ function SourcesPageHeader() {
       <Link
         href="/sources/upload"
         className={cn(
-          "inline-flex shrink-0 items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white",
+          "inline-flex shrink-0 items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-ink-inverse",
           "transition-colors duration-200 hover:bg-accent-muted",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
         )}
@@ -49,7 +49,7 @@ function ReturnToWritingPill({ chapterId }: { chapterId: string }) {
     <Link
       href={`/writing/${chapterId}`}
       className={cn(
-        "fixed bottom-6 right-6 z-40 rounded-full border border-accent bg-accent px-4 py-2 text-sm font-medium text-white shadow-md",
+        "fixed bottom-6 right-6 z-40 rounded-full border border-accent bg-accent px-4 py-2 text-sm font-medium text-ink-inverse shadow-md",
         "hover:bg-accent-muted cursor-pointer",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       )}

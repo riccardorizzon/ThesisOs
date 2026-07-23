@@ -116,7 +116,7 @@ function ConflictDialog({
           <button
             type="button"
             onClick={onOverwrite}
-            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-muted"
+            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-ink-inverse hover:bg-accent-muted"
           >
             Sovrascrivi con questa scheda
           </button>

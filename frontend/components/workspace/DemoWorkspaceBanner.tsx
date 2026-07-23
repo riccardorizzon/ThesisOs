@@ -83,7 +83,7 @@ export function DemoWorkspaceBanner() {
           <button
             type="button"
             onClick={() => setCopyOpen(true)}
-            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 cursor-pointer"
+            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-ink-inverse hover:opacity-90 cursor-pointer"
             data-testid="demo-copy-structure"
           >
             Copia struttura nel mio progetto
@@ -111,7 +111,7 @@ export function DemoWorkspaceBanner() {
               precaricato.
             </p>
             {copyError ? (
-              <p className="mt-3 text-sm text-red-700" role="alert">
+              <p className="mt-3 text-sm text-danger" role="alert">
                 {copyError}
               </p>
             ) : null}
@@ -127,7 +127,7 @@ export function DemoWorkspaceBanner() {
               <button
                 type="button"
                 onClick={() => void handleCopy()}
-                className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 cursor-pointer disabled:opacity-60"
+                className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-ink-inverse hover:opacity-90 cursor-pointer disabled:opacity-60"
                 disabled={copying}
                 data-testid="copy-structure-confirm"
               >

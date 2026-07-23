@@ -8,29 +8,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: "var(--color-bg)",
+        bg: "rgb(var(--color-bg) / <alpha-value>)",
         surface: {
-          DEFAULT: "var(--color-surface)",
-          muted: "var(--color-surface-muted)",
+          DEFAULT: "rgb(var(--color-surface) / <alpha-value>)",
+          muted: "rgb(var(--color-surface-muted) / <alpha-value>)",
         },
         border: {
-          DEFAULT: "var(--color-border)",
-          strong: "var(--color-border-strong)",
+          DEFAULT: "rgb(var(--color-border) / <alpha-value>)",
+          strong: "rgb(var(--color-border-strong) / <alpha-value>)",
         },
         ink: {
-          DEFAULT: "var(--color-ink)",
-          muted: "var(--color-ink-muted)",
-          subtle: "var(--color-ink-subtle)",
+          DEFAULT: "rgb(var(--color-ink) / <alpha-value>)",
+          muted: "rgb(var(--color-ink-muted) / <alpha-value>)",
+          subtle: "rgb(var(--color-ink-subtle) / <alpha-value>)",
+          inverse: "rgb(var(--color-ink-inverse) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: "var(--color-accent)",
-          muted: "var(--color-accent-muted)",
-          subtle: "var(--color-accent-subtle)",
-          ring: "var(--color-accent-ring)",
+          DEFAULT: "rgb(var(--color-accent) / <alpha-value>)",
+          muted: "rgb(var(--color-accent-muted) / <alpha-value>)",
+          subtle: "rgb(var(--color-accent-subtle) / <alpha-value>)",
+          ring: "rgb(var(--color-accent-ring) / <alpha-value>)",
         },
-        success: "var(--color-success)",
-        warning: "var(--color-warning)",
-        danger: "var(--color-danger)",
+        success: "rgb(var(--color-success) / <alpha-value>)",
+        warning: "rgb(var(--color-warning) / <alpha-value>)",
+        danger: "rgb(var(--color-danger) / <alpha-value>)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],

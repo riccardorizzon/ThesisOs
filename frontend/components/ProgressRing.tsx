@@ -51,7 +51,7 @@ export function ProgressRing({
             cy={center}
             r={radius}
             fill="none"
-            stroke="var(--color-border)"
+            stroke="rgb(var(--color-border))"
             strokeWidth={strokeWidth}
           />
           <circle
@@ -59,7 +59,7 @@ export function ProgressRing({
             cy={center}
             r={radius}
             fill="none"
-            stroke="var(--color-accent-ring)"
+            stroke="rgb(var(--color-accent-ring))"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}

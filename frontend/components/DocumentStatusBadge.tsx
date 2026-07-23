@@ -1,14 +1,14 @@
 import type { DocumentStatus } from "@/lib/documentClient";
 
 const STATUS_STYLES: Record<DocumentStatus, string> = {
-  uploaded: "bg-gray-100 text-gray-700",
-  processing: "bg-amber-100 text-amber-800",
-  parsed: "bg-emerald-100 text-emerald-800",
-  failed: "bg-rose-100 text-rose-800",
+  uploaded: "bg-surface-muted text-ink-muted",
+  processing: "bg-warning/10 text-warning",
+  parsed: "bg-success/10 text-success",
+  failed: "bg-danger/10 text-danger",
 };
 
 export function DocumentStatusBadge({ status }: { status: DocumentStatus }) {
-  const style = STATUS_STYLES[status] ?? "bg-gray-100 text-gray-700";
+  const style = STATUS_STYLES[status] ?? "bg-surface-muted text-ink-muted";
   return (
     <span
       className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${style}`}

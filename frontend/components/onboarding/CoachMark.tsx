@@ -172,7 +172,7 @@ export function CoachMark({
           <button
             type="button"
             onClick={onNext}
-            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-accent-muted"
+            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-ink-inverse transition-colors duration-200 hover:bg-accent-muted"
             data-testid="coach-mark-next"
           >
             {stepIndex + 1 >= totalSteps ? "Fine" : "Avanti"}

@@ -269,7 +269,7 @@ export function WritingAiPanel({
                 <button
                   type="button"
                   onClick={handleConfirmProposal}
-                  className="rounded-md bg-accent px-2 py-1 text-xs font-medium text-white cursor-pointer"
+                  className="rounded-md bg-accent px-2 py-1 text-xs font-medium text-ink-inverse cursor-pointer"
                   data-testid="confirm-proposal"
                 >
                   Aggiungi alla coda
@@ -301,7 +301,7 @@ export function WritingAiPanel({
                 type="button"
                 onClick={handleApplica}
                 disabled={!canApplica}
-                className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white cursor-pointer disabled:opacity-50"
+                className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-ink-inverse cursor-pointer disabled:opacity-50"
                 data-testid="applica-button"
               >
                 Applica

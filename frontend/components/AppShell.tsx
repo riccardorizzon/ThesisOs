@@ -112,7 +112,7 @@ export function AppShell({ children, rightPanel }: AppShellProps) {
                   {showHomeBadge ? (
                     <>
                       <span
-                        className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-xs font-medium text-white"
+                        className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-xs font-medium text-ink-inverse"
                         aria-hidden="true"
                         data-testid="nav-badge-home"
                       >

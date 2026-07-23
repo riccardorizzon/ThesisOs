@@ -244,7 +244,7 @@ export function ReviewMode({ className, contextPacket }: ReviewModeProps) {
             <p className="text-sm text-ink-muted">Nessuna revisione in sospeso</p>
             <Link
               href="/writing"
-              className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 cursor-pointer"
+              className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-ink-inverse hover:bg-accent/90 cursor-pointer"
             >
               Avvia revisione
             </Link>
@@ -265,7 +265,7 @@ export function ReviewMode({ className, contextPacket }: ReviewModeProps) {
                   <button
                     type="button"
                     onClick={handleCompare}
-                    className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 cursor-pointer"
+                    className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-ink-inverse hover:bg-accent/90 cursor-pointer"
                   >
                     Confronta revisione
                   </button>

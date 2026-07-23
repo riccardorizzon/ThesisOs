@@ -251,7 +251,7 @@ export function AiChatView() {
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 rounded-md bg-accent px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+                  className="shrink-0 rounded-md bg-accent px-3 py-2 text-sm font-medium text-ink-inverse hover:opacity-90 disabled:opacity-50"
                   disabled={streaming}
                   onClick={() =>
                     void send(
@@ -329,7 +329,7 @@ export function AiChatView() {
           )}
           {error && (
             <div
-              className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+              className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger"
               aria-live="polite"
             >
               {error}

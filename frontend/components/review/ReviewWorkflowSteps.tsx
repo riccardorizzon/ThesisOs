@@ -45,10 +45,10 @@ export function ReviewWorkflowSteps({
                 className={[
                   "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium",
                   isActive
-                    ? "border-blue-800 bg-blue-50 text-blue-900"
+                    ? "border-accent bg-accent-subtle text-accent"
                     : isComplete
-                      ? "border-green-700 bg-green-50 text-green-900"
-                      : "border-gray-300 bg-gray-50 text-gray-500",
+                      ? "border-success bg-success/10 text-success"
+                      : "border-border-strong bg-surface-muted text-ink-muted",
                 ].join(" ")}
                 aria-current={isActive ? "step" : undefined}
               >
@@ -56,10 +56,10 @@ export function ReviewWorkflowSteps({
                   className={[
                     "flex h-5 w-5 items-center justify-center rounded-full text-xs",
                     isActive
-                      ? "bg-blue-800 text-white"
+                      ? "bg-accent text-ink-inverse"
                       : isComplete
-                        ? "bg-green-700 text-white"
-                        : "bg-gray-300 text-gray-600",
+                        ? "bg-success text-ink-inverse"
+                        : "bg-border-strong text-ink",
                   ].join(" ")}
                   aria-hidden
                 >
@@ -69,7 +69,7 @@ export function ReviewWorkflowSteps({
               </span>
               {index < STEPS.length - 1 ? (
                 <span
-                  className="hidden text-gray-400 sm:inline"
+                  className="hidden text-ink-subtle sm:inline"
                   aria-hidden
                 >
                   →

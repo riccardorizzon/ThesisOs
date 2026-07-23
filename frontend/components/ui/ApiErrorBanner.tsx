@@ -40,21 +40,21 @@ export function ApiErrorBanner({
   return (
     <div
       className={cn(
-        "rounded-lg border border-red-200 bg-red-50 px-4 py-6",
+        "rounded-lg border border-danger/30 bg-danger/10 px-4 py-6",
         className
       )}
       role="alert"
       data-testid={testId}
     >
-      <p className="text-sm font-medium text-red-800">{title}</p>
-      <p className="mt-2 text-sm text-red-700" data-testid={`${testId}-message`}>
+      <p className="text-sm font-medium text-danger">{title}</p>
+      <p className="mt-2 text-sm text-danger" data-testid={`${testId}-message`}>
         {message}
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={handleRetry}
-          className="rounded-md bg-red-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-900 cursor-pointer"
+          className="rounded-md bg-danger px-3 py-1.5 text-sm font-medium text-ink-inverse hover:bg-danger/90 cursor-pointer"
           data-testid={`${testId}-retry`}
         >
           Riprova
@@ -62,7 +62,7 @@ export function ApiErrorBanner({
         {backHref ? (
           <Link
             href={backHref}
-            className="text-sm font-medium text-red-800 underline-offset-2 hover:underline cursor-pointer"
+            className="text-sm font-medium text-danger underline-offset-2 hover:underline cursor-pointer"
           >
             {backLabel}
           </Link>
