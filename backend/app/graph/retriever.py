@@ -8,8 +8,10 @@ from app.graph.corpus_query import (
     EXCLUSION_BOOST_QUERY,
     is_corpus_list_query,
 )
+from langchain_core.runnables import RunnableConfig
+
 from app.schemas.graph_state import AgentError, GraphState, Message, RetrievedChunk
-from app.schemas.retrieval import SearchResultItem
+from app.schemas.retrieval import SearchFilters, SearchResultItem
 from app.services.retrieval import EmbedFailedError, RetrievalService
 
 
@@ -40,17 +42,26 @@ def _merge_results(
 def make_retriever_node(retrieval_service: RetrievalService | None = None):
     service = retrieval_service or RetrievalService()
 
-    async def retriever_node(state: GraphState) -> dict:
+    async def retriever_node(state: GraphState, config: RunnableConfig) -> dict:
         query = _last_user_message(state.messages)
         if not query:
             return {"retrieved_context": [], "errors": list(state.errors)}
 
+        # INV-MTW-2: RAG reads only the active thesis corpus (project from
+        # LangGraph config, never GraphState — ADR-0014).
+        configurable = config.get("configurable") or {}
+        scope = SearchFilters(project_id=configurable.get("project_id"))
+
         try:
             limit = CORPUS_RETRIEVAL_LIMIT if is_corpus_list_query(query) else 10
-            results, _model = await service.search(query, limit=limit)
+            results, _model = await service.search(query, filters=scope, limit=limit)
             if is_corpus_list_query(query):
-                exclusion_extra, _ = await service.search(EXCLUSION_BOOST_QUERY, limit=4)
-                corpus_extra, _ = await service.search(CORPUS_LIST_BOOST_QUERY, limit=6)
+                exclusion_extra, _ = await service.search(
+                    EXCLUSION_BOOST_QUERY, filters=scope, limit=4
+                )
+                corpus_extra, _ = await service.search(
+                    CORPUS_LIST_BOOST_QUERY, filters=scope, limit=6
+                )
                 results = _merge_results(
                     results,
                     exclusion_extra,

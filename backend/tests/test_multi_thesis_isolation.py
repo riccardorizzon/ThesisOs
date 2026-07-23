@@ -7,9 +7,29 @@ requests without an explicit project keep today's Default Thesis behaviour
 
 import pytest
 
+from app.db.models import EMBEDDING_DIM
 from app.schemas.document import DocumentListFilters, DocumentUploadMetadata
+from app.schemas.retrieval import SearchFilters
 from app.services.document import DocumentService
+from app.services.document.parsers.base import ParsedChunk, ParseResult
 from app.services.document.storage import LocalStorageAdapter
+from app.services.retrieval import RetrievalService
+
+
+class _FakeParser:
+    def __init__(self, chunks: list[str]):
+        self.name = "docling"
+        self._result = ParseResult(
+            parser="docling", chunks=[ParsedChunk(content=c) for c in chunks]
+        )
+
+    def parse(self, data, source_type):
+        return self._result
+
+
+class _FakeLLM:
+    async def embed(self, texts, *, model=None):
+        return [[0.01] * EMBEDDING_DIM for _ in texts]
 
 
 @pytest.fixture
@@ -46,6 +66,40 @@ async def test_documents_isolated_per_project(doc_svc, db_session):
         DocumentListFilters(project_id="thesis-003"), session=db_session
     )
     assert empty == []
+
+
+async def _indexed_document(doc_svc, db_session, *, project_id, chunks):
+    retrieval = RetrievalService(llm=_FakeLLM(), documents=doc_svc)
+    meta = DocumentUploadMetadata(project_id=project_id)
+    rec = await doc_svc.upload(
+        filename=f"{project_id or 'default'}.pdf", data=b"%PDF", meta=meta, session=db_session
+    )
+    await doc_svc.parse(rec.id, primary=_FakeParser(chunks), session=db_session)
+    await retrieval.embed_document(rec.id, session=db_session)
+    return rec.id
+
+
+async def test_retrieval_isolated_per_project(doc_svc, db_session):
+    retrieval = RetrievalService(llm=_FakeLLM(), documents=doc_svc)
+    main_doc = await _indexed_document(
+        doc_svc, db_session, project_id=None, chunks=["moda e processo creativo"]
+    )
+    other_doc = await _indexed_document(
+        doc_svc, db_session, project_id="thesis-002", chunks=["storia del diritto romano"]
+    )
+
+    default_results, _ = await retrieval.search("processo", session=db_session)
+    assert {r.document_id for r in default_results} == {main_doc}
+
+    other_results, _ = await retrieval.search(
+        "processo", filters=SearchFilters(project_id="thesis-002"), session=db_session
+    )
+    assert {r.document_id for r in other_results} == {other_doc}
+
+    empty_results, _ = await retrieval.search(
+        "processo", filters=SearchFilters(project_id="thesis-003"), session=db_session
+    )
+    assert empty_results == []
 
 
 async def test_upload_registers_source_in_same_project(doc_svc, db_session):

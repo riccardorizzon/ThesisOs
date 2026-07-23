@@ -24,6 +24,7 @@ VALID_ACTIONS = frozenset({"rewrite", "verify", "find-sources", "expand"})
 
 class WritingActionRequest(BaseModel):
     action: str = Field(min_length=1, max_length=64)
+    project_id: str | None = None  # ADR-0047: None ⇒ Default Thesis
     chapter_id: str | None = None
     selection_text: str | None = None
     chapter_content: str = ""
@@ -50,6 +51,7 @@ async def writing_actions(req: WritingActionRequest):
             action=req.action,
             selection_text=req.selection_text,
             chapter_content=req.chapter_content,
+            project_id=req.project_id,
         )
     except WritingPanelRetrievalError as exc:
         return JSONResponse(

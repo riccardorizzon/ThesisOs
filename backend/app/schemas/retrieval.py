@@ -8,11 +8,13 @@ from app.schemas.graph_state import RetrievedChunk
 
 
 class SearchFilters(BaseModel):
+    project_id: str | None = None  # ADR-0047: None ⇒ Default Thesis
     document_ids: list[str] | None = None
     source_types: list[str] | None = None
 
 
 class SearchRequest(BaseModel):
+    project_id: str | None = None  # ADR-0047: None ⇒ Default Thesis
     query: str = Field(min_length=1)
     limit: int = Field(default=10, ge=1, le=100)
     document_ids: list[str] | None = None

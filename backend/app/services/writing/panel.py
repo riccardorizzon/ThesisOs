@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.schemas.graph_state import RetrievedChunk
-from app.schemas.retrieval import SearchResultItem
+from app.schemas.retrieval import SearchFilters, SearchResultItem
 from app.services.retrieval import EmbedFailedError, RetrievalService
 
 WRITING_PANEL_RETRIEVAL_LIMIT = 10
@@ -51,6 +51,7 @@ async def fetch_panel_retrieved_context(
     action: str,
     selection_text: str | None,
     chapter_content: str,
+    project_id: str | None = None,
     retrieval_service: RetrievalService | None = None,
 ) -> list[RetrievedChunk]:
     """Run corpus search for a writing panel action; empty when no query text."""
@@ -64,7 +65,11 @@ async def fetch_panel_retrieved_context(
 
     service = retrieval_service or RetrievalService()
     try:
-        results, _model = await service.search(query, limit=WRITING_PANEL_RETRIEVAL_LIMIT)
+        results, _model = await service.search(
+            query,
+            filters=SearchFilters(project_id=project_id),
+            limit=WRITING_PANEL_RETRIEVAL_LIMIT,
+        )
     except EmbedFailedError as exc:
         raise WritingPanelRetrievalError(str(exc)) from exc
     return search_results_to_chunks(results)

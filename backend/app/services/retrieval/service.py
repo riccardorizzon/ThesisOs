@@ -15,6 +15,7 @@ from app.db.session_async import AsyncSessionLocal
 from app.llm.base import LLMClient
 from app.llm.factory import get_llm_client
 from app.schemas.retrieval import SearchFilters, SearchResultItem
+from app.services.project_scope import resolve_project_id
 from app.services.document.chunking import estimate_tokens
 from app.services.document.exceptions import DocumentNotFoundError
 from app.services.document.service import DocumentService
@@ -267,13 +268,19 @@ class RetrievalService:
         query_vec = query_vectors[0]
         vec_literal = "[" + ",".join(str(v) for v in query_vec) + "]"
 
-        clauses = ["d.status = 'indexed'", "e.model = :model"]
+        # INV-MTW-2: retrieval never crosses thesis workspaces.
+        clauses = [
+            "d.status = 'indexed'",
+            "e.model = :model",
+            "d.project_id = :project_id",
+        ]
         params: dict = {
             "model": self._embedding_model,
             "query": query,
             "query_vec": vec_literal,
             "alpha": hybrid_alpha,
             "limit": limit,
+            "project_id": resolve_project_id(filters.project_id),
         }
         if filters.document_ids:
             clauses.append("c.document_id = ANY(:document_ids)")

@@ -24,6 +24,7 @@ async def search_corpus(body: SearchRequest):
         results, model = await _service.search(
             body.query.strip(),
             filters=SearchFilters(
+                project_id=body.project_id,
                 document_ids=body.document_ids,
                 source_types=body.source_types,
             ),
