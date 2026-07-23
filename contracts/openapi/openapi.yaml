@@ -67,6 +67,7 @@ paths:
                 title: { type: string, nullable: true }
                 author: { type: string, nullable: true }
                 language: { type: string, nullable: true }
+                project_id: { type: string, nullable: true, description: "Target thesis workspace (ADR-0047; default thesis-agent)" }
       responses:
         "201": { description: Created (status uploaded; parse runs async), content: { application/json: { schema: { $ref: "#/components/schemas/Document" } } } }
         "400": { description: Unsupported format, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
@@ -75,6 +76,7 @@ paths:
       summary: List documents (q is an ILIKE filter on title/filename only — not search)
       x-milestone: M3
       parameters:
+        - { name: project_id, in: query, required: false, schema: { type: string }, description: "Thesis workspace filter (ADR-0047; default thesis-agent)" }
         - { name: source_type, in: query, required: false, schema: { type: string, enum: [pdf, epub, docx] } }
         - { name: status, in: query, required: false, schema: { type: string, enum: [uploaded, processing, parsed, failed] } }
         - { name: q, in: query, required: false, schema: { type: string }, description: "Case-insensitive substring on title/filename (not corpus search)" }
@@ -250,6 +252,7 @@ paths:
       summary: List memories
       x-milestone: M2
       parameters:
+        - { name: project_id, in: query, required: false, schema: { type: string }, description: "Thesis workspace filter (ADR-0047; default thesis-agent)" }
         - { name: kind, in: query, required: false, schema: { type: string, enum: [user, thesis, concept, citation, decision, editable] } }
         - { name: key, in: query, required: false, schema: { type: string } }
         - { name: pinned, in: query, required: false, schema: { type: boolean } }
@@ -481,6 +484,37 @@ paths:
             text/markdown:
               schema: { type: string }
         "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /projects:
+    get:
+      summary: List thesis workspaces (project registry — ADR-0047)
+      x-milestone: PX6
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: "#/components/schemas/Project" } } } } } } }
+    post:
+      summary: Create a new thesis workspace (sequential id thesis-NNN)
+      x-milestone: PX6
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProjectCreate" }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Project" } } } }
+        "422": { description: Invalid display_name, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /projects/{project_id}:
+    patch:
+      summary: Rename a thesis workspace
+      x-milestone: PX6
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProjectUpdate" }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Project" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
   /projects/{project_id}/context:
     get:
       summary: Context packet for a UI surface
@@ -582,6 +616,7 @@ components:
       type: object
       required: [kind, content]
       properties:
+        project_id: { type: string, nullable: true, description: "Thesis workspace (ADR-0047; default thesis-agent)" }
         kind: { type: string, enum: [user, thesis, concept, citation, decision, editable] }
         title: { type: string, nullable: true }
         content: { type: string }
@@ -722,6 +757,7 @@ components:
       type: object
       required: [query]
       properties:
+        project_id: { type: string, nullable: true, description: "Thesis workspace filter (ADR-0047; default thesis-agent)" }
         query: { type: string, minLength: 1 }
         limit: { type: integer, default: 10, minimum: 1, maximum: 100 }
         document_ids: { type: array, items: { type: string, format: uuid } }
@@ -745,3 +781,22 @@ components:
       properties:
         results: { type: array, items: { $ref: "#/components/schemas/SearchResultItem" } }
         query_embedding_model: { type: string }
+    Project:
+      type: object
+      required: [id, display_name, created_at]
+      properties:
+        id: { type: string, description: "thesis-agent | demo-thesis | thesis-NNN (ADR-0047)" }
+        display_name: { type: string }
+        kind: { type: string, enum: [owned, demo], default: owned }
+        status: { type: string, enum: [active, archived], default: active }
+        created_at: { type: string, format: date-time }
+    ProjectCreate:
+      type: object
+      required: [display_name]
+      properties:
+        display_name: { type: string, minLength: 1, maxLength: 120 }
+    ProjectUpdate:
+      type: object
+      required: [display_name]
+      properties:
+        display_name: { type: string, minLength: 1, maxLength: 120 }
