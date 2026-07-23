@@ -7,12 +7,17 @@
 **Goal:** Route orchestration through Gemini 3.5 Flash-Lite, route thesis production through
 Gemini 3.6 Flash, and reduce chat time-to-first-token while preserving the complete LangGraph.
 
-> **Status 2026-07-23:** Tasks 1–4 implemented and verified green
-> (`test_llm_factory`, `test_litellm_client`, `test_m5_graph_topology`,
-> `test_inference_enforcement`, `test_companion_chat_wiring`, `test_m6_writer_route`,
-> `test_m6_writing_integration`, `test_conversations_api`). Task 5 deployment and live
-> latency evidence (steps 2–9) still pending. Persistence contract added on top:
-> see `decisions/ADR-0046-persistence-contract.md`.
+> **Status 2026-07-23 (complete):** Tasks 1–5 done. Full CI green (`make ci` exit 0).
+> Deployed via docker compose rebuild; `/ready` 200; container config verified
+> `global gemini-3.6-flash gemini-3.5-flash-lite`. Live evidence (3 resume + 3 ordinary
+> turns): resume median first token **2.15s** (≤5s), ordinary median **5.16s** (≤8s);
+> resume orchestration nodes at **0ms** in `agent_steps`; ordinary orchestration on
+> Flash-Lite (~0.8–1.4s/node). Grounded turn emitted `sources`; Writer branch confirmed
+> `retriever → writer` (11.0s writer node). Diagnostic conversations/runs/tasks deleted
+> (verified 0 residues); backend logs clean. Deployed E2E: 9/9 passed.
+> Persistence contract verified live on top (ADR-0046): «la salvo» and «basta per oggi»
+> now write memory rows (v6→v7, v12→v13) before confirming; real continuity rows
+> restored afterwards via versioned memory API.
 
 **Architecture:** Keep the current graph topology and inject a second LLM client only into
 Supervisor, Planner and Router. Deterministically classify the Companion resume marker inside
@@ -540,7 +545,7 @@ cd backend
 
 Expected: all selected tests pass.
 
-- [ ] **Step 2: Run the repository gate**
+- [x] **Step 2: Run the repository gate**
 
 Run:
 
@@ -551,7 +556,7 @@ make ci
 Expected: exit code `0`; backend, frontend, Builder Engine, schema drift and classification
 checks pass.
 
-- [ ] **Step 3: Rebuild and redeploy the backend**
+- [x] **Step 3: Rebuild and redeploy the backend**
 
 Run:
 
@@ -564,7 +569,7 @@ curl --retry 15 --retry-delay 2 --retry-all-errors --fail \
 
 Expected: readiness `200`, with DB and configuration true.
 
-- [ ] **Step 4: Verify the deployed model configuration**
+- [x] **Step 4: Verify the deployed model configuration**
 
 Run:
 
@@ -579,7 +584,7 @@ Expected:
 global gemini-3.6-flash gemini-3.5-flash-lite
 ```
 
-- [ ] **Step 5: Measure three resume and three ordinary turns**
+- [x] **Step 5: Measure three resume and three ordinary turns**
 
 Use fixed, unique diagnostic conversation UUIDs. For each streamed request record:
 
@@ -597,7 +602,7 @@ resume orchestration nodes execute with near-zero duration
 ordinary orchestration uses Flash-Lite
 ```
 
-- [ ] **Step 6: Exercise live Grounded and Writer branches**
+- [x] **Step 6: Exercise live Grounded and Writer branches**
 
 Send one source-grounded question and one explicit drafting request. Confirm from
 `agent_steps` and SSE:
@@ -610,13 +615,13 @@ Writer:   retriever → writer
 Record the set of task IDs before the smoke test so any tasks created by the diagnostic can
 be identified precisely.
 
-- [ ] **Step 7: Remove only diagnostic records**
+- [x] **Step 7: Remove only diagnostic records**
 
 In one transaction, delete `agent_steps`, `agent_runs`, `messages`, conversations and any
 task IDs created by the diagnostic UUIDs. Verify each diagnostic conversation count is zero.
 Do not delete pre-existing thesis conversations or tasks.
 
-- [ ] **Step 8: Run deployed browser E2E**
+- [x] **Step 8: Run deployed browser E2E**
 
 Run:
 
@@ -630,7 +635,7 @@ npm test -- m7-product-flow.spec.ts
 
 Expected: 9 tests pass.
 
-- [ ] **Step 9: Inspect recent logs**
+- [x] **Step 9: Inspect recent logs**
 
 Inspect backend/frontend logs since deployment. Accept no traceback, HTTP 5xx or failed
 graph node. Report existing future-compatibility warnings separately rather than treating
