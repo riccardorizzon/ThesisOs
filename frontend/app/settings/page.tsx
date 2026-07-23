@@ -7,14 +7,28 @@ import {
   saveProjectPrefs,
   type ProjectPrefs,
 } from "@/lib/projectPrefs";
+import { renameProject } from "@/lib/projectsClient";
 
 /** PX-6 settings depth — replaces M0 stub. */
 export default function SettingsPage() {
   const [prefs, setPrefs] = useState<ProjectPrefs | null>(null);
+  const [renameStatus, setRenameStatus] = useState<"idle" | "saved" | "error">(
+    "idle"
+  );
 
   useEffect(() => {
     setPrefs(loadProjectPrefs());
   }, []);
+
+  const syncDisplayName = async () => {
+    if (!prefs?.displayName.trim()) return;
+    try {
+      await renameProject(getActiveProjectId(), prefs.displayName.trim());
+      setRenameStatus("saved");
+    } catch {
+      setRenameStatus("error");
+    }
+  };
 
   if (!prefs) {
     return (
@@ -47,10 +61,24 @@ export default function SettingsPage() {
           <input
             type="text"
             value={prefs.displayName}
-            onChange={(e) => update({ displayName: e.target.value })}
+            onChange={(e) => {
+              setRenameStatus("idle");
+              update({ displayName: e.target.value });
+            }}
+            onBlur={() => void syncDisplayName()}
             className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
           />
         </label>
+        {renameStatus === "saved" ? (
+          <p className="text-xs text-success" role="status">
+            Nome sincronizzato con il registro tesi.
+          </p>
+        ) : null}
+        {renameStatus === "error" ? (
+          <p className="text-xs text-warning" role="alert">
+            Nome salvato solo in locale — registro non raggiungibile.
+          </p>
+        ) : null}
         <p className="text-xs text-ink-subtle">
           ID attivo: <span className="font-mono">{getActiveProjectId()}</span>
         </p>

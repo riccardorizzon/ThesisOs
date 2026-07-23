@@ -19,10 +19,21 @@ export function getActiveProjectId(): string {
   return localStorage.getItem(STORAGE_KEY) ?? "thesis-agent";
 }
 
+const LAST_PERSONAL_KEY = "thesisos:last-personal-project-id";
+
 export function setActiveProjectId(projectId: string): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, projectId);
+  if (projectId !== "demo-thesis") {
+    localStorage.setItem(LAST_PERSONAL_KEY, projectId);
+  }
   document.cookie = `${ACTIVE_PROJECT_COOKIE}=${encodeURIComponent(projectId)}; path=/; max-age=31536000; samesite=lax`;
+}
+
+/** Last owned (non-demo) thesis the user worked on — chat returns here from demo. */
+export function getLastPersonalProjectId(): string {
+  if (typeof window === "undefined") return "thesis-agent";
+  return localStorage.getItem(LAST_PERSONAL_KEY) ?? "thesis-agent";
 }
 
 /** SSR: read active project id from Cookie header (synced by setActiveProjectId). */

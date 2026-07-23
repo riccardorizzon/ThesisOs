@@ -23,3 +23,19 @@ export async function createProject(displayName: string): Promise<ProjectEntry> 
   if (!res.ok) throw new Error(`Project create failed: ${res.status}`);
   return res.json() as Promise<ProjectEntry>;
 }
+
+export async function renameProject(
+  projectId: string,
+  displayName: string
+): Promise<ProjectEntry> {
+  const res = await fetch(
+    `${apiBaseUrl()}/projects/${encodeURIComponent(projectId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ display_name: displayName }),
+    }
+  );
+  if (!res.ok) throw new Error(`Project rename failed: ${res.status}`);
+  return res.json() as Promise<ProjectEntry>;
+}

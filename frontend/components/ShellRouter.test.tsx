@@ -33,6 +33,7 @@ vi.mock("@/lib/workspacePrefs", () => ({
 }));
 vi.mock("@/lib/projectPrefs", () => ({
   getActiveProjectId: () => "demo-thesis",
+  getLastPersonalProjectId: () => "thesis-agent",
   setActiveProjectId,
 }));
 
