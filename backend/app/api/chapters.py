@@ -31,6 +31,20 @@ def _err(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(status_code=status, content={"code": code, "message": message})
 
 
+async def _scope_error(chapter_id: str, project_id: str | None) -> JSONResponse | None:
+    """404 when the chapter belongs to another thesis (ADR-0047 INV-MTW-2).
+
+    Scope is enforced only when the caller declares a project; legacy callers
+    keep today's behaviour (INV-MTW-1).
+    """
+    if not project_id:
+        return None
+    record = await _service.get(chapter_id)
+    if record.project_id != project_id:
+        return _err(404, "chapter_not_found", f"Chapter not found: {chapter_id}")
+    return None
+
+
 @router.patch("/chapters/reorder")
 async def reorder_chapters(body: ChapterReorderRequest):
     try:
@@ -68,24 +82,30 @@ async def list_chapters(
 
 
 @router.post("/chapters/copy-demo-structure", status_code=201)
-async def copy_demo_structure():
-    return await _service.copy_demo_structure()
+async def copy_demo_structure(project_id: str | None = None):
+    return await _service.copy_demo_structure(project_id=project_id)
 
 
 @router.get("/chapters/{chapter_id}")
-async def get_chapter(chapter_id: str):
+async def get_chapter(chapter_id: str, project_id: str | None = None):
     try:
-        return await _service.get(chapter_id)
+        record = await _service.get(chapter_id)
+        if project_id and record.project_id != project_id:
+            return _err(404, "chapter_not_found", f"Chapter not found: {chapter_id}")
+        return record
     except ChapterNotFoundError as exc:
         return _err(404, "chapter_not_found", str(exc))
 
 
 @router.patch("/chapters/{chapter_id}")
-async def update_chapter(chapter_id: str, body: ChapterUpdate):
+async def update_chapter(chapter_id: str, body: ChapterUpdate, project_id: str | None = None):
     """Update content and/or metadata. A non-null `content_md` → content edit;
     otherwise a metadata/status edit. `expected_version` required (FastAPI 422);
     stale → 409 (ADR-0033)."""
     try:
+        scope_err = await _scope_error(chapter_id, project_id)
+        if scope_err is not None:
+            return scope_err
         if body.content_md is not None:
             return await _service.update_content(
                 chapter_id,
@@ -111,16 +131,22 @@ async def update_chapter(chapter_id: str, body: ChapterUpdate):
 
 
 @router.get("/chapters/{chapter_id}/versions")
-async def list_chapter_versions(chapter_id: str):
+async def list_chapter_versions(chapter_id: str, project_id: str | None = None):
     try:
+        scope_err = await _scope_error(chapter_id, project_id)
+        if scope_err is not None:
+            return scope_err
         return await _service.list_versions(chapter_id)
     except ChapterNotFoundError as exc:
         return _err(404, "chapter_not_found", str(exc))
 
 
 @router.delete("/chapters/{chapter_id}", status_code=204)
-async def delete_chapter(chapter_id: str):
+async def delete_chapter(chapter_id: str, project_id: str | None = None):
     try:
+        scope_err = await _scope_error(chapter_id, project_id)
+        if scope_err is not None:
+            return scope_err
         await _service.delete(chapter_id)
     except ChapterNotFoundError as exc:
         return _err(404, "chapter_not_found", str(exc))

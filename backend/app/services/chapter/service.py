@@ -188,13 +188,13 @@ class ChapterService:
                 raise
 
     async def copy_demo_structure(
-        self, *, session: AsyncSession | None = None
+        self, *, project_id: str | None = None, session: AsyncSession | None = None
     ) -> CopyDemoStructureResponse:
         if session is not None:
-            return await self._copy_demo_structure(session)
+            return await self._copy_demo_structure(session, project_id=project_id)
         async with AsyncSessionLocal() as s:
             try:
-                result = await self._copy_demo_structure(s)
+                result = await self._copy_demo_structure(s, project_id=project_id)
                 await s.commit()
                 return result
             except Exception:
@@ -264,15 +264,22 @@ class ChapterService:
         scoped = self._apply_scope(rows, filters.scope)
         return [self._to_record(r) for r in scoped]
 
-    async def _copy_demo_structure(self, session: AsyncSession) -> CopyDemoStructureResponse:
+    async def _copy_demo_structure(
+        self, session: AsyncSession, *, project_id: str | None = None
+    ) -> CopyDemoStructureResponse:
+        target_project = resolve_project_id(project_id)
         rows = (await session.execute(select(models.Chapter))).scalars().all()
         # Copy only quarantined dogfood templates — never thesis migration seeds.
         demo_rows = sorted(
             [r for r in rows if _is_quarantined_dogfood(r)],
             key=lambda r: (r.order_index, r.created_at),
         )
+        # Duplicate-title guard is scoped to the destination thesis (ADR-0047).
         owned_titles = {
-            r.title.strip().lower() for r in rows if not _is_quarantined_dogfood(r)
+            r.title.strip().lower()
+            for r in rows
+            if not _is_quarantined_dogfood(r)
+            and resolve_project_id(getattr(r, "project_id", None)) == target_project
         }
         created: list[ChapterRecord] = []
         skipped: list[str] = []
@@ -287,6 +294,7 @@ class ChapterService:
                 session,
                 ChapterCreate(
                     title=sanitized_title,
+                    project_id=target_project,
                     parent_id=None,
                     order_index=row.order_index,
                     status="draft",

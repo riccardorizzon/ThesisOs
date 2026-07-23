@@ -26,6 +26,16 @@ def _err(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(status_code=status, content={"code": code, "message": message})
 
 
+async def _scope_error(document_id: str, project_id: str | None) -> JSONResponse | None:
+    """404 when the document belongs to another thesis (ADR-0047 INV-MTW-2)."""
+    if not project_id:
+        return None
+    record = await _service.get(document_id)
+    if record.project_id != project_id:
+        return _err(404, "document_not_found", f"Document not found: {document_id}")
+    return None
+
+
 async def _parse_in_background(document_id: str) -> None:
     """Run parse then the M4 embed pipeline off the request path.
 
@@ -95,16 +105,22 @@ async def list_documents(
 
 
 @router.get("/documents/{document_id}")
-async def get_document(document_id: str):
+async def get_document(document_id: str, project_id: str | None = None):
     try:
-        return await _service.get(document_id)
+        record = await _service.get(document_id)
+        if project_id and record.project_id != project_id:
+            return _err(404, "document_not_found", f"Document not found: {document_id}")
+        return record
     except DocumentNotFoundError as exc:
         return _err(404, "document_not_found", str(exc))
 
 
 @router.patch("/documents/{document_id}")
-async def update_document(document_id: str, body: DocumentUpdate):
+async def update_document(document_id: str, body: DocumentUpdate, project_id: str | None = None):
     try:
+        scope_err = await _scope_error(document_id, project_id)
+        if scope_err is not None:
+            return scope_err
         return await _service.update(document_id, body)
     except DocumentNotFoundError as exc:
         return _err(404, "document_not_found", str(exc))
@@ -113,8 +129,11 @@ async def update_document(document_id: str, body: DocumentUpdate):
 
 
 @router.delete("/documents/{document_id}", status_code=204, response_model=None)
-async def delete_document(document_id: str):
+async def delete_document(document_id: str, project_id: str | None = None):
     try:
+        scope_err = await _scope_error(document_id, project_id)
+        if scope_err is not None:
+            return scope_err
         await _service.delete(document_id)
         return Response(status_code=204)
     except DocumentNotFoundError as exc:
@@ -122,24 +141,33 @@ async def delete_document(document_id: str):
 
 
 @router.get("/documents/{document_id}/chunks")
-async def list_document_chunks(document_id: str):
+async def list_document_chunks(document_id: str, project_id: str | None = None):
     try:
+        scope_err = await _scope_error(document_id, project_id)
+        if scope_err is not None:
+            return scope_err
         return await _service.list_chunks(document_id)
     except DocumentNotFoundError as exc:
         return _err(404, "document_not_found", str(exc))
 
 
 @router.get("/documents/{document_id}/versions")
-async def list_document_versions(document_id: str):
+async def list_document_versions(document_id: str, project_id: str | None = None):
     try:
+        scope_err = await _scope_error(document_id, project_id)
+        if scope_err is not None:
+            return scope_err
         return await _service.list_versions(document_id)
     except DocumentNotFoundError as exc:
         return _err(404, "document_not_found", str(exc))
 
 
 @router.post("/documents/{document_id}/reparse", status_code=202)
-async def reparse_document(document_id: str, background_tasks: BackgroundTasks):
+async def reparse_document(document_id: str, background_tasks: BackgroundTasks, project_id: str | None = None):
     try:
+        scope_err = await _scope_error(document_id, project_id)
+        if scope_err is not None:
+            return scope_err
         await _service.get(document_id)
     except DocumentNotFoundError as exc:
         return _err(404, "document_not_found", str(exc))

@@ -172,6 +172,52 @@ async def test_conversations_isolated_per_project(db_session):
             await svc._get_or_create_conversation(s, main.id, project_id="thesis-002")
 
 
+async def test_chapter_ownership_check_hides_foreign_chapters(db_session):
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+    from app.schemas.chapter import ChapterCreate
+    from app.services.chapter import ChapterService
+
+    chapter = await ChapterService().create(
+        ChapterCreate(title="Cap. moda", project_id="thesis-agent"), session=db_session
+    )
+    await db_session.commit()
+
+    client = TestClient(app)
+    own = client.get(f"/chapters/{chapter.id}", params={"project_id": "thesis-agent"})
+    assert own.status_code == 200
+
+    foreign = client.get(f"/chapters/{chapter.id}", params={"project_id": "thesis-002"})
+    assert foreign.status_code == 404
+
+    legacy = client.get(f"/chapters/{chapter.id}")
+    assert legacy.status_code == 200  # INV-MTW-1
+
+
+async def test_copy_demo_structure_targets_requested_project(db_session):
+    from app.schemas.chapter import ChapterCreate, ChapterListFilters
+    from app.services.chapter import ChapterService
+
+    svc = ChapterService()
+    await svc.create(
+        ChapterCreate(title="Introduzione (dogfood M6)", project_id="demo-thesis"),
+        session=db_session,
+    )
+    result = await svc.copy_demo_structure(project_id="thesis-002", session=db_session)
+    assert len(result.created) == 1
+    assert result.created[0].project_id == "thesis-002"
+
+    target = await svc.list(
+        ChapterListFilters(project_id="thesis-002"), session=db_session
+    )
+    assert {c.project_id for c in target} == {"thesis-002"}
+    default_side = await svc.list(
+        ChapterListFilters(project_id="thesis-agent"), session=db_session
+    )
+    assert default_side == []
+
+
 async def test_upload_registers_source_in_same_project(doc_svc, db_session):
     from sqlalchemy import text
 

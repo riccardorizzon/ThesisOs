@@ -79,7 +79,7 @@ class FakeChapterService:
             )
         ]
 
-    async def copy_demo_structure(self, *, session=None):
+    async def copy_demo_structure(self, *, project_id=None, session=None):
         return {"created": [_record(title="Capitolo demo")], "skipped_titles": []}
 
 

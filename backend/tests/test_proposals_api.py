@@ -73,7 +73,7 @@ class FakeProposalService:
             return []
         return [item]
 
-    async def accept(self, proposal_id, data=None, *, session=None):
+    async def accept(self, proposal_id, data=None, *, project_id=None, session=None):
         if proposal_id == "missing":
             raise ProposalNotFoundError(proposal_id)
         if proposal_id == "resolved":
@@ -97,7 +97,7 @@ class FakeProposalService:
             updated_at=now,
         )
 
-    async def reject(self, proposal_id, data=None, *, session=None):
+    async def reject(self, proposal_id, data=None, *, project_id=None, session=None):
         if proposal_id == "missing":
             raise ProposalNotFoundError(proposal_id)
         if proposal_id == "resolved":

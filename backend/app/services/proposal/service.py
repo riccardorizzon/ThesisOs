@@ -111,14 +111,15 @@ class ProposalService:
         proposal_id: str,
         data: ProposalAcceptRequest | None = None,
         *,
+        project_id: str | None = None,
         session: AsyncSession | None = None,
     ) -> ChapterRecord:
         data = data or ProposalAcceptRequest()
         if session is not None:
-            return await self._accept(session, proposal_id, data)
+            return await self._accept(session, proposal_id, data, expected_project_id=project_id)
         async with AsyncSessionLocal() as s:
             try:
-                record = await self._accept(s, proposal_id, data)
+                record = await self._accept(s, proposal_id, data, expected_project_id=project_id)
                 await s.commit()
                 return record
             except Exception:
@@ -130,14 +131,15 @@ class ProposalService:
         proposal_id: str,
         data: ProposalRejectRequest | None = None,
         *,
+        project_id: str | None = None,
         session: AsyncSession | None = None,
     ) -> ProposalRecord:
         data = data or ProposalRejectRequest()
         if session is not None:
-            return await self._reject(session, proposal_id, data)
+            return await self._reject(session, proposal_id, data, expected_project_id=project_id)
         async with AsyncSessionLocal() as s:
             try:
-                record = await self._reject(s, proposal_id, data)
+                record = await self._reject(s, proposal_id, data, expected_project_id=project_id)
                 await s.commit()
                 return record
             except Exception:
@@ -169,9 +171,16 @@ class ProposalService:
         return [self._to_record(r) for r in rows]
 
     async def _accept(
-        self, session: AsyncSession, proposal_id: str, data: ProposalAcceptRequest
+        self,
+        session: AsyncSession,
+        proposal_id: str,
+        data: ProposalAcceptRequest,
+        *,
+        expected_project_id: str | None = None,
     ) -> ChapterRecord:
-        row = await self._require_pending(session, proposal_id)
+        row = await self._require_pending(
+            session, proposal_id, expected_project_id=expected_project_id
+        )
         chapter = await self._chapters.get(row.chapter_id, session=session)
         expected_version = (
             data.expected_chapter_version
@@ -189,9 +198,16 @@ class ProposalService:
         return updated
 
     async def _reject(
-        self, session: AsyncSession, proposal_id: str, data: ProposalRejectRequest
+        self,
+        session: AsyncSession,
+        proposal_id: str,
+        data: ProposalRejectRequest,
+        *,
+        expected_project_id: str | None = None,
     ) -> ProposalRecord:
-        row = await self._require_pending(session, proposal_id)
+        row = await self._require_pending(
+            session, proposal_id, expected_project_id=expected_project_id
+        )
         row.status = "rejected"
         meta = dict(row.metadata_ or {})
         if data.reason:
@@ -201,9 +217,19 @@ class ProposalService:
         await session.flush()
         return self._to_record(row)
 
-    async def _require_pending(self, session: AsyncSession, proposal_id: str) -> ProposalRow:
+    async def _require_pending(
+        self,
+        session: AsyncSession,
+        proposal_id: str,
+        *,
+        expected_project_id: str | None = None,
+    ) -> ProposalRow:
         row = await session.get(ProposalRow, proposal_id)
         if row is None:
+            raise ProposalNotFoundError(proposal_id)
+        # Declared-scope check (ADR-0047 INV-MTW-2): proposals of another
+        # thesis are invisible, not just untouchable.
+        if expected_project_id and row.project_id != expected_project_id:
             raise ProposalNotFoundError(proposal_id)
         if row.status != "pending":
             raise ProposalNotPendingError(proposal_id, row.status)

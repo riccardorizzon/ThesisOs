@@ -28,8 +28,8 @@ async def create_conversation(body: ConversationCreate):
 
 
 @router.get("/conversations/{conversation_id}/messages")
-async def list_messages(conversation_id: str):
+async def list_messages(conversation_id: str, project_id: str | None = None):
     try:
-        return await _service.list_messages(conversation_id)
+        return await _service.list_messages(conversation_id, project_id=project_id)
     except ConversationNotFoundError as exc:
         return _err(404, "conversation_not_found", str(exc))

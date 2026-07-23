@@ -43,9 +43,13 @@ async def create_proposal(body: ProposalCreate):
 
 
 @router.post("/proposals/{proposal_id}/accept")
-async def accept_proposal(proposal_id: str, body: ProposalAcceptRequest | None = None):
+async def accept_proposal(
+    proposal_id: str,
+    body: ProposalAcceptRequest | None = None,
+    project_id: str | None = None,
+):
     try:
-        chapter = await _service.accept(proposal_id, body)
+        chapter = await _service.accept(proposal_id, body, project_id=project_id)
         return {"chapter": chapter.model_dump(mode="json")}
     except ProposalNotFoundError as exc:
         return _err(404, "proposal_not_found", str(exc))
@@ -58,9 +62,13 @@ async def accept_proposal(proposal_id: str, body: ProposalAcceptRequest | None =
 
 
 @router.post("/proposals/{proposal_id}/reject")
-async def reject_proposal(proposal_id: str, body: ProposalRejectRequest | None = None):
+async def reject_proposal(
+    proposal_id: str,
+    body: ProposalRejectRequest | None = None,
+    project_id: str | None = None,
+):
     try:
-        proposal = await _service.reject(proposal_id, body)
+        proposal = await _service.reject(proposal_id, body, project_id=project_id)
         return {"proposal": proposal.model_dump(mode="json")}
     except ProposalNotFoundError as exc:
         return _err(404, "proposal_not_found", str(exc))

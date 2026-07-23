@@ -14,6 +14,7 @@ from app.services.workspace.companion_session import (
 )
 from app.services.workspace.work_artifact import load_work_artifact, resume_block
 from app.schemas.context import DEFAULT_PROJECT_ID
+from app.services.project_scope import resolve_project_id
 from app.services.workspace.thesis_knowledge import load_companion_resume, load_project_identity
 from app.services.workspace.thesis_sor import reconcile_thesis_agent_memory
 
@@ -76,7 +77,9 @@ class WorkspaceLoader:
         conversation_messages: int = 0,
     ) -> WorkspaceSnapshot:
         await reconcile_thesis_agent_memory(self._memory, project_id=project_id)
-        chapters = await self._chapters.list(ChapterListFilters())
+        chapters = await self._chapters.list(
+            ChapterListFilters(project_id=resolve_project_id(project_id))
+        )
         progress_pct = _compute_progress_pct(chapters)
         focus = _pick_focus(chapters)
 

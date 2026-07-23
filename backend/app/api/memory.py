@@ -20,6 +20,16 @@ def _err(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(status_code=status, content={"code": code, "message": message})
 
 
+async def _scope_error(memory_id: str, project_id: str | None) -> JSONResponse | None:
+    """404 when the memory belongs to another thesis (ADR-0047 INV-MTW-2)."""
+    if not project_id:
+        return None
+    record = await _service.get(memory_id)
+    if record.project_id != project_id:
+        return _err(404, "memory_not_found", f"Memory not found: {memory_id}")
+    return None
+
+
 @router.get("/memory")
 async def list_memories(
     project_id: str | None = None,
@@ -47,16 +57,22 @@ async def create_memory(body: MemoryCreate):
 
 
 @router.get("/memory/{memory_id}")
-async def get_memory(memory_id: str):
+async def get_memory(memory_id: str, project_id: str | None = None):
     try:
-        return await _service.get(memory_id)
+        record = await _service.get(memory_id)
+        if project_id and record.project_id != project_id:
+            return _err(404, "memory_not_found", f"Memory not found: {memory_id}")
+        return record
     except MemoryNotFoundError as exc:
         return _err(404, "memory_not_found", str(exc))
 
 
 @router.patch("/memory/{memory_id}")
-async def update_memory(memory_id: str, body: MemoryUpdate):
+async def update_memory(memory_id: str, body: MemoryUpdate, project_id: str | None = None):
     try:
+        scope_err = await _scope_error(memory_id, project_id)
+        if scope_err is not None:
+            return scope_err
         return await _service.update(memory_id, body)
     except MemoryNotFoundError as exc:
         return _err(404, "memory_not_found", str(exc))
@@ -65,8 +81,11 @@ async def update_memory(memory_id: str, body: MemoryUpdate):
 
 
 @router.delete("/memory/{memory_id}", status_code=204, response_model=None)
-async def delete_memory(memory_id: str):
+async def delete_memory(memory_id: str, project_id: str | None = None):
     try:
+        scope_err = await _scope_error(memory_id, project_id)
+        if scope_err is not None:
+            return scope_err
         await _service.delete(memory_id)
         return Response(status_code=204)
     except MemoryNotFoundError as exc:
@@ -76,8 +95,11 @@ async def delete_memory(memory_id: str):
 
 
 @router.get("/memory/{memory_id}/versions")
-async def list_memory_versions(memory_id: str):
+async def list_memory_versions(memory_id: str, project_id: str | None = None):
     try:
+        scope_err = await _scope_error(memory_id, project_id)
+        if scope_err is not None:
+            return scope_err
         return await _service.list_versions(memory_id)
     except MemoryNotFoundError as exc:
         return _err(404, "memory_not_found", str(exc))

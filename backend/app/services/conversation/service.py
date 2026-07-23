@@ -149,10 +149,15 @@ class ConversationService:
             await session.commit()
             return self._summary(conv)
 
-    async def list_messages(self, conversation_id: str) -> ConversationMessagesResponse:
+    async def list_messages(
+        self, conversation_id: str, *, project_id: str | None = None
+    ) -> ConversationMessagesResponse:
         async with AsyncSessionLocal() as session:
             conv = await session.get(models.Conversation, conversation_id)
             if conv is None:
+                raise ConversationNotFoundError(conversation_id)
+            # Declared-scope check (ADR-0047): hide threads of other theses.
+            if project_id and resolve_project_id(getattr(conv, "project_id", None)) != project_id:
                 raise ConversationNotFoundError(conversation_id)
             rows = (
                 await session.execute(
