@@ -99,7 +99,7 @@ No runtime changes are required for v2.0 RC.
 
 | ID | Limitation | Mitigation in v2.0 | Future work |
 |----|------------|--------------------|-------------|
-| L-01 | Multi-project isolation is registry-scoped, not DB-partitioned | Project registry + active project context | Full DB partition per project |
+| L-01 | ~~Multi-project isolation is registry-scoped, not DB-partitioned~~ **Resolved post-RC by ADR-0047** (durable `projects` registry + `project_id` partition on documents/memories/conversations/retrieval/events) | Project registry + active project context | Done — see `plans/multi-thesis-workspace/` |
 | L-02 | L-author / L-unread lenses use catalog stubs | Documented partial; core lenses fully functional | Satellite data integration |
 | L-03 | Citation validator is product-layer mitigation; does not claim deterministic LLM author-date | Applica gating + override | LLM model or post-processing improvement |
 | L-04 | Collaboration / multi-user editing not included | Single-user scoped | Product v3 |
