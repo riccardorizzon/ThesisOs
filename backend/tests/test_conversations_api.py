@@ -39,6 +39,10 @@ def chat_client(db_session, monkeypatch):
 
     llm = OrchestrationLLM(stream_parts=["Persisted", " reply"])
     monkeypatch.setattr("app.services.conversation.service.get_llm_client", lambda: llm)
+    monkeypatch.setattr(
+        "app.services.conversation.service.get_orchestration_llm_client",
+        lambda: llm,
+    )
     monkeypatch.setattr(chat, "get_llm_client", lambda: llm)
     from app.main import app
 

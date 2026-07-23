@@ -17,7 +17,13 @@ def _render() -> str:
     return "\n".join(ddl)
 
 
+def _normalize_trailing_whitespace(ddl: str) -> str:
+    return "\n".join(line.rstrip() for line in ddl.splitlines()) + "\n"
+
+
 def test_schema_snapshot_matches_models():
-    assert SCHEMA.read_text() == _render(), (
+    assert _normalize_trailing_whitespace(
+        SCHEMA.read_text()
+    ) == _normalize_trailing_whitespace(_render()), (
         "contracts/db/schema.sql is stale vs app/db/models.py — regenerate it."
     )

@@ -106,6 +106,10 @@ async def test_degraded_orchestration_still_replies(
 ):
     llm = ConfigurableLLM(supervisor=supervisor, planner=planner, router=router, stream_parts=["reply"])
     monkeypatch.setattr("app.services.conversation.service.get_llm_client", lambda: llm)
+    monkeypatch.setattr(
+        "app.services.conversation.service.get_orchestration_llm_client",
+        lambda: llm,
+    )
 
     events = await _collect(ConversationService())
 
@@ -116,8 +120,11 @@ async def test_degraded_orchestration_still_replies(
 
 @pytest.mark.asyncio
 async def test_agent_run_graph_name_is_orchestrated(db_session, langgraph_ready, monkeypatch):
+    llm = OrchestrationLLM(stream_parts=["hi"])
+    monkeypatch.setattr("app.services.conversation.service.get_llm_client", lambda: llm)
     monkeypatch.setattr(
-        "app.services.conversation.service.get_llm_client", lambda: OrchestrationLLM(stream_parts=["hi"])
+        "app.services.conversation.service.get_orchestration_llm_client",
+        lambda: llm,
     )
     await _collect(ConversationService())
 

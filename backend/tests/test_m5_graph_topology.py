@@ -12,7 +12,15 @@ from app.schemas.retrieval import SearchResultItem
 from tests.support.orchestration_llm import OrchestrationLLM
 
 ORCHESTRATION_NODES = frozenset(
-    {"supervisor_node", "planner_node", "router_node", "memory_context_node", "retriever_node", "conversation_node"}
+    {
+        "supervisor_node",
+        "planner_node",
+        "router_node",
+        "workspace_context_node",
+        "memory_context_node",
+        "retriever_node",
+        "conversation_node",
+    }
 )
 
 
@@ -24,6 +32,11 @@ class SpyRetrieval:
     async def search(self, query, *, filters=None, limit=10, hybrid_alpha=0.5, session=None):
         self.search_calls += 1
         return self._results, "text-multilingual-embedding-002"
+
+
+class _FalseyOrchestrationLLM(OrchestrationLLM):
+    def __bool__(self) -> bool:
+        return False
 
 
 @pytest.fixture
@@ -52,7 +65,8 @@ def test_structural_orchestration_chain(in_memory_checkpointer):
     assert ("__start__", "supervisor_node") in edges
     assert ("supervisor_node", "planner_node") in edges
     assert ("planner_node", "router_node") in edges
-    assert ("router_node", "memory_context_node") in edges
+    assert ("router_node", "workspace_context_node") in edges
+    assert ("workspace_context_node", "memory_context_node") in edges
 
 
 def test_structural_conditional_dispatch_points(in_memory_checkpointer):
@@ -117,6 +131,57 @@ async def test_integration_conversation_skips_retriever(in_memory_checkpointer):
 
     assert spy.search_calls == 0
     assert llm.generate_calls == 3
+
+
+async def test_orchestration_and_response_use_separate_clients(
+    in_memory_checkpointer,
+):
+    response = OrchestrationLLM(stream_parts=["answer"])
+    orchestration = OrchestrationLLM()
+    graph = build_graph(
+        response,
+        orchestration_llm=orchestration,
+        checkpointer=in_memory_checkpointer,
+        memory_service=_StubMemory(),
+    )
+    cfg = {"configurable": {"thread_id": "tiered-models"}}
+
+    chunks = [
+        chunk
+        async for chunk in graph.astream(
+            GraphState(messages=[Message(role="user", content="Hello")]),
+            cfg,
+            stream_mode="custom",
+        )
+    ]
+
+    assert orchestration.generate_calls == 3
+    assert response.generate_calls == 0
+    assert response.last_stream_messages is not None
+    assert any(chunk.get("type") == "token" for chunk in chunks)
+
+
+async def test_explicit_falsey_orchestration_client_does_not_fall_back(
+    in_memory_checkpointer,
+):
+    response = OrchestrationLLM(stream_parts=["answer"])
+    orchestration = _FalseyOrchestrationLLM()
+    graph = build_graph(
+        response,
+        orchestration_llm=orchestration,
+        checkpointer=in_memory_checkpointer,
+        memory_service=_StubMemory(),
+    )
+
+    async for _ in graph.astream(
+        GraphState(messages=[Message(role="user", content="Hello")]),
+        {"configurable": {"thread_id": "explicit-falsey-orchestration"}},
+        stream_mode="custom",
+    ):
+        pass
+
+    assert orchestration.generate_calls == 3
+    assert response.generate_calls == 0
 
 
 async def test_integration_grounded_chat_runs_retriever(in_memory_checkpointer):

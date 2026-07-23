@@ -2,6 +2,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE chapters (
 	id UUID DEFAULT gen_random_uuid() NOT NULL, 
+	project_id VARCHAR(64) DEFAULT 'thesis-agent' NOT NULL,
 	parent_id UUID, 
 	order_index INTEGER NOT NULL, 
 	title TEXT NOT NULL, 
@@ -273,7 +274,7 @@ CREATE TABLE sources (
 	url TEXT, 
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY(document_id) REFERENCES documents (id)
+	FOREIGN KEY(document_id) REFERENCES documents (id) ON DELETE CASCADE
 );
 
 CREATE TABLE agent_steps (

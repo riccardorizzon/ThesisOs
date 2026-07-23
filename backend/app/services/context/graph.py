@@ -96,8 +96,7 @@ async def assemble_context_graph(
     """Build full context graph — surface/presentation does not affect assembly."""
     project_id = request.project.project_id
     is_primary = project_id == DEFAULT_PROJECT_ID
-    registry = ProjectRegistryService()
-    registry_entry = registry.get(project_id)
+    registry_entry = ProjectRegistryService().get(project_id)
 
     if is_primary:
         binding_ctx = await memory_service.load_prompt_context(

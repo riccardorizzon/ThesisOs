@@ -44,7 +44,17 @@ resource "google_cloud_run_v2_service" "backend" {
 
       env {
         name  = "VERTEX_LOCATION"
-        value = var.region
+        value = var.vertex_location
+      }
+
+      env {
+        name  = "GEMINI_MODEL"
+        value = var.gemini_model
+      }
+
+      env {
+        name  = "GEMINI_ORCHESTRATION_MODEL"
+        value = var.gemini_orchestration_model
       }
     }
   }

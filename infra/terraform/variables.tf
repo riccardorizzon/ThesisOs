@@ -9,6 +9,24 @@ variable "region" {
   default     = "europe-west1"
 }
 
+variable "vertex_location" {
+  type        = string
+  description = "Vertex AI location used by Gemini models."
+  default     = "global"
+}
+
+variable "gemini_model" {
+  type        = string
+  description = "Gemini response model used for conversation and writing."
+  default     = "gemini-3.6-flash"
+}
+
+variable "gemini_orchestration_model" {
+  type        = string
+  description = "Gemini model used for supervisor, planner, and router decisions."
+  default     = "gemini-3.5-flash-lite"
+}
+
 variable "db_tier" {
   type        = string
   description = "Cloud SQL machine tier. Smallest/cheapest tier by default."

@@ -21,6 +21,10 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 const TEST_SOURCES: LibrarySource[] = [
   {
     id: "a",

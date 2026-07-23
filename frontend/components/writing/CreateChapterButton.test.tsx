@@ -54,7 +54,10 @@ describe("CreateChapterButton", () => {
     fireEvent.click(screen.getByTestId("writing-create-chapter-submit"));
 
     await waitFor(() => {
-      expect(chapterClient.create).toHaveBeenCalledWith({ title: "Introduzione" });
+      expect(chapterClient.create).toHaveBeenCalledWith({
+        project_id: "thesis-agent",
+        title: "Introduzione",
+      });
     });
     expect(onCreated).toHaveBeenCalledWith(expect.objectContaining({ id: "new-ch" }));
     expect(push).toHaveBeenCalledWith("/writing/new-ch");

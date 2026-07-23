@@ -12,7 +12,7 @@ from app.db import models
 from app.db.session_async import AsyncSessionLocal
 from app.graph.checkpointer import open_checkpointer
 from app.graph.conversation import build_graph
-from app.llm.factory import get_llm_client
+from app.llm.factory import get_llm_client, get_orchestration_llm_client
 from app.runtime.contracts import RuntimeEventEmitter
 from app.runtime.event_bus import RuntimeEventBus
 from app.runtime.events import EventType, RuntimeEvent
@@ -248,17 +248,30 @@ class ConversationService:
                 async with open_checkpointer() as saver:
                     graph = build_graph(
                         get_llm_client(),
+                        orchestration_llm=get_orchestration_llm_client(),
                         checkpointer=saver,
                         task_service=self._task_service,
                         emitter=self._event_bus,
                         run_context=rc,
                     )
                     # RunContext travels via LangGraph config, never GraphState (ADR-0014).
-                    cfg = {"configurable": {"thread_id": conv_id, "run_context": rc.model_dump()}}
+                    cfg = {
+                        "configurable": {
+                            "thread_id": conv_id,
+                            "run_context": rc.model_dump(),
+                            "project_id": project_id,
+                        }
+                    }
                     async for chunk in graph.astream(state, cfg, stream_mode="custom"):
                         if chunk.get("type") == "token":
                             parts.append(chunk["text"])
                             yield {"event": "token", "data": {"text": chunk["text"]}}
+                        elif chunk.get("type") == "replace":
+                            parts = [chunk.get("text", "")]
+                            yield {
+                                "event": "replace",
+                                "data": {"text": chunk.get("text", "")},
+                            }
                         elif chunk.get("type") == "sources":
                             yield {"event": "sources", "data": {"sources": chunk.get("sources", [])}}
                         elif chunk.get("type") == "usage":

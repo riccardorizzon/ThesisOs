@@ -5,8 +5,12 @@ from __future__ import annotations
 import logging
 import uuid
 
+from app.graph.companion.protocol import is_companion_open
 from app.graph.orchestration.llm import extract_json_object, request_json
-from app.graph.orchestration.messages import build_orchestration_user_block
+from app.graph.orchestration.messages import (
+    build_orchestration_user_block,
+    last_user_message,
+)
 from app.graph.orchestration.prompts import PLANNER_SYSTEM
 from app.graph.orchestration.task_persistence import PlannerTaskPersistHook
 from app.llm.base import LLMClient
@@ -40,6 +44,13 @@ def _parse_planner_payload(data: dict, *, existing_task: TaskRef | None) -> tupl
 def make_planner_node(llm: LLMClient, *, on_task_ref: PlannerTaskPersistHook | None = None):
     async def planner_node(state: GraphState) -> dict:
         errors = list(state.errors)
+        if is_companion_open(last_user_message(state.messages)):
+            return {
+                "plan": state.plan or Plan(steps=["Resume the current thesis focus"]),
+                "task": state.task,
+                "errors": errors,
+            }
+
         user_block = build_orchestration_user_block(state, include_plan=True)
         raw = await request_json(llm, system=PLANNER_SYSTEM, user=user_block)
         data = extract_json_object(raw)

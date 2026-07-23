@@ -56,7 +56,6 @@ async def list_chapters(
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
 ):
-    """List chapters for one project only — project_id is required (no cross-project dump)."""
     filters = ChapterListFilters(
         project_id=project_id,
         parent_id=parent_id,

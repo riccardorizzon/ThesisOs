@@ -1,5 +1,14 @@
 import { apiBaseUrl } from "@/lib/apiBase";
 
+export type ChatSource = {
+  index: number;
+  chunk_id: string;
+  document_id: string;
+  document_title: string | null;
+  page_from: number | null;
+  score: number;
+};
+
 export async function getHealth(): Promise<{ status: string }> {
   const r = await fetch(`${apiBaseUrl()}/health`, { cache: "no-store" });
   if (!r.ok) throw new Error(`health ${r.status}`);
@@ -8,6 +17,8 @@ export async function getHealth(): Promise<{ status: string }> {
 
 export type ChatEvent =
   | { event: "token"; data: { text: string } }
+  | { event: "replace"; data: { text: string } }
+  | { event: "sources"; data: { sources: ChatSource[] } }
   | { event: "ping"; data: Record<string, never> }
   | { event: "done"; data: { conversation_id: string; message_id: string; usage: unknown } }
   | { event: "error"; data: { code: string; message: string } };

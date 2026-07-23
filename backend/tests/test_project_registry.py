@@ -9,6 +9,11 @@ def test_list_includes_default_projects():
     ids = {p.id for p in items}
     assert "thesis-agent" in ids
     assert "demo-thesis" in ids
+    thesis = next(p for p in items if p.id == "thesis-agent")
+    assert thesis.kind == "owned"
+    assert thesis.display_name == (
+        "Prima dei dieci minuti. Il processo creativo nel fashion design"
+    )
 
 
 def test_create_project():

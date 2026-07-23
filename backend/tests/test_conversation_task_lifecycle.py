@@ -25,6 +25,10 @@ async def langgraph_ready(db_session):
 def orchestration_llm(monkeypatch):
     llm = OrchestrationLLM(stream_parts=["hello"])
     monkeypatch.setattr("app.services.conversation.service.get_llm_client", lambda: llm)
+    monkeypatch.setattr(
+        "app.services.conversation.service.get_orchestration_llm_client",
+        lambda: llm,
+    )
     return llm
 
 

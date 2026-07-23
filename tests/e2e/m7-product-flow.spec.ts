@@ -4,10 +4,15 @@ const API_BASE = process.env.E2E_API_BASE_URL ?? "http://127.0.0.1:8001";
 const PROJECT_ID = "thesis-agent";
 
 test.describe("M7 product flow @m7", () => {
-  test("Home surfaces import CTA and primary navigation", async ({ page }) => {
+  test("Home opens the Companion with thesis tools and primary navigation", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Home", level: 1 })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Importa documento/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Thesis Companion" })).toBeVisible();
+    await expect(page.getByTestId("ai-chat-view")).toBeVisible();
+    await expect(page.getByText("§3.6", { exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("button", { name: "Continua da §3.6" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Vai alla scrittura" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Vai alla revisione" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Vai alle fonti" })).toBeVisible();
     const nav = page.getByRole("navigation", { name: "Primary" });
     for (const label of ["Home", "Research", "Writing", "Sources", "Knowledge", "Settings"]) {
       await expect(nav.getByRole("link", { name: label })).toBeVisible();
@@ -55,7 +60,7 @@ test.describe("M7 product flow @m7", () => {
   });
 
   test("Chat view loads conversation list from API", async ({ page }) => {
-    await page.goto("/ai");
+    await page.goto("/");
     await expect(page.getByTestId("ai-chat-view")).toBeVisible();
     await expect(page.getByTestId("conversation-list")).toBeVisible({ timeout: 15_000 });
   });
@@ -80,14 +85,18 @@ test.describe("M7 product flow @m7", () => {
     expect(bibText).toContain("@book{");
     expect(bibText).toContain("Benjamin");
 
-    const created = await request.post(`${API_BASE}/chapters`, {
-      data: { title: "E2E export", content_md: "# E2E\n\nExport smoke." },
-    });
-    expect(created.ok()).toBeTruthy();
-    const chapter = (await created.json()) as { id: string };
-    const md = await request.get(`${API_BASE}/export/chapters/${chapter.id}.md`);
+    const chapters = await request.get(
+      `${API_BASE}/chapters?project_id=${PROJECT_ID}&scope=owned&limit=500`,
+    );
+    expect(chapters.ok()).toBeTruthy();
+    const chapter = ((await chapters.json()) as Array<{ id: string; title: string }>).find(
+      (item) => item.title.includes("§3.6"),
+    );
+    expect(chapter).toBeTruthy();
+
+    const md = await request.get(`${API_BASE}/export/chapters/${chapter!.id}.md`);
     expect(md.ok()).toBeTruthy();
     expect(md.headers()["content-type"] ?? "").toContain("text/markdown");
-    expect(await md.text()).toContain("Export smoke.");
+    expect(await md.text()).toContain("3.6.1");
   });
 });

@@ -1,0 +1,5 @@
+# Temporary bind-mount for EWO-7B / C.6-R2 — hot-load backend without full image rebuild.
+services:
+  backend:
+    volumes:
+      - ./backend:/app

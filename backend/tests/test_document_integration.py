@@ -68,7 +68,7 @@ async def test_upload_registers_source_in_corpus(svc):
         )
         source = row.one()
         assert source.slug == rec.id
-        assert source.document_id == rec.id
+        assert str(source.document_id) == rec.id
         assert source.title == rec.title
         assert source.created_by == "importazione"
 

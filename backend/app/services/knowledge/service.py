@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from app.db.session_async import AsyncSessionLocal
 from app.schemas.knowledge import (
     ConceptCreate,
@@ -17,6 +19,9 @@ from app.services.knowledge.repository import (
     ConceptNotFoundError,
     ConceptRepository,
 )
+
+
+logger = logging.getLogger("app.services.knowledge")
 
 
 class KnowledgeObjectNotFoundError(LookupError):
@@ -72,8 +77,14 @@ class KnowledgeService:
                 count = await self._concepts.count_for_project(session, project_id)
                 if count > 0:
                     return await self._concepts.get_by_slug(session, project_id, slug)
+        except ConceptNotFoundError:
+            pass  # not in DB — expected, fall back to the static catalog
         except Exception:
-            pass
+            logger.exception(
+                "DB concept lookup failed for %s/%s — falling back to catalog",
+                project_id,
+                slug,
+            )
         obj = get_knowledge_object(slug)
         if obj is None:
             raise KnowledgeObjectNotFoundError(slug)
@@ -96,7 +107,11 @@ class KnowledgeService:
         except ConceptNotFoundError:
             raise KnowledgeObjectNotFoundError(slug) from None
         except Exception:
-            pass
+            logger.exception(
+                "DB concept detail failed for %s/%s — falling back to catalog",
+                project_id,
+                slug,
+            )
         return self.get_concept_detail(slug)
 
     def get_concept_header(self, slug: str) -> ConceptHeaderEnvelope:

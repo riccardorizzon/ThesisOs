@@ -97,7 +97,9 @@ class Embedding(Base):
 class Source(Base):
     __tablename__ = "sources"
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=text("gen_random_uuid()"))
-    document_id: Mapped[str | None] = mapped_column(ForeignKey("documents.id"), nullable=True)
+    document_id: Mapped[str | None] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), nullable=True
+    )
     type: Mapped[str] = mapped_column(String(32))
     csl_json: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
     title: Mapped[str | None] = mapped_column(Text, nullable=True)

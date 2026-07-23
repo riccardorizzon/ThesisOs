@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.graph.companion.protocol import is_companion_open
 from app.graph.orchestration.coerce import coerce_m5_route
 from app.graph.orchestration.constants import DEFAULT_ROUTE
 from app.graph.orchestration.llm import extract_json_object, request_json
@@ -15,6 +16,9 @@ def make_router_node(llm: LLMClient):
     async def router_node(state: GraphState) -> dict:
         errors = list(state.errors)
         user_message = last_user_message(state.messages) or ""
+        if is_companion_open(user_message):
+            return {"route": DEFAULT_ROUTE, "errors": errors}
+
         user_block = build_orchestration_user_block(state, include_plan=True)
         raw = await request_json(llm, system=ROUTER_SYSTEM, user=user_block)
         data = extract_json_object(raw)

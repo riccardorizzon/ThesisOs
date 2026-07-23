@@ -1,4 +1,4 @@
-"""Project registry (PX6-EWO-007) — CUR-7 hard isolation."""
+"""Project registry (PX6-EWO-007)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 THESIS_AGENT_ID = "thesis-agent"
 DEMO_THESIS_ID = "demo-thesis"
+THESIS_AGENT_TITLE = "Prima dei dieci minuti. Il processo creativo nel fashion design"
 
 
 class ProjectEntry(BaseModel):
@@ -36,9 +37,9 @@ def _slugify(name: str) -> str:
 _DEFAULT: list[ProjectEntry] = [
     ProjectEntry(
         id=THESIS_AGENT_ID,
-        display_name="Demo (esempio)",
+        display_name=THESIS_AGENT_TITLE,
         created_at="2026-07-01T00:00:00Z",
-        kind="demo",
+        kind="owned",
     ),
     ProjectEntry(
         id=DEMO_THESIS_ID,
@@ -74,7 +75,6 @@ class ProjectRegistryService:
             id=project_id,
             display_name=body.display_name.strip(),
             created_at=datetime.now(timezone.utc).isoformat(),
-            kind="owned",
         )
         _registry.append(entry)
         return entry

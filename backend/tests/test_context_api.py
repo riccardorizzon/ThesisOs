@@ -113,7 +113,9 @@ def test_get_context_returns_packet_subset(client):
     assert r.status_code == 200
     body = r.json()
     assert body["schema_version"] == "0.2"
-    assert body["project"]["title"] == "Demo (esempio)"
+    assert body["project"]["title"] == (
+        "Prima dei dieci minuti. Il processo creativo nel fashion design"
+    )
     assert body["project"]["progress_pct"] == 85
     assert body["project_context"]["project_id"] == DEFAULT_PROJECT_ID
     assert body["project_context"]["product_id"] == DEFAULT_PRODUCT_ID

@@ -7,6 +7,7 @@ from collections.abc import Callable
 from app.llm.base import LLMClient
 
 Emit = Callable[[dict], None]
+MINIMAL_REASONING_PARAMS = {"reasoning_effort": "minimal"}
 
 
 async def generate_with_citation_enforcement(
@@ -19,8 +20,21 @@ async def generate_with_citation_enforcement(
     """Generate text; one deterministic retry if academic numeric cites without author-date.
 
     Returns (final_text, usage, retried).
-    When retry fires, only the retry pass is emitted (first pass buffered).
+    Non-academic chunks stream immediately. Academic output remains buffered until
+    citation validation accepts either the first pass or its deterministic retry.
     """
+    if not academic:
+        parts: list[str] = []
+        usage: dict = {}
+        async for chunk in llm.astream(wire, params=MINIMAL_REASONING_PARAMS):
+            if chunk.text:
+                parts.append(chunk.text)
+                if emit is not None:
+                    emit({"type": "token", "text": chunk.text})
+            if chunk.metadata.get("usage"):
+                usage = chunk.metadata["usage"]
+        return "".join(parts), usage, False
+
     from app.graph.academic_production import (
         CITATION_ENFORCEMENT_RETRY_MESSAGE,
         needs_citation_enforcement_retry,
@@ -35,7 +49,7 @@ async def generate_with_citation_enforcement(
             usage = chunk.metadata["usage"]
     text = "".join(parts)
 
-    if not academic or not needs_citation_enforcement_retry(text):
+    if not needs_citation_enforcement_retry(text):
         if emit is not None:
             for token in parts:
                 emit({"type": "token", "text": token})
