@@ -102,6 +102,53 @@ async def test_retrieval_isolated_per_project(doc_svc, db_session):
     assert empty_results == []
 
 
+async def test_memories_isolated_per_project(db_session):
+    from app.schemas.memory import MemoryCreate, MemoryListFilters
+    from app.services.memory import MemoryService
+
+    svc = MemoryService()
+    main = await svc.create(
+        MemoryCreate(kind="user", content="ricercatore moda", pinned=True),
+        session=db_session,
+    )
+    assert main.project_id == "thesis-agent"
+
+    # Same singleton kind in another thesis must NOT collide (per-project singleton).
+    other = await svc.create(
+        MemoryCreate(project_id="thesis-002", kind="user", content="giurista", pinned=True),
+        session=db_session,
+    )
+    assert other.project_id == "thesis-002"
+
+    default_list = await svc.list(session=db_session)
+    assert {m.id for m in default_list} == {main.id}
+
+    other_list = await svc.list(
+        MemoryListFilters(project_id="thesis-002"), session=db_session
+    )
+    assert {m.id for m in other_list} == {other.id}
+
+
+async def test_prompt_context_isolated_per_project(db_session):
+    from app.schemas.memory import MemoryCreate, PromptContextFilters
+    from app.services.memory import MemoryService
+
+    svc = MemoryService()
+    await svc.create(
+        MemoryCreate(kind="thesis", content="tesi sul fashion design", pinned=True),
+        session=db_session,
+    )
+    filters = PromptContextFilters(include_pinned_thesis=True)
+
+    default_ctx = await svc.load_prompt_context(filters=filters, session=db_session)
+    assert len(default_ctx.thesis) == 1
+
+    other_ctx = await svc.load_prompt_context(
+        project_id="thesis-002", filters=filters, session=db_session
+    )
+    assert other_ctx.thesis == []
+
+
 async def test_upload_registers_source_in_same_project(doc_svc, db_session):
     from sqlalchemy import text
 

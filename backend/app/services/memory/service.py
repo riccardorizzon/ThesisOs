@@ -34,6 +34,7 @@ from app.services.memory.exceptions import (
     SingletonMemoryExistsError,
     WriteConflictError,
 )
+from app.services.project_scope import resolve_project_id
 
 _CHARS_PER_TOKEN_ESTIMATE = 4
 
@@ -137,6 +138,7 @@ class MemoryService:
         self,
         *,
         conversation_id: str | None = None,
+        project_id: str | None = None,
         max_tokens: int | None = None,
         filters: PromptContextFilters | None = None,
         session: AsyncSession | None = None,
@@ -147,6 +149,7 @@ class MemoryService:
             return await self._load_prompt_context(
                 session,
                 conversation_id=conversation_id,
+                project_id=project_id,
                 max_tokens=max_tokens,
                 filters=filters,
             )
@@ -154,6 +157,7 @@ class MemoryService:
             return await self._load_prompt_context(
                 s,
                 conversation_id=conversation_id,
+                project_id=project_id,
                 max_tokens=max_tokens,
                 filters=filters,
             )
@@ -162,14 +166,15 @@ class MemoryService:
         self,
         ops: list[MemoryOp],
         *,
+        project_id: str | None = None,
         session: AsyncSession | None = None,
     ) -> list[MemoryRecord]:
         """Hook for M5 memory agent — uses the same write path as CRUD."""
         if session is not None:
-            return await self._apply_ops(session, ops)
+            return await self._apply_ops(session, ops, project_id=project_id)
         async with AsyncSessionLocal() as s:
             try:
-                results = await self._apply_ops(s, ops)
+                results = await self._apply_ops(s, ops, project_id=project_id)
                 await s.commit()
                 return results
             except Exception:
@@ -183,14 +188,17 @@ class MemoryService:
     async def _create(self, session: AsyncSession, data: MemoryCreate) -> MemoryRecord:
         self._validate_kind(data.kind)
         key = self._resolve_key(data.kind, data.key)
+        project_id = resolve_project_id(data.project_id)
 
         if data.kind in SINGLETON_KINDS:
-            existing = await self._find_singleton(session, data.kind)
+            # Singleton-per-project (ADR-0047): each thesis owns its identity memory.
+            existing = await self._find_singleton(session, data.kind, project_id=project_id)
             if existing is not None:
                 raise SingletonMemoryExistsError(data.kind, key)
 
         now = datetime.now(timezone.utc)
         row = models.Memory(
+            project_id=project_id,
             kind=data.kind,
             key=key,
             title=data.title,
@@ -215,7 +223,9 @@ class MemoryService:
         return self._to_record(row)
 
     async def _list(self, session: AsyncSession, filters: MemoryListFilters) -> list[MemoryRecord]:
-        stmt = select(models.Memory)
+        stmt = select(models.Memory).where(
+            models.Memory.project_id == resolve_project_id(filters.project_id)
+        )
         if filters.kind is not None:
             stmt = stmt.where(models.Memory.kind == filters.kind)
         if filters.key is not None:
@@ -335,27 +345,30 @@ class MemoryService:
         conversation_id: str | None,
         max_tokens: int | None,
         filters: PromptContextFilters,
+        project_id: str | None = None,
     ) -> PromptContext:
         # conversation_id reserved for future per-conversation scoping (M5+).
         ctx = PromptContext(conversation_id=conversation_id)
 
         if filters.include_binding_decisions:
-            binding = await self._find_by_key(session, BINDING_DECISION_KEY)
+            binding = await self._find_by_key(
+                session, BINDING_DECISION_KEY, project_id=project_id
+            )
             if binding is not None:
                 ctx.decisions.append(self._to_prompt_item(binding))
 
         if filters.include_editable:
-            editable = await self._find_singleton(session, "editable")
+            editable = await self._find_singleton(session, "editable", project_id=project_id)
             if editable is not None:
                 ctx.editable.append(self._to_prompt_item(editable))
 
         if filters.include_pinned_user:
-            user = await self._find_singleton(session, "user")
+            user = await self._find_singleton(session, "user", project_id=project_id)
             if user is not None and user.pinned:
                 ctx.user.append(self._to_prompt_item(user))
 
         if filters.include_pinned_thesis:
-            thesis = await self._find_singleton(session, "thesis")
+            thesis = await self._find_singleton(session, "thesis", project_id=project_id)
             if thesis is not None and thesis.pinned:
                 ctx.thesis.append(self._to_prompt_item(thesis))
 
@@ -364,7 +377,14 @@ class MemoryService:
 
         return ctx
 
-    async def _apply_ops(self, session: AsyncSession, ops: list[MemoryOp]) -> list[MemoryRecord]:
+    async def _apply_ops(
+        self,
+        session: AsyncSession,
+        ops: list[MemoryOp],
+        *,
+        project_id: str | None = None,
+    ) -> list[MemoryRecord]:
+        scope = resolve_project_id(project_id)
         results: list[MemoryRecord] = []
         for op in ops:
             if op.op == "upsert":
@@ -375,6 +395,7 @@ class MemoryService:
                             select(models.Memory).where(
                                 models.Memory.kind == op.kind,
                                 models.Memory.key == op.key,
+                                models.Memory.project_id == scope,
                             )
                         )
                     ).scalar_one_or_none()
@@ -387,7 +408,12 @@ class MemoryService:
                 else:
                     record = await self._create(
                         session,
-                        MemoryCreate(kind=op.kind, key=op.key, content=op.content or ""),
+                        MemoryCreate(
+                            project_id=scope,
+                            kind=op.kind,
+                            key=op.key,
+                            content=op.content or "",
+                        ),
                     )
                 results.append(record)
             elif op.op == "delete":
@@ -397,6 +423,7 @@ class MemoryService:
                             select(models.Memory).where(
                                 models.Memory.kind == op.kind,
                                 models.Memory.key == op.key,
+                                models.Memory.project_id == scope,
                             )
                         )
                     ).scalar_one_or_none()
@@ -420,15 +447,24 @@ class MemoryService:
         self,
         session: AsyncSession,
         key: str,
+        *,
+        project_id: str | None = None,
     ) -> models.Memory | None:
         return (
-            await session.execute(select(models.Memory).where(models.Memory.key == key))
+            await session.execute(
+                select(models.Memory).where(
+                    models.Memory.key == key,
+                    models.Memory.project_id == resolve_project_id(project_id),
+                )
+            )
         ).scalar_one_or_none()
 
     async def _find_singleton(
         self,
         session: AsyncSession,
         kind: str,
+        *,
+        project_id: str | None = None,
     ) -> models.Memory | None:
         key = CANONICAL_KEYS[kind]
         return (
@@ -436,6 +472,7 @@ class MemoryService:
                 select(models.Memory).where(
                     models.Memory.kind == kind,
                     models.Memory.key == key,
+                    models.Memory.project_id == resolve_project_id(project_id),
                 )
             )
         ).scalar_one_or_none()
@@ -455,6 +492,7 @@ class MemoryService:
     def _to_record(row: models.Memory) -> MemoryRecord:
         return MemoryRecord(
             id=row.id,
+            project_id=resolve_project_id(getattr(row, "project_id", None)),
             kind=row.kind,
             title=row.title,
             content=row.content,

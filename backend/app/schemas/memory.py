@@ -14,6 +14,7 @@ BINDING_DECISION_KEY = "decisions"
 
 class MemoryRecord(BaseModel):
     id: str
+    project_id: str = "thesis-agent"
     kind: str
     title: str | None
     content: str
@@ -27,6 +28,7 @@ class MemoryRecord(BaseModel):
 
 
 class MemoryCreate(BaseModel):
+    project_id: str | None = None  # ADR-0047: None ⇒ Default Thesis
     kind: str
     content: str
     title: str | None = None
@@ -45,6 +47,7 @@ class MemoryUpdate(BaseModel):
 
 
 class MemoryListFilters(BaseModel):
+    project_id: str | None = None  # ADR-0047: None ⇒ Default Thesis
     kind: str | None = None
     key: str | None = None
     pinned: bool | None = None

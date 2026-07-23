@@ -92,6 +92,7 @@ CREATE TABLE events (
 
 CREATE TABLE memories (
 	id UUID DEFAULT gen_random_uuid() NOT NULL,
+	project_id VARCHAR(64) DEFAULT 'thesis-agent' NOT NULL,
 	kind VARCHAR(16) NOT NULL,
 	key TEXT,
 	title TEXT,

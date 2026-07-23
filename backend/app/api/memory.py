@@ -22,6 +22,7 @@ def _err(status: int, code: str, message: str) -> JSONResponse:
 
 @router.get("/memory")
 async def list_memories(
+    project_id: str | None = None,
     kind: str | None = None,
     key: str | None = None,
     pinned: bool | None = None,
@@ -29,7 +30,9 @@ async def list_memories(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ):
-    filters = MemoryListFilters(kind=kind, key=key, pinned=pinned, q=q, limit=limit, offset=offset)
+    filters = MemoryListFilters(
+        project_id=project_id, kind=kind, key=key, pinned=pinned, q=q, limit=limit, offset=offset
+    )
     return await _service.list(filters)
 
 
