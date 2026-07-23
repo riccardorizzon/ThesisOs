@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from app.db.session_async import AsyncSessionLocal
+from app.schemas.context import DEFAULT_PROJECT_ID
 from app.schemas.knowledge import (
     ConceptCreate,
     ConceptDefinitionEnvelope,
@@ -35,7 +36,7 @@ class KnowledgeService:
     def list_objects(
         self,
         *,
-        project_id: str = "thesis-agent",
+        project_id: str = DEFAULT_PROJECT_ID,
         object_type: str | None = None,
         include_deprecated: bool = False,
     ) -> KnowledgeObjectListResponse:

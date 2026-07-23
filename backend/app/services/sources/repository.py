@@ -9,6 +9,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.knowledge import Concept, ConceptSourceLink
+from app.schemas.context import DEFAULT_PROJECT_ID
 from app.schemas.knowledge import KnowledgeState, LinkedCounts
 
 _STATUS_TO_STATE: dict[str, KnowledgeState] = {
@@ -40,9 +41,6 @@ class SourceNotFoundError(LookupError):
 
 class SourceNotDeletableError(PermissionError):
     pass
-
-
-DEFAULT_PROJECT_ID = "thesis-agent"
 
 
 async def register_uploaded_document(

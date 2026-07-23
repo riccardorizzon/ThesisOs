@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import models
 from app.db.session_async import AsyncSessionLocal
+from app.services.project_scope import resolve_project_id
 from app.schemas.chapter import (
     VALID_CHAPTER_STATUSES,
     ChapterContentUpdate,
@@ -221,7 +222,7 @@ class ChapterService:
         if status not in VALID_CHAPTER_STATUSES:
             raise InvalidChapterStatusError(status)
         row = models.Chapter(
-            project_id=data.project_id or "thesis-agent",
+            project_id=resolve_project_id(data.project_id),
             parent_id=data.parent_id,
             order_index=data.order_index,
             title=data.title,
@@ -438,7 +439,7 @@ class ChapterService:
     def _to_record(row: models.Chapter) -> ChapterRecord:
         return ChapterRecord(
             id=row.id,
-            project_id=getattr(row, "project_id", None) or "thesis-agent",
+            project_id=resolve_project_id(getattr(row, "project_id", None)),
             parent_id=row.parent_id,
             order_index=row.order_index,
             title=row.title,

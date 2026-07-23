@@ -10,6 +10,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.schemas.context import DEFAULT_PROJECT_ID
+
 # Chapter lifecycle (ADR-0032 §3). M6 wires draft/review; approved (M9 Critic) and
 # published (M8) are reserved values the API accepts but does not auto-transition.
 VALID_CHAPTER_STATUSES = frozenset({"draft", "review", "approved", "published"})
@@ -20,7 +22,7 @@ CHANGE_KINDS = frozenset({"WRITE", "EDIT", "PROMOTE", "MERGE", "RESTORE"})
 
 class ChapterRecord(BaseModel):
     id: str
-    project_id: str = "thesis-agent"
+    project_id: str = DEFAULT_PROJECT_ID
     parent_id: str | None = None
     order_index: int
     title: str
@@ -49,7 +51,7 @@ class ChapterVersionRecord(BaseModel):
 
 class ChapterCreate(BaseModel):
     title: str
-    project_id: str = "thesis-agent"
+    project_id: str = DEFAULT_PROJECT_ID
     parent_id: str | None = None
     order_index: int = 0
     status: str = "draft"
