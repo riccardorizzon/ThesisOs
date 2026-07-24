@@ -7,6 +7,13 @@ import {
   getPendingProposalCount,
 } from "@/lib/proposalQueue";
 import * as aiActions from "@/lib/aiActions";
+import { validateProjectCitations } from "@/lib/citationClient";
+
+vi.mock("@/lib/citationClient", () => ({
+  validateProjectCitations: vi.fn(),
+}));
+
+const mockedValidateCitations = vi.mocked(validateProjectCitations);
 
 afterEach(() => {
   cleanup();
@@ -16,6 +23,7 @@ afterEach(() => {
 
 beforeEach(() => {
   _resetProposalQueueForTests();
+  mockedValidateCitations.mockResolvedValue({ issues: [], blocking: false });
 });
 
 describe("WritingAiPanel", () => {
@@ -129,12 +137,104 @@ describe("WritingAiPanel", () => {
       expect(screen.getByTestId("ai-stream-output")).toHaveTextContent("Parziale");
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Annulla/i }));
+    expect(screen.getByText("Generazione in corso…")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Interrompi/i }));
     rejectStream?.();
 
     await waitFor(() => {
       expect(screen.queryByTestId("ai-stream-output")).toBeNull();
     });
     expect(getPendingProposalCount()).toBe(0);
+  });
+
+  it("blocks applying AI output with an unlinked author-date citation", async () => {
+    vi.spyOn(aiActions, "streamWritingAction").mockImplementation(
+      async (_params, onEvent) => {
+        onEvent({
+          event: "done",
+          data: { draft: "Affermazione (FantomaAutore, 2050)." },
+        });
+      }
+    );
+    mockedValidateCitations.mockResolvedValue({
+      blocking: true,
+      issues: [
+        {
+          start: 13,
+          end: 38,
+          code: "unlinked_author_date",
+          message: "Citazione non collegata alla bibliografia del progetto",
+          suggestion: "Aggiungi o collega questa fonte alla bibliografia",
+          matched: "(FantomaAutore, 2050)",
+        },
+      ],
+    });
+    render(
+      <WritingAiPanel
+        contextPacket={FIXTURE_CONTEXT_PACKET}
+        chapterContent="Capitolo"
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Verifica/i }));
+
+    expect(
+      await screen.findByText(/FantomaAutore, 2050/)
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("applica-button")).toBeDisabled();
+    fireEvent.click(screen.getByTestId("applica-override-button"));
+    expect(screen.getByTestId("applica-button")).toBeEnabled();
+  });
+
+  it("keeps Applica disabled while project citation validation is pending", async () => {
+    vi.spyOn(aiActions, "streamWritingAction").mockImplementation(
+      async (_params, onEvent) => {
+        onEvent({ event: "done", data: { draft: "Testo (Benjamin, 1936)." } });
+      }
+    );
+    mockedValidateCitations.mockImplementation(
+      () => new Promise(() => undefined)
+    );
+    render(
+      <WritingAiPanel
+        contextPacket={FIXTURE_CONTEXT_PACKET}
+        chapterContent="Capitolo"
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Verifica/i }));
+
+    expect(
+      await screen.findByText("Verifica citazioni in corso…")
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("applica-button")).toBeDisabled();
+    expect(
+      screen.queryByTestId("applica-override-button")
+    ).not.toBeInTheDocument();
+  });
+
+  it("fails closed when project citation validation is unavailable", async () => {
+    vi.spyOn(aiActions, "streamWritingAction").mockImplementation(
+      async (_params, onEvent) => {
+        onEvent({ event: "done", data: { draft: "Testo (Benjamin, 1936)." } });
+      }
+    );
+    mockedValidateCitations.mockRejectedValue(
+      new Error("Verifica citazioni non disponibile. Riprova.")
+    );
+    render(
+      <WritingAiPanel
+        contextPacket={FIXTURE_CONTEXT_PACKET}
+        chapterContent="Capitolo"
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Verifica/i }));
+
+    expect(
+      await screen.findByText("Verifica citazioni non disponibile. Riprova.")
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("applica-button")).toBeDisabled();
+    expect(screen.getByTestId("applica-override-button")).toBeInTheDocument();
   });
 });

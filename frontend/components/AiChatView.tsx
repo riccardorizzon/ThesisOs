@@ -30,6 +30,14 @@ function toChatMessages(items: ConversationMessage[]): ViewMessage[] {
     }));
 }
 
+function removeEmptyAssistant(messages: ViewMessage[]): ViewMessage[] {
+  const last = messages.at(-1);
+  if (last?.role === "assistant" && !last.content.trim()) {
+    return messages.slice(0, -1);
+  }
+  return messages;
+}
+
 /**
  * Thesis Companion chat — companion-first home entry (ADR-0045).
  * The resume packet is the single source of truth for where work resumes.
@@ -57,7 +65,26 @@ export function AiChatView() {
     [router]
   );
 
+  const handleConversationDeleted = useCallback(
+    (id: string) => {
+      setListRefresh((revision) => revision + 1);
+      if (id === conversationId) {
+        setMessages([]);
+        setError(null);
+        router.replace("/");
+      }
+    },
+    [conversationId, router]
+  );
+
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  const cancelStream = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setMessages(removeEmptyAssistant);
+    setStreaming(false);
+  }, []);
 
   useEffect(() => {
     if (conversationId) {
@@ -179,6 +206,7 @@ export function AiChatView() {
             setListRefresh((n) => n + 1);
           } else if (e.event === "error") {
             setError(e.data.message);
+            setMessages(removeEmptyAssistant);
           }
         },
         ac.signal
@@ -186,8 +214,10 @@ export function AiChatView() {
     } catch (err) {
       if (!(err instanceof DOMException && err.name === "AbortError")) {
         setError(String(err));
+        setMessages(removeEmptyAssistant);
       }
     } finally {
+      if (abortRef.current === ac) abortRef.current = null;
       setStreaming(false);
     }
   }
@@ -197,6 +227,7 @@ export function AiChatView() {
       <ConversationList
         activeId={conversationId}
         onSelect={selectConversation}
+        onDeleted={handleConversationDeleted}
         refreshKey={listRefresh}
       />
       <section className="flex min-w-0 flex-1 flex-col">
@@ -311,20 +342,13 @@ export function AiChatView() {
           ))}
           {streaming && (
             <div
-              className="flex items-center gap-1 px-2 text-sm text-ink-muted"
+              className="flex items-center gap-2 px-2 text-sm text-ink-muted"
               data-testid="ai-chat-streaming"
               aria-live="polite"
               aria-label="Risposta in corso"
             >
-              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
-              <span
-                className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent"
-                style={{ animationDelay: "150ms" }}
-              />
-              <span
-                className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent"
-                style={{ animationDelay: "300ms" }}
-              />
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-accent" />
+              <span>Generazione in corso…</span>
             </div>
           )}
           {error && (
@@ -336,7 +360,12 @@ export function AiChatView() {
             </div>
           )}
         </div>
-        <InputBox disabled={streaming || loadingMessages} onSend={send} />
+        <InputBox
+          disabled={loadingMessages}
+          streaming={streaming}
+          onCancel={cancelStream}
+          onSend={send}
+        />
       </section>
     </div>
   );

@@ -16,7 +16,7 @@ from app.graph.orchestration.constants import (
 )
 
 
-def _has_retrieval_keywords(text: str) -> bool:
+def has_retrieval_intent(text: str) -> bool:
     lower = text.lower()
     return any(kw in lower for kw in RETRIEVAL_KEYWORDS)
 
@@ -44,10 +44,12 @@ def coerce_m5_route(raw: str, *, user_message: str) -> str:
     (spec §6.2). Callers emit ``no_route`` only for missing/empty/parse failure.
     """
     route = str(raw).strip().lower()
-    if route in DIRECT_ROUTES:
-        return route
     if _has_writer_intent(route, user_message):
         return WRITER_ROUTE
-    if _has_retrieval_keywords(user_message):
+    if route == GROUNDED_ROUTE:
         return GROUNDED_ROUTE
+    if has_retrieval_intent(user_message):
+        return GROUNDED_ROUTE
+    if route in DIRECT_ROUTES:
+        return route
     return DEFAULT_ROUTE

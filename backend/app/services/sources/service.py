@@ -110,6 +110,13 @@ class SourcesService:
 
         return SourceListResponse(sources=items, total=len(items))
 
+    async def approved_citation_refs(self, project_id: str) -> list[dict]:
+        async with AsyncSessionLocal() as session:
+            return await self._sources.approved_citation_refs(
+                session,
+                project_id,
+            )
+
     async def get_source(
         self,
         project_id: str,
@@ -121,6 +128,25 @@ class SourcesService:
             except SourceNotFoundError:
                 raise SourceNotFoundError(slug) from None
             return await self._to_list_item(session, project_id, row)
+
+    async def add_to_bibliography(
+        self,
+        project_id: str,
+        slug: str,
+    ) -> SourceListItem:
+        async with AsyncSessionLocal() as session:
+            try:
+                row = await self._sources.approve_for_bibliography(
+                    session,
+                    project_id,
+                    slug,
+                )
+                item = await self._to_list_item(session, project_id, row)
+                await session.commit()
+                return item
+            except Exception:
+                await session.rollback()
+                raise
 
     async def delete_source(self, project_id: str, slug: str) -> None:
         document_id: str | None = None

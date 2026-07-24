@@ -77,3 +77,17 @@ export function saveProjectPrefs(prefs: ProjectPrefs): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(scopedPrefsKey(), JSON.stringify(prefs));
 }
+
+export function clearProjectBrowserState(projectId: string): void {
+  if (typeof window === "undefined") return;
+  const prefix = `thesisos:${projectId}:`;
+  const keys: string[] = [];
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (key?.startsWith(prefix)) keys.push(key);
+  }
+  for (const key of keys) localStorage.removeItem(key);
+  if (localStorage.getItem(LAST_PERSONAL_KEY) === projectId) {
+    localStorage.setItem(LAST_PERSONAL_KEY, "thesis-agent");
+  }
+}

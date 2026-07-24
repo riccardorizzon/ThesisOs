@@ -12,7 +12,15 @@ describe("MemoryKindBadge", () => {
   });
 
   it("renders all operational and knowledge kinds", () => {
-    const kinds = ["user", "thesis", "editable", "decision", "concept", "citation"] as const;
+    const kinds = [
+      "user",
+      "thesis",
+      "editable",
+      "decision",
+      "concept",
+      "citation",
+      "note",
+    ] as const;
     for (const kind of kinds) {
       render(<MemoryKindBadge kind={kind} />);
       expect(screen.getByTestId(`kind-badge-${kind}`)).toBeInTheDocument();

@@ -124,6 +124,12 @@ export function SourcesEnrichedList({
     const base = `/sources/${slug}`;
     return chapterContext ? `${base}?chapter=${chapterContext}` : base;
   };
+  const approvedCount = initialSources.filter(
+    (source) => source.corpus_status === "approvata"
+  ).length;
+  const candidateCount = initialSources.filter(
+    (source) => source.corpus_status === "candidata"
+  ).length;
 
   if (initialSources.length === 0) {
     return (
@@ -149,7 +155,10 @@ export function SourcesEnrichedList({
 
       <SourcesPageHeader />
 
-      <BibliographyExportBar />
+      <BibliographyExportBar
+        approvedCount={approvedCount}
+        candidateCount={candidateCount}
+      />
 
       <div className="mb-6">
         <label htmlFor="sources-unified-search" className="sr-only">

@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { resolveApiBase } from "@/lib/apiBase";
 
 describe("resolveApiBase", () => {
-  it("returns empty string in browser for same-origin API", () => {
-    expect(resolveApiBase(true)).toBe("");
+  it("uses a dedicated same-origin API namespace in the browser", () => {
+    expect(resolveApiBase(true)).toBe("/api");
   });
 
   it("returns internal backend URL on server", () => {

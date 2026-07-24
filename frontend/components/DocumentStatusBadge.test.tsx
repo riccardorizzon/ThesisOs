@@ -4,7 +4,13 @@ import { describe, expect, it } from "vitest";
 import { DocumentStatusBadge } from "@/components/DocumentStatusBadge";
 import type { DocumentStatus } from "@/lib/documentClient";
 
-const STATUSES: DocumentStatus[] = ["uploaded", "processing", "parsed", "failed"];
+const STATUSES: DocumentStatus[] = [
+  "uploaded",
+  "processing",
+  "parsed",
+  "indexed",
+  "failed",
+];
 
 describe("DocumentStatusBadge", () => {
   it.each(STATUSES)("renders the %s status", (status) => {

@@ -5,6 +5,7 @@ from app.services.chapter.exceptions import (
     ChapterNotFoundError,
     ChapterServiceError,
     ChapterWriteConflictError,
+    InvalidDemoCopyTargetError,
     InvalidChapterStatusError,
 )
 from app.services.chapter.service import ChapterService
@@ -15,5 +16,6 @@ __all__ = [
     "ChapterNotFoundError",
     "ChapterNotDeletableError",
     "ChapterWriteConflictError",
+    "InvalidDemoCopyTargetError",
     "InvalidChapterStatusError",
 ]

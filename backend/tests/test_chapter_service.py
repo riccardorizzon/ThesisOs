@@ -16,6 +16,7 @@ from app.services.chapter import (
     ChapterNotDeletableError,
     ChapterNotFoundError,
     ChapterService,
+    ChapterServiceError,
     ChapterWriteConflictError,
     InvalidChapterStatusError,
 )
@@ -202,10 +203,14 @@ async def test_user_chapter_is_deletable_and_can_be_deleted(db_session):
 
 
 @pytest.mark.asyncio
-async def test_dogfood_chapter_not_deletable(db_session):
+async def test_demo_project_chapter_not_deletable(db_session):
     svc = ChapterService()
     rec = await svc.create(
-        ChapterCreate(title="Craftsmanship (dogfood M6)", content_md="seed"),
+        ChapterCreate(
+            title="Capitolo dimostrativo",
+            project_id="demo-thesis",
+            content_md="seed",
+        ),
         session=db_session,
     )
     await db_session.commit()
@@ -214,6 +219,26 @@ async def test_dogfood_chapter_not_deletable(db_session):
 
     with pytest.raises(ChapterNotDeletableError):
         await svc.delete(rec.id, session=db_session)
+
+
+@pytest.mark.asyncio
+async def test_migration_protection_uses_content_metadata_not_title(db_session):
+    svc = ChapterService()
+    user_named = await svc.create(
+        ChapterCreate(title="[kimi-claw] Note personali", content_md="Testo utente"),
+        session=db_session,
+    )
+    migrated = await svc.create(
+        ChapterCreate(
+            title="Capitolo migrato",
+            content_md="<!-- migration_slug:chapter-1 -->\nTesto migrato",
+        ),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    assert (await svc.get(user_named.id, session=db_session)).deletable is True
+    assert (await svc.get(migrated.id, session=db_session)).deletable is False
 
 
 @pytest.mark.asyncio
@@ -232,41 +257,87 @@ async def test_chapter_with_children_not_deletable(db_session):
 
 
 @pytest.mark.asyncio
-async def test_list_scope_owned_excludes_dogfood(db_session):
+@pytest.mark.parametrize(
+    "title",
+    ["Prova", "Craftsmanship", "Reti neurali", "E2E export"],
+)
+async def test_owned_chapter_visibility_never_depends_on_title(db_session, title):
     svc = ChapterService()
-    owned = await svc.create(ChapterCreate(title="Mio capitolo"), session=db_session)
-    await svc.create(
-        ChapterCreate(title="Craftsmanship (dogfood M6)", content_md="seed"),
+    owned = await svc.create(
+        ChapterCreate(title=title, project_id="thesis-002"),
         session=db_session,
     )
     await db_session.commit()
 
-    owned_list = await svc.list(ChapterListFilters(scope="owned"), session=db_session)
-    demo_list = await svc.list(ChapterListFilters(scope="demo"), session=db_session)
+    owned_list = await svc.list(
+        ChapterListFilters(project_id="thesis-002", scope="owned"),
+        session=db_session,
+    )
 
-    assert {c.id for c in owned_list} == {owned.id}
-    assert all(not c.deletable for c in demo_list)
-    assert owned.id not in {c.id for c in demo_list}
+    by_id = {item.id: item for item in owned_list}
+    assert owned.id in by_id
+    loaded = by_id[owned.id]
+    assert loaded.title == title
+    assert loaded.deletable is True
 
 
 @pytest.mark.asyncio
-async def test_copy_demo_structure_creates_empty_owned_titles(db_session):
+async def test_copy_demo_structure_uses_demo_project_and_is_idempotent(db_session):
     svc = ChapterService()
-    await svc.create(
-        ChapterCreate(title="Introduzione (dogfood demo)", content_md="contenuto dogfood lungo"),
+
+    result = await svc.copy_demo_structure(
+        project_id="thesis-002",
         session=db_session,
     )
     await db_session.commit()
 
-    result = await svc.copy_demo_structure(session=db_session)
-    await db_session.commit()
+    assert [item.title for item in result.created] == [
+        "Introduzione",
+        "Quadro teorico",
+        "Metodologia",
+        "Analisi",
+        "Conclusioni",
+    ]
+    assert all(item.project_id == "thesis-002" for item in result.created)
+    assert all(item.content_md == "" for item in result.created)
+    assert all(item.deletable is True for item in result.created)
 
-    assert len(result.created) == 1
-    assert result.created[0].title == "Introduzione"
-    assert result.created[0].content_md == ""
-    assert result.created[0].deletable is True
-
-    second = await svc.copy_demo_structure(session=db_session)
+    second = await svc.copy_demo_structure(
+        project_id="thesis-002",
+        session=db_session,
+    )
     await db_session.commit()
     assert second.created == []
-    assert second.skipped_titles == ["Introduzione (dogfood demo)"]
+    assert second.skipped_titles == [
+        "Introduzione",
+        "Quadro teorico",
+        "Metodologia",
+        "Analisi",
+        "Conclusioni",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_copy_demo_structure_rejects_demo_as_destination(db_session):
+    with pytest.raises(ChapterServiceError):
+        await ChapterService().copy_demo_structure(
+            project_id="demo-thesis",
+            session=db_session,
+        )
+
+
+@pytest.mark.asyncio
+async def test_listing_demo_project_self_heals_curated_seed(db_session):
+    items = await ChapterService().list(
+        ChapterListFilters(project_id="demo-thesis", scope="demo"),
+        session=db_session,
+    )
+
+    assert [item.title for item in items] == [
+        "Introduzione",
+        "Quadro teorico",
+        "Metodologia",
+        "Analisi",
+        "Conclusioni",
+    ]
+    assert all(item.deletable is False for item in items)

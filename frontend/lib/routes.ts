@@ -38,12 +38,6 @@ export const PRODUCT_ROUTES: ProductRoute[] = [
     description: "Spatial research canvas",
   },
   {
-    path: "/research/guided",
-    module: "research",
-    milestone: "PX-3",
-    description: "Guided exploration trail",
-  },
-  {
     path: "/writing",
     module: "writing",
     milestone: "PX-2",
@@ -125,13 +119,13 @@ export const LEGACY_REDIRECTS: LegacyRedirect[] = [
   },
   {
     source: "/memory",
-    destination: "/knowledge",
+    destination: "/knowledge?view=notes",
     permanent: false,
     adr: "ADR-0036 — memory admin split; primary → Knowledge",
   },
   {
     source: "/memory/:path*",
-    destination: "/knowledge",
+    destination: "/knowledge?view=notes",
     permanent: false,
     adr: "ADR-0036 — memory/* → Knowledge",
   },

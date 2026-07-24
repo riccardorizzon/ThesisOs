@@ -27,11 +27,19 @@ class DocumentWriteConflictError(DocumentServiceError):
 
 
 class UnsupportedFormatError(DocumentServiceError):
-    """Source type is not one of pdf/epub/docx — maps to 400 unsupported_format."""
+    """Source type is outside the upload allowlist — maps to 415."""
 
     def __init__(self, source_type: str | None):
         self.source_type = source_type
         super().__init__(f"unsupported_format: {source_type!r}")
+
+
+class InvalidFileContentError(DocumentServiceError):
+    """Filename and bytes disagree — reject before persistence."""
+
+    def __init__(self, source_type: str):
+        self.source_type = source_type
+        super().__init__(f"invalid_file_content: {source_type}")
 
 
 class ParserUnavailableError(DocumentServiceError):

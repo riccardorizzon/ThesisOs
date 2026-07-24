@@ -58,6 +58,16 @@ def test_build_orchestration_user_block_includes_plan_and_task():
         ("conversation", "hello", DEFAULT_ROUTE),
         ("grounded_chat", "hello", GROUNDED_ROUTE),
         ("writer", "search my documents", GROUNDED_ROUTE),
+        (
+            "conversation",
+            "Cosa dice il mio documento sulla triangolazione?",
+            GROUNDED_ROUTE,
+        ),
+        (
+            "conversation",
+            "Cerca nelle fonti che ho caricato",
+            GROUNDED_ROUTE,
+        ),
         ("writer", "hello there", DEFAULT_ROUTE),
         ("unknown_route", "hello", DEFAULT_ROUTE),
     ],

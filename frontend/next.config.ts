@@ -14,11 +14,14 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     const prefixRewrites = API_PROXY_PREFIXES.flatMap((prefix) => [
-      { source: `/${prefix}`, destination: `${apiUpstream}/${prefix}` },
-      { source: `/${prefix}/:path*`, destination: `${apiUpstream}/${prefix}/:path*` },
+      { source: `/api/${prefix}`, destination: `${apiUpstream}/${prefix}` },
+      {
+        source: `/api/${prefix}/:path*`,
+        destination: `${apiUpstream}/${prefix}/:path*`,
+      },
     ]);
     const exactRewrites = API_PROXY_EXACT_PATHS.map((path) => ({
-      source: `/${path}`,
+      source: `/api/${path}`,
       destination: `${apiUpstream}/${path}`,
     }));
     return [...prefixRewrites, ...exactRewrites];

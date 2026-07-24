@@ -40,3 +40,11 @@ class ChapterNotDeletableError(ChapterServiceError):
     def __init__(self, chapter_id: str):
         self.chapter_id = chapter_id
         super().__init__(f"chapter_not_deletable: {chapter_id}")
+
+
+class InvalidDemoCopyTargetError(ChapterServiceError):
+    """The read-only demo project cannot be a copy destination."""
+
+    def __init__(self, project_id: str):
+        self.project_id = project_id
+        super().__init__(f"invalid_demo_copy_target: {project_id}")

@@ -31,6 +31,7 @@ from app.services.document.exceptions import (
     DocumentNotFoundError,
     DocumentServiceError,
     DocumentWriteConflictError,
+    InvalidFileContentError,
     UnsupportedFormatError,
 )
 from app.services.document.parsers import Parser, parse_document
@@ -38,6 +39,11 @@ from app.services.document.storage import StorageAdapter, build_storage_adapter,
 from app.services.events.bus import publish
 from app.services.project_scope import resolve_project_id
 from app.services.sources.repository import register_uploaded_document
+
+
+def validate_upload_content(source_type: str, data: bytes) -> None:
+    if source_type == "pdf" and not data.startswith(b"%PDF"):
+        raise InvalidFileContentError(source_type)
 
 
 class DocumentService:
@@ -222,6 +228,7 @@ class DocumentService:
         resolved = (source_type or infer_source_type(filename) or "").lower()
         if resolved not in VALID_SOURCE_TYPES:
             raise UnsupportedFormatError(source_type or filename)
+        validate_upload_content(resolved, data)
         meta = meta or DocumentUploadMetadata()
         now = datetime.now(timezone.utc)
 

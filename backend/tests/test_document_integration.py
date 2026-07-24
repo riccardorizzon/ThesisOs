@@ -93,7 +93,7 @@ async def test_upload_parse_list_round_trip(svc):
 
 
 async def test_document_and_events_survive_new_session(svc, tmp_path):
-    rec = await svc.upload(filename="persist.pdf", data=b"x")
+    rec = await svc.upload(filename="persist.pdf", data=b"%PDF test")
     await svc.parse(rec.id, primary=_docling(["persisted chunk body"]))
 
     async with AsyncSessionLocal() as session:
@@ -132,7 +132,7 @@ async def test_embeddings_zero_writes_after_ingestion(svc, db_available):
     async with AsyncSessionLocal() as session:
         before = await session.scalar(select(func.count()).select_from(models.Embedding))
 
-    rec = await svc.upload(filename="emb.pdf", data=b"x")
+    rec = await svc.upload(filename="emb.pdf", data=b"%PDF test")
     await svc.parse(rec.id, primary=_docling(["no embeddings in m3"]))
 
     async with AsyncSessionLocal() as session:
@@ -167,7 +167,7 @@ def test_chat_smoke_unchanged_without_documents(monkeypatch):
 
 async def test_chat_does_not_leak_ingested_chunk_text(svc, monkeypatch):
     marker = "DistinctiveChunkMarker-XYZZY-INTEGRATION"
-    rec = await svc.upload(filename="secret.pdf", data=b"x")
+    rec = await svc.upload(filename="secret.pdf", data=b"%PDF test")
     await svc.parse(rec.id, primary=_docling([marker]))
 
     import app.api.chat as chat

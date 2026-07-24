@@ -43,6 +43,19 @@ RETRIEVAL_KEYWORDS: frozenset[str] = frozenset(
         "what do",
         "from my",
         "in my library",
+        "documento",
+        "documenti",
+        "fonte",
+        "fonti",
+        "caricato",
+        "caricati",
+        "cerca",
+        "citazione",
+        "citazioni",
+        "cosa dice",
+        "cosa dicono",
+        "nel mio",
+        "nella mia biblioteca",
     }
 )
 
@@ -80,28 +93,3 @@ WRITER_STRUCTURE_TOKENS: frozenset[str] = frozenset(
     {"chapter", "section", "subsection", "capitolo", "capitoli", "sezione", "sezioni", "paragrafo"}
 )
 
-# Heuristic keywords for reserved-route normalization (spec §6.2).
-RETRIEVAL_KEYWORDS: frozenset[str] = frozenset(
-    {
-        "document",
-        "documents",
-        "corpus",
-        "source",
-        "sources",
-        "uploaded",
-        "upload",
-        "retrieve",
-        "retrieval",
-        "search",
-        "cite",
-        "citation",
-        "chapter",
-        "paper",
-        "pdf",
-        "according to",
-        "what does",
-        "what do",
-        "from my",
-        "in my library",
-    }
-)

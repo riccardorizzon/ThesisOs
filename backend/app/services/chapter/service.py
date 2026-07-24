@@ -33,66 +33,21 @@ from app.services.chapter.exceptions import (
     ChapterNotDeletableError,
     ChapterNotFoundError,
     ChapterWriteConflictError,
+    InvalidDemoCopyTargetError,
     InvalidChapterStatusError,
 )
-
-# Migration seeds stay non-deletable, but must appear in personal/owned outline.
-_MIGRATION_TITLE_MARKERS = ("[kimi-claw",)
-# Dogfood / lab noise — quarantined from student-facing lists (owned + default all).
-_DOGFOOD_TITLE_MARKERS = (
-    "(dogfood",
-    "dogfood m",
-    "dogfood chapter",
-    "dogfood demo",
-    "g5 walkthrough",
-    "g5 test",
-    "m7 dogfood",
-    "reti neurali",
-)
-_DOGFOOD_EXACT_TITLES = frozenset(
-    {
-        "e2e export",
-        "craftsmanship",
-        "g5 walkthrough",
-        "g5 test",
-        "m7 dogfood chapter",
-        "prova",
-    }
-)
-# Back-compat alias used when sanitizing demo titles for copy_demo_structure.
-_PROTECTED_TITLE_MARKERS = _DOGFOOD_TITLE_MARKERS + _MIGRATION_TITLE_MARKERS
-_PROTECTED_EXACT_TITLES = _DOGFOOD_EXACT_TITLES
-
-
-def _sanitize_demo_title(title: str) -> str:
-    lowered = title.lower()
-    cut_at = len(title)
-    for marker in _DOGFOOD_TITLE_MARKERS:
-        idx = lowered.find(marker)
-        if idx != -1:
-            cut_at = min(cut_at, idx)
-    cleaned = title[:cut_at].strip(" \t-–—(")
-    return cleaned or title.strip()
-
-
-def _is_quarantined_dogfood(row: models.Chapter) -> bool:
-    """True for lab/demo noise that must not appear on the thesis outline."""
-    title = row.title.strip().lower()
-    if title in _DOGFOOD_EXACT_TITLES:
-        return True
-    return any(marker in title for marker in _DOGFOOD_TITLE_MARKERS)
+from app.services.demo_seed import DEMO_CHAPTERS, DEMO_THESIS_ID, ensure_demo_seed
 
 
 def _is_migration_seed(row: models.Chapter) -> bool:
-    title = row.title.strip().lower()
-    if any(marker in title for marker in _MIGRATION_TITLE_MARKERS):
-        return True
     return (row.content_md or "").lstrip().startswith("<!-- migration_slug:")
 
 
 def _chapter_is_deletable(row: models.Chapter) -> bool:
-    """Protected seeds (migration + dogfood) cannot be deleted from the UI."""
-    if _is_quarantined_dogfood(row) or _is_migration_seed(row):
+    """Demo rows and migration seeds cannot be deleted from the UI."""
+    if resolve_project_id(getattr(row, "project_id", None)) == DEMO_THESIS_ID:
+        return False
+    if _is_migration_seed(row):
         return False
     return True
 
@@ -247,9 +202,12 @@ class ChapterService:
     async def _list(
         self, session: AsyncSession, filters: ChapterListFilters
     ) -> list[ChapterRecord]:
-        stmt = select(models.Chapter)
-        if filters.project_id is not None:
-            stmt = stmt.where(models.Chapter.project_id == filters.project_id)
+        project_id = resolve_project_id(filters.project_id)
+        if project_id == DEMO_THESIS_ID:
+            await ensure_demo_seed(session)
+        stmt = select(models.Chapter).where(
+            models.Chapter.project_id == project_id
+        )
         if filters.parent_id is not None:
             stmt = stmt.where(models.Chapter.parent_id == filters.parent_id)
         if filters.q:
@@ -268,32 +226,51 @@ class ChapterService:
         self, session: AsyncSession, *, project_id: str | None = None
     ) -> CopyDemoStructureResponse:
         target_project = resolve_project_id(project_id)
-        rows = (await session.execute(select(models.Chapter))).scalars().all()
-        # Copy only quarantined dogfood templates — never thesis migration seeds.
+        if target_project == DEMO_THESIS_ID:
+            raise InvalidDemoCopyTargetError(target_project)
+
+        await ensure_demo_seed(session)
+        seed_ids = [seed.id for seed in DEMO_CHAPTERS]
         demo_rows = sorted(
-            [r for r in rows if _is_quarantined_dogfood(r)],
+            (
+                (
+                    await session.execute(
+                        select(models.Chapter).where(
+                            models.Chapter.project_id == DEMO_THESIS_ID,
+                            models.Chapter.id.in_(seed_ids),
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            ),
             key=lambda r: (r.order_index, r.created_at),
         )
-        # Duplicate-title guard is scoped to the destination thesis (ADR-0047).
         owned_titles = {
-            r.title.strip().lower()
-            for r in rows
-            if not _is_quarantined_dogfood(r)
-            and resolve_project_id(getattr(r, "project_id", None)) == target_project
+            r.title.strip().casefold()
+            for r in (
+                (
+                    await session.execute(
+                        select(models.Chapter).where(
+                            models.Chapter.project_id == target_project
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
         }
         created: list[ChapterRecord] = []
         skipped: list[str] = []
         for row in demo_rows:
-            sanitized_title = _sanitize_demo_title(row.title)
-            title_key = row.title.strip().lower()
-            san_key = sanitized_title.strip().lower()
-            if title_key in owned_titles or san_key in owned_titles:
+            title_key = row.title.strip().casefold()
+            if title_key in owned_titles:
                 skipped.append(row.title)
                 continue
             record = await self._create(
                 session,
                 ChapterCreate(
-                    title=sanitized_title,
+                    title=row.title,
                     project_id=target_project,
                     parent_id=None,
                     order_index=row.order_index,
@@ -303,7 +280,7 @@ class ChapterService:
                 ),
             )
             created.append(record)
-            owned_titles.add(san_key)
+            owned_titles.add(title_key)
         return CopyDemoStructureResponse(created=created, skipped_titles=skipped)
 
     async def _update_content(
@@ -407,14 +384,9 @@ class ChapterService:
 
     @staticmethod
     def _apply_scope(rows: list[models.Chapter], scope: str) -> list[models.Chapter]:
-        # owned/personal: thesis + user chapters (incl. protected kimi seeds)
-        # demo: quarantined dogfood only
-        # all: student-safe default — hide dogfood (CUR-8 /chapters leak)
-        if scope == "owned":
-            return [r for r in rows if not _is_quarantined_dogfood(r)]
-        if scope == "demo":
-            return [r for r in rows if _is_quarantined_dogfood(r)]
-        return [r for r in rows if not _is_quarantined_dogfood(r)]
+        # Rows are already isolated by project_id. Scope is retained for API
+        # compatibility; provenance must never be inferred from user titles.
+        return rows
 
     @staticmethod
     def _require_version(

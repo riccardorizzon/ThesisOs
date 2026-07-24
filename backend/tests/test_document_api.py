@@ -14,6 +14,7 @@ from app.schemas.document import (
 from app.services.document import (
     DocumentNotFoundError,
     DocumentWriteConflictError,
+    InvalidFileContentError,
     UnsupportedFormatError,
 )
 
@@ -42,6 +43,8 @@ class FakeDocumentService:
         self.calls.append(("upload", filename))
         if filename.endswith(".xyz"):
             raise UnsupportedFormatError(filename)
+        if filename == "fake.pdf":
+            raise InvalidFileContentError("pdf")
         st = "markdown" if filename.endswith(".md") else "pdf"
         return _record(original_filename=filename, source_type=st, title=(meta.title if meta else None) or "Doc")
 
@@ -141,11 +144,22 @@ def test_upload_delegates_and_schedules_parse(fake_service):
     assert "parse" in names  # background parse ran
 
 
-def test_upload_unsupported_format_returns_400(fake_service):
+def test_upload_unsupported_format_returns_415(fake_service):
     client, _ = fake_service
     r = client.post("/upload", files={"file": ("notes.xyz", b"x", "application/octet-stream")})
-    assert r.status_code == 400
+    assert r.status_code == 415
     assert r.json()["code"] == "unsupported_format"
+
+
+def test_upload_invalid_file_content_returns_415(fake_service):
+    client, _ = fake_service
+    r = client.post(
+        "/upload",
+        files={"file": ("fake.pdf", b"plain text", "application/pdf")},
+    )
+    assert r.status_code == 415
+    assert r.json()["code"] == "invalid_file_content"
+    assert "pymupdf" not in r.json()["message"].lower()
 
 
 def test_list_delegates_with_filters(fake_service):

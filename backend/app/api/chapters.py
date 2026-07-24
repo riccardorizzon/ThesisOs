@@ -20,6 +20,7 @@ from app.services.chapter import (
     ChapterNotFoundError,
     ChapterService,
     ChapterWriteConflictError,
+    InvalidDemoCopyTargetError,
     InvalidChapterStatusError,
 )
 
@@ -83,7 +84,10 @@ async def list_chapters(
 
 @router.post("/chapters/copy-demo-structure", status_code=201)
 async def copy_demo_structure(project_id: str | None = None):
-    return await _service.copy_demo_structure(project_id=project_id)
+    try:
+        return await _service.copy_demo_structure(project_id=project_id)
+    except InvalidDemoCopyTargetError as exc:
+        return _err(422, "invalid_demo_copy_target", str(exc))
 
 
 @router.get("/chapters/{chapter_id}")

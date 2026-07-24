@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 from app.graph.router import make_router_node
 from app.schemas.graph_state import AgentError, GraphState, Message, Plan
 
@@ -51,6 +49,23 @@ async def test_router_grounded_chat():
     out = await node(_state(messages=[Message(role="user", content="Search my library")]))
 
     assert out["route"] == "grounded_chat"
+
+
+async def test_router_forces_explicit_italian_document_query_to_grounded_chat():
+    node = make_router_node(FakeLLM("not-json"))
+    out = await node(
+        _state(
+            messages=[
+                Message(
+                    role="user",
+                    content="Cosa dice il mio documento sulla triangolazione?",
+                )
+            ]
+        )
+    )
+
+    assert out["route"] == "grounded_chat"
+    assert not any(error.message == "no_route" for error in out["errors"])
 
 
 async def test_router_parse_failure_no_route():

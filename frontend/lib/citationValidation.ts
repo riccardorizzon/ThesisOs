@@ -9,15 +9,23 @@ export type CitationSourceRef = {
 export type CitationIssue = {
   start: number;
   end: number;
-  code: "invalid_numeric" | "needs_review" | "valid_linked";
+  code:
+    | "invalid_numeric"
+    | "needs_review"
+    | "valid_linked"
+    | "unlinked_author_date";
   message: string;
   suggestion?: string;
   matched: string;
 };
 
-const AUTHOR_DATE_RE = /\([A-Za-zÀ-ÿ][\w'-]+,\s*\d{4}\)/;
+const PARENTHETICAL_AUTHOR_DATE_RE =
+  /\(([A-ZÀ-ÖØ-Þ][^,()]{0,120}),\s*((?:19|20)\d{2}|[ns]\.?\s*d\.?)\)/gu;
+const NARRATIVE_AUTHOR_DATE_RE =
+  /([A-ZÀ-ÖØ-Þ][A-Za-zÀ-ÿ'’\-]+(?:\s+(?:&|e|and)\s+[A-ZÀ-ÖØ-Þ][A-Za-zÀ-ÿ'’\-]+)*)\s*\(\s*((?:19|20)\d{2}|[ns]\.?\s*d\.?)\s*\)/gu;
 const NUMERIC_CITE_RE = /\[\d+\]/g;
 const LINKED_MARKER_RE = /\[@\w+\d*\]/g;
+const AUTHOR_CONNECTORS = new Set(["e", "and", "et", "al"]);
 
 function surnameFromAuthor(author: string): string {
   const parts = author.trim().split(/\s+/);
@@ -37,6 +45,62 @@ export function suggestAuthorDate(
   const yearMatch = yearStr.match(/\b(19|20)\d{2}\b/);
   const year = yearMatch?.[0] ?? "n.d.";
   return `(${surnameFromAuthor(author)}, ${year})`;
+}
+
+function normalizedTokens(value: string): Set<string> {
+  const tokens = value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .match(/[a-z0-9]+/g) ?? [];
+  return new Set(
+    tokens.filter(
+      (token) => token.length > 1 && !AUTHOR_CONNECTORS.has(token)
+    )
+  );
+}
+
+function normalizedYear(value: string | number | undefined): string {
+  return String(value ?? "").match(/\b(19|20)\d{2}\b/)?.[0] ?? "n.d.";
+}
+
+function isLinkedAuthorDate(
+  authors: string,
+  year: string,
+  sources: CitationSourceRef[]
+): boolean {
+  const citedTokens = normalizedTokens(authors);
+  const citedYear = normalizedYear(year);
+  if (citedTokens.size === 0) return false;
+  return sources.some((source) => {
+    if (normalizedYear(source.year) !== citedYear) return false;
+    const sourceTokens = normalizedTokens(source.author ?? "");
+    return [...citedTokens].every((token) => sourceTokens.has(token));
+  });
+}
+
+type AuthorDateMatch = {
+  start: number;
+  end: number;
+  matched: string;
+  authors: string;
+  year: string;
+};
+
+function authorDateMatches(text: string): AuthorDateMatch[] {
+  const matches = [
+    ...text.matchAll(PARENTHETICAL_AUTHOR_DATE_RE),
+    ...text.matchAll(NARRATIVE_AUTHOR_DATE_RE),
+  ];
+  return matches
+    .map((match) => ({
+      start: match.index ?? 0,
+      end: (match.index ?? 0) + match[0].length,
+      matched: match[0],
+      authors: match[1] ?? "",
+      year: match[2] ?? "",
+    }))
+    .sort((left, right) => left.start - right.start);
 }
 
 export function validateCitations(
@@ -65,12 +129,28 @@ export function validateCitations(
     });
   }
 
-  // Suppress issues inside author-date spans (simple heuristic)
-  if (AUTHOR_DATE_RE.test(text) && issues.length === 0) {
-    return [];
+  for (const match of text.matchAll(LINKED_MARKER_RE)) {
+    const start = match.index ?? 0;
+    seen.add(`${start}:${match[0]}`);
   }
 
-  void LINKED_MARKER_RE;
+  if (sources !== undefined) {
+    for (const match of authorDateMatches(text)) {
+      const key = `${match.start}:${match.matched}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (isLinkedAuthorDate(match.authors, match.year, sources)) continue;
+      issues.push({
+        start: match.start,
+        end: match.end,
+        code: "unlinked_author_date",
+        message: "Citazione non collegata alla bibliografia del progetto",
+        suggestion: "Aggiungi o collega questa fonte alla bibliografia",
+        matched: match.matched,
+      });
+    }
+  }
+
   return issues;
 }
 
@@ -78,7 +158,9 @@ export function hasBlockingCitationIssues(
   text: string,
   sources?: CitationSourceRef[]
 ): boolean {
-  return validateCitations(text, sources).some((i) => i.code === "invalid_numeric");
+  return validateCitations(text, sources).some((issue) =>
+    issue.code === "invalid_numeric" || issue.code === "unlinked_author_date"
+  );
 }
 
 export function countInvalidNumericCitations(text: string): number {

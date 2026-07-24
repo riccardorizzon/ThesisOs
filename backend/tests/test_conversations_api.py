@@ -191,6 +191,119 @@ def test_chat_lists_under_project_after_turn(chat_client):
     assert any(item["id"] == conv_id for item in listed)
 
 
+def test_chat_titles_placeholder_conversation_from_first_user_message(chat_client):
+    created = chat_client.post(
+        "/conversations",
+        json={"project_id": _PROJECT},
+    ).json()
+
+    stream = chat_client.post(
+        "/chat",
+        json={
+            "message": "  Revisione   del\ncapitolo metodologico  ",
+            "conversation_id": created["id"],
+            "project_id": _PROJECT,
+        },
+    )
+    assert "event: done" in stream.text
+
+    listed = chat_client.get(
+        "/conversations",
+        params={"project_id": _PROJECT},
+    ).json()["items"]
+    updated = next(item for item in listed if item["id"] == created["id"])
+    assert updated["title"] == "Revisione del capitolo metodologico"
+
+
+def test_chat_preserves_explicit_conversation_title(chat_client):
+    created = chat_client.post(
+        "/conversations",
+        json={"project_id": _PROJECT, "title": "Titolo scelto"},
+    ).json()
+    chat_client.post(
+        "/chat",
+        json={
+            "message": "Questo testo non deve diventare il titolo",
+            "conversation_id": created["id"],
+            "project_id": _PROJECT,
+        },
+    )
+
+    listed = chat_client.get(
+        "/conversations",
+        params={"project_id": _PROJECT},
+    ).json()["items"]
+    updated = next(item for item in listed if item["id"] == created["id"])
+    assert updated["title"] == "Titolo scelto"
+
+
+def test_rename_conversation_is_project_scoped(client):
+    created = client.post(
+        "/conversations",
+        json={"project_id": _PROJECT},
+    ).json()
+
+    renamed = client.patch(
+        f"/conversations/{created['id']}",
+        params={"project_id": _PROJECT},
+        json={"title": "  Titolo aggiornato  "},
+    )
+    assert renamed.status_code == 200
+    assert renamed.json()["title"] == "Titolo aggiornato"
+
+    foreign = client.patch(
+        f"/conversations/{created['id']}",
+        params={"project_id": "other-project"},
+        json={"title": "Intrusione"},
+    )
+    assert foreign.status_code == 404
+
+
+def test_rename_conversation_rejects_blank_title(client):
+    created = client.post(
+        "/conversations",
+        json={"project_id": _PROJECT},
+    ).json()
+    response = client.patch(
+        f"/conversations/{created['id']}",
+        params={"project_id": _PROJECT},
+        json={"title": "   "},
+    )
+    assert response.status_code == 422
+
+
+def test_delete_conversation_removes_thread_and_is_project_scoped(chat_client):
+    created = chat_client.post(
+        "/conversations",
+        json={"project_id": _PROJECT},
+    ).json()
+    chat_client.post(
+        "/chat",
+        json={
+            "message": "Messaggio da eliminare",
+            "conversation_id": created["id"],
+            "project_id": _PROJECT,
+        },
+    )
+
+    foreign = chat_client.delete(
+        f"/conversations/{created['id']}",
+        params={"project_id": "other-project"},
+    )
+    assert foreign.status_code == 404
+
+    deleted = chat_client.delete(
+        f"/conversations/{created['id']}",
+        params={"project_id": _PROJECT},
+    )
+    assert deleted.status_code == 204
+    missing = chat_client.get(
+        f"/conversations/{created['id']}/messages",
+        params={"project_id": _PROJECT},
+    )
+    assert missing.status_code == 404
+
+
 def test_chat_returns_503_when_llm_not_configured(monkeypatch):
     import app.api.chat as chat
 

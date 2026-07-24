@@ -69,7 +69,12 @@ export function KnowledgeObjectCard({
 
   if (href != null) {
     return (
-      <Link href={href} className={classes} data-testid={`knowledge-card-${object.slug}`}>
+      <Link
+        href={href}
+        prefetch={false}
+        className={classes}
+        data-testid={`knowledge-card-${object.slug}`}
+      >
         {body}
       </Link>
     );

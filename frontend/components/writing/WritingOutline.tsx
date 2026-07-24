@@ -170,6 +170,7 @@ export function WritingOutline({
             >
               <Link
                 href={chapterHref(chapter.id)}
+                prefetch={false}
                 aria-current={selected ? "page" : undefined}
                 className={cn(
                   "flex h-row-dense items-center gap-2 rounded-md px-3 transition-colors duration-200",
@@ -199,6 +200,7 @@ export function WritingOutline({
                       <li key={section.id}>
                         <Link
                           href={chapterHref(chapter.id, section.id)}
+                          prefetch={false}
                           className={cn(
                             "flex h-row-dense items-center truncate pl-2 text-xs transition-colors",
                             "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",

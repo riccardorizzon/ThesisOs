@@ -150,6 +150,33 @@ class SourceRepository:
             for row in result
         ]
 
+    async def approved_citation_refs(
+        self,
+        session: AsyncSession,
+        project_id: str,
+    ) -> list[dict]:
+        result = await session.execute(
+            text(
+                """
+                SELECT slug, subtitle AS author, year, title
+                FROM sources
+                WHERE project_id = :project_id
+                  AND corpus_status = 'approvata'
+                ORDER BY title
+                """
+            ),
+            {"project_id": project_id},
+        )
+        return [
+            {
+                "source_id": row.slug,
+                "author": row.author,
+                "year": row.year,
+                "title": row.title,
+            }
+            for row in result
+        ]
+
     async def get_by_slug(
         self,
         session: AsyncSession,
@@ -185,6 +212,29 @@ class SourceRepository:
             source_type=row.source_type,
             document_id=row.document_id,
         )
+
+    async def approve_for_bibliography(
+        self,
+        session: AsyncSession,
+        project_id: str,
+        slug: str,
+    ) -> SourceRow:
+        result = await session.execute(
+            text(
+                """
+                UPDATE sources
+                SET corpus_status = 'approvata',
+                    knowledge_state = 'validated'
+                WHERE project_id = :project_id
+                  AND slug = :slug
+                RETURNING slug
+                """
+            ),
+            {"project_id": project_id, "slug": slug},
+        )
+        if result.one_or_none() is None:
+            raise SourceNotFoundError(slug)
+        return await self.get_by_slug(session, project_id, slug)
 
     async def delete_upload_source(
         self,

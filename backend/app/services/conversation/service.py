@@ -6,7 +6,7 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import delete, select, text
 
 from app.db import models
 from app.db.session_async import AsyncSessionLocal
@@ -34,6 +34,17 @@ from app.services.project_scope import resolve_project_id
 from app.services.task.service import TaskService
 
 logger = logging.getLogger("app.services.conversation")
+
+_PLACEHOLDER_TITLES = {"", "New Conversation", "Nuova conversazione"}
+
+
+def conversation_title_from_message(text: str, limit: int = 72) -> str:
+    collapsed = " ".join(text.split())
+    if not collapsed:
+        return "Nuova conversazione"
+    if len(collapsed) <= limit:
+        return collapsed
+    return f"{collapsed[: limit - 1].rstrip()}…"
 
 
 class ConversationService:
@@ -95,7 +106,7 @@ class ConversationService:
         conv = models.Conversation(
             id=conversation_id or str(uuid.uuid4()),
             project_id=resolve_project_id(project_id),
-            title=title or "New Conversation",
+            title=title or "Nuova conversazione",
         )
         session.add(conv)
         await session.flush()
@@ -132,6 +143,37 @@ class ConversationService:
                     .order_by(models.Conversation.created_at.desc())
                 )
             ).scalars().all()
+            placeholder_ids = [
+                conversation.id
+                for conversation in rows
+                if (conversation.title or "").strip() in _PLACEHOLDER_TITLES
+            ]
+            if placeholder_ids:
+                first_messages = (
+                    await session.execute(
+                        select(
+                            models.Message.conversation_id,
+                            models.Message.content,
+                        )
+                        .where(
+                            models.Message.conversation_id.in_(placeholder_ids),
+                            models.Message.role == "user",
+                        )
+                        .distinct(models.Message.conversation_id)
+                        .order_by(
+                            models.Message.conversation_id,
+                            models.Message.created_at,
+                        )
+                    )
+                ).all()
+                titles = {
+                    conversation_id: conversation_title_from_message(content)
+                    for conversation_id, content in first_messages
+                }
+                for conversation in rows:
+                    if conversation.id in titles:
+                        conversation.title = titles[conversation.id]
+                await session.commit()
             return ConversationListResponse(
                 items=[self._summary(conv) for conv in rows]
             )
@@ -148,6 +190,87 @@ class ConversationService:
             )
             await session.commit()
             return self._summary(conv)
+
+    async def rename_conversation(
+        self,
+        conversation_id: str,
+        *,
+        project_id: str,
+        title: str,
+    ) -> ConversationSummary:
+        async with AsyncSessionLocal() as session:
+            conv = await session.get(models.Conversation, conversation_id)
+            if conv is None:
+                raise ConversationNotFoundError(conversation_id)
+            try:
+                self._ensure_project_scope(conv, project_id)
+            except ConversationProjectMismatchError:
+                raise ConversationNotFoundError(conversation_id) from None
+            conv.title = title
+            await session.commit()
+            return self._summary(conv)
+
+    async def delete_conversation(
+        self,
+        conversation_id: str,
+        *,
+        project_id: str,
+    ) -> None:
+        async with AsyncSessionLocal() as session:
+            conv = await session.get(models.Conversation, conversation_id)
+            if conv is None:
+                raise ConversationNotFoundError(conversation_id)
+            try:
+                self._ensure_project_scope(conv, project_id)
+            except ConversationProjectMismatchError:
+                raise ConversationNotFoundError(conversation_id) from None
+
+            run_ids = list(
+                (
+                    await session.execute(
+                        select(models.AgentRun.id).where(
+                            models.AgentRun.conversation_id == conversation_id
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            if run_ids:
+                await session.execute(
+                    delete(models.AgentStep).where(
+                        models.AgentStep.agent_run_id.in_(run_ids)
+                    )
+                )
+                await session.execute(
+                    delete(models.AgentRun).where(models.AgentRun.id.in_(run_ids))
+                )
+            await session.execute(
+                delete(models.Message).where(
+                    models.Message.conversation_id == conversation_id
+                )
+            )
+            await self._delete_checkpoints(session, conversation_id)
+            await session.delete(conv)
+            await session.commit()
+
+    @staticmethod
+    async def _delete_checkpoints(session, conversation_id: str) -> None:
+        for table_name in ("checkpoint_writes", "checkpoint_blobs", "checkpoints"):
+            exists = (
+                await session.execute(
+                    text("SELECT to_regclass(:name)"),
+                    {"name": f"langgraph.{table_name}"},
+                )
+            ).scalar_one()
+            if exists is not None:
+                await session.execute(
+                    text(
+                        f"DELETE FROM langgraph.{table_name} "  # noqa: S608 - fixed allowlist
+                        "WHERE thread_id = :thread_id"
+                    ),
+                    {"thread_id": conversation_id},
+                )
 
     async def list_messages(
         self, conversation_id: str, *, project_id: str | None = None
@@ -217,6 +340,8 @@ class ConversationService:
                 effective_project_id = resolve_project_id(
                     getattr(conv, "project_id", None) or project_id
                 )
+                if (conv.title or "").strip() in _PLACEHOLDER_TITLES:
+                    conv.title = conversation_title_from_message(user_text)
                 session.add(models.Message(conversation_id=conv_id, role="user", content=user_text))
                 rc = RunContext(
                     conversation_id=conv_id,

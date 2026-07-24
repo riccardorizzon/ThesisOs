@@ -46,6 +46,38 @@ async def test_crud_multi_kind(memory_svc: MemoryService, db_session):
         await memory_svc.get(created.id, session=db_session)
 
 
+async def test_note_kind_supports_multiple_project_scoped_notes(
+    memory_svc: MemoryService,
+    db_session,
+):
+    first = await memory_svc.create(
+        MemoryCreate(
+            project_id="thesis-002",
+            kind="note",
+            title="Prima nota",
+            content="Contenuto uno",
+        ),
+        session=db_session,
+    )
+    second = await memory_svc.create(
+        MemoryCreate(
+            project_id="thesis-002",
+            kind="note",
+            title="Seconda nota",
+            content="Contenuto due",
+        ),
+        session=db_session,
+    )
+
+    notes = await memory_svc.list(
+        MemoryListFilters(project_id="thesis-002", kind="note"),
+        session=db_session,
+    )
+
+    assert {item.id for item in notes} == {first.id, second.id}
+    assert all(item.kind == "note" for item in notes)
+
+
 async def test_version_chain(memory_svc: MemoryService, db_session):
     m = await memory_svc.create(
         MemoryCreate(kind="decision", title="Method", content="v1 body"),

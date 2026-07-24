@@ -7,7 +7,8 @@ export type MemoryKind =
   | "concept"
   | "citation"
   | "decision"
-  | "editable";
+  | "editable"
+  | "note";
 
 export type Memory = {
   id: string;
@@ -78,7 +79,26 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     );
   }
   if (r.status === 204) return undefined as T;
-  return r.json() as Promise<T>;
+  const contentType = r.headers?.get?.("content-type");
+  if (
+    typeof r.headers?.get === "function" &&
+    !contentType?.toLowerCase().includes("application/json")
+  ) {
+    throw new MemoryApiError(
+      r.status,
+      "invalid_response",
+      "Impossibile leggere le note. Riprova.",
+    );
+  }
+  try {
+    return (await r.json()) as T;
+  } catch {
+    throw new MemoryApiError(
+      r.status,
+      "invalid_response",
+      "Impossibile leggere le note. Riprova.",
+    );
+  }
 }
 
 function queryString(params?: MemoryListParams): string {

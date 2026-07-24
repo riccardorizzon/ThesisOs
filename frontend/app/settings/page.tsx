@@ -8,6 +8,7 @@ import {
   type ProjectPrefs,
 } from "@/lib/projectPrefs";
 import { renameProject } from "@/lib/projectsClient";
+import { DeleteProjectPanel } from "@/components/settings/DeleteProjectPanel";
 
 /** PX-6 settings depth — replaces M0 stub. */
 export default function SettingsPage() {
@@ -124,6 +125,11 @@ export default function SettingsPage() {
           </select>
         </label>
       </div>
+
+      <DeleteProjectPanel
+        projectId={getActiveProjectId()}
+        displayName={prefs.displayName}
+      />
     </section>
   );
 }

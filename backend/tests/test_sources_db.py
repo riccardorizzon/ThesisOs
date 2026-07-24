@@ -177,6 +177,33 @@ async def test_service_list_sources_reads_db_only(seeded_db):
     assert "barthes-mythologies" not in ids
 
 
+@pytest.mark.asyncio
+async def test_service_promotes_candidate_to_bibliography_idempotently(seeded_db):
+    service = SourcesService()
+
+    promoted = await service.add_to_bibliography(
+        PROJECT,
+        "albers-interaction-color",
+    )
+    repeated = await service.add_to_bibliography(
+        PROJECT,
+        "albers-interaction-color",
+    )
+
+    assert promoted.corpus_status == "approvata"
+    assert promoted.knowledge_state == "validated"
+    assert repeated.corpus_status == "approvata"
+
+
+@pytest.mark.asyncio
+async def test_service_promotion_is_project_scoped(seeded_db):
+    with pytest.raises(SourceNotFoundError):
+        await SourcesService().add_to_bibliography(
+            "other-project",
+            "albers-interaction-color",
+        )
+
+
 def test_service_does_not_import_corpus_picker():
     source = inspect.getsource(SourcesService)
     assert "CORPUS_PICKER_SOURCES" not in source

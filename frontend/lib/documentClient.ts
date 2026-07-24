@@ -1,8 +1,18 @@
 import { apiBaseUrl } from "@/lib/apiBase";
 import { activeProjectScope, withProject } from "@/lib/projectScope";
 
-export type DocumentSourceType = "pdf" | "epub" | "docx";
-export type DocumentStatus = "uploaded" | "processing" | "parsed" | "failed";
+export type DocumentSourceType =
+  | "pdf"
+  | "epub"
+  | "docx"
+  | "markdown"
+  | "text";
+export type DocumentStatus =
+  | "uploaded"
+  | "processing"
+  | "parsed"
+  | "indexed"
+  | "failed";
 
 export type Document = {
   id: string;
@@ -96,7 +106,26 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     );
   }
   if (r.status === 204) return undefined as T;
-  return r.json() as Promise<T>;
+  const contentType = r.headers?.get?.("content-type");
+  if (
+    typeof r.headers?.get === "function" &&
+    !contentType?.toLowerCase().includes("application/json")
+  ) {
+    throw new DocumentApiError(
+      r.status,
+      "invalid_response",
+      "Impossibile leggere i documenti. Riprova.",
+    );
+  }
+  try {
+    return (await r.json()) as T;
+  } catch {
+    throw new DocumentApiError(
+      r.status,
+      "invalid_response",
+      "Impossibile leggere i documenti. Riprova.",
+    );
+  }
 }
 
 function queryString(params?: DocumentListParams): string {

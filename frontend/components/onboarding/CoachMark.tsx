@@ -56,7 +56,7 @@ export const PX2_COACH_STEPS: CoachMarkStep[] = [
     id: 5,
     target: '[data-testid="home-import-cta"]',
     title: "Importa la prima fonte",
-    body: "Carica PDF o Markdown per indicizzarli e collegarli ai concetti della tesi.",
+    body: "Carica PDF, EPUB, DOCX, Markdown o testo per indicizzarli e collegarli ai concetti della tesi.",
     pathnameMatch: (pathname) => pathname === "/",
   },
 ];
@@ -127,6 +127,14 @@ export function CoachMark({
     };
   }, [step.target]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onSkip();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onSkip]);
+
   if (!rect) return null;
 
   const top = Math.min(rect.bottom + 8, window.innerHeight - 160);
@@ -135,7 +143,7 @@ export function CoachMark({
   return (
     <>
       <div
-        className="fixed inset-0 z-[79] bg-ink/10"
+        className="pointer-events-none fixed inset-0 z-[79] bg-ink/10"
         aria-hidden
         data-testid="coach-mark-backdrop"
       />

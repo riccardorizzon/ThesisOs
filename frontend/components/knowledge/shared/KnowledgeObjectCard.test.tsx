@@ -1,8 +1,25 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { KnowledgeObjectCard } from "@/components/knowledge/shared/KnowledgeObjectCard";
 import type { KnowledgeObjectEnvelope } from "@/lib/knowledgeTypes";
 import { render, screen } from "@testing-library/react";
+
+vi.mock("next/link", () => ({
+  default: ({
+    children,
+    href,
+    prefetch,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    prefetch?: boolean;
+  }) => (
+    <a href={href} data-prefetch={String(prefetch)} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 const SAMPLE: KnowledgeObjectEnvelope = {
   id: "aura",
@@ -35,5 +52,10 @@ describe("KnowledgeObjectCard", () => {
     expect(screen.getByTestId("confidence-alta")).toHaveTextContent("Alta");
     expect(screen.getByText("Core")).toBeInTheDocument();
     expect(screen.getByText("1 fonti")).toBeInTheDocument();
+  });
+
+  it("disables speculative prefetch for high-cardinality cards", () => {
+    render(<KnowledgeObjectCard object={SAMPLE} href="/knowledge/aura" />);
+    expect(screen.getByRole("link")).toHaveAttribute("data-prefetch", "false");
   });
 });

@@ -140,9 +140,9 @@ export const chapterClient = {
   delete(id: string) {
     return request<void>(withProject(`/chapters/${id}`), { method: "DELETE" });
   },
-  copyDemoStructure() {
+  copyDemoStructure(projectId?: string) {
     return request<{ created: Chapter[]; skipped_titles: string[] }>(
-      withProject("/chapters/copy-demo-structure"),
+      withProject("/chapters/copy-demo-structure", projectId),
       { method: "POST" }
     );
   },

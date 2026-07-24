@@ -196,17 +196,13 @@ async def test_chapter_ownership_check_hides_foreign_chapters(db_session):
 
 
 async def test_copy_demo_structure_targets_requested_project(db_session):
-    from app.schemas.chapter import ChapterCreate, ChapterListFilters
+    from app.schemas.chapter import ChapterListFilters
     from app.services.chapter import ChapterService
 
     svc = ChapterService()
-    await svc.create(
-        ChapterCreate(title="Introduzione (dogfood M6)", project_id="demo-thesis"),
-        session=db_session,
-    )
     result = await svc.copy_demo_structure(project_id="thesis-002", session=db_session)
-    assert len(result.created) == 1
-    assert result.created[0].project_id == "thesis-002"
+    assert len(result.created) == 5
+    assert {item.project_id for item in result.created} == {"thesis-002"}
 
     target = await svc.list(
         ChapterListFilters(project_id="thesis-002"), session=db_session

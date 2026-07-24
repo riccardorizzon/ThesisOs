@@ -241,6 +241,28 @@ def test_get_source_not_found():
     assert res.status_code == 404
 
 
+def test_add_candidate_source_to_bibliography_is_idempotent():
+    first = client.post(
+        "/projects/thesis-agent/sources/albers-interaction-color/bibliography"
+    )
+    second = client.post(
+        "/projects/thesis-agent/sources/albers-interaction-color/bibliography"
+    )
+
+    assert first.status_code == 200
+    assert first.json()["corpus_status"] == "approvata"
+    assert second.status_code == 200
+    assert second.json()["corpus_status"] == "approvata"
+
+
+def test_add_source_to_bibliography_is_project_scoped():
+    response = client.post(
+        "/projects/other-project/sources/albers-interaction-color/bibliography"
+    )
+    assert response.status_code == 404
+    assert response.json()["code"] == "source_not_found"
+
+
 def test_export_bibliography_bibtex_from_db():
     res = client.get("/projects/thesis-agent/sources/bibliography/export")
     assert res.status_code == 200

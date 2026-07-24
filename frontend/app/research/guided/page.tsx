@@ -1,5 +1,5 @@
-import { ResearchGuidedPlaceholder } from "@/components/research/ResearchGuidedPlaceholder";
+import { redirect } from "next/navigation";
 
 export default function ResearchGuidedPage() {
-  return <ResearchGuidedPlaceholder />;
+  redirect("/research");
 }

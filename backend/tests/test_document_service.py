@@ -4,6 +4,7 @@ from app.schemas.document import DocumentListFilters, DocumentUpdate, DocumentUp
 from app.services.document import (
     DocumentNotFoundError,
     DocumentService,
+    DocumentServiceError,
     DocumentWriteConflictError,
     ParseError,
     UnsupportedFormatError,
@@ -54,8 +55,22 @@ async def test_upload_creates_uploaded_with_initial_version(svc, db_session):
     assert versions[0].change_reason == "metadata"
 
 
+async def test_upload_rejects_disguised_pdf_before_persistence(svc, db_session):
+    with pytest.raises(DocumentServiceError, match="invalid_file_content"):
+        await svc.upload(
+            filename="fake.pdf",
+            data=b"plain text pretending to be a pdf",
+            session=db_session,
+        )
+
+    assert await svc.list(
+        DocumentListFilters(project_id="thesis-agent"),
+        session=db_session,
+    ) == []
+
+
 async def test_parse_success_creates_ordered_chunks(svc, db_session):
-    rec = await svc.upload(filename="a.pdf", data=b"x", session=db_session)
+    rec = await svc.upload(filename="a.pdf", data=b"%PDF test", session=db_session)
     parsed = await svc.parse(rec.id, primary=_docling(["alpha", "beta"]), session=db_session)
     assert parsed.status == "parsed"
     assert parsed.parser == "docling"
@@ -69,7 +84,7 @@ async def test_parse_success_creates_ordered_chunks(svc, db_session):
 
 
 async def test_reparse_keeps_hash_changes_ids(svc, db_session):
-    rec = await svc.upload(filename="a.pdf", data=b"x", session=db_session)
+    rec = await svc.upload(filename="a.pdf", data=b"%PDF test", session=db_session)
     parser = _docling(["alpha", "beta"])
     await svc.parse(rec.id, primary=parser, session=db_session)
     first = await svc.list_chunks(rec.id, session=db_session)
@@ -91,7 +106,7 @@ async def test_parse_failure_marks_failed_with_zero_chunks(svc, db_session):
 
 
 async def test_update_optimistic_lock(svc, db_session):
-    rec = await svc.upload(filename="a.pdf", data=b"x", session=db_session)
+    rec = await svc.upload(filename="a.pdf", data=b"%PDF test", session=db_session)
     updated = await svc.update(
         rec.id, DocumentUpdate(title="New Title", expected_version=1), session=db_session
     )
@@ -104,7 +119,7 @@ async def test_update_optimistic_lock(svc, db_session):
 
 
 async def test_delete_cascades(svc, db_session):
-    rec = await svc.upload(filename="a.pdf", data=b"x", session=db_session)
+    rec = await svc.upload(filename="a.pdf", data=b"%PDF test", session=db_session)
     await svc.parse(rec.id, primary=_docling(["alpha"]), session=db_session)
     await svc.delete(rec.id, session=db_session)
     with pytest.raises(DocumentNotFoundError):
@@ -113,7 +128,9 @@ async def test_delete_cascades(svc, db_session):
 
 async def test_list_filters_by_type_and_title(svc, db_session):
     await svc.upload(
-        filename="alpha.pdf", data=b"x", meta=DocumentUploadMetadata(title="Alpha"),
+        filename="alpha.pdf",
+        data=b"%PDF test",
+        meta=DocumentUploadMetadata(title="Alpha"),
         session=db_session,
     )
     await svc.upload(

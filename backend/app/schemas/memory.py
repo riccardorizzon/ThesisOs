@@ -5,7 +5,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-VALID_KINDS = frozenset({"user", "thesis", "concept", "citation", "decision", "editable"})
+VALID_KINDS = frozenset(
+    {"user", "thesis", "concept", "citation", "decision", "editable", "note"}
+)
 SINGLETON_KINDS = frozenset({"user", "thesis", "editable"})
 CANONICAL_KEYS: dict[str, str] = {"user": "user", "thesis": "thesis", "editable": "editable"}
 PROMPT_CONTEXT_KINDS = frozenset({"editable", "user", "thesis", "decision"})

@@ -71,4 +71,19 @@ describe("CreateChapterButton", () => {
       "Crea capitolo"
     );
   });
+
+  it("enforces the 200 character title contract before submitting", async () => {
+    render(<CreateChapterButton />);
+    fireEvent.click(screen.getByTestId("writing-create-chapter-cta"));
+    const input = screen.getByTestId("writing-create-chapter-title");
+
+    expect(input).toHaveAttribute("maxLength", "200");
+    fireEvent.change(input, { target: { value: "A".repeat(201) } });
+    fireEvent.click(screen.getByTestId("writing-create-chapter-submit"));
+
+    expect(
+      await screen.findByText("Il titolo può contenere al massimo 200 caratteri.")
+    ).toBeInTheDocument();
+    expect(chapterClient.create).not.toHaveBeenCalled();
+  });
 });

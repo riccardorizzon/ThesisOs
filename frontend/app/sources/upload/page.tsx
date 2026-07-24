@@ -8,7 +8,7 @@ import { DocumentErrorBanner } from "@/components/DocumentErrorBanner";
 import { cn } from "@/lib/cn";
 import { useDocumentStore } from "@/lib/documentStore";
 
-const ACCEPT = ".pdf,.epub,.docx";
+const ACCEPT = ".pdf,.epub,.docx,.md,.markdown,.txt";
 
 const inputClassName = cn(
   "w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-ink",
@@ -36,7 +36,8 @@ export default function SourceUploadPage() {
         author: author || null,
         language: language || null,
       });
-      router.push("/sources");
+      router.push(`/sources?document=${encodeURIComponent(created.id)}`);
+      router.refresh();
     } catch {
       // error surfaced via store/banner
     }
@@ -56,8 +57,8 @@ export default function SourceUploadPage() {
           Aggiungi fonte
         </h1>
         <p className="mt-1 max-w-prose text-sm text-ink-muted">
-          Carica un PDF, EPUB o DOCX. Dopo il caricamento la fonte viene analizzata
-          automaticamente e aggiunta al corpus.
+          Carica un PDF, EPUB, DOCX, Markdown o testo. Dopo il caricamento la fonte
+          viene analizzata automaticamente e aggiunta al corpus.
         </p>
       </header>
 

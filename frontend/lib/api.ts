@@ -1,4 +1,10 @@
 import { apiBaseUrl } from "@/lib/apiBase";
+import {
+  consumeSse,
+  isAbortError,
+  requireSseResponse,
+  SseTransportError,
+} from "@/lib/sseClient";
 
 export type ChatSource = {
   index: number;
@@ -23,41 +29,45 @@ export type ChatEvent =
   | { event: "done"; data: { conversation_id: string; message_id: string; usage: unknown } }
   | { event: "error"; data: { code: string; message: string } };
 
+const CHAT_STATUS_MESSAGES: Readonly<Record<number, string>> = {
+  409: "È già in corso una risposta in questa conversazione.",
+  422: "Il messaggio non è valido o è troppo lungo.",
+  503: "L’assistente non è configurato.",
+};
+
 export async function postChatStream(
   body: { message: string; conversation_id?: string; project_id?: string },
   onEvent: (e: ChatEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const r = await fetch(`${apiBaseUrl()}/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal,
-  });
-  if (r.status === 409) { onEvent({ event: "error", data: { code: "conversation_busy", message: "Busy" } }); return; }
-  if (r.status === 503) { onEvent({ event: "error", data: { code: "llm_not_configured", message: "LLM runtime not configured" } }); return; }
-  if (!r.body) throw new Error(`chat ${r.status}`);
-
-  const reader = r.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = "";
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += decoder.decode(value, { stream: true });
-    // SSE frames are blank-line separated; the spec allows CRLF, LF, or CR
-    // terminators. sse-starlette emits CRLF, so split on all variants.
-    const frames = buf.split(/\r\n\r\n|\n\n|\r\r/);
-    buf = frames.pop() ?? "";
-    for (const frame of frames) {
-      let event = "message";
-      let data = "";
-      for (const line of frame.split(/\r\n|\n|\r/)) {
-        if (line.startsWith("event:")) event = line.slice(6).trim();
-        else if (line.startsWith("data:")) data += line.slice(5).trim();
-      }
-      if (!data) continue;
-      onEvent({ event, data: JSON.parse(data) } as ChatEvent);
+  try {
+    const response = await fetch(`${apiBaseUrl()}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal,
+    });
+    await requireSseResponse(response, CHAT_STATUS_MESSAGES);
+    await consumeSse(
+      response,
+      (frame) => onEvent(frame as ChatEvent),
+      signal
+    );
+  } catch (error) {
+    if (isAbortError(error)) throw error;
+    if (error instanceof SseTransportError) {
+      onEvent({
+        event: "error",
+        data: { code: error.code, message: error.message },
+      });
+      return;
     }
+    onEvent({
+      event: "error",
+      data: {
+        code: "network_error",
+        message: "Connessione all’assistente non disponibile. Riprova.",
+      },
+    });
   }
 }

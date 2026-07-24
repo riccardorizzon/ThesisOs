@@ -4,7 +4,7 @@
  */
 export function resolveApiBase(isBrowser: boolean): string {
   if (isBrowser) {
-    return "";
+    return "/api";
   }
   return (
     process.env.INTERNAL_API_BASE_URL ??

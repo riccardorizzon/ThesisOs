@@ -26,11 +26,13 @@ afterEach(() => {
 describe("ResearchHubPage", () => {
   it("enables canvas card when concepts exist", () => {
     render(<ResearchHubPage conceptCount={3} />);
-    expect(screen.getAllByTestId("mode-card-enabled")).toHaveLength(2);
+    expect(screen.getAllByTestId("mode-card-enabled")).toHaveLength(1);
     expect(screen.getByRole("link", { name: /Apri mappa/i })).toHaveAttribute(
       "href",
       "/research/canvas"
     );
+    expect(screen.queryByText("Esplorazione guidata")).not.toBeInTheDocument();
+    expect(screen.queryByText(/trail guidato/i)).not.toBeInTheDocument();
   });
 
   it("disables canvas card when no concepts", () => {

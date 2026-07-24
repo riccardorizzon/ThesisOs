@@ -8,6 +8,7 @@ import { getActiveProjectId } from "@/lib/projectPrefs";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 
 export const DEFAULT_CHAPTER_TITLE = "Introduzione";
+export const MAX_CHAPTER_TITLE_LENGTH = 200;
 
 export type CreateChapterButtonProps = {
   variant?: "primary" | "icon";
@@ -53,6 +54,10 @@ export function CreateChapterButton({
       setError("Inserisci un titolo per il capitolo.");
       return;
     }
+    if (trimmed.length > MAX_CHAPTER_TITLE_LENGTH) {
+      setError("Il titolo può contenere al massimo 200 caratteri.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -85,6 +90,7 @@ export function CreateChapterButton({
           ref={inputRef}
           type="text"
           value={title}
+          maxLength={MAX_CHAPTER_TITLE_LENGTH}
           onChange={(event) => setTitle(event.target.value)}
           disabled={busy}
           className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-ink"

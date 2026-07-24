@@ -1,6 +1,10 @@
+import { cookies } from "next/headers";
+
 import { SourcesEnrichedList } from "@/components/sources/SourcesEnrichedList";
 import { SourcesErrorState } from "@/components/sources/SourcesErrorState";
 import { listSources } from "@/lib/sourcesClient";
+import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
+import { readActiveProjectIdCookie } from "@/lib/projectPrefs";
 
 type Props = {
   searchParams: Promise<{ chapter?: string }>;
@@ -10,7 +14,10 @@ export default async function SourcesPage({ searchParams }: Props) {
   const { chapter } = await searchParams;
 
   try {
-    const res = await listSources();
+    const cookieStore = await cookies();
+    const projectId =
+      readActiveProjectIdCookie(cookieStore.toString()) ?? DEFAULT_PROJECT_ID;
+    const res = await listSources({ projectId });
     return (
       <SourcesEnrichedList initialSources={res.sources} chapterContext={chapter} />
     );

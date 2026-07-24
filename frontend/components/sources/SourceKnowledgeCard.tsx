@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { KnowledgeObjectCard } from "@/components/knowledge/shared";
+import { AddToBibliographyButton } from "@/components/sources/AddToBibliographyButton";
 import { SourceDeleteButton } from "@/components/sources/SourceDeleteButton";
 import { cn } from "@/lib/cn";
 import { isUserUploadedSource } from "@/lib/isUserUploadedSource";
@@ -47,7 +48,12 @@ export function SourceKnowledgeCard({
         </div>
       )}
       {isUserUploadedSource(source) && (
-        <div className="px-1">
+        <div className="flex flex-wrap items-center gap-2 px-1">
+          <AddToBibliographyButton
+            slug={source.slug}
+            corpusStatus={source.corpus_status}
+            onPromoted={() => router.refresh()}
+          />
           <SourceDeleteButton
             slug={source.slug}
             title={source.title}

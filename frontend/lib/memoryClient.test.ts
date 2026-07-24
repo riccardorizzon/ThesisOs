@@ -74,6 +74,21 @@ describe("memoryClient", () => {
     expect(fetchMock.mock.calls[0][1]?.method).toBe("POST");
   });
 
+  it("maps a successful HTML response to a product-safe invalid_response error", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response("<!DOCTYPE html><h1>Knowledge</h1>", {
+        status: 200,
+        headers: { "Content-Type": "text/html" },
+      })
+    );
+
+    await expect(memoryClient.list()).rejects.toMatchObject({
+      status: 200,
+      code: "invalid_response",
+      message: "Impossibile leggere le note. Riprova.",
+    });
+  });
+
   it("memoryDisplayTitle prefers title", () => {
     expect(memoryDisplayTitle({ title: "T", key: null, content: "c" })).toBe("T");
   });

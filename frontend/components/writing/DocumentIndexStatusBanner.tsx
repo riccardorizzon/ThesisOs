@@ -17,6 +17,7 @@ const STATUS_LABELS: Record<DocumentStatus, string> = {
   uploaded: "Caricato",
   processing: "Indicizzazione in corso",
   parsed: "Indicizzato",
+  indexed: "Indicizzato",
   failed: "Indicizzazione fallita",
 };
 
@@ -55,9 +56,7 @@ export function DocumentIndexStatusBanner({ className }: DocumentIndexStatusBann
       setDocuments(pending);
       setLoadError(null);
     } catch (err) {
-      setLoadError(
-        err instanceof Error ? err.message : "Impossibile verificare lo stato indicizzazione"
-      );
+      setLoadError("Impossibile verificare lo stato di indicizzazione. Riprova.");
     }
   }, [trackedId]);
 
@@ -96,9 +95,11 @@ export function DocumentIndexStatusBanner({ className }: DocumentIndexStatusBann
 
   const pending = documents.filter((doc) => isPending(doc.status));
   const failed = documents.filter((doc) => doc.status === "failed");
-  const parsed = documents.filter((doc) => doc.status === "parsed");
+  const successful = documents.filter(
+    (doc) => doc.status === "parsed" || doc.status === "indexed"
+  );
 
-  if (pending.length === 0 && failed.length === 0 && parsed.length === 0) {
+  if (pending.length === 0 && failed.length === 0 && successful.length === 0) {
     return null;
   }
 
@@ -135,17 +136,16 @@ export function DocumentIndexStatusBanner({ className }: DocumentIndexStatusBann
             <p key={doc.id} data-testid={`writing-index-failed-${doc.id}`}>
               <span className="font-medium">{documentDisplayTitle(doc)}</span>
               {" — "}
-              {STATUS_LABELS.failed}
-              {doc.error_message ? `: ${doc.error_message}` : ""}
+              {STATUS_LABELS.failed}. Controlla il file e caricalo di nuovo.
             </p>
           ))}
           {pending.length === 0 &&
             failed.length === 0 &&
-            parsed.map((doc) => (
+            successful.map((doc) => (
               <p key={doc.id} data-testid={`writing-index-parsed-${doc.id}`}>
                 <span className="font-medium">{documentDisplayTitle(doc)}</span>
                 {" — "}
-                {STATUS_LABELS.parsed}
+                {STATUS_LABELS[doc.status]}
                 {doc.chunk_count != null ? ` (${doc.chunk_count} chunk)` : ""}
               </p>
             ))}

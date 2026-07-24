@@ -177,5 +177,17 @@ export const useDocumentStore = create<DocumentAdminState>((set, get) => ({
   },
 }));
 
-export const DOCUMENT_SOURCE_TYPES: DocumentSourceType[] = ["pdf", "epub", "docx"];
-export const DOCUMENT_STATUSES: DocumentStatus[] = ["uploaded", "processing", "parsed", "failed"];
+export const DOCUMENT_SOURCE_TYPES: DocumentSourceType[] = [
+  "pdf",
+  "epub",
+  "docx",
+  "markdown",
+  "text",
+];
+export const DOCUMENT_STATUSES: DocumentStatus[] = [
+  "uploaded",
+  "processing",
+  "parsed",
+  "indexed",
+  "failed",
+];

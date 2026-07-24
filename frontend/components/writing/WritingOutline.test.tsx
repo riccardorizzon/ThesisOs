@@ -12,14 +12,21 @@ vi.mock("next/link", () => ({
     children,
     href,
     className,
+    prefetch,
     "aria-current": ariaCurrent,
   }: {
     children: React.ReactNode;
     href: string;
     className?: string;
+    prefetch?: boolean;
     "aria-current"?: "page" | boolean;
   }) => (
-    <a href={href} className={className} aria-current={ariaCurrent}>
+    <a
+      href={href}
+      className={className}
+      aria-current={ariaCurrent}
+      data-prefetch={String(prefetch)}
+    >
       {children}
     </a>
   ),
@@ -38,6 +45,9 @@ describe("WritingOutline", () => {
     expect(
       screen.getByRole("link", { name: /Cap\. 2 — Quadro teorico/i })
     ).toHaveAttribute("href", "/writing/2");
+    expect(
+      screen.getByRole("link", { name: /Cap\. 2 — Quadro teorico/i })
+    ).toHaveAttribute("data-prefetch", "false");
   });
 
   it("marks active chapter with aria-current", () => {

@@ -41,6 +41,22 @@ class ProjectUpdateRequest(BaseModel):
     display_name: str = Field(min_length=1, max_length=120)
 
 
+class ProjectDeleteRequest(BaseModel):
+    confirmation_project_id: str = Field(min_length=1, max_length=64)
+
+
+class ProtectedProjectError(Exception):
+    def __init__(self, project_id: str):
+        self.project_id = project_id
+        super().__init__(f"protected_project: {project_id}")
+
+
+class ProjectConfirmationError(Exception):
+    def __init__(self, project_id: str):
+        self.project_id = project_id
+        super().__init__(f"project_confirmation_mismatch: {project_id}")
+
+
 def _entry(row) -> ProjectEntry:
     return ProjectEntry(
         id=row.id,
@@ -72,6 +88,101 @@ async def _next_sequential_id(session: AsyncSession) -> str:
         if match:
             highest = max(highest, int(match.group(1)))
     return f"thesis-{highest + 1:03d}"
+
+
+_PROJECT_DELETE_STATEMENTS = (
+    """
+    DELETE FROM agent_steps
+    WHERE agent_run_id IN (
+      SELECT id FROM agent_runs WHERE project_id = :pid
+    )
+    """,
+    "DELETE FROM agent_runs WHERE project_id = :pid",
+    """
+    DELETE FROM messages
+    WHERE conversation_id IN (
+      SELECT id FROM conversations WHERE project_id = :pid
+    )
+    """,
+    "DELETE FROM conversations WHERE project_id = :pid",
+    "DELETE FROM proposals WHERE project_id = :pid",
+    """
+    DELETE FROM citations
+    WHERE chapter_id IN (
+      SELECT id FROM chapters WHERE project_id = :pid
+    )
+    OR source_id IN (
+      SELECT id FROM sources WHERE project_id = :pid
+    )
+    """,
+    "DELETE FROM notes WHERE project_id = :pid",
+    """
+    DELETE FROM embeddings
+    WHERE owner_type = 'chunk'
+    AND owner_id IN (
+      SELECT c.id
+      FROM chunks c
+      JOIN documents d ON d.id = c.document_id
+      WHERE d.project_id = :pid
+    )
+    """,
+    """
+    DELETE FROM chunks
+    WHERE document_id IN (
+      SELECT id FROM documents WHERE project_id = :pid
+    )
+    """,
+    """
+    DELETE FROM concept_source_links
+    WHERE concept_id IN (
+      SELECT id FROM concepts WHERE project_id = :pid
+    )
+    OR source_slug IN (
+      SELECT slug FROM sources WHERE project_id = :pid
+    )
+    """,
+    "DELETE FROM sources WHERE project_id = :pid",
+    """
+    DELETE FROM document_versions
+    WHERE document_id IN (
+      SELECT id FROM documents WHERE project_id = :pid
+    )
+    """,
+    "DELETE FROM documents WHERE project_id = :pid",
+    """
+    DELETE FROM chapter_versions
+    WHERE chapter_id IN (
+      SELECT id FROM chapters WHERE project_id = :pid
+    )
+    """,
+    "DELETE FROM chapters WHERE project_id = :pid",
+    """
+    DELETE FROM memory_versions
+    WHERE memory_id IN (
+      SELECT id FROM memories WHERE project_id = :pid
+    )
+    """,
+    "DELETE FROM memories WHERE project_id = :pid",
+    """
+    DELETE FROM concept_relations
+    WHERE from_concept_id IN (
+      SELECT id FROM concepts WHERE project_id = :pid
+    )
+    OR to_concept_id IN (
+      SELECT id FROM concepts WHERE project_id = :pid
+    )
+    """,
+    "DELETE FROM concepts WHERE project_id = :pid",
+    "DELETE FROM tasks WHERE project_id = :pid",
+    "DELETE FROM events WHERE project_id = :pid",
+    "DELETE FROM projects WHERE id = :pid",
+)
+
+
+async def _delete_project_rows(session: AsyncSession, project_id: str) -> None:
+    params = {"pid": project_id}
+    for statement in _PROJECT_DELETE_STATEMENTS:
+        await session.execute(text(statement), params)
 
 
 class ProjectRegistryService:
@@ -147,3 +258,34 @@ class ProjectRegistryService:
             row = result.one_or_none()
             await session.commit()
         return _entry(row) if row is not None else None
+
+    async def delete_project(
+        self,
+        project_id: str,
+        *,
+        confirmation_project_id: str,
+    ) -> bool:
+        if project_id in {THESIS_AGENT_ID, DEMO_THESIS_ID}:
+            raise ProtectedProjectError(project_id)
+        if confirmation_project_id != project_id:
+            raise ProjectConfirmationError(project_id)
+
+        async with AsyncSessionLocal() as session:
+            await _ensure_defaults(session)
+            exists = (
+                await session.execute(
+                    text("SELECT 1 FROM projects WHERE id = :pid"),
+                    {"pid": project_id},
+                )
+            ).scalar_one_or_none()
+            if exists is None:
+                await session.rollback()
+                return False
+
+            try:
+                await _delete_project_rows(session, project_id)
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+        return True

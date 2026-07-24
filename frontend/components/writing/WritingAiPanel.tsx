@@ -12,6 +12,8 @@ import {
 import { addProposal } from "@/lib/proposalQueue";
 import { findConflictingDecision, parseDecisionsFromPacket } from "@/lib/decisionClient";
 import { hasBlockingCitationIssues } from "@/lib/citationValidation";
+import type { CitationIssue } from "@/lib/citationValidation";
+import { validateProjectCitations } from "@/lib/citationClient";
 import { CitationValidatorBanner } from "@/components/writing/CitationValidatorBanner";
 import { useApplyAiSuggestionChrome } from "@/lib/writingChromeIntegration";
 
@@ -47,7 +49,18 @@ export function WritingAiPanel({
   const [activeActionLabel, setActiveActionLabel] = useState("");
   const [appliedNotice, setAppliedNotice] = useState<string | null>(null);
   const [citationOverride, setCitationOverride] = useState(false);
+  const [citationIssues, setCitationIssues] = useState<CitationIssue[] | null>(
+    null
+  );
+  const [citationValidationPending, setCitationValidationPending] =
+    useState(false);
+  const [citationValidationError, setCitationValidationError] = useState<
+    string | null
+  >(null);
+  const [citationValidationBlocking, setCitationValidationBlocking] =
+    useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const citationValidationRevisionRef = useRef(0);
   const liveRef = useRef<HTMLDivElement>(null);
 
   const actions = getAvailableActions(selectionText, chapterContent);
@@ -69,11 +82,51 @@ export function WritingAiPanel({
   const resetStream = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+    citationValidationRevisionRef.current += 1;
     setPhase("idle");
     setStreamText("");
     setActiveActionId(null);
     setActiveActionLabel("");
+    setCitationOverride(false);
+    setCitationIssues(null);
+    setCitationValidationPending(false);
+    setCitationValidationError(null);
+    setCitationValidationBlocking(false);
   }, []);
+
+  const validateDraftCitations = useCallback(
+    async (draft: string) => {
+      if (!contextPacket) return;
+      const revision = citationValidationRevisionRef.current + 1;
+      citationValidationRevisionRef.current = revision;
+      setCitationValidationPending(true);
+      setCitationValidationError(null);
+      setCitationIssues(null);
+      setCitationValidationBlocking(false);
+      try {
+        const result = await validateProjectCitations(
+          contextPacket.project_context.project_id,
+          draft
+        );
+        if (citationValidationRevisionRef.current !== revision) return;
+        setCitationIssues(result.issues);
+        setCitationValidationBlocking(result.blocking);
+      } catch (err) {
+        if (citationValidationRevisionRef.current !== revision) return;
+        setCitationValidationError(
+          err instanceof Error
+            ? err.message
+            : "Verifica citazioni non disponibile. Riprova."
+        );
+        setCitationValidationBlocking(true);
+      } finally {
+        if (citationValidationRevisionRef.current === revision) {
+          setCitationValidationPending(false);
+        }
+      }
+    },
+    [contextPacket]
+  );
 
   const runAction = useCallback(
     async (actionId: WritingActionId, label: string) => {
@@ -104,8 +157,10 @@ export function WritingAiPanel({
           } else if (event.event === "done") {
             setStreamText(event.data.draft);
             setPhase("complete");
+            void validateDraftCitations(event.data.draft);
           } else if (event.event === "error") {
             setStreamText(event.data.message);
+            setActiveActionId(null);
             setPhase("complete");
           }
         },
@@ -116,7 +171,14 @@ export function WritingAiPanel({
         setPhase((current) => (current === "streaming" ? "complete" : current));
       }
     },
-    [chapterId, chapterContent, contextPacket, resetStream, selectionText]
+    [
+      chapterId,
+      chapterContent,
+      contextPacket,
+      resetStream,
+      selectionText,
+      validateDraftCitations,
+    ]
   );
 
   useEffect(() => {
@@ -136,17 +198,27 @@ export function WritingAiPanel({
     resetStream();
   };
 
-  const handleApplica = useCallback(() => {
-    if (!streamText.trim() || !activeActionId) return;
-    if (hasBlockingCitationIssues(streamText) && !citationOverride) return;
-    setPhase("preview");
-  }, [streamText, activeActionId, citationOverride]);
-
+  const localCitationBlocking = hasBlockingCitationIssues(streamText);
+  const citationNeedsOverride =
+    localCitationBlocking ||
+    citationValidationBlocking ||
+    Boolean(citationValidationError);
   const citationBlocked =
     phase === "complete" &&
     Boolean(streamText.trim()) &&
-    hasBlockingCitationIssues(streamText) &&
+    (citationValidationPending || citationNeedsOverride) &&
     !citationOverride;
+  const canOverride =
+    phase === "complete" &&
+    Boolean(activeActionId) &&
+    !citationValidationPending &&
+    citationNeedsOverride &&
+    !citationOverride;
+
+  const handleApplica = useCallback(() => {
+    if (!streamText.trim() || !activeActionId || citationBlocked) return;
+    setPhase("preview");
+  }, [streamText, activeActionId, citationBlocked]);
 
   useApplyAiSuggestionChrome(handleApplica);
 
@@ -165,7 +237,11 @@ export function WritingAiPanel({
   };
 
   const showStreamArea = phase !== "idle";
-  const canApplica = phase === "complete" && Boolean(streamText.trim()) && !citationBlocked;
+  const canApplica =
+    phase === "complete" &&
+    Boolean(activeActionId) &&
+    Boolean(streamText.trim()) &&
+    !citationBlocked;
 
   return (
     <aside
@@ -233,8 +309,20 @@ export function WritingAiPanel({
         <div className="flex min-h-0 flex-1 flex-col border-t border-border">
           <CitationValidatorBanner
             text={streamText}
+            issues={citationIssues}
+            pending={citationValidationPending}
+            error={citationValidationError}
             className="border-b border-warning/20 bg-warning/5 px-3 py-2"
           />
+          {phase === "streaming" ? (
+            <p
+              className="border-b border-border px-3 py-2 text-xs text-ink-muted"
+              role="status"
+              aria-live="polite"
+            >
+              Generazione in corso…
+            </p>
+          ) : null}
           <div
             className="flex-1 overflow-y-auto p-3 font-mono text-sm text-ink"
             data-testid="ai-stream-output"
@@ -285,9 +373,9 @@ export function WritingAiPanel({
                 onClick={handleCancel}
                 className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-ink-muted cursor-pointer"
               >
-                Annulla
+                {phase === "streaming" ? "Interrompi" : "Annulla"}
               </button>
-              {citationBlocked && (
+              {canOverride && (
                 <button
                   type="button"
                   onClick={() => setCitationOverride(true)}

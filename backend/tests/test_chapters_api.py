@@ -18,6 +18,7 @@ from app.services.chapter import (
     ChapterNotDeletableError,
     ChapterNotFoundError,
     ChapterWriteConflictError,
+    InvalidDemoCopyTargetError,
     InvalidChapterStatusError,
 )
 
@@ -80,6 +81,8 @@ class FakeChapterService:
         ]
 
     async def copy_demo_structure(self, *, project_id=None, session=None):
+        if project_id == "demo-thesis":
+            raise InvalidDemoCopyTargetError(project_id)
         return {"created": [_record(title="Capitolo demo")], "skipped_titles": []}
 
 
@@ -96,6 +99,18 @@ def test_create_chapter_201(client):
     assert r.status_code == 201
     assert r.json()["title"] == "Introduction"
     assert r.json()["status"] == "draft"
+
+
+@pytest.mark.parametrize("title", ["", "   ", "A" * 201])
+def test_create_rejects_invalid_title(client, title):
+    r = client.post("/chapters", json={"title": title})
+    assert r.status_code == 422
+
+
+def test_create_trims_title(client):
+    r = client.post("/chapters", json={"title": "  Introduction  "})
+    assert r.status_code == 201
+    assert r.json()["title"] == "Introduction"
 
 
 def test_create_invalid_status_422(client):
@@ -139,6 +154,24 @@ def test_patch_metadata_status(client):
     assert r.json()["status"] == "review"
 
 
+@pytest.mark.parametrize("title", ["", "   ", "A" * 201])
+def test_patch_rejects_invalid_title(client, title):
+    r = client.patch(
+        "/chapters/ch-9",
+        json={"title": title, "expected_version": 1},
+    )
+    assert r.status_code == 422
+
+
+def test_patch_trims_title(client):
+    r = client.patch(
+        "/chapters/ch-9",
+        json={"title": "  Titolo aggiornato  ", "expected_version": 1},
+    )
+    assert r.status_code == 200
+    assert r.json()["title"] == "Titolo aggiornato"
+
+
 def test_patch_requires_expected_version(client):
     # FastAPI request validation (ChapterUpdate.expected_version required) → 422.
     r = client.patch("/chapters/ch-9", json={"content_md": "x"})
@@ -180,6 +213,15 @@ def test_copy_demo_structure_201(client):
     body = r.json()
     assert len(body["created"]) == 1
     assert body["created"][0]["title"] == "Capitolo demo"
+
+
+def test_copy_demo_structure_rejects_demo_destination(client):
+    r = client.post(
+        "/chapters/copy-demo-structure",
+        params={"project_id": "demo-thesis"},
+    )
+    assert r.status_code == 422
+    assert r.json()["code"] == "invalid_demo_copy_target"
 
 
 def test_outline_not_wired_in_m6():

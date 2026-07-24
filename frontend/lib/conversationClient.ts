@@ -77,3 +77,35 @@ export async function getConversationMessages(
   const body = (await res.json()) as ConversationMessagesResponse;
   return body.items;
 }
+
+export async function renameConversation(
+  conversationId: string,
+  title: string,
+  projectId?: string
+): Promise<ConversationSummary> {
+  const pid = resolveProjectId(projectId);
+  const query = new URLSearchParams({ project_id: pid });
+  const res = await fetch(
+    `${apiBaseUrl()}/conversations/${encodeURIComponent(conversationId)}?${query}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    }
+  );
+  if (!res.ok) await parseError(res, "Rename conversation failed");
+  return res.json() as Promise<ConversationSummary>;
+}
+
+export async function deleteConversation(
+  conversationId: string,
+  projectId?: string
+): Promise<void> {
+  const pid = resolveProjectId(projectId);
+  const query = new URLSearchParams({ project_id: pid });
+  const res = await fetch(
+    `${apiBaseUrl()}/conversations/${encodeURIComponent(conversationId)}?${query}`,
+    { method: "DELETE" }
+  );
+  if (!res.ok) await parseError(res, "Delete conversation failed");
+}

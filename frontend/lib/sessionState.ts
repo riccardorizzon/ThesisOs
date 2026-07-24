@@ -125,22 +125,36 @@ export function touchSessionActivity(fields: Partial<SessionPersistedState>): Se
   return saveSessionState(fields);
 }
 
+export function ensureSessionState(
+  now: Date = new Date()
+): SessionPersistedState {
+  const existing = loadSessionState();
+  if (
+    existing?.startedAt &&
+    !Number.isNaN(new Date(existing.startedAt).getTime())
+  ) {
+    return existing;
+  }
+  return saveSessionState({ startedAt: now.toISOString() });
+}
+
 export function clearSessionState(): void {
   if (isBrowser()) {
     removeProjectStorageItem(SESSION_STATE_NAME);
   }
 }
 
-/** Format elapsed session duration — e.g. "2h 14m", "45m", "0m". */
+/** Format elapsed session duration — e.g. "2h 14m", "45m", "<1m". */
 export function formatSessionDuration(
   startedAt: string | null | undefined,
   now: Date = new Date()
-): string {
-  if (!startedAt) return "0m";
+): string | null {
+  if (!startedAt) return null;
   const start = new Date(startedAt);
-  if (Number.isNaN(start.getTime())) return "0m";
+  if (Number.isNaN(start.getTime())) return null;
   const diffMs = Math.max(0, now.getTime() - start.getTime());
   const totalMinutes = Math.floor(diffMs / 60_000);
+  if (totalMinutes === 0) return "<1m";
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   if (hours > 0) return `${hours}h ${minutes}m`;

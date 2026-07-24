@@ -2,8 +2,10 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { EntityCard } from "@/components/EntityCard";
+import { AddToBibliographyButton } from "@/components/sources/AddToBibliographyButton";
 import { SourceDeleteButton } from "@/components/sources/SourceDeleteButton";
 import {
   KnowledgeConfidenceChip,
@@ -26,6 +28,7 @@ export function SourceApiDetailView({
   chapterContext,
   className,
 }: SourceApiDetailViewProps) {
+  const router = useRouter();
   const [linked, setLinked] = useState(
     chapterContext
       ? corpusClient.isLinkedToChapter(chapterContext, source.slug)
@@ -126,7 +129,12 @@ export function SourceApiDetailView({
       </article>
 
       {isUserUploadedSource(source) && (
-        <section className="mt-6" aria-label="Azioni fonte">
+        <section className="mt-6 flex flex-wrap items-center gap-2" aria-label="Azioni fonte">
+          <AddToBibliographyButton
+            slug={source.slug}
+            corpusStatus={source.corpus_status}
+            onPromoted={() => router.refresh()}
+          />
           <SourceDeleteButton
             slug={source.slug}
             title={source.title}

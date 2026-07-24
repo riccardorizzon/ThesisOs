@@ -101,7 +101,7 @@ export function ResearchHubPage({
         <p className="text-xs font-medium uppercase tracking-wide text-ink-subtle">PX-5</p>
         <h1 className="mt-1 text-2xl font-semibold text-ink">Research</h1>
         <p className="mt-2 max-w-prose text-sm leading-relaxed text-ink-muted">
-          Esplora il panorama concettuale — mappa spaziale o trail guidato.
+          Esplora il panorama concettuale attraverso la mappa spaziale.
         </p>
       </header>
 
@@ -112,7 +112,7 @@ export function ResearchHubPage({
         />
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4">
         <ModeCard
           title="Mappa concettuale"
           description="Canvas con lenti di scoperta, inspector e suggerimenti serendipità — esplora collegamenti non ovvi."
@@ -120,13 +120,6 @@ export function ResearchHubPage({
           cta="Apri mappa →"
           icon="map"
           isDisabled={!hasConcepts && !countUnavailable}
-        />
-        <ModeCard
-          title="Esplorazione guidata"
-          description="Trail lineare con basket — percorso curato nel grafo Knowledge."
-          href="/research/guided"
-          cta="Inizia trail →"
-          icon="route"
         />
       </div>
 

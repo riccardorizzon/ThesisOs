@@ -68,17 +68,17 @@ describe("documentClient", () => {
     });
   });
 
-  it("maps 400 unsupported_format on upload", async () => {
+  it("maps 415 unsupported_format on upload", async () => {
     vi.spyOn(global, "fetch").mockResolvedValue({
       ok: false,
-      status: 400,
-      statusText: "Bad Request",
+      status: 415,
+      statusText: "Unsupported Media Type",
       json: async () => ({ code: "unsupported_format", message: "no" }),
     } as Response);
 
-    const file = new File([], "notes.txt");
+    const file = new File([], "malware.exe");
     await expect(documentClient.upload({ file })).rejects.toMatchObject({
-      status: 400,
+      status: 415,
       code: "unsupported_format",
     });
   });
@@ -93,6 +93,21 @@ describe("documentClient", () => {
     const r = await documentClient.reparse("d1");
     expect(r.status).toBe("processing");
     expect((fetchMock.mock.calls[0][1] as RequestInit).method).toBe("POST");
+  });
+
+  it("maps a successful HTML response to a product-safe invalid_response error", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response("<!DOCTYPE html><h1>Sources</h1>", {
+        status: 200,
+        headers: { "Content-Type": "text/html" },
+      })
+    );
+
+    await expect(documentClient.list()).rejects.toMatchObject({
+      status: 200,
+      code: "invalid_response",
+      message: "Impossibile leggere i documenti. Riprova.",
+    });
   });
 
   it("documentDisplayTitle prefers title then filename", () => {

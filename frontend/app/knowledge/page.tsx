@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-import { KnowledgeExplorer } from "@/components/knowledge/explorer";
+import { KnowledgeWorkspace } from "@/components/knowledge/KnowledgeWorkspace";
 import { KnowledgeExplorerLoadError } from "@/components/knowledge/explorer/KnowledgeExplorerLoadError";
 import { listKnowledgeObjects } from "@/lib/knowledgeClient";
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
@@ -16,13 +16,24 @@ function knowledgeLoadMessage(err: unknown): string {
   return "Errore sconosciuto durante il caricamento.";
 }
 
-export default async function KnowledgePage() {
+type KnowledgePageProps = {
+  searchParams: Promise<{ view?: string }>;
+};
+
+export default async function KnowledgePage({
+  searchParams,
+}: KnowledgePageProps) {
+  const { view: rawView } = await searchParams;
+  const view = rawView === "notes" ? "notes" : "concepts";
+  if (view === "notes") {
+    return <KnowledgeWorkspace concepts={[]} view="notes" />;
+  }
   try {
     const cookieStore = await cookies();
     const projectId =
       readActiveProjectIdCookie(cookieStore.toString()) ?? DEFAULT_PROJECT_ID;
     const res = await listKnowledgeObjects({ type: "concept", projectId });
-    return <KnowledgeExplorer concepts={res.objects} />;
+    return <KnowledgeWorkspace concepts={res.objects} view="concepts" />;
   } catch (err) {
     return <KnowledgeExplorerLoadError message={knowledgeLoadMessage(err)} />;
   }

@@ -43,6 +43,27 @@ describe("CoachMark", () => {
     expect(screen.getByTestId("coach-mark-step-1")).toBeTruthy();
     expect(screen.getByText("Riprendi da dove hai lasciato")).toBeTruthy();
     expect(screen.getByTestId("coach-mark-skip")).toBeTruthy();
+    expect(screen.getByTestId("coach-mark-backdrop")).toHaveClass(
+      "pointer-events-none"
+    );
+  });
+
+  it("dismisses from the keyboard with Escape", () => {
+    const onSkip = vi.fn();
+    document.body.innerHTML =
+      '<a data-testid="continua-link" href="/writing">Continua</a>';
+    render(
+      <CoachMark
+        step={PX2_COACH_STEPS[0]}
+        onNext={vi.fn()}
+        onSkip={onSkip}
+        stepIndex={0}
+        totalSteps={5}
+      />
+    );
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(onSkip).toHaveBeenCalledOnce();
   });
 });
 

@@ -137,4 +137,5 @@ export const MEMORY_KINDS: MemoryKind[] = [
   "decision",
   "concept",
   "citation",
+  "note",
 ];

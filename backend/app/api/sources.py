@@ -66,6 +66,20 @@ async def get_source(project_id: str, slug: str) -> SourceListItem:
         return _err(404, "source_not_found", f"Unknown source: {slug}")
 
 
+@router.post(
+    "/projects/{project_id}/sources/{slug}/bibliography",
+    response_model=SourceListItem,
+)
+async def add_source_to_bibliography(
+    project_id: str,
+    slug: str,
+) -> SourceListItem:
+    try:
+        return await _service.add_to_bibliography(project_id, slug)
+    except SourceNotFoundError:
+        return _err(404, "source_not_found", f"Unknown source: {slug}")
+
+
 @router.delete("/projects/{project_id}/sources/{slug}", status_code=204, response_model=None)
 async def delete_source(project_id: str, slug: str):
     try:

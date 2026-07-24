@@ -18,6 +18,8 @@ vi.mock("@/lib/conversationClient", () => ({
   listConversations: vi.fn(),
   createConversation: vi.fn(),
   getConversationMessages: vi.fn(),
+  renameConversation: vi.fn(),
+  deleteConversation: vi.fn(),
 }));
 
 vi.mock("@/lib/api", () => ({
@@ -30,17 +32,21 @@ vi.mock("@/lib/companionClient", () => ({
 
 import {
   createConversation,
+  deleteConversation,
   getConversationMessages,
   listConversations,
+  renameConversation,
 } from "@/lib/conversationClient";
 import { postChatStream } from "@/lib/api";
 import { getCompanionResume } from "@/lib/companionClient";
 
 const mockedList = vi.mocked(listConversations);
 const mockedCreate = vi.mocked(createConversation);
+const mockedDelete = vi.mocked(deleteConversation);
 const mockedGetMessages = vi.mocked(getConversationMessages);
 const mockedPostChat = vi.mocked(postChatStream);
 const mockedGetCompanionResume = vi.mocked(getCompanionResume);
+const mockedRename = vi.mocked(renameConversation);
 
 const companionResume = {
   schema_version: "1",
@@ -78,6 +84,13 @@ beforeEach(() => {
     created_at: "2026-07-07T12:00:00Z",
   });
   mockedGetMessages.mockResolvedValue([]);
+  mockedRename.mockImplementation(async (id, title) => ({
+    id,
+    project_id: "thesis-agent",
+    title,
+    created_at: "2026-07-07T12:00:00Z",
+  }));
+  mockedDelete.mockResolvedValue(undefined);
   mockedPostChat.mockResolvedValue(undefined);
   mockedGetCompanionResume.mockResolvedValue(companionResume);
 });
@@ -223,6 +236,57 @@ describe("AiChatView", () => {
     expect(screen.getByText("The Craftsman")).toBeInTheDocument();
     expect(screen.getByText("p. 42")).toBeInTheDocument();
   });
+
+  it("shows a stream error and removes the empty assistant placeholder", async () => {
+    mockedPostChat.mockImplementation(async (_body, onEvent) => {
+      onEvent({
+        event: "error",
+        data: {
+          code: "request_failed",
+          message: "Servizio non disponibile. Riprova.",
+        },
+      });
+    });
+    render(<AiChatView />);
+
+    fireEvent.change(screen.getByPlaceholderText("Scrivi un messaggio…"), {
+      target: { value: "Ciao" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Invia" }));
+
+    expect(
+      await screen.findByText("Servizio non disponibile. Riprova.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("…")).not.toBeInTheDocument();
+  });
+
+  it("exposes progress and cancels the active stream", async () => {
+    let streamSignal: AbortSignal | undefined;
+    mockedPostChat.mockImplementation(
+      async (_body, _onEvent, signal) =>
+        new Promise<void>((resolve) => {
+          streamSignal = signal;
+          signal?.addEventListener("abort", () => resolve(), { once: true });
+        })
+    );
+    render(<AiChatView />);
+
+    fireEvent.change(screen.getByPlaceholderText("Scrivi un messaggio…"), {
+      target: { value: "Genera" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Invia" }));
+
+    expect(await screen.findByText("Generazione in corso…")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Interrompi" }));
+
+    expect(streamSignal?.aborted).toBe(true);
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: "Interrompi" })
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.queryByText("…")).not.toBeInTheDocument();
+  });
 });
 
 describe("ConversationList", () => {
@@ -248,5 +312,65 @@ describe("ConversationList", () => {
     expect(await screen.findByText("Tesi chat")).toBeInTheDocument();
     expect(screen.getByText("Revisione")).toBeInTheDocument();
     expect(screen.getByTestId("conversation-item-conv-a")).toHaveClass("font-medium");
+  });
+
+  it("renames a conversation from its action menu", async () => {
+    mockedList.mockResolvedValue([
+      {
+        id: "conv-a",
+        project_id: "thesis-agent",
+        title: "New Conversation",
+        created_at: "2026-07-07T12:00:00Z",
+      },
+    ]);
+    render(<AiChatView />);
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: /Azioni per la conversazione/,
+      })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Rinomina" }));
+    fireEvent.change(screen.getByLabelText("Nuovo titolo conversazione"), {
+      target: { value: "Capitolo metodologico" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Salva titolo" }));
+
+    await waitFor(() => {
+      expect(mockedRename).toHaveBeenCalledWith(
+        "conv-a",
+        "Capitolo metodologico",
+        "thesis-agent"
+      );
+    });
+    expect(await screen.findByText("Capitolo metodologico")).toBeInTheDocument();
+  });
+
+  it("deletes the active conversation with confirmation and returns home", async () => {
+    searchParams = new URLSearchParams("conversation=conv-a");
+    mockedList.mockResolvedValue([
+      {
+        id: "conv-a",
+        project_id: "thesis-agent",
+        title: "Da eliminare",
+        created_at: "2026-07-07T12:00:00Z",
+      },
+    ]);
+    render(<AiChatView />);
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Azioni per la conversazione Da eliminare",
+      })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Elimina" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Conferma eliminazione conversazione" })
+    );
+
+    await waitFor(() => {
+      expect(mockedDelete).toHaveBeenCalledWith("conv-a", "thesis-agent");
+    });
+    expect(mockReplace).toHaveBeenCalledWith("/");
   });
 });

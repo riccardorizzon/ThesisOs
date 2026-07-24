@@ -5,8 +5,8 @@ import { cn } from "@/lib/cn";
 import { ProposalBundleModal } from "@/components/memory/ProposalBundleModal";
 import {
   formatSessionDuration,
+  ensureSessionState,
   getPendingProposalCount,
-  loadSessionState,
 } from "@/lib/sessionState";
 
 export type SessionChipProps = {
@@ -18,13 +18,13 @@ export type SessionChipProps = {
  * Layer: Business (Product Plane)
  */
 export function SessionChip({ className }: SessionChipProps) {
-  const [duration, setDuration] = useState("0m");
+  const [duration, setDuration] = useState("—");
   const [pendingCount, setPendingCount] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
 
   const refresh = useCallback(() => {
-    const session = loadSessionState();
-    setDuration(formatSessionDuration(session?.startedAt));
+    const session = ensureSessionState();
+    setDuration(formatSessionDuration(session.startedAt) ?? "—");
     setPendingCount(getPendingProposalCount());
   }, []);
 

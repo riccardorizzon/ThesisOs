@@ -3,8 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
+
+ConversationTitle = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=120),
+]
 
 
 class ConversationSummary(BaseModel):
@@ -31,4 +37,8 @@ class ConversationMessagesResponse(BaseModel):
 
 class ConversationCreate(BaseModel):
     project_id: str = Field(min_length=1)
-    title: str | None = None
+    title: ConversationTitle | None = None
+
+
+class ConversationUpdate(BaseModel):
+    title: ConversationTitle

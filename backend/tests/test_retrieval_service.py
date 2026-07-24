@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select
 
 from app.db import models
 from app.db.models import EMBEDDING_DIM
@@ -82,7 +82,7 @@ async def _embedding_count_for_document(db_session, document_id: str) -> int:
 
 
 async def _parsed_document(svc: DocumentService, db_session) -> str:
-    rec = await svc.upload(filename="a.pdf", data=b"x", session=db_session)
+    rec = await svc.upload(filename="a.pdf", data=b"%PDF test", session=db_session)
     parsed = await svc.parse(
         rec.id, primary=FakeParser(["alpha chunk", "beta chunk"]), session=db_session
     )
@@ -128,7 +128,7 @@ async def test_embed_failed_surfaces_error(svc: DocumentService, db_session):
 async def _parsed_document_with_chunks(
     svc: DocumentService, db_session, chunks: list[str]
 ) -> str:
-    rec = await svc.upload(filename="a.pdf", data=b"x", session=db_session)
+    rec = await svc.upload(filename="a.pdf", data=b"%PDF test", session=db_session)
     parsed = await svc.parse(
         rec.id, primary=FakeParser(chunks), session=db_session
     )

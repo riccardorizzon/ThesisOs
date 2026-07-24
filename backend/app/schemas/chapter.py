@@ -7,8 +7,9 @@ No retrieval/embedding fields — chapters are authored prose, not a RAG surface
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 from app.schemas.context import DEFAULT_PROJECT_ID
 
@@ -18,6 +19,11 @@ VALID_CHAPTER_STATUSES = frozenset({"draft", "review", "approved", "published"})
 
 # Change-stream kinds (ADR-0033 §2). M6 emits WRITE/EDIT/PROMOTE; MERGE/RESTORE reserved.
 CHANGE_KINDS = frozenset({"WRITE", "EDIT", "PROMOTE", "MERGE", "RESTORE"})
+
+ChapterTitle = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=200),
+]
 
 
 class ChapterRecord(BaseModel):
@@ -50,7 +56,7 @@ class ChapterVersionRecord(BaseModel):
 
 
 class ChapterCreate(BaseModel):
-    title: str
+    title: ChapterTitle
     project_id: str = DEFAULT_PROJECT_ID
     parent_id: str | None = None
     order_index: int = 0
@@ -65,7 +71,7 @@ class ChapterContentUpdate(BaseModel):
 
 
 class ChapterMetadataUpdate(BaseModel):
-    title: str | None = None
+    title: ChapterTitle | None = None
     summary: str | None = None
     status: str | None = None
     expected_version: int
@@ -78,7 +84,7 @@ class ChapterUpdate(BaseModel):
     """
 
     content_md: str | None = None
-    title: str | None = None
+    title: ChapterTitle | None = None
     summary: str | None = None
     status: str | None = None
     expected_version: int

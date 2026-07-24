@@ -93,3 +93,18 @@ export async function deleteSource(
     );
   }
 }
+
+export async function addSourceToBibliography(
+  slug: string,
+  projectId?: string
+): Promise<SourceListItem> {
+  const pid = resolveProjectId(projectId);
+  const res = await fetch(
+    `${apiBaseUrl()}/projects/${pid}/sources/${encodeURIComponent(slug)}/bibliography`,
+    { method: "POST" }
+  );
+  if (!res.ok) {
+    throw new Error("Impossibile aggiungere la fonte alla bibliografia. Riprova.");
+  }
+  return res.json() as Promise<SourceListItem>;
+}

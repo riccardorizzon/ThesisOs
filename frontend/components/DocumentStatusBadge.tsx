@@ -4,6 +4,7 @@ const STATUS_STYLES: Record<DocumentStatus, string> = {
   uploaded: "bg-surface-muted text-ink-muted",
   processing: "bg-warning/10 text-warning",
   parsed: "bg-success/10 text-success",
+  indexed: "bg-success/10 text-success",
   failed: "bg-danger/10 text-danger",
 };
 

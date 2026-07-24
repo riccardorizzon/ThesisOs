@@ -4,12 +4,21 @@ import { useState } from "react";
 import { exportBibliography } from "@/lib/sourcesClient";
 import { getActiveProjectId } from "@/lib/projectPrefs";
 
+type BibliographyExportBarProps = {
+  approvedCount: number;
+  candidateCount: number;
+};
+
 /** Bibliography export actions (PX6-EWO-005/006). */
-export function BibliographyExportBar() {
+export function BibliographyExportBar({
+  approvedCount,
+  candidateCount,
+}: BibliographyExportBarProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleExport = async () => {
+    if (approvedCount === 0) return;
     setBusy(true);
     setError(null);
     try {
@@ -39,7 +48,7 @@ export function BibliographyExportBar() {
       <span className="text-sm font-medium text-ink">Bibliografia</span>
       <button
         type="button"
-        disabled={busy}
+        disabled={busy || approvedCount === 0}
         onClick={() => void handleExport()}
         className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium text-ink cursor-pointer disabled:opacity-50"
       >
@@ -53,6 +62,11 @@ export function BibliographyExportBar() {
         Stampa
       </button>
       {error && <p className="text-xs text-warning">{error}</p>}
+      {approvedCount === 0 && candidateCount > 0 ? (
+        <p className="basis-full text-xs text-ink-muted">
+          Aggiungi almeno una fonte candidata alla bibliografia per esportarla.
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -15,12 +15,17 @@ class FakeRetrievalService:
         self._results = results
         self._fail = fail
         self.last_query: str | None = None
+        self.last_filters = None
 
     async def search(self, query, *, filters=None, limit=10, hybrid_alpha=0.5, session=None):
         self.last_query = query
+        self.last_filters = filters
         if self._fail:
             raise EmbedFailedError("down")
         return self._results or [], "text-multilingual-embedding-002"
+
+
+_EMPTY_CONFIG = {"configurable": {}}
 
 
 async def test_retriever_populates_context():
@@ -37,7 +42,10 @@ async def test_retriever_populates_context():
         ]
     )
     node = make_retriever_node(service)
-    out = await node(GraphState(messages=[Message(role="user", content="question")]))
+    out = await node(
+        GraphState(messages=[Message(role="user", content="question")]),
+        _EMPTY_CONFIG,
+    )
     assert len(out["retrieved_context"]) == 1
     assert out["retrieved_context"][0].chunk_id == "c1"
     assert service.last_query == "question"
@@ -45,13 +53,41 @@ async def test_retriever_populates_context():
 
 async def test_retriever_no_results_adds_error():
     node = make_retriever_node(FakeRetrievalService())
-    out = await node(GraphState(messages=[Message(role="user", content="question")]))
+    out = await node(
+        GraphState(messages=[Message(role="user", content="question")]),
+        _EMPTY_CONFIG,
+    )
     assert out["retrieved_context"] == []
     assert any(e.message == "no_results" for e in out["errors"])
 
 
 async def test_retriever_embed_failed_adds_error():
     node = make_retriever_node(FakeRetrievalService(fail=True))
-    out = await node(GraphState(messages=[Message(role="user", content="question")]))
+    out = await node(
+        GraphState(messages=[Message(role="user", content="question")]),
+        _EMPTY_CONFIG,
+    )
     assert out["retrieved_context"] == []
     assert any(e.message == "embed_failed" for e in out["errors"])
+
+
+async def test_retriever_reads_project_id_from_langgraph_config():
+    service = FakeRetrievalService(
+        results=[
+            SearchResultItem(
+                chunk_id="c1",
+                document_id="d1",
+                chunk_hash="h1",
+                score=0.8,
+                content="chunk text",
+                document_title="Scoped Doc",
+            )
+        ]
+    )
+    node = make_retriever_node(service)
+    await node(
+        GraphState(messages=[Message(role="user", content="question")]),
+        {"configurable": {"project_id": "thesis-005"}},
+    )
+    assert service.last_filters is not None
+    assert service.last_filters.project_id == "thesis-005"

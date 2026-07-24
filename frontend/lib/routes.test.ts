@@ -7,7 +7,7 @@ describe("PRODUCT_ROUTES", () => {
     expect(paths).toContain("/");
     expect(paths).toContain("/research");
     expect(paths).toContain("/research/canvas");
-    expect(paths).toContain("/research/guided");
+    expect(paths).not.toContain("/research/guided");
     expect(paths).toContain("/writing");
     expect(paths).toContain("/sources");
     expect(paths).toContain("/knowledge");
@@ -42,11 +42,11 @@ describe("LEGACY_REDIRECTS", () => {
       "/writing"
     );
     expect(LEGACY_REDIRECTS.find((r) => r.source === "/memory")?.destination).toBe(
-      "/knowledge"
+      "/knowledge?view=notes"
     );
     expect(
       LEGACY_REDIRECTS.find((r) => r.source === "/memory/:path*")?.destination
-    ).toBe("/knowledge");
+    ).toBe("/knowledge?view=notes");
   });
 
   it("redirects /documents to /sources per PX3-EWO-001", () => {

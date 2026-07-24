@@ -3,6 +3,7 @@ import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import {
   PROPOSALS_STORAGE_KEY,
   SESSION_STATE_STORAGE_KEY,
+  ensureSessionState,
   formatSessionDuration,
   getPendingProposalCount,
   loadSessionState,
@@ -116,5 +117,24 @@ describe("formatSessionDuration", () => {
     const now = new Date("2026-07-04T12:45:00Z");
     const started = "2026-07-04T12:00:00Z";
     expect(formatSessionDuration(started, now)).toBe("45m");
+  });
+
+  it("uses <1m during the first minute", () => {
+    const started = "2026-07-04T12:00:00Z";
+    const now = new Date("2026-07-04T12:00:30Z");
+    expect(formatSessionDuration(started, now)).toBe("<1m");
+  });
+
+  it("does not claim a duration for invalid state", () => {
+    expect(formatSessionDuration("not-a-date")).toBeNull();
+    expect(formatSessionDuration(undefined)).toBeNull();
+  });
+
+  it("initializes a valid session start when state is absent", () => {
+    localStorage.clear();
+    const now = new Date("2026-07-04T12:00:00Z");
+    const session = ensureSessionState(now);
+    expect(session.startedAt).toBe(now.toISOString());
+    expect(loadSessionState()?.startedAt).toBe(now.toISOString());
   });
 });

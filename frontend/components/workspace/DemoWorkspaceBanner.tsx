@@ -4,7 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { chapterClient } from "@/lib/chapterClient";
 import { createProject } from "@/lib/projectsClient";
-import { saveProjectPrefs, setActiveProjectId } from "@/lib/projectPrefs";
+import {
+  getLastPersonalProjectId,
+  saveProjectPrefs,
+  setActiveProjectId,
+} from "@/lib/projectPrefs";
 import { setWorkspaceMode } from "@/lib/workspacePrefs";
 
 export function DemoWorkspaceBanner() {
@@ -43,7 +47,9 @@ export function DemoWorkspaceBanner() {
     setCopying(true);
     setCopyError(null);
     try {
-      await chapterClient.copyDemoStructure();
+      const targetProjectId = getLastPersonalProjectId();
+      await chapterClient.copyDemoStructure(targetProjectId);
+      setActiveProjectId(targetProjectId);
       setWorkspaceMode("personal");
       setCopyOpen(false);
       router.push("/writing");

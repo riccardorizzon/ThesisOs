@@ -74,7 +74,7 @@ async def test_upload_emits_document_uploaded(svc, db_session):
 
 
 async def test_parse_emits_chunk_created_per_chunk(svc, db_session):
-    rec = await svc.upload(filename="a.pdf", data=b"x", session=db_session)
+    rec = await svc.upload(filename="a.pdf", data=b"%PDF test", session=db_session)
     await svc.parse(rec.id, primary=_docling(["alpha", "beta"]), session=db_session)
 
     events = (
@@ -111,7 +111,7 @@ async def test_parse_failure_emits_no_chunk_events(svc, db_session):
 
 
 async def test_reparse_emits_fresh_chunk_events(svc, db_session):
-    rec = await svc.upload(filename="a.pdf", data=b"x", session=db_session)
+    rec = await svc.upload(filename="a.pdf", data=b"%PDF test", session=db_session)
     parser = _docling(["alpha", "beta"])
     await svc.parse(rec.id, primary=parser, session=db_session)
     first_count = (

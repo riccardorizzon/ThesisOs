@@ -13,9 +13,11 @@ const SIDEBAR_LABELS = [
 test.describe("PX1 UI smoke @ui", () => {
   test("Home loads as default route", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Home", level: 1 })).toBeVisible();
     await expect(
-      page.getByRole("main").getByText(/Riprendi da dove hai lasciato/)
+      page.getByRole("heading", { name: "Thesis Companion", level: 1 })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("main").getByText(/Riprendi il lavoro/)
     ).toBeVisible();
   });
 
@@ -32,12 +34,15 @@ test.describe("PX1 UI smoke @ui", () => {
     await expect(page.getByTestId("writing-workspace")).toBeVisible();
     await expect(page.getByTestId("writing-outline")).toBeVisible();
     await expect(page.getByTestId("context-summary")).toBeVisible();
+    await expect(page.getByTestId("writing-index-status-error")).toHaveCount(0);
   });
 
-  test("Sources shell renders with library cards", async ({ page }) => {
+  test("Sources shell renders for populated or empty projects", async ({ page }) => {
     await page.goto("/sources");
     await expect(page.getByRole("heading", { name: "Sources", level: 1 })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Albers/i })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Aggiungi fonte" }).first()
+    ).toBeVisible();
   });
 
   test("legacy /workspace redirects to Writing", async ({ page }) => {

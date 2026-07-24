@@ -7,6 +7,7 @@ const KIND_STYLES: Record<MemoryKind, string> = {
   decision: "bg-amber-400/10 text-amber-300",
   concept: "bg-sky-400/10 text-sky-300",
   citation: "bg-rose-400/10 text-rose-300",
+  note: "bg-surface-muted text-ink-muted",
 };
 
 export function MemoryKindBadge({ kind }: { kind: MemoryKind }) {

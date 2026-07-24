@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select
 
 from app.api.documents import _parse_in_background
 from app.db import models
@@ -28,7 +28,7 @@ def svc(tmp_path) -> DocumentService:
 
 
 async def test_record_index_error_sets_message(svc: DocumentService, db_session):
-    rec = await svc.upload(filename="a.pdf", data=b"x", session=db_session)
+    rec = await svc.upload(filename="a.pdf", data=b"%PDF test", session=db_session)
     await svc.parse(rec.id, primary=FakeParser(), session=db_session)
     updated = await svc.record_index_error(rec.id, "vertex token limit", session=db_session)
     assert updated.error_message.startswith("index_failed:")
@@ -41,7 +41,7 @@ async def test_background_index_failure_records_error(svc: DocumentService):
     from app.db.session_async import AsyncSessionLocal
 
     async with AsyncSessionLocal() as s:
-        rec = await svc.upload(filename="a.pdf", data=b"x", session=s)
+        rec = await svc.upload(filename="a.pdf", data=b"%PDF test", session=s)
         await svc.parse(rec.id, primary=FakeParser(), session=s)
         doc_id = rec.id
         await s.commit()

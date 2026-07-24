@@ -13,6 +13,7 @@ from app.services.document import (
     DocumentNotFoundError,
     DocumentService,
     DocumentWriteConflictError,
+    InvalidFileContentError,
     UnsupportedFormatError,
 )
 from app.services.retrieval import EmbedFailedError, RetrievalService, RetrievalServiceError
@@ -78,8 +79,18 @@ async def upload_document(
         record = await _service.upload(
             filename=file.filename or "upload", data=data, meta=meta
         )
-    except UnsupportedFormatError as exc:
-        return _err(400, "unsupported_format", str(exc))
+    except UnsupportedFormatError:
+        return _err(
+            415,
+            "unsupported_format",
+            "Formato non supportato. Usa PDF, EPUB, DOCX, Markdown o testo.",
+        )
+    except InvalidFileContentError:
+        return _err(
+            415,
+            "invalid_file_content",
+            "Il contenuto del file non corrisponde al formato selezionato.",
+        )
     background_tasks.add_task(_parse_in_background, record.id)
     return record
 

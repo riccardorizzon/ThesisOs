@@ -1,6 +1,12 @@
 import type { ContextPacket } from "@/lib/contextClient";
 import { apiBaseUrl } from "@/lib/apiBase";
 import { activeProjectScope } from "@/lib/projectScope";
+import {
+  consumeSse,
+  isAbortError,
+  requireSseResponse,
+  SseTransportError,
+} from "@/lib/sseClient";
 
 export type WritingActionId = "rewrite" | "verify" | "find-sources" | "expand";
 
@@ -94,6 +100,12 @@ export type WritingActionStreamEvent =
   | { event: "done"; data: { draft: string } }
   | { event: "error"; data: { code: string; message: string } };
 
+const WRITING_STATUS_MESSAGES: Readonly<Record<number, string>> = {
+  400: "Azione di scrittura non valida.",
+  422: "Il testo selezionato non è valido.",
+  503: "L’assistente non è configurato.",
+};
+
 function summarizeContext(packet: ContextPacket): string {
   const parts: string[] = [];
   if (packet.decisions.length) {
@@ -112,50 +124,6 @@ function summarizeContext(packet: ContextPacket): string {
     parts.push("Regole di scrittura:\n" + packet.writing_rules.map((r) => `- ${r}`).join("\n"));
   }
   return parts.join("\n\n");
-}
-
-async function parseSseStream(
-  body: ReadableStream<Uint8Array>,
-  onEvent: (e: WritingActionStreamEvent) => void,
-  signal?: AbortSignal
-): Promise<void> {
-  const reader = body.getReader();
-  const decoder = new TextDecoder();
-  let buf = "";
-  for (;;) {
-    if (signal?.aborted) {
-      await reader.cancel();
-      return;
-    }
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += decoder.decode(value, { stream: true });
-    const frames = buf.split(/\r\n\r\n|\n\n|\r\r/);
-    buf = frames.pop() ?? "";
-    for (const frame of frames) {
-      let event = "message";
-      let data = "";
-      for (const line of frame.split(/\r\n|\n|\r/)) {
-        if (line.startsWith("event:")) event = line.slice(6).trim();
-        else if (line.startsWith("data:")) data += line.slice(5).trim();
-      }
-      if (!data) continue;
-      onEvent({ event, data: JSON.parse(data) } as WritingActionStreamEvent);
-    }
-  }
-}
-
-async function readErrorBody(
-  response: Response
-): Promise<{ code: string; message: string }> {
-  const body = (await response.json().catch(() => null)) as {
-    code?: string;
-    message?: string;
-  } | null;
-  return {
-    code: body?.code ?? "request_failed",
-    message: body?.message ?? response.statusText,
-  };
 }
 
 function emitError(
@@ -178,7 +146,7 @@ export async function streamWritingAction(
   signal?: AbortSignal
 ): Promise<void> {
   try {
-    const r = await fetch(`${apiBaseUrl()}/writing/actions`, {
+    const response = await fetch(`${apiBaseUrl()}/writing/actions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -192,24 +160,22 @@ export async function streamWritingAction(
       signal,
     });
 
-    if (!r.ok) {
-      const err = await readErrorBody(r);
+    await requireSseResponse(response, WRITING_STATUS_MESSAGES);
+    await consumeSse(
+      response,
+      (frame) => onEvent(frame as WritingActionStreamEvent),
+      signal
+    );
+  } catch (err) {
+    if (signal?.aborted || isAbortError(err)) return;
+    if (err instanceof SseTransportError) {
       emitError(onEvent, err.code, err.message);
       return;
     }
-
-    if (!r.body) {
-      emitError(onEvent, "empty_response", "Risposta AI vuota dal server");
-      return;
-    }
-
-    await parseSseStream(r.body, onEvent, signal);
-  } catch (err) {
-    if (signal?.aborted) return;
     emitError(
       onEvent,
       "network_error",
-      err instanceof Error ? err.message : "Connessione al servizio AI non disponibile"
+      "Connessione al servizio AI non disponibile. Riprova."
     );
   }
 }
