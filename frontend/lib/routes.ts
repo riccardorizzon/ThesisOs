@@ -9,6 +9,7 @@ export type ProductModule =
   | "home"
   | "research"
   | "writing"
+  | "manuscript"
   | "sources"
   | "knowledge"
   | "review"
@@ -42,6 +43,18 @@ export const PRODUCT_ROUTES: ProductRoute[] = [
     module: "writing",
     milestone: "PX-2",
     description: "Three-panel editor",
+  },
+  {
+    path: "/manuscript",
+    module: "manuscript",
+    milestone: "PX-2",
+    description: "Manuscript reader — ordered thesis reading",
+  },
+  {
+    path: "/manuscript/[chapterId]",
+    module: "manuscript",
+    milestone: "PX-2",
+    description: "Manuscript reader focused on one chapter",
   },
   {
     path: "/sources",

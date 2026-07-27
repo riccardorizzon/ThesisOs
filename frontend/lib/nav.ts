@@ -15,6 +15,7 @@ export const PRIMARY_NAV: NavRoute[] = [
   { href: "/", label: "Home", group: "primary" },
   { href: "/research", label: "Research", group: "primary" },
   { href: "/writing", label: "Writing", group: "primary" },
+  { href: "/manuscript", label: "Manoscritto", group: "primary" },
   { href: "/sources", label: "Sources", group: "primary" },
   { href: "/knowledge", label: "Knowledge", group: "primary" },
   { href: "/settings", label: "Settings", group: "settings" },

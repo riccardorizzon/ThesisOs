@@ -5,6 +5,7 @@ const SIDEBAR_LABELS = [
   "Home",
   "Research",
   "Writing",
+  "Manoscritto",
   "Sources",
   "Knowledge",
   "Settings",

@@ -11,11 +11,16 @@
   Home
   Research
   Writing
+  Manoscritto
   Sources
   Knowledge
   ─────────
   Settings
   ```
+
+  **Amendment (2026-07-27):** Manoscritto added as sixth primary module between Writing
+  and Sources — read-only thesis manuscript reader (`/manuscript`). Review and AI remain
+  adjunct surfaces outside primary nav.
 
   ### Default entry
 
@@ -29,6 +34,7 @@
   | `/` | Home |
   | `/research`, `/research/[conceptId]` | Research |
   | `/writing`, `/writing/[chapterId]` | Writing |
+  | `/manuscript`, `/manuscript/[chapterId]` | Manoscritto |
   | `/sources`, `/sources/[sourceId]` | Sources |
   | `/knowledge`, `/knowledge/[conceptId]` | Knowledge |
   | `/ai` | AI power mode (optional full chat) |
@@ -46,7 +52,8 @@
   | `/documents/*` | `/sources/*` (PX-3) |
 
 - **Invariants:**
-  - **INV-IA-1:** Sidebar contains exactly the six primary modules + Settings (no Memory/Corpus/Chat as top-level).
+  - **INV-IA-1:** Sidebar contains exactly these six primary modules + Settings: Home,
+    Research, Writing, Manoscritto, Sources, Knowledge (no Memory/Corpus/Chat as top-level).
   - **INV-IA-2:** Home is the default landing route after auth/load.
   - **INV-IA-3:** Writing uses fixed three-panel layout (outline | editor | AI panel) on desktop — ADR-0039.
   - **INV-IA-4:** IA changes require Product Constitution amendment (P8) or ADR-0036 supersession — not silent route adds.

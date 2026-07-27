@@ -14,6 +14,7 @@ describe("PRIMARY_NAV", () => {
       "Home",
       "Research",
       "Writing",
+      "Manoscritto",
       "Sources",
       "Knowledge",
       "Settings",
@@ -22,7 +23,7 @@ describe("PRIMARY_NAV", () => {
 
   it("has exactly one settings route", () => {
     expect(PRIMARY_NAV.filter((r) => r.group === "settings")).toHaveLength(1);
-    expect(PRIMARY_NAV.filter((r) => r.group === "primary")).toHaveLength(5);
+    expect(PRIMARY_NAV.filter((r) => r.group === "primary")).toHaveLength(6);
   });
 });
 
@@ -53,6 +54,7 @@ describe("buildBreadcrumbs", () => {
 
   it("builds module root crumbs", () => {
     expect(buildBreadcrumbs("/writing")).toEqual([{ label: "Writing" }]);
+    expect(buildBreadcrumbs("/manuscript")).toEqual([{ label: "Manoscritto" }]);
     expect(buildBreadcrumbs("/sources")).toEqual([{ label: "Sources" }]);
     expect(buildBreadcrumbs("/knowledge")).toEqual([{ label: "Knowledge" }]);
   });
@@ -60,6 +62,10 @@ describe("buildBreadcrumbs", () => {
   it("builds nested dynamic crumbs with parent link", () => {
     expect(buildBreadcrumbs("/writing/ch-1")).toEqual([
       { label: "Writing", href: "/writing" },
+      { label: "ch 1" },
+    ]);
+    expect(buildBreadcrumbs("/manuscript/ch-1")).toEqual([
+      { label: "Manoscritto", href: "/manuscript" },
       { label: "ch 1" },
     ]);
     expect(buildBreadcrumbs("/sources/benjamin-1935")).toEqual([

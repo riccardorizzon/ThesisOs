@@ -9,11 +9,17 @@ describe("PRODUCT_ROUTES", () => {
     expect(paths).toContain("/research/canvas");
     expect(paths).not.toContain("/research/guided");
     expect(paths).toContain("/writing");
+    expect(paths).toContain("/manuscript");
     expect(paths).toContain("/sources");
     expect(paths).toContain("/knowledge");
     expect(paths).toContain("/review");
     expect(paths).toContain("/ai");
     expect(paths).toContain("/settings");
+  });
+
+  it("registers manuscript module routes", () => {
+    const manuscript = PRODUCT_ROUTES.find((r) => r.path === "/manuscript");
+    expect(manuscript?.module).toBe("manuscript");
   });
 
   it("registers /review as distinct from /ai per ADR-0039", () => {
