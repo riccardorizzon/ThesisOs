@@ -1,64 +1,78 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ManuscriptToc } from "./ManuscriptToc";
-import type { ManuscriptTocChapter } from "@/lib/manuscriptToc";
+import type { ManuscriptOutlinePart } from "@/lib/manuscriptToc";
 
 afterEach(() => cleanup());
 
-const chapters: ManuscriptTocChapter[] = [
+const outline: ManuscriptOutlinePart[] = [
   {
-    id: "c1",
+    number: "1",
     title: "Capitolo 1",
-    status: "draft",
-    word_count: 100,
-    order_index: 0,
+    chapterId: null,
+    status: null,
+    word_count: 0,
     sections: [
-      { id: "intro", label: "Intro", level: 1 },
-      { id: "method", label: "Method", level: 2 },
+      {
+        id: "s11",
+        number: "1.1",
+        label: "Intro",
+        status: "review",
+        word_count: 10,
+        order_index: 0,
+      },
     ],
   },
   {
-    id: "c2",
-    title: "Capitolo 2",
-    status: "approved",
-    word_count: 50,
-    order_index: 1,
-    sections: [],
+    number: "3",
+    title: "Progettazione metodologica",
+    chapterId: "c3",
+    status: "review",
+    word_count: 100,
+    sections: [
+      {
+        id: "s36",
+        number: "3.6",
+        label: "Sintesi: il capo come costruzione di senso",
+        status: "draft",
+        word_count: 177,
+        order_index: 36,
+      },
+    ],
   },
 ];
 
 describe("ManuscriptToc", () => {
-  it("shows summary, statuses, words, and sections", () => {
+  it("shows hierarchical index with section numbers and labels", () => {
     render(
       <ManuscriptToc
-        chapters={chapters}
-        activeChapterId="c1"
+        outline={outline}
+        activeChapterId="s36"
         onSelectChapter={vi.fn()}
-        onSelectSection={vi.fn()}
       />
     );
-    expect(screen.getByTestId("manuscript-toc")).toBeTruthy();
-    expect(screen.getByText(/2 capitoli/i)).toBeTruthy();
-    expect(screen.getByText(/150/)).toBeTruthy();
-    expect(screen.getByTestId("status-badge-draft")).toBeTruthy();
+    expect(screen.getByText(/Capitoli e sottocapitoli/i)).toBeTruthy();
+    expect(screen.getByText("3.6")).toBeTruthy();
+    expect(screen.getByText("Sintesi: il capo come costruzione di senso")).toBeTruthy();
+    expect(screen.getByText("1.1")).toBeTruthy();
     expect(screen.getByText("Intro")).toBeTruthy();
-    expect(screen.getByText("Method")).toBeTruthy();
+    expect(screen.getByText("Progettazione metodologica")).toBeTruthy();
   });
 
-  it("notifies chapter and section selection", () => {
+  it("selects chapter headers and sections", () => {
     const onSelectChapter = vi.fn();
-    const onSelectSection = vi.fn();
     render(
       <ManuscriptToc
-        chapters={chapters}
-        activeChapterId="c1"
+        outline={outline}
+        activeChapterId="s36"
         onSelectChapter={onSelectChapter}
-        onSelectSection={onSelectSection}
       />
     );
-    fireEvent.click(screen.getByRole("button", { name: /Capitolo 2/i }));
-    expect(onSelectChapter).toHaveBeenCalledWith("c2");
-    fireEvent.click(screen.getByRole("button", { name: "Method" }));
-    expect(onSelectSection).toHaveBeenCalledWith("c1", "method");
+    fireEvent.click(screen.getByRole("button", { name: /Progettazione metodologica/i }));
+    expect(onSelectChapter).toHaveBeenCalledWith("c3");
+    fireEvent.click(
+      screen.getByRole("button", { name: /3\.6 Sintesi: il capo come costruzione di senso/i })
+    );
+    expect(onSelectChapter).toHaveBeenCalledWith("s36");
   });
 });

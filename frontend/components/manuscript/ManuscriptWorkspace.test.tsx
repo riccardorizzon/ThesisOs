@@ -31,60 +31,51 @@ describe("ManuscriptWorkspace", () => {
   beforeEach(() => {
     vi.mocked(chapterClient.list).mockResolvedValue([
       {
-        id: "c1",
+        id: "c3",
         parent_id: null,
-        order_index: 0,
-        title: "Uno",
-        status: "draft",
-        content_md: null,
+        order_index: 7,
+        title: "Cap. 3 — Progettazione metodologica",
+        status: "review",
+        content_md: "# Capitolo 3\n\nIntro capitolo.",
         summary: null,
-        word_count: 3,
+        word_count: 100,
         version: 1,
         created_at: "2026-01-01T00:00:00Z",
         updated_at: "2026-01-01T00:00:00Z",
       },
       {
-        id: "c2",
+        id: "s36",
         parent_id: null,
-        order_index: 1,
-        title: "Due",
-        status: "review",
-        content_md: null,
+        order_index: 36,
+        title: "[kimi] §3.6 Sintesi: il capo come costruzione di senso",
+        status: "draft",
+        content_md: "# Sintesi\n\nTesto §3.6.",
         summary: null,
-        word_count: 4,
+        word_count: 177,
         version: 1,
         created_at: "2026-01-01T00:00:00Z",
         updated_at: "2026-01-01T00:00:00Z",
       },
     ]);
-    vi.mocked(chapterClient.get).mockImplementation(async (id: string) => ({
-      id,
-      parent_id: null,
-      order_index: id === "c1" ? 0 : 1,
-      title: id === "c1" ? "Uno" : "Due",
-      status: id === "c1" ? "draft" : "review",
-      content_md: id === "c1" ? "# Alpha\n\ntext" : "# Beta\n\nmore words here",
-      summary: null,
-      word_count: id === "c1" ? 3 : 4,
-      version: 1,
-      created_at: "2026-01-01T00:00:00Z",
-      updated_at: "2026-01-01T00:00:00Z",
-    }));
-  });
-
-  it("loads TOC sections from fetched content and links Modifica to Writing", async () => {
-    render(<ManuscriptWorkspace chapterId="c1" />);
-    await waitFor(() => {
-      expect(screen.getByTestId("manuscript-workspace")).toBeTruthy();
+    vi.mocked(chapterClient.get).mockImplementation(async (id: string) => {
+      const all = await chapterClient.list();
+      return all.find((c) => c.id === id)!;
     });
-    expect(screen.getByRole("heading", { level: 1, name: "Alpha" })).toBeTruthy();
-    expect(screen.getByTestId("manuscript-edit").getAttribute("href")).toBe("/writing/c1");
   });
 
-  it("Prev/Next push manuscript routes in order", async () => {
-    render(<ManuscriptWorkspace chapterId="c1" />);
+  it("shows §3.6 in the outline and links Modifica to Writing", async () => {
+    render(<ManuscriptWorkspace chapterId="s36" />);
+    await waitFor(() => {
+      expect(screen.getByText("3.6")).toBeTruthy();
+    });
+    expect(screen.getByText("Sintesi: il capo come costruzione di senso")).toBeTruthy();
+    expect(screen.getByTestId("manuscript-edit").getAttribute("href")).toBe("/writing/s36");
+  });
+
+  it("Prev/Next walks flattened outline order", async () => {
+    render(<ManuscriptWorkspace chapterId="s36" />);
     await waitFor(() => screen.getByTestId("manuscript-reader"));
-    fireEvent.click(screen.getByRole("button", { name: "Successivo" }));
-    expect(push).toHaveBeenCalledWith("/manuscript/c2");
+    fireEvent.click(screen.getByRole("button", { name: "Precedente" }));
+    expect(push).toHaveBeenCalledWith("/manuscript/c3");
   });
 });

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
 import {
-  buildManuscriptToc,
+  buildManuscriptOutline,
+  flattenManuscriptOutline,
   neighborChapterIds,
   sortChaptersByOrder,
 } from "@/lib/manuscriptToc";
@@ -33,13 +34,12 @@ async function hydrateChapters(list: Chapter[]): Promise<Chapter[]> {
   );
 }
 
-/** Two-panel Manoscritto — TOC + read-only chapter reader. */
+/** Two-panel Manoscritto — hierarchical TOC + read-only chapter reader. */
 export function ManuscriptWorkspace({ chapterId, className }: ManuscriptWorkspaceProps) {
   const router = useRouter();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [scrollToSectionId, setScrollToSectionId] = useState<string | null>(null);
   const [showTocMobile, setShowTocMobile] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
 
@@ -62,41 +62,31 @@ export function ManuscriptWorkspace({ chapterId, className }: ManuscriptWorkspac
     void load();
   }, [load, reloadToken]);
 
-  const toc = useMemo(() => buildManuscriptToc(chapters), [chapters]);
-  const orderedIds = useMemo(() => toc.map((ch) => ch.id), [toc]);
+  const outline = useMemo(() => buildManuscriptOutline(chapters), [chapters]);
+  const orderedIds = useMemo(() => flattenManuscriptOutline(outline), [outline]);
 
   const activeChapterId = useMemo(() => {
-    if (toc.length === 0) return null;
-    if (chapterId && toc.some((ch) => ch.id === chapterId)) return chapterId;
-    return toc[0]!.id;
-  }, [chapterId, toc]);
+    if (orderedIds.length === 0) return null;
+    if (chapterId && orderedIds.includes(chapterId)) return chapterId;
+    return orderedIds[0]!;
+  }, [chapterId, orderedIds]);
 
   useEffect(() => {
-    if (loading || toc.length === 0) return;
-    if (chapterId && !toc.some((ch) => ch.id === chapterId)) {
-      router.replace(`/manuscript/${toc[0]!.id}`);
+    if (loading || orderedIds.length === 0) return;
+    if (chapterId && !orderedIds.includes(chapterId)) {
+      router.replace(`/manuscript/${orderedIds[0]!}`);
       return;
     }
     if (!chapterId && activeChapterId) {
       router.replace(`/manuscript/${activeChapterId}`);
     }
-  }, [loading, chapterId, toc, activeChapterId, router]);
+  }, [loading, chapterId, orderedIds, activeChapterId, router]);
 
-  const activeChapter =
-    chapters.find((ch) => ch.id === activeChapterId) ?? null;
+  const activeChapter = chapters.find((ch) => ch.id === activeChapterId) ?? null;
   const { prevId, nextId } = neighborChapterIds(orderedIds, activeChapterId ?? "");
 
   const navigateChapter = (id: string) => {
-    setScrollToSectionId(null);
     router.push(`/manuscript/${id}`);
-    setShowTocMobile(false);
-  };
-
-  const selectSection = (id: string, sectionId: string) => {
-    setScrollToSectionId(sectionId);
-    if (id !== activeChapterId) {
-      router.push(`/manuscript/${id}`);
-    }
     setShowTocMobile(false);
   };
 
@@ -138,16 +128,14 @@ export function ManuscriptWorkspace({ chapterId, className }: ManuscriptWorkspac
 
       <div
         className={cn(
-          "w-full shrink-0 md:block md:w-[280px]",
+          "w-full shrink-0 md:block md:w-[300px]",
           showTocMobile ? "block" : "hidden"
         )}
       >
         <ManuscriptToc
-          chapters={toc}
+          outline={outline}
           activeChapterId={activeChapterId}
-          activeSectionId={scrollToSectionId}
           onSelectChapter={navigateChapter}
-          onSelectSection={selectSection}
           className="h-full max-h-[40vh] md:max-h-none"
         />
       </div>
@@ -156,9 +144,10 @@ export function ManuscriptWorkspace({ chapterId, className }: ManuscriptWorkspac
         chapter={activeChapter}
         prevId={prevId}
         nextId={nextId}
-        emptyThesis={toc.length === 0}
+        emptyThesis={orderedIds.length === 0}
+        emptyMessage="Nessun capitolo strutturato"
+        emptyHint="Aggiungi capitoli con titoli Cap. N o §N.x in Writing."
         onNavigate={navigateChapter}
-        scrollToSectionId={scrollToSectionId}
         className="min-w-0 flex-1"
       />
     </div>

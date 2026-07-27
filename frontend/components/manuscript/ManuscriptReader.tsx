@@ -6,12 +6,15 @@ import { cn } from "@/lib/cn";
 import type { Chapter } from "@/lib/chapterClient";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ManuscriptMarkdown } from "@/components/manuscript/ManuscriptMarkdown";
+import { parseManuscriptTitle, stripManuscriptTag } from "@/lib/manuscriptToc";
 
 export type ManuscriptReaderProps = {
   chapter: Chapter | null;
   prevId: string | null;
   nextId: string | null;
   emptyThesis?: boolean;
+  emptyMessage?: string;
+  emptyHint?: string;
   onNavigate: (chapterId: string) => void;
   scrollToSectionId?: string | null;
   className?: string;
@@ -23,6 +26,8 @@ export function ManuscriptReader({
   prevId,
   nextId,
   emptyThesis = false,
+  emptyMessage = "Nessun capitolo",
+  emptyHint = "Aggiungi capitoli in Writing per iniziare a comporre la tesi.",
   onNavigate,
   scrollToSectionId,
   className,
@@ -39,10 +44,8 @@ export function ManuscriptReader({
         data-testid="manuscript-reader"
         className={cn("flex flex-1 flex-col items-start justify-center gap-3 p-8", className)}
       >
-        <h2 className="text-lg font-semibold text-ink">Nessun capitolo</h2>
-        <p className="text-sm text-ink-muted">
-          Aggiungi capitoli in Writing per iniziare a comporre la tesi.
-        </p>
+        <h2 className="text-lg font-semibold text-ink">{emptyMessage}</h2>
+        <p className="text-sm text-ink-muted">{emptyHint}</p>
         <Link
           href="/writing"
           className="text-sm font-medium text-accent underline-offset-2 hover:underline"
@@ -65,6 +68,13 @@ export function ManuscriptReader({
   }
 
   const hasContent = Boolean(chapter.content_md?.trim());
+  const parsedTitle = parseManuscriptTitle(chapter.title);
+  const displayTitle =
+    parsedTitle.kind === "section"
+      ? `${parsedTitle.major}.${parsedTitle.minor} ${parsedTitle.label}`
+      : parsedTitle.kind === "chapter"
+        ? `Cap. ${parsedTitle.major} — ${parsedTitle.label}`
+        : stripManuscriptTag(chapter.title);
 
   return (
     <section
@@ -74,7 +84,7 @@ export function ManuscriptReader({
     >
       <header className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-4">
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-xl font-semibold text-ink">{chapter.title}</h1>
+          <h1 className="truncate text-xl font-semibold text-ink">{displayTitle}</h1>
           <p className="mt-0.5 text-xs text-ink-muted">{chapter.word_count} parole</p>
         </div>
         <StatusBadge status={chapter.status} />
