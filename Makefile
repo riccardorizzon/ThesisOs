@@ -163,3 +163,9 @@ ops-check: ## Live stack gate: health, LLM, export contract, document audit
 
 seed-curated-sources: ## Upload core thesis markdown from knowledge/thesis-agent to Sources
 	@bash bin/seed-curated-sources.sh
+
+demo-cleanup-dry-run: ## Preview Wave 1 demo data cleanup (docs/chapters)
+	@bash bin/demo-cleanup.sh --dry-run
+
+demo-cleanup: ## Apply Wave 1 demo data cleanup (destructive — backup DB first)
+	@bash bin/demo-cleanup.sh --apply --conversations
