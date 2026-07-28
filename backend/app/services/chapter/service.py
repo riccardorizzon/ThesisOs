@@ -90,7 +90,9 @@ class ChapterService:
         if session is not None:
             return await self._list(session, filters)
         async with AsyncSessionLocal() as s:
-            return await self._list(s, filters)
+            records = await self._list(s, filters)
+            await s.commit()
+            return records
 
     async def update_content(
         self, chapter_id: str, data: ChapterContentUpdate, *, session: AsyncSession | None = None
@@ -286,12 +288,30 @@ class ChapterService:
     async def _update_content(
         self, session: AsyncSession, chapter_id: str, data: ChapterContentUpdate
     ) -> ChapterRecord:
-        row = self._require_version(await session.get(models.Chapter, chapter_id), chapter_id, data.expected_version)
-        row.content_md = data.content_md
-        row.word_count = _word_count(data.content_md)
-        row.version += 1
-        row.updated_at = datetime.now(timezone.utc)
-        await session.flush()
+        result = await session.execute(
+            update(models.Chapter)
+            .where(
+                models.Chapter.id == chapter_id,
+                models.Chapter.version == data.expected_version,
+            )
+            .values(
+                content_md=data.content_md,
+                word_count=_word_count(data.content_md),
+                version=data.expected_version + 1,
+                updated_at=datetime.now(timezone.utc),
+            )
+            .returning(models.Chapter)
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            existing = await session.get(models.Chapter, chapter_id)
+            if existing is None:
+                raise ChapterNotFoundError(chapter_id)
+            raise ChapterWriteConflictError(
+                chapter_id,
+                expected_version=data.expected_version,
+                actual_version=existing.version,
+            )
         self._append_change(session, row, change_kind="EDIT")
         await session.flush()
         return self._to_record(row)
@@ -299,22 +319,52 @@ class ChapterService:
     async def _update_metadata(
         self, session: AsyncSession, chapter_id: str, data: ChapterMetadataUpdate
     ) -> ChapterRecord:
-        row = self._require_version(await session.get(models.Chapter, chapter_id), chapter_id, data.expected_version)
+        existing = await session.get(models.Chapter, chapter_id)
+        if existing is None:
+            raise ChapterNotFoundError(chapter_id)
+        if existing.version != data.expected_version:
+            raise ChapterWriteConflictError(
+                chapter_id,
+                expected_version=data.expected_version,
+                actual_version=existing.version,
+            )
+
         status_change = False
+        values: dict = {
+            "version": data.expected_version + 1,
+            "updated_at": datetime.now(timezone.utc),
+        }
         if data.status is not None:
             if data.status not in VALID_CHAPTER_STATUSES:
                 raise InvalidChapterStatusError(data.status)
-            status_change = data.status != row.status
-            row.status = data.status
+            status_change = data.status != existing.status
+            values["status"] = data.status
         if data.title is not None:
-            row.title = data.title
+            values["title"] = data.title
         if data.summary is not None:
-            row.summary = data.summary
-        row.version += 1
-        row.updated_at = datetime.now(timezone.utc)
-        await session.flush()
-        # A status transition is recorded as PROMOTE; other metadata edits as EDIT (ADR-0033 §3).
-        self._append_change(session, row, change_kind="PROMOTE" if status_change else "EDIT")
+            values["summary"] = data.summary
+
+        result = await session.execute(
+            update(models.Chapter)
+            .where(
+                models.Chapter.id == chapter_id,
+                models.Chapter.version == data.expected_version,
+            )
+            .values(**values)
+            .returning(models.Chapter)
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            refreshed = await session.get(models.Chapter, chapter_id)
+            assert refreshed is not None
+            raise ChapterWriteConflictError(
+                chapter_id,
+                expected_version=data.expected_version,
+                actual_version=refreshed.version,
+            )
+        self._append_change(
+            session, row, change_kind="PROMOTE" if status_change else "EDIT"
+        )
         await session.flush()
         return self._to_record(row)
 
@@ -366,7 +416,11 @@ class ChapterService:
     async def _reorder(
         self, session: AsyncSession, data: ChapterReorderRequest
     ) -> list[ChapterRecord]:
-        rows = (await session.execute(select(models.Chapter))).scalars().all()
+        rows = (
+            await session.execute(
+                select(models.Chapter).where(models.Chapter.project_id == data.project_id)
+            )
+        ).scalars().all()
         by_id = {r.id: r for r in rows}
         missing = [cid for cid in data.ordered_ids if cid not in by_id]
         if missing:
@@ -376,7 +430,9 @@ class ChapterService:
             row.order_index = index
             row.updated_at = datetime.now(timezone.utc)
         await session.flush()
-        return await self._list(session, ChapterListFilters(limit=500))
+        return await self._list(
+            session, ChapterListFilters(project_id=data.project_id, limit=500)
+        )
 
     # ------------------------------------------------------------------
     # Helpers

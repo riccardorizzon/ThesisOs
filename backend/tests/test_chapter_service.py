@@ -112,6 +112,30 @@ async def test_optimistic_lock_conflict(db_session):
 
 
 @pytest.mark.asyncio
+async def test_concurrent_content_update_second_gets_conflict(db_session):
+    svc = ChapterService()
+    created = await svc.create(
+        ChapterCreate(title="Lock me", content_md="v1", project_id="thesis-002"),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    await svc.update_content(
+        created.id,
+        ChapterContentUpdate(content_md="v2", expected_version=created.version),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    with pytest.raises(ChapterWriteConflictError):
+        await svc.update_content(
+            created.id,
+            ChapterContentUpdate(content_md="stale", expected_version=created.version),
+            session=db_session,
+        )
+
+
+@pytest.mark.asyncio
 async def test_reserved_lifecycle_states_accepted(db_session):
     """approved/published are reserved but valid values (no auto-transition)."""
     svc = ChapterService()

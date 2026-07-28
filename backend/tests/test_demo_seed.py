@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import select
 
 from app.db import models
-from app.schemas.chapter import ChapterCreate
+from app.schemas.chapter import ChapterCreate, ChapterListFilters
 from app.services.chapter import ChapterService
 from app.services.demo_seed import (
     DEMO_CHAPTERS,
@@ -73,3 +73,12 @@ async def test_reset_demo_seed_never_touches_owned_chapters(db_session):
     )
     assert dirty.id not in {row.id for row in demo_rows}
     assert [row.id for row in demo_rows] == [seed.id for seed in DEMO_CHAPTERS]
+
+
+@pytest.mark.asyncio
+async def test_list_demo_persists_seeded_chapters_across_sessions():
+    svc = ChapterService()
+    first = await svc.list(ChapterListFilters(project_id=DEMO_THESIS_ID))
+    assert first
+    again = await svc.get(first[0].id)
+    assert again.id == first[0].id

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import models
@@ -316,25 +316,38 @@ class DocumentService:
     async def _update(
         self, session: AsyncSession, document_id: str, data: DocumentUpdate
     ) -> DocumentRecord:
-        row = await session.get(models.Document, document_id)
+        values: dict = {
+            "version": data.expected_version + 1,
+            "updated_at": datetime.now(timezone.utc),
+        }
+        if data.title is not None:
+            values["title"] = data.title
+        if data.author is not None:
+            values["author"] = data.author
+        if data.language is not None:
+            values["language"] = data.language
+        if data.metadata is not None:
+            values["metadata_"] = data.metadata
+
+        result = await session.execute(
+            update(models.Document)
+            .where(
+                models.Document.id == document_id,
+                models.Document.version == data.expected_version,
+            )
+            .values(**values)
+            .returning(models.Document)
+        )
+        row = result.scalar_one_or_none()
         if row is None:
-            raise DocumentNotFoundError(document_id)
-        if row.version != data.expected_version:
+            existing = await session.get(models.Document, document_id)
+            if existing is None:
+                raise DocumentNotFoundError(document_id)
             raise DocumentWriteConflictError(
                 document_id,
                 expected_version=data.expected_version,
-                actual_version=row.version,
+                actual_version=existing.version,
             )
-        if data.title is not None:
-            row.title = data.title
-        if data.author is not None:
-            row.author = data.author
-        if data.language is not None:
-            row.language = data.language
-        if data.metadata is not None:
-            row.metadata_ = data.metadata
-        row.version += 1
-        row.updated_at = datetime.now(timezone.utc)
         await session.flush()
         await self._append_version_snapshot(session, row, change_reason="metadata")
         await session.flush()

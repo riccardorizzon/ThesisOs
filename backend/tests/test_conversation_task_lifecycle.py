@@ -143,3 +143,61 @@ async def test_stream_turn_mark_done_failure_still_completes_turn(
 
     run = await _latest_agent_run(db_session)
     assert run.status == "done"
+
+
+@pytest.mark.asyncio
+async def test_writer_generation_failed_skips_empty_assistant_persist(
+    db_session, langgraph_ready, monkeypatch
+):
+    from sqlalchemy import select
+
+    from app.db import models
+    from app.graph.conversation import build_graph as real_build_graph
+    from app.graph.orchestration.constants import WRITER_ROUTE
+    from app.llm.base import TokenChunk
+    from app.schemas.memory import PromptContext
+    from tests.support.orchestration_llm import OrchestrationLLM
+
+    WRITER_MSG = "Write the chapter on craftsmanship"
+
+    class _StubMemory:
+        async def load_prompt_context(self, **kwargs):
+            return PromptContext()
+
+    class SpyRetrieval:
+        async def search(self, query, *, filters=None, limit=10, hybrid_alpha=0.5, session=None):
+            return [], "fake-model"
+
+    class WriterFailLLM(OrchestrationLLM):
+        async def astream(self, messages, *, model=None, params=None):
+            raise RuntimeError("vertex down")
+            yield TokenChunk(text="")
+
+    llm = WriterFailLLM(route=WRITER_ROUTE)
+    monkeypatch.setattr("app.services.conversation.service.get_llm_client", lambda: llm)
+    monkeypatch.setattr(
+        "app.services.conversation.service.get_orchestration_llm_client",
+        lambda: llm,
+    )
+
+    def patched_build(*args, **kwargs):
+        kwargs.setdefault("retrieval_service", SpyRetrieval())
+        kwargs.setdefault("memory_service", _StubMemory())
+        return real_build_graph(*args, **kwargs)
+
+    monkeypatch.setattr("app.services.conversation.service.build_graph", patched_build)
+
+    svc = ConversationService()
+    events = await _collect_stream(svc, user_text=WRITER_MSG)
+
+    assert any(
+        e["event"] == "error" and e["data"].get("code") == "generation_failed" for e in events
+    )
+    assert not any(e["event"] == "done" for e in events)
+
+    rows = (
+        await db_session.execute(
+            select(models.Message).where(models.Message.role == "assistant")
+        )
+    ).scalars().all()
+    assert all(m.content.strip() for m in rows)

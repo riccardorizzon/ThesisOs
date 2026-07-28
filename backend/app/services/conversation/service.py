@@ -429,12 +429,51 @@ class ConversationService:
                     task = snap.values.get("task") if snap.values else None
                     if task is not None:
                         task_id = task.id
-                message_id = await self._persist_assistant(conv_id, "".join(parts))
-                await self._finalize(run_id, conv_id, status="done", usage=usage, task_id=task_id)
-                finalized = True
-                await self._emit(EventType.RUN_COMPLETED, rc, project_id=effective_project_id, status="done", task_id=task_id)
-                yield {"event": "done", "data": {"conversation_id": conv_id,
-                                                 "message_id": message_id, "usage": usage}}
+
+                assistant_text = "".join(parts)
+                writer_failed = False
+                if snap and snap.values:
+                    for err in snap.values.get("errors") or []:
+                        agent = getattr(err, "agent", None) or (
+                            err.get("agent") if isinstance(err, dict) else None
+                        )
+                        message = getattr(err, "message", None) or (
+                            err.get("message") if isinstance(err, dict) else None
+                        )
+                        if agent == "writer" and message == "generation_failed":
+                            writer_failed = True
+                            break
+
+                if writer_failed and not assistant_text.strip():
+                    await self._finalize(
+                        run_id,
+                        conv_id,
+                        status="error",
+                        usage=usage,
+                        task_id=task_id,
+                        error="generation_failed",
+                    )
+                    finalized = True
+                    await self._emit(
+                        EventType.RUN_COMPLETED,
+                        rc,
+                        project_id=effective_project_id,
+                        status="error",
+                    )
+                    yield {
+                        "event": "error",
+                        "data": {
+                            "code": "generation_failed",
+                            "message": "Draft generation failed",
+                        },
+                    }
+                else:
+                    message_id = await self._persist_assistant(conv_id, assistant_text)
+                    await self._finalize(run_id, conv_id, status="done", usage=usage, task_id=task_id)
+                    finalized = True
+                    await self._emit(EventType.RUN_COMPLETED, rc, project_id=effective_project_id, status="done", task_id=task_id)
+                    yield {"event": "done", "data": {"conversation_id": conv_id,
+                                                     "message_id": message_id, "usage": usage}}
             except NotImplementedError:
                 await self._safe_finalize(run_id, conv_id, status="error", usage=usage,
                                           error="llm_not_configured")
