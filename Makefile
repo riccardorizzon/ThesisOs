@@ -13,7 +13,7 @@ RUFF     := $(BACKEND)/.venv/bin/ruff
 .DEFAULT_GOAL := help
 
 .PHONY: help install ensure-test-db lint format format-fix typecheck unit unit-frontend unit-builder-engine test \
-        drift openapi-drift scope isolation ap001-guard ap002-guard check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5 qualify-m6 dogfood-m6 dogfood-m7 gate-m7.2
+        drift openapi-drift scope isolation ap001-guard ap002-guard check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5 qualify-m6 dogfood-m6 dogfood-m7 gate-m7.2 ops-check deploy-backend
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -151,3 +151,15 @@ up: ## Start local stack (docker compose)
 
 down: ## Stop local stack
 	docker compose down
+
+deploy-backend: ## Rebuild backend image from HEAD and recreate (post git pull)
+	docker compose build backend
+	docker compose up -d backend
+	@for i in $$(seq 1 30); do curl -sf http://localhost:8000/health >/dev/null && break; sleep 1; done
+	@bash bin/ops-check.sh
+
+ops-check: ## Live stack gate: health, LLM, export contract, document audit
+	@bash bin/ops-check.sh
+
+seed-curated-sources: ## Upload core thesis markdown from knowledge/thesis-agent to Sources
+	@bash bin/seed-curated-sources.sh
