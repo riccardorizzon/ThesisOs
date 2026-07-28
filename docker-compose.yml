@@ -17,8 +17,10 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://thesisos:thesisos@db:5432/thesisos
       APP_ENV: local
+      DOCUMENT_STORAGE_LOCAL_DIR: /data/documents
     volumes:
       - ./.asep:/.asep:ro
+      - document_data:/data/documents
     command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     depends_on:
       db: { condition: service_healthy }
@@ -37,3 +39,4 @@ services:
     ports: ["3000:3000"]
 volumes:
   pgdata: {}
+  document_data: {}

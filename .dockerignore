@@ -4,3 +4,10 @@
 **/__pycache__
 **/*.pyc
 .git
+.env
+.env.*
+**/.env
+**/.env.*
+backend/.env
+**/secrets/
+**/backups/
