@@ -15,27 +15,39 @@ from app.llm.base import LLMClient
 from app.schemas.graph_state import AgentError, GraphState
 
 
+def _fallback_route_on_parse_failure(
+    user_message: str,
+    errors: list[AgentError],
+) -> dict:
+    """Keyword fallback when router LLM JSON is missing or unparseable (E2E remediation).
+
+    Retrieval-looking turns still ground even when the LLM fails; other turns degrade to
+    conversation with ``no_route``. Writer intent is resolved later via ``coerce_m5_route``
+    when the LLM succeeds — never short-circuit before that (ADR-0031 §4).
+    """
+    if has_retrieval_intent(user_message):
+        return {"route": GROUNDED_ROUTE, "errors": errors}
+    errors.append(AgentError(agent="router", message="no_route"))
+    return {"route": DEFAULT_ROUTE, "errors": errors}
+
+
 def make_router_node(llm: LLMClient):
     async def router_node(state: GraphState) -> dict:
         errors = list(state.errors)
         user_message = last_user_message(state.messages) or ""
         if is_companion_open(user_message):
             return {"route": DEFAULT_ROUTE, "errors": errors}
-        if has_retrieval_intent(user_message):
-            return {"route": GROUNDED_ROUTE, "errors": errors}
 
         user_block = build_orchestration_user_block(state, include_plan=True)
         raw = await request_json(llm, system=ROUTER_SYSTEM, user=user_block)
         data = extract_json_object(raw)
 
         if data is None:
-            errors.append(AgentError(agent="router", message="no_route"))
-            return {"route": DEFAULT_ROUTE, "errors": errors}
+            return _fallback_route_on_parse_failure(user_message, errors)
 
         raw_route = data.get("route")
         if raw_route is None:
-            errors.append(AgentError(agent="router", message="no_route"))
-            return {"route": DEFAULT_ROUTE, "errors": errors}
+            return _fallback_route_on_parse_failure(user_message, errors)
 
         final_route = coerce_m5_route(str(raw_route), user_message=user_message)
         return {"route": final_route, "errors": errors}

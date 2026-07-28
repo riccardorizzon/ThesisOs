@@ -51,6 +51,25 @@ async def test_router_grounded_chat():
     assert out["route"] == "grounded_chat"
 
 
+async def test_router_drafting_phrase_with_chapter_reaches_writer():
+    """Regression: pre-LLM retrieval short-circuit must not shadow writer (f6cbfcae)."""
+    payload = json.dumps({"route": "writer"})
+    node = make_router_node(FakeLLM(payload))
+    out = await node(
+        _state(
+            messages=[
+                Message(
+                    role="user",
+                    content="Write the chapter on craftsmanship",
+                )
+            ]
+        )
+    )
+
+    assert out["route"] == "writer"
+    assert not any(e.message == "no_route" for e in out["errors"])
+
+
 async def test_router_forces_explicit_italian_document_query_to_grounded_chat():
     node = make_router_node(FakeLLM("not-json"))
     out = await node(
