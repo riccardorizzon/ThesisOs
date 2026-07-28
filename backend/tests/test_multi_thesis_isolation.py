@@ -195,6 +195,44 @@ async def test_chapter_ownership_check_hides_foreign_chapters(db_session):
     assert legacy.status_code == 200  # INV-MTW-1
 
 
+async def test_chapter_reorder_scoped_to_project(db_session):
+    from app.schemas.chapter import ChapterCreate, ChapterListFilters, ChapterReorderRequest
+    from app.services.chapter import ChapterService
+
+    svc = ChapterService()
+    main_a = await svc.create(
+        ChapterCreate(title="A-main", project_id="thesis-agent", order_index=0),
+        session=db_session,
+    )
+    main_b = await svc.create(
+        ChapterCreate(title="B-main", project_id="thesis-agent", order_index=1),
+        session=db_session,
+    )
+    other = await svc.create(
+        ChapterCreate(title="Other", project_id="thesis-002", order_index=0),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    await svc.reorder(
+        ChapterReorderRequest(
+            project_id="thesis-agent",
+            ordered_ids=[main_b.id, main_a.id],
+        ),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    main_rows = await svc.list(
+        ChapterListFilters(project_id="thesis-agent"),
+        session=db_session,
+    )
+    assert [row.id for row in main_rows] == [main_b.id, main_a.id]
+
+    other_row = await svc.get(other.id, session=db_session)
+    assert other_row.order_index == 0
+
+
 async def test_copy_demo_structure_targets_requested_project(db_session):
     from app.schemas.chapter import ChapterListFilters
     from app.services.chapter import ChapterService

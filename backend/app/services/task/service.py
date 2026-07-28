@@ -24,14 +24,27 @@ class TaskService:
         *,
         owner_agent: str | None,
         plan_steps: list[str],
+        project_id: str | None = None,
         session: AsyncSession | None = None,
     ) -> None:
         if session is not None:
-            await self._upsert(session, task_ref, owner_agent=owner_agent, plan_steps=plan_steps)
+            await self._upsert(
+                session,
+                task_ref,
+                owner_agent=owner_agent,
+                plan_steps=plan_steps,
+                project_id=project_id,
+            )
             return
         async with AsyncSessionLocal() as s:
             try:
-                await self._upsert(s, task_ref, owner_agent=owner_agent, plan_steps=plan_steps)
+                await self._upsert(
+                    s,
+                    task_ref,
+                    owner_agent=owner_agent,
+                    plan_steps=plan_steps,
+                    project_id=project_id,
+                )
                 await s.commit()
             except Exception:
                 await s.rollback()
@@ -61,13 +74,16 @@ class TaskService:
         *,
         owner_agent: str | None,
         plan_steps: list[str],
+        project_id: str | None = None,
     ) -> None:
         now = datetime.now(timezone.utc)
         payload = {"plan_steps": list(plan_steps)}
+        scoped_project = project_id or "thesis-agent"
         stmt = (
             insert(models.Task)
             .values(
                 id=task_ref.id,
+                project_id=scoped_project,
                 title=task_ref.title,
                 status="in_progress",
                 owner_agent=owner_agent,

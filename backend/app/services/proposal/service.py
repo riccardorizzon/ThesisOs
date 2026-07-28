@@ -182,6 +182,8 @@ class ProposalService:
             session, proposal_id, expected_project_id=expected_project_id
         )
         chapter = await self._chapters.get(row.chapter_id, session=session)
+        if chapter.project_id != row.project_id:
+            raise ProposalNotFoundError(proposal_id)
         expected_version = (
             data.expected_chapter_version
             if data.expected_chapter_version is not None

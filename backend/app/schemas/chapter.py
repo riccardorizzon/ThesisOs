@@ -106,4 +106,5 @@ class CopyDemoStructureResponse(BaseModel):
 
 
 class ChapterReorderRequest(BaseModel):
+    project_id: str = Field(min_length=1)
     ordered_ids: list[str] = Field(min_length=1)

@@ -1,7 +1,7 @@
 import { apiBaseUrl } from "@/lib/apiBase";
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 import { getActiveProjectId } from "@/lib/projectPrefs";
-import { withProject } from "@/lib/projectScope";
+import { withProject, activeProjectScope } from "@/lib/projectScope";
 import type { ChapterListScope } from "@/lib/workspacePrefs";
 
 export type ChapterStatus = "draft" | "review" | "approved" | "published";
@@ -123,18 +123,23 @@ export const chapterClient = {
     return request<ChapterVersion[]>(withProject(`/chapters/${id}/versions`));
   },
   async exportMarkdown(id: string): Promise<Blob> {
-    const r = await fetch(`${apiBaseUrl()}/export/chapters/${id}.md`, { cache: "no-store" });
+    const r = await fetch(`${apiBaseUrl()}${withProject(`/export/chapters/${id}.md`)}`, {
+      cache: "no-store",
+    });
     if (!r.ok) {
       const body = (await r.json().catch(() => null)) as { code?: string; message?: string } | null;
       throw new ChapterApiError(r.status, body?.code ?? "unknown", body?.message ?? r.statusText);
     }
     return r.blob();
   },
-  reorder(orderedIds: string[]) {
+  reorder(orderedIds: string[], projectId?: string) {
     return request<Chapter[]>("/chapters/reorder", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ordered_ids: orderedIds }),
+      body: JSON.stringify({
+        ordered_ids: orderedIds,
+        project_id: activeProjectScope(projectId),
+      }),
     });
   },
   delete(id: string) {

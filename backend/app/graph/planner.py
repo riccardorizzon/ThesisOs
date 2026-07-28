@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 import uuid
 
+from langchain_core.runnables import RunnableConfig
+
 from app.graph.companion.protocol import is_companion_open
 from app.graph.orchestration.llm import extract_json_object, request_json
 from app.graph.orchestration.messages import (
@@ -42,7 +44,8 @@ def _parse_planner_payload(data: dict, *, existing_task: TaskRef | None) -> tupl
 
 
 def make_planner_node(llm: LLMClient, *, on_task_ref: PlannerTaskPersistHook | None = None):
-    async def planner_node(state: GraphState) -> dict:
+    async def planner_node(state: GraphState, config: RunnableConfig | None = None) -> dict:
+        config = config or {}
         errors = list(state.errors)
         if is_companion_open(last_user_message(state.messages)):
             return {
@@ -65,8 +68,9 @@ def make_planner_node(llm: LLMClient, *, on_task_ref: PlannerTaskPersistHook | N
             return {"plan": plan, "task": None, "errors": errors}
 
         if task is not None and on_task_ref is not None:
+            project_id = (config.get("configurable") or {}).get("project_id")
             try:
-                await on_task_ref(task, plan.steps)
+                await on_task_ref(task, plan.steps, project_id)
             except Exception:
                 logger.exception("task persist hook failed for task %s", task.id)
 

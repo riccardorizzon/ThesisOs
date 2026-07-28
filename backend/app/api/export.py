@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.services.chapter import ChapterNotFoundError, ChapterService
@@ -16,10 +16,16 @@ def _err(status: int, code: str, message: str) -> JSONResponse:
 
 
 @router.get("/export/chapters/{chapter_id}.md")
-async def export_chapter_markdown(chapter_id: str):
+async def export_chapter_markdown(
+    chapter_id: str,
+    project_id: str = Query(min_length=1),
+):
     try:
         chapter = await _service.get(chapter_id)
     except ChapterNotFoundError:
+        return _err(404, "chapter_not_found", f"Unknown chapter: {chapter_id}")
+
+    if chapter.project_id != project_id:
         return _err(404, "chapter_not_found", f"Unknown chapter: {chapter_id}")
 
     content = chapter.content_md or ""

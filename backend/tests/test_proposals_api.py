@@ -339,3 +339,37 @@ async def test_reject_persists_status(integration_client, db_session):
     assert row is not None
     assert row.status == "rejected"
     assert row.metadata_.get("reject_reason") == "no change"
+
+
+@pytest.mark.asyncio
+async def test_accept_rejects_chapter_from_other_project(integration_client, db_session):
+    chapter_svc = ChapterService()
+    chapter = await chapter_svc.create(
+        ChapterCreate(title="Foreign", content_md="Before.", project_id="thesis-002"),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    svc = ProposalService()
+    proposal = await svc.create(
+        ProposalCreate(
+            project_id=PROJECT,
+            chapter_id=chapter.id,
+            original="Before.",
+            proposed="After.",
+            action="rewrite",
+        ),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    accept = integration_client.post(
+        f"/proposals/{proposal.id}/accept",
+        params={"project_id": PROJECT},
+        json={"expected_chapter_version": 1},
+    )
+    assert accept.status_code == 404
+    assert accept.json()["code"] == "proposal_not_found"
+
+    refreshed = await chapter_svc.get(chapter.id, session=db_session)
+    assert refreshed.content_md == "Before."

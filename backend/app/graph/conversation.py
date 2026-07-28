@@ -239,11 +239,12 @@ def build_graph(
     on_task_ref = None
     if task_service is not None:
 
-        async def on_task_ref(task: TaskRef, plan_steps: list[str]) -> None:
+        async def on_task_ref(task: TaskRef, plan_steps: list[str], project_id: str | None = None) -> None:
             await task_service.upsert_from_task_ref(
                 task,
                 owner_agent="planner",
                 plan_steps=plan_steps,
+                project_id=project_id or "thesis-agent",
             )
             if instrument:
                 await emit_safely(

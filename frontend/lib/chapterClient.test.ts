@@ -118,6 +118,23 @@ describe("chapterClient", () => {
     expect(blob.type).toContain("markdown");
     const url = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
     expect(url).toContain("/export/chapters/ch1.md");
+    expect(url).toContain("project_id=");
+  });
+
+  it("reorder PATCHes with project_id", async () => {
+    const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => [],
+    } as Response);
+
+    await chapterClient.reorder(["a", "b"], "proj-b");
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.method).toBe("PATCH");
+    expect(JSON.parse(init.body as string)).toEqual({
+      ordered_ids: ["a", "b"],
+      project_id: "proj-b",
+    });
   });
 });
 

@@ -1,5 +1,6 @@
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 import { getActiveProjectId } from "@/lib/projectPrefs";
+import { withProject } from "@/lib/projectScope";
 import type { Chapter } from "@/lib/chapterClient";
 import { apiBaseUrl } from "@/lib/apiBase";
 
@@ -80,17 +81,20 @@ export const proposalClient = {
     });
   },
 
-  accept(proposalId: string, body: ProposalAcceptBody = {}) {
-    return request<{ chapter: Chapter }>(`/proposals/${encodeURIComponent(proposalId)}/accept`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+  accept(proposalId: string, body: ProposalAcceptBody = {}, projectId?: string) {
+    return request<{ chapter: Chapter }>(
+      withProject(`/proposals/${encodeURIComponent(proposalId)}/accept`, projectId),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
   },
 
-  reject(proposalId: string, body: ProposalRejectBody = {}) {
+  reject(proposalId: string, body: ProposalRejectBody = {}, projectId?: string) {
     return request<{ proposal: ProposalApiRecord }>(
-      `/proposals/${encodeURIComponent(proposalId)}/reject`,
+      withProject(`/proposals/${encodeURIComponent(proposalId)}/reject`, projectId),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -7,4 +7,4 @@ from collections.abc import Awaitable, Callable
 from app.schemas.graph_state import TaskRef
 
 # Planner produces TaskRef; runtime composition root maps it to TaskService.
-PlannerTaskPersistHook = Callable[[TaskRef, list[str]], Awaitable[None]]
+PlannerTaskPersistHook = Callable[[TaskRef, list[str], str | None], Awaitable[None]]
