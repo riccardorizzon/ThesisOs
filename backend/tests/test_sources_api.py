@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
@@ -90,106 +88,99 @@ def _knowledge_state(link_count: int) -> str:
     return "validated"
 
 
-async def _ensure_source_seed() -> None:
-    from app.db.session_async import AsyncSessionLocal
-
-    async with AsyncSessionLocal() as session:
-        count = int(
-            (
-                await session.execute(
-                    text(
-                        "SELECT COUNT(*) FROM sources WHERE project_id = :project_id"
-                    ),
-                    {"project_id": _PROJECT},
+async def _ensure_source_seed(session) -> None:
+    count = int(
+        (
+            await session.execute(
+                text(
+                    "SELECT COUNT(*) FROM sources WHERE project_id = :project_id"
+                ),
+                {"project_id": _PROJECT},
+            )
+        ).scalar_one()
+    )
+    if count > 0:
+        return
+    for slug, title, author, year, corpus_status in _SOURCE_SEED_ROWS:
+        summary = f"{year} · Fonte bibliografica"
+        await session.execute(
+            text(
+                """
+                INSERT INTO sources (
+                    project_id, slug, type, title, subtitle, summary, year,
+                    authors, corpus_status, confidence, knowledge_state,
+                    is_core, created_by
+                ) VALUES (
+                    :project_id, :slug, 'catalog', :title, :subtitle, :summary, :year,
+                    CAST(:authors AS jsonb), :corpus_status, 'non_valutata', 'candidate',
+                    false, 'importazione'
                 )
-            ).scalar_one()
+                """
+            ),
+            {
+                "project_id": _PROJECT,
+                "slug": slug,
+                "title": title,
+                "subtitle": author,
+                "summary": summary,
+                "year": year,
+                "authors": f'[{{"literal": "{author}"}}]',
+                "corpus_status": corpus_status,
+            },
         )
-        if count > 0:
-            return
-        for slug, title, author, year, corpus_status in _SOURCE_SEED_ROWS:
-            summary = f"{year} · Fonte bibliografica"
+
+
+async def _ensure_concept_seed(session) -> None:
+    count = int(
+        (await session.execute(text("SELECT COUNT(*) FROM concepts"))).scalar_one()
+    )
+    if count > 0:
+        return
+    for slug, title, subtitle, summary, is_core, confidence, source_slugs in _CONCEPT_SEED:
+        state = _knowledge_state(len(source_slugs))
+        result = await session.execute(
+            text(
+                """
+                INSERT INTO concepts (
+                    project_id, slug, title, subtitle, summary, definition,
+                    confidence, knowledge_state, is_core, created_by
+                ) VALUES (
+                    :project_id, :slug, :title, :subtitle, :summary, :definition,
+                    :confidence, :knowledge_state, :is_core, 'importazione'
+                )
+                RETURNING id
+                """
+            ),
+            {
+                "project_id": _PROJECT,
+                "slug": slug,
+                "title": title,
+                "subtitle": subtitle,
+                "summary": summary,
+                "definition": summary,
+                "confidence": confidence,
+                "knowledge_state": state,
+                "is_core": is_core,
+            },
+        )
+        concept_id = result.scalar_one()
+        for source_slug in source_slugs:
             await session.execute(
                 text(
                     """
-                    INSERT INTO sources (
-                        project_id, slug, type, title, subtitle, summary, year,
-                        authors, corpus_status, confidence, knowledge_state,
-                        is_core, created_by
-                    ) VALUES (
-                        :project_id, :slug, 'catalog', :title, :subtitle, :summary, :year,
-                        CAST(:authors AS jsonb), :corpus_status, 'non_valutata', 'candidate',
-                        false, 'importazione'
-                    )
+                    INSERT INTO concept_source_links (concept_id, source_slug)
+                    VALUES (:concept_id, :source_slug)
                     """
                 ),
-                {
-                    "project_id": _PROJECT,
-                    "slug": slug,
-                    "title": title,
-                    "subtitle": author,
-                    "summary": summary,
-                    "year": year,
-                    "authors": f'[{{"literal": "{author}"}}]',
-                    "corpus_status": corpus_status,
-                },
+                {"concept_id": concept_id, "source_slug": source_slug},
             )
-        await session.commit()
-
-
-async def _ensure_concept_seed() -> None:
-    from app.db.session_async import AsyncSessionLocal
-
-    async with AsyncSessionLocal() as session:
-        count = int(
-            (await session.execute(text("SELECT COUNT(*) FROM concepts"))).scalar_one()
-        )
-        if count > 0:
-            return
-        for slug, title, subtitle, summary, is_core, confidence, source_slugs in _CONCEPT_SEED:
-            state = _knowledge_state(len(source_slugs))
-            result = await session.execute(
-                text(
-                    """
-                    INSERT INTO concepts (
-                        project_id, slug, title, subtitle, summary, definition,
-                        confidence, knowledge_state, is_core, created_by
-                    ) VALUES (
-                        :project_id, :slug, :title, :subtitle, :summary, :definition,
-                        :confidence, :knowledge_state, :is_core, 'importazione'
-                    )
-                    RETURNING id
-                    """
-                ),
-                {
-                    "project_id": _PROJECT,
-                    "slug": slug,
-                    "title": title,
-                    "subtitle": subtitle,
-                    "summary": summary,
-                    "definition": summary,
-                    "confidence": confidence,
-                    "knowledge_state": state,
-                    "is_core": is_core,
-                },
-            )
-            concept_id = result.scalar_one()
-            for source_slug in source_slugs:
-                await session.execute(
-                    text(
-                        """
-                        INSERT INTO concept_source_links (concept_id, source_slug)
-                        VALUES (:concept_id, :source_slug)
-                        """
-                    ),
-                    {"concept_id": concept_id, "source_slug": source_slug},
-                )
-        await session.commit()
 
 
 @pytest.fixture(autouse=True)
-def _sources_api_db_seed(_test_db_ready):
-    asyncio.run(_ensure_source_seed())
-    asyncio.run(_ensure_concept_seed())
+async def _sources_api_db_seed(db_session):
+    await _ensure_source_seed(db_session)
+    await _ensure_concept_seed(db_session)
+    await db_session.commit()
 
 
 def test_list_sources_default_omits_deprecated():

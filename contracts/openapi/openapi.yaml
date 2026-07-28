@@ -247,6 +247,135 @@ paths:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/ChapterVersion" } }
         "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /chapters/reorder:
+    patch:
+      summary: Reorder chapters within a thesis workspace
+      x-milestone: M6
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project_id, ordered_ids]
+              properties:
+                project_id: { type: string }
+                ordered_ids: { type: array, items: { type: string, format: uuid } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Chapter" } } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /chapters/copy-demo-structure:
+    post:
+      summary: Copy demo chapter structure into a target thesis
+      x-milestone: M6
+      parameters:
+        - { name: project_id, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
+        "422": { description: Invalid target, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /writing/actions:
+    post:
+      summary: Execute a writing workspace action
+      x-milestone: M7
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
+  /projects/{project_id}/companion/resume:
+    get:
+      summary: Companion resume payload for a thesis workspace
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
+  /projects/{project_id}/knowledge/concepts:
+    post:
+      summary: Create a knowledge concept
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { type: object } } } }
+  /projects/{project_id}/knowledge/concepts/{slug}:
+    get:
+      summary: Get a knowledge concept
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
+    patch:
+      summary: Update a knowledge concept
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
+    delete:
+      summary: Delete a knowledge concept
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Deleted }
+  /projects/{project_id}/knowledge/concepts/{slug}/definition:
+    get:
+      summary: Concept definition panel payload
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
+  /projects/{project_id}/knowledge/concepts/{slug}/header:
+    get:
+      summary: Concept header payload
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
+  /projects/{project_id}/knowledge/graph:
+    get:
+      summary: Knowledge graph for a thesis workspace
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
+  /projects/{project_id}/knowledge/objects:
+    get:
+      summary: List knowledge objects
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
+  /projects/{project_id}/knowledge/objects/{slug}:
+    get:
+      summary: Get a knowledge object
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
+  /projects/{project_id}/knowledge/search:
+    get:
+      summary: Search knowledge objects
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object } } } }
   /memory:
     get:
       summary: List memories
@@ -477,6 +606,7 @@ paths:
       x-milestone: M7
       parameters:
         - { name: chapter_id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: project_id, in: query, required: true, schema: { type: string }, description: "Thesis workspace scope (ADR-0047)" }
       responses:
         "200":
           description: Markdown file

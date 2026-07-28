@@ -13,7 +13,7 @@ RUFF     := $(BACKEND)/.venv/bin/ruff
 .DEFAULT_GOAL := help
 
 .PHONY: help install ensure-test-db lint format format-fix typecheck unit unit-frontend unit-builder-engine test \
-        drift scope isolation ap001-guard ap002-guard check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5 qualify-m6 dogfood-m6 dogfood-m7 gate-m7.2
+        drift openapi-drift scope isolation ap001-guard ap002-guard check ci up down status unit-m4-recovery dogfood-m4 qualify-m5 dogfood-m5 qualify-m6 dogfood-m6 dogfood-m7 gate-m7.2
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -54,6 +54,9 @@ unit-builder-engine: ## builder_engine pytest (MB1 Phase 1)
 drift: ## DB schema / contract drift test
 	cd $(BACKEND) && .venv/bin/python -m pytest -q tests/test_schema_snapshot.py
 
+openapi-drift: ## OpenAPI contract vs live watched routes
+	@bash bin/check-openapi-drift.sh
+
 scope: ## scope-creep guard (informational: stubs must be milestone-tagged)
 	@echo "Scope-creep scan (review any matches — must be intentional milestone stubs):"
 	@rg -n "NotImplementedError|wired post-M|wired in M[0-9]" $(BACKEND)/app \
@@ -75,11 +78,11 @@ ap002-guard: ## AP-002 — forbid silent SSR empty fallback on API loaders (Them
 # NOTE: `format` is intentionally NOT in `check`/`ci` yet — the M0–M2 code
 # predates ruff-format. Adopt it deliberately: run `make format-fix`, commit the
 # reformat as one isolated change, then add `format` back to the gate below.
-check: lint typecheck unit drift isolation ap001-guard ap002-guard ## Fast local gate (pre-commit / pre-push)
+check: lint typecheck unit drift openapi-drift isolation ap001-guard ap002-guard ## Fast local gate (pre-commit / pre-push)
 
 test: unit unit-frontend unit-builder-engine ## All unit suites
 
-ci: lint typecheck unit unit-frontend unit-builder-engine drift scope isolation ap001-guard ap002-guard validate-platform-classification ## Full CI gate
+ci: lint typecheck unit unit-frontend unit-builder-engine drift openapi-drift scope isolation ap001-guard ap002-guard validate-platform-classification ## Full CI gate
 
 validate-platform-classification: ## ASEP registry ↔ proposal platform_contract (governance)
 	cd builder_engine && (test -d .venv || python3 -m venv .venv) \
