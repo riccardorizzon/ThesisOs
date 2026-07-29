@@ -28,8 +28,8 @@ This draft freezes **what we know today** so GA is mechanical later.
 |------|-----------------|-----------------|
 | PX-1…PX-6 promoted | yes | PASS (certificates) |
 | M7 / rc.2 | yes | PASS |
-| `make demo-gate` | yes | _(verification)_ |
-| `make beta-validator-rc` | yes | _(verification)_ |
+| `make demo-gate` | yes | **PASS** 2026-07-29 |
+| `make beta-validator-rc` | yes | **PASS** 2026-07-29 |
 | Human cohort 5–10 | yes (path A) | **BLOCKED — requires humans** |
 | Feedback triage / no blocker | yes | **BLOCKED — no cohort** |
 | 7-day stability | yes | **INCOMPLETE — D0 only** |
