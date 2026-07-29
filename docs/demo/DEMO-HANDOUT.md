@@ -18,6 +18,7 @@ cat /tmp/thesisos-beta-public.env   # URL tunnel corrente
 | `/ai` | Chat persistente con retrieval sul corpus |
 | `/writing` | Capitoli + pannello AI grounded |
 | `/review` | Proposte AI → accettazione in capitolo |
+| `/manuscript` | Manoscritto — lettura ordinata per capitolo |
 | `/knowledge` | Concetti strutturati (STIGMATA, aura, …) |
 
 ## Flusso demo consigliato (10 min)
@@ -32,8 +33,7 @@ cat /tmp/thesisos-beta-public.env   # URL tunnel corrente
 1. **Single-user** — nessun multi-tenant; adatto a demo e uso personale.  
 2. **Corpus-bound** — le risposte AI usano solo documenti indicizzati; niente web live.  
 3. **Tunnel pubblico fragile** — URL Cloudflare può cambiare; per demo stabile usare localhost o VM dedicata.  
-4. **Originali file** — molti PDF storici non sono su disco; RAG funziona da chunk Postgres. Re-upload solo se serve download/re-parse.  
-5. **Polish in corso** — titoli capitoli con prefisso import, README vs nav Manoscritto: Wave 2.
+4. **Originali file** — molti PDF storici non sono su disco; RAG funziona da chunk Postgres. Re-upload solo se serve download/re-parse.
 
 ## Gate tecnico (operatori)
 

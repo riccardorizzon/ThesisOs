@@ -26,6 +26,7 @@ Next: GA approval after beta exit → M8 (new features).
 | `/sources`, `/sources/upload` | Sources | DB library, upload → index |
 | `/knowledge` | Knowledge | DB concepts + search |
 | `/writing`, `/writing/[chapterId]` | Writing | Grounded AI panel, export menu |
+| `/manuscript`, `/manuscript/[chapterId]` | Manoscritto | Read-only thesis outline + chapter reader |
 | `/review` | Review | Proposals API, accept → chapter |
 | `/ai` | Chat | Persistent conversations |
 | `/research` | Research | Canvas + guided trails |

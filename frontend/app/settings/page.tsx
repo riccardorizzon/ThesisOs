@@ -8,6 +8,7 @@ import {
   type ProjectPrefs,
 } from "@/lib/projectPrefs";
 import { renameProject } from "@/lib/projectsClient";
+import { BetaLimitationsPanel } from "@/components/settings/BetaLimitationsPanel";
 import { DeleteProjectPanel } from "@/components/settings/DeleteProjectPanel";
 
 /** PX-6 settings depth — replaces M0 stub. */
@@ -125,6 +126,8 @@ export default function SettingsPage() {
           </select>
         </label>
       </div>
+
+      <BetaLimitationsPanel />
 
       <DeleteProjectPanel
         projectId={getActiveProjectId()}

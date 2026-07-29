@@ -120,15 +120,14 @@ Leggi o consegna [`DEMO-HANDOUT.md`](./DEMO-HANDOUT.md). Punti chiave:
 - Beta single-user; tunnel pubblico instabile.
 - RAG = corpus caricato; niente ricerca web.
 - Molti originali PDF non su disco (era `/tmp`); chunk in DB sufficienti per chat/scrittura.
-- Manoscritto in nav ma non nel README — Wave 2.
-- Titoli capitoli ancora con prefisso `[kimi-claw-2026-06]` — Wave 2 rename.
+- Limitazioni complete in **Settings → Beta** e in [`DEMO-HANDOUT.md`](./DEMO-HANDOUT.md).
 
 ---
 
 ## Checklist pre-demo (5 min prima)
 
 - [ ] `make ops-check` PASS
-- [ ] `bash bin/demo-cleanup.sh --dry-run` — verificare conteggi attesi (~15 doc, ~25 capitoli)
+- [ ] `bash bin/demo-cleanup.sh --dry-run` — verificare conteggi attesi (~15 doc, ~14 capitoli)
 - [ ] (Opzionale) `bash bin/demo-cleanup.sh --apply` eseguito e verificato
 - [ ] Nuova conversazione demo creata; thread `ping`/`test` non mostrati
 - [ ] Cap. 3 apre senza errori

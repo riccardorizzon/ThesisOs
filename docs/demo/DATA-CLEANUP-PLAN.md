@@ -118,10 +118,11 @@ Elenco completo in `bin/demo-cleanup.sh` (`NOISE_DOC_IDS`).
 
 **Nota:** capitoli `demo-thesis` (seed demo) non sono cancellabili via API — non toccare quel project.
 
-### NASCONDERE (Wave 2 — rename, non delete)
+### NASCONDERE (Wave 2 — completato)
 
-- Rimuovere prefisso `[kimi-claw-2026-06]` dai titoli in UI/export.
-- Eventuale stub «Introduzione» vuoto: tenere o riempire in Wave 2.
+- Prefisso `[kimi-claw-…]` rimosso dai titoli via `bin/demo-wave2.sh --apply`.
+- README allineato con route `/manuscript` (Manoscritto).
+- Limitazioni beta in **Settings → Beta — limitazioni note**.
 
 ---
 
@@ -213,4 +214,9 @@ docker compose exec -T db psql -U thesisos -d thesisos -c \
 | Failed docs | 0 | 0 |
 | Titoli capitolo duplicati | 8 coppie | 0 |
 
-Wave 2 aggiunge: rename capitoli vetrina, README Manoscritto, bullet limitazioni in product UI.
+Wave 2 (completata): rename capitoli vetrina, README Manoscritto, bullet limitazioni in Settings UI.
+
+```bash
+bash bin/demo-wave2.sh --dry-run
+bash bin/demo-wave2.sh --apply
+```

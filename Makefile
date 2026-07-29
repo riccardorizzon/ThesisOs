@@ -169,3 +169,9 @@ demo-cleanup-dry-run: ## Preview Wave 1 demo data cleanup (docs/chapters)
 
 demo-cleanup: ## Apply Wave 1 demo data cleanup (destructive — backup DB first)
 	@bash bin/demo-cleanup.sh --apply --conversations
+
+demo-wave2-dry-run: ## Preview Wave 2 demo polish (chapter title rename)
+	@bash bin/demo-wave2.sh --dry-run
+
+demo-wave2: ## Apply Wave 2 demo polish (chapter titles + dogfood cleanup)
+	@bash bin/demo-wave2.sh --apply
