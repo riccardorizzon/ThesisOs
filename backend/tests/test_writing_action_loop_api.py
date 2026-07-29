@@ -112,3 +112,22 @@ def test_verify_stream_includes_step_events(client, monkeypatch):
     assert "craftsmanship" in body
     assert '"search_count": 2' in body
     assert '"chunk_count": 5' in body
+
+
+def test_verify_unexpected_loop_error_yields_sse_error(client, monkeypatch):
+    async def boom_loop(**kwargs):
+        raise TypeError("'<' not supported between instances of 'int' and 'str'")
+
+    monkeypatch.setattr("app.api.writing_actions.run_writing_panel_with_loop", boom_loop)
+
+    with client.stream(
+        "POST",
+        "/writing/actions",
+        json={"action": "verify", "chapter_content": "x"},
+    ) as resp:
+        assert resp.status_code == 200
+        body = "".join(resp.iter_text())
+
+    assert "event: error" in body
+    assert "action_loop_failed" in body
+    assert "event: done" not in body

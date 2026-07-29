@@ -65,7 +65,18 @@ class ToolRegistry:
         spec = self._tools.get(name)
         if spec is None:
             raise KeyError(f"Unknown tool: {name}")
-        return spec.fn(**arguments)
+        # Models often emit JSON numbers as strings; coerce to annotated types.
+        sig = inspect.signature(spec.fn)
+        coerced: dict[str, Any] = {}
+        for key, value in arguments.items():
+            param = sig.parameters.get(key)
+            if param is not None and param.annotation is int and not isinstance(value, bool):
+                try:
+                    value = int(value)
+                except (TypeError, ValueError):
+                    pass
+            coerced[key] = value
+        return spec.fn(**coerced)
 
     def schemas(self) -> list[dict[str, Any]]:
         return [spec.schema for spec in self._tools.values()]

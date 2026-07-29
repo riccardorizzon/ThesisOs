@@ -101,6 +101,22 @@ async def test_search_corpus_caps_limit_at_10():
 
 
 @pytest.mark.asyncio
+async def test_search_corpus_coerces_string_limit_from_llm():
+    """Vertex/tool JSON often emits limit as a string — must not TypeError on min()."""
+    service = FakeRetrievalService(results=[_search_result()])
+    accumulate: list[RetrievedChunk] = []
+    search_corpus = make_search_corpus_tool(
+        retrieval_service=service,
+        project_id=None,
+        accumulate=accumulate,
+    )
+
+    await search_corpus("craft", limit="5")  # type: ignore[arg-type]
+
+    assert service.last_limit == 5
+
+
+@pytest.mark.asyncio
 async def test_search_corpus_skips_duplicate_across_calls():
     service = FakeRetrievalService(results=[_search_result(chunk_id="c1")])
     accumulate: list[RetrievedChunk] = []

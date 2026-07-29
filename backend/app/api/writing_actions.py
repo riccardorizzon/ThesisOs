@@ -112,6 +112,14 @@ async def writing_actions(req: WritingActionRequest):
                 "data": json.dumps({"code": "generation_failed", "message": str(exc)}),
             }
             return
+        except Exception as exc:  # noqa: BLE001 — keep SSE terminal; avoid empty close
+            yield {
+                "event": "error",
+                "data": json.dumps(
+                    {"code": "action_loop_failed", "message": str(exc) or "Action loop failed"}
+                ),
+            }
+            return
 
         for step in loop_steps:
             yield {

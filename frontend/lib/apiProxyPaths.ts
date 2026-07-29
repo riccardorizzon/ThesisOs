@@ -18,5 +18,12 @@ export const API_PROXY_PREFIXES = [
   "export",
 ] as const;
 
-/** Exact API paths (not prefixes) — avoids clobbering UI routes like /writing/[chapterId]. */
+/**
+ * Exact API paths (not prefixes) — avoids clobbering UI routes like /writing/[chapterId].
+ * SSE routes (`writing/actions`, `chat`) are handled by App Router Route Handlers
+ * (`app/api/.../route.ts`) that stream via `proxySsePost` — do not rely on rewrites for those.
+ */
 export const API_PROXY_EXACT_PATHS = ["writing/actions"] as const;
+
+/** Paths with dedicated SSE Route Handlers (must not depend on Next rewrite buffering). */
+export const SSE_ROUTE_HANDLER_PATHS = ["writing/actions", "chat"] as const;

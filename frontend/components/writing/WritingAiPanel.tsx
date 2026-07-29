@@ -149,6 +149,7 @@ export function WritingAiPanel({
       const controller = new AbortController();
       abortRef.current = controller;
       let accumulated = "";
+      let completed = false;
 
       await streamWritingAction(
         {
@@ -172,19 +173,31 @@ export function WritingAiPanel({
             accumulated += event.data.text;
             setStreamText(accumulated);
           } else if (event.event === "done") {
+            completed = true;
             setStreamText(event.data.draft);
             setPhase("complete");
             void validateDraftCitations(event.data.draft);
           } else if (event.event === "error") {
+            // Keep activeActionId so loop steps stay visible for diagnosis.
+            // Recover draft if the SSE pipe closed after tokens already arrived.
+            if (
+              event.data.code === "stream_interrupted" &&
+              accumulated.trim()
+            ) {
+              completed = true;
+              setStreamText(accumulated);
+              setPhase("complete");
+              void validateDraftCitations(accumulated);
+              return;
+            }
             setStreamText(event.data.message);
-            setActiveActionId(null);
             setPhase("complete");
           }
         },
         controller.signal
       );
 
-      if (!controller.signal.aborted) {
+      if (!controller.signal.aborted && !completed) {
         setPhase((current) => (current === "streaming" ? "complete" : current));
       }
     },
