@@ -37,6 +37,15 @@ else
   bad "${kimi_titles} chapter(s) still have [kimi-claw-…] prefix"
 fi
 
+echo "--- Document titles ---"
+kimi_docs="$(docker compose exec -T db psql -U thesisos -d thesisos -At -c \
+  "SELECT COUNT(*) FROM documents WHERE project_id='${PROJECT}' AND title ILIKE '[kimi-claw%';")"
+if [[ "${kimi_docs:-1}" -eq 0 ]]; then
+  ok "no [kimi-claw-…] prefixes on documents"
+else
+  bad "${kimi_docs} document(s) still have [kimi-claw-…] prefix"
+fi
+
 if [[ "${dup_titles:-1}" -eq 0 ]]; then
   ok "no duplicate chapter titles"
 else

@@ -188,6 +188,9 @@ demo-wave3-check: ## Gate: Wave 3 ops resilience (backup, runbook, mid-demo smok
 demo-wave4-check: ## Gate: Wave 4 growth (research, cohort, GCP deploy doc)
 	@bash bin/demo-wave4-check.sh
 
+demo-simulate: ## Realistic demo walkthrough (fonti→chat→writing→export)
+	@bash bin/demo-simulate.sh
+
 demo-gate: ## Full demo readiness gate (ops + Wave 1–4)
 	@bash bin/ops-check.sh
 	@bash bin/demo-cleanup.sh --dry-run

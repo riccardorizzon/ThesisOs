@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Wave 2 demo polish — strip migration prefixes from chapter titles, remove leftover dogfood.
+# Wave 2 demo polish — strip migration prefixes from chapter/document titles, remove leftover dogfood.
 # Usage:
 #   bash bin/demo-wave2.sh --dry-run
 #   bash bin/demo-wave2.sh --apply
@@ -103,6 +103,68 @@ else:
 PY
 }
 
+rename_documents() {
+  API="$API" PROJECT="$PROJECT" DRY_RUN="$DRY_RUN" python3 <<'PY'
+import json
+import os
+import re
+import sys
+import urllib.error
+import urllib.request
+
+api = os.environ["API"]
+project = os.environ["PROJECT"]
+dry_run = os.environ.get("DRY_RUN", "1") == "1"
+prefix_re = re.compile(r"^\[kimi-claw-[0-9-]+\]\s*")
+
+def request(method, path, body=None):
+    data = None
+    headers = {}
+    if body is not None:
+        data = json.dumps(body).encode()
+        headers["Content-Type"] = "application/json"
+    req = urllib.request.Request(f"{api}{path}", data=data, headers=headers, method=method)
+    with urllib.request.urlopen(req) as resp:
+        if resp.status == 204:
+            return None
+        return json.load(resp)
+
+docs = request("GET", f"/documents?project_id={project}")
+if isinstance(docs, dict):
+    docs = docs.get("items", [])
+pending = []
+for doc in docs:
+    title = doc.get("title") or ""
+    if not prefix_re.match(title):
+        continue
+    new_title = prefix_re.sub("", title, count=1).strip()
+    if not new_title or new_title == title:
+        continue
+    pending.append((doc["id"], title, new_title, doc["version"]))
+
+print(f"--- Rename documents ({len(pending)} pending) ---")
+if not pending:
+    print("  (none pending)")
+else:
+    for doc_id, old_title, new_title, version in pending:
+        if dry_run:
+            print(f"  [dry-run] {doc_id[:8]}…")
+            print(f"            {old_title[:60]}")
+            print(f"         -> {new_title[:60]}")
+            continue
+        try:
+            request(
+                "PATCH",
+                f"/documents/{doc_id}?project_id={project}",
+                {"title": new_title, "expected_version": version},
+            )
+            print(f"  OK    {doc_id[:8]}… -> {new_title[:55]}")
+        except urllib.error.HTTPError as exc:
+            print(f"  FAIL  {doc_id} HTTP {exc.code}", file=sys.stderr)
+            sys.exit(1)
+PY
+}
+
 delete_chapters() {
   echo "--- Delete leftover chapters (${#DELETE_CHAPTER_IDS[@]} in list) ---"
   mapfile -t EXISTING_CHAPTER_IDS < <(curl -sf "${API}/chapters?project_id=${PROJECT}" | python3 -c "
@@ -140,15 +202,14 @@ for item in items:
 }
 
 rename_chapters || fail=1
+rename_documents || fail=1
 delete_chapters
 
 echo
 if [[ "$DRY_RUN" -eq 1 ]]; then
   echo "Dry-run complete. Apply with: bash bin/demo-wave2.sh --apply"
 else
-  echo "Apply complete. Verify titles:"
-  echo "  docker compose exec -T db psql -U thesisos -d thesisos -c \\"
-  echo "    \"SELECT left(title,60) FROM chapters WHERE project_id='${PROJECT}' ORDER BY title;\""
+  echo "Apply complete. Verify: bash bin/demo-wave2-check.sh"
 fi
 
 exit "$fail"
