@@ -1,7 +1,7 @@
 # GA Path Verification — 2026-07-29
 
 > Post-execution verification of automatable gates.  
-> Candidate tip before this commit: `86ad1578` · tip after execution commit: see git.
+> Branch tip at close of session: `ca59dc11` (`feat/companion-persistence`).
 
 ## Suite
 
