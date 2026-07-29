@@ -1,7 +1,8 @@
 # ThesisOS — Demo Handout (1 pagina)
 
 **Prodotto:** workspace AI per tesi accademica (fonti, chat RAG, scrittura per capitolo, review, export).  
-**Versione:** Beta `v2.0.0-rc.2` · workspace `thesis-agent`
+**Versione:** Demo-ready `v2.0.0-rc.2` · workspace `thesis-agent`  
+**Fase demo:** **CLOSED** 2026-07-29 (Waves 1–4 + ADR-0048) — cohort/GA/M8 deferred
 
 ## URL demo
 

@@ -6,9 +6,10 @@ production target: GCP (Cloud Run + Cloud SQL).
 
 ## Status
 
-**Beta — `v2.0.0-rc.2`** — M7 complete on `main`; RC tagged @ `5039df77`.
-Beta validation open (7-day window). Onboarding:
-[`.asep/reports/RC-BETA-ONBOARDING.md`](.asep/reports/RC-BETA-ONBOARDING.md).
+**Demo-ready — `v2.0.0-rc.2`** — M7 complete; RC tagged @ `5039df77`.
+Demo Waves 1–4 + ADR-0048 **closed** (2026-07-29):
+[`.asep/reports/DEMO-PRESENTABILITY-CLOSURE-20260729.md`](.asep/reports/DEMO-PRESENTABILITY-CLOSURE-20260729.md).
+Human cohort, GA package, and M8 are **deferred** (not claimed done).
 
 **Multi-Thesis Workspace (ADR-0047)** — one ThesisOS, N isolated thesis
 workspaces. The current thesis stays the Default Thesis (`thesis-agent`); new
@@ -16,7 +17,7 @@ theses get sequential ids (`thesis-002`, …) via the project switcher and own
 their documents, memory, chapters, bibliography, embeddings/RAG, chat and
 settings. Audit + plan: `plans/multi-thesis-workspace/`.
 
-Next: GA approval after beta exit → M8 (new features).
+Next (when authorized): GA Approval Package → then M8.
 
 ## Product surfaces
 

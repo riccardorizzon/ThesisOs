@@ -9,10 +9,13 @@ title: ThesisOS Product v2 — Engineering
 program_type: engineering
 status: active
 
-milestone_authorized: PX-6
-milestone_authorized_prior: PX-4
-milestone_frozen: PX-4
-milestones_planned_blocked: [PX-6]
+# PX-1…PX-6 promoted (certificates). No milestone EWO authorized until GA/M8 act.
+milestone_authorized: none
+milestone_authorized_prior: PX-6
+milestone_frozen: PX-6
+milestones_planned_blocked: [GA, M8]
+demo_presentability: closed
+demo_presentability_closure: .asep/reports/DEMO-PRESENTABILITY-CLOSURE-20260729.md
 
 depends_on:
   product_constitution: docs/product/PRODUCT-CONSTITUTION.md
@@ -221,7 +224,14 @@ milestones:
     adr_refs: [ADR-0036, ADR-0037]
   PX-6:
     title: Polish
-    status: blocked
+    status: promoted
+    promoted_at: "2026-07-07"
+    promotion_certificate: .asep/certificates/PX6-PROMOTION-20260707.yaml
+    promotion_doc: docs/px6-promotion.md
+    tag: px6-complete
+    note: >-
+      Header previously stale (blocked). Synced 2026-07-29 to certificate.
+      Demo presentability closed; GA/M8 deferred.
 
 workorder_backlog:
   - id: PX1-EWO-001
@@ -1108,5 +1118,12 @@ post_px2:
   px5_qualification: .asep/reports/QWO-PX5-001.md
   px5_tag: px5-complete
   runtime_engineering_authorization: not_authorized
-  next_milestone: PX-6 Polish (blocked until authorized)
-  note: PX-5 PROMOTED — tag pending commit of Wave E delta
+  px6_status: promoted
+  px6_tag: px6-complete
+  px6_promotion_certificate: .asep/certificates/PX6-PROMOTION-20260707.yaml
+  demo_presentability: closed
+  demo_presentability_closure: .asep/reports/DEMO-PRESENTABILITY-CLOSURE-20260729.md
+  next_milestone: none (GA package + M8 deferred — require Architect authorization)
+  note: >-
+    PX-1…PX-6 promoted; M7/rc.2 shipped; demo Waves 1–4 + ADR-0048 CLOSED 2026-07-29.
+    Human cohort / GA / M8 deferred.

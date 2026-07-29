@@ -1,7 +1,9 @@
 # Demo Wave 4 — Crescita (post-MVP presentabile)
 
+> **Status:** **CLOSED** 2026-07-29 — `.asep/reports/DEMO-PRESENTABILITY-CLOSURE-20260729.md`  
 > **Obiettivo:** passare da «posso presentarlo» a «prodotto in crescita».  
-> **Non bloccante** per demo 15 min — complementa Wave 1–3.
+> **Non bloccante** per demo 15 min — complementa Wave 1–3.  
+> Cohort umana + GA + M8 = **DEFERRED** (non aperti come lavoro demo).
 
 ## Scope Wave 4
 

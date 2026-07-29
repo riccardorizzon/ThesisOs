@@ -1,12 +1,13 @@
 # RC Beta Validation — Operational Tracker (M7 / rc.2)
 
 > **Product:** ThesisOS v2.0.0-rc.2  
-> **Phase:** Release Candidate validation — **Day 0 PASS** (automated)  
+> **Phase:** Release Candidate validation — **CLOSED (operator disposition 2026-07-29)**  
 > **Validator:** `bin/beta-validator-rc.sh` · `make beta-validator-rc`  
 > **Onboarding:** `.asep/reports/RC-BETA-ONBOARDING.md`  
 > **Started:** 2026-07-08  
-> **Target duration:** 7 days  
-> **Staging baseline:** `5039df77` @ `v2.0.0-rc.2`
+> **Closed:** 2026-07-29 — see `.asep/reports/DEMO-PRESENTABILITY-CLOSURE-20260729.md`  
+> **Staging baseline:** `5039df77` @ `v2.0.0-rc.2`  
+> **Cohort / GA:** **DEFERRED** (materials ready; not claimed complete)
 
 ## Scope
 
@@ -57,18 +58,29 @@ Collect **only**:
 
 - [x] Day 0 automated validator PASS
 - [x] M7.2 + `make ci` green on RC commit
-- [ ] Staging stable 7 days
-- [ ] Smoke tests green after any hotfix
-- [ ] No open `v2.0-blocker` items
-- [ ] Beta feedback triaged
-- [ ] Human cohort onboarded (5–10)
+- [x] Demo presentability closed (`DEMO-PRESENTABILITY-CLOSURE-20260729.md`)
+- [ ] Staging stable 7 days — **deferred** (no dedicated staging SLA run claimed)
+- [ ] Smoke tests green after any hotfix — **deferred**
+- [x] No open `v2.0-blocker` items (operator demo path)
+- [ ] Beta feedback triaged — **N/A** (no human cohort run)
+- [ ] Human cohort onboarded (5–10) — **DEFERRED**
 
 ## GA gate
 
-Tag `v2.0.0` requires **separate GA Approval Package** — not authorized by RC approval.
+Tag `v2.0.0` requires **separate GA Approval Package** — **not authorized** by this closure.
+
+## Disposition 2026-07-29
+
+| Item | Result |
+|------|--------|
+| Automated / demo gates | **CLOSED PASS** |
+| Human cohort | **DEFERRED** |
+| GA | **DEFERRED** |
+| M8 | **DEFERRED** |
 
 ## WO-TRACE
 
 ```text
-M7.2 PASS → v2.0.0-rc.2 → THIS TRACKER → GA approval (future)
+M7.2 PASS → v2.0.0-rc.2 → demo Waves 1–4 + ADR-0048 CLOSED
+  → GA / cohort / M8 deferred (separate authorization)
 ```

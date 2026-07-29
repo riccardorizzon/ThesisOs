@@ -1,5 +1,7 @@
 # Beta Cohort — Invito tester (Wave 4)
 
+> **Status:** **DEFERRED** 2026-07-29 — materials ready; cohort not run  
+> **Closure:** `.asep/reports/DEMO-PRESENTABILITY-CLOSURE-20260729.md`  
 > **Target:** 5–10 persone · **Tracker:** `.asep/reports/THESISOS-v2.0.0-rc.2-BETA-VALIDATION.md`  
 > **Onboarding:** `.asep/reports/RC-BETA-ONBOARDING.md` · **Handout:** `docs/demo/DEMO-HANDOUT.md`
 
