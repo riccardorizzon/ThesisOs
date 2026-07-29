@@ -48,4 +48,7 @@ GA not complete (cohort / D7 / AUTHORIZE / tag still open).
 
 ## PR
 
-Filled after push — search GitHub for `feat/companion-persistence` → `main`.
+- Branch pushed: `origin/feat/companion-persistence` @ `a199a679`
+- `gh` not authenticated in this environment — **PR not created by agent**
+- Open: https://github.com/riccardorizzon/ThesisOs/compare/main...feat/companion-persistence?expand=1
+- Or: `gh auth login` then `gh pr create --base main --head feat/companion-persistence`
