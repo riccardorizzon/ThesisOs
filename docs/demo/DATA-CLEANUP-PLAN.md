@@ -219,4 +219,17 @@ Wave 2 (completata): rename capitoli vetrina, README Manoscritto, bullet limitaz
 ```bash
 bash bin/demo-wave2.sh --dry-run
 bash bin/demo-wave2.sh --apply
+make demo-wave2-check    # gate: titoli puliti, export, sources 11/11
+make demo-gate           # gate completo pre-demo
 ```
+
+## Checklist chiusura Wave 2
+
+| Item | Gate | Stato |
+|------|------|-------|
+| Capitoli senza prefisso `[kimi-claw-…]` | `make demo-wave2-check` | 14 capitoli, 0 duplicati |
+| Cap. 3 vetrina (≥3000 parole) | `make demo-wave2-check` | `503c33f5…` in `review` |
+| Export markdown Cap. 3 | `make demo-wave2-check` | HTTP 200 + 422 senza `project_id` |
+| Limitazioni beta in UI | Settings → *Beta — limitazioni note* | 4 bullet umani |
+| Menu / docs allineati | README + getting-started + RC onboarding | `/manuscript` elencato |
+| Coach marks / empty state | Vitest `CoachMark`, `HomeView`, `EmptyStatePanel` | codice + test verdi |

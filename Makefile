@@ -175,3 +175,11 @@ demo-wave2-dry-run: ## Preview Wave 2 demo polish (chapter title rename)
 
 demo-wave2: ## Apply Wave 2 demo polish (chapter titles + dogfood cleanup)
 	@bash bin/demo-wave2.sh --apply
+
+demo-wave2-check: ## Gate: Wave 2 polish applied (titles, export, sources)
+	@bash bin/demo-wave2-check.sh
+
+demo-gate: ## Full demo readiness gate (ops + Wave 1 + Wave 2)
+	@bash bin/ops-check.sh
+	@bash bin/demo-cleanup.sh --dry-run
+	@bash bin/demo-wave2-check.sh

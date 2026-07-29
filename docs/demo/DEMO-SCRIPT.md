@@ -126,7 +126,7 @@ Leggi o consegna [`DEMO-HANDOUT.md`](./DEMO-HANDOUT.md). Punti chiave:
 
 ## Checklist pre-demo (5 min prima)
 
-- [ ] `make ops-check` PASS
+- [ ] `make demo-gate` PASS (ops-check + Wave 1/2 data polish)
 - [ ] `bash bin/demo-cleanup.sh --dry-run` — verificare conteggi attesi (~15 doc, ~14 capitoli)
 - [ ] (Opzionale) `bash bin/demo-cleanup.sh --apply` eseguito e verificato
 - [ ] Nuova conversazione demo creata; thread `ping`/`test` non mostrati

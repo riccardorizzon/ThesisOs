@@ -19,9 +19,10 @@ Open [http://localhost:3000](http://localhost:3000).
 1. **Thesis Companion** (`/`) — read the real project resume and continue the current focus.
 2. **Chat** — ask, search the corpus, review a direction, draft, or preserve the session.
 3. **Writing** (`/writing`) — edit versioned chapters in the three-panel workspace.
-4. **Review** (`/review`) — accept or reject writing proposals chapter by chapter.
-5. **Sources** (`/sources`) — upload, browse, search, index and export the bibliography.
-6. **Knowledge** (`/knowledge`) — explore concepts, decisions and source relationships.
+4. **Manoscritto** (`/manuscript`) — read the thesis in order; open Writing to edit.
+5. **Review** (`/review`) — accept or reject writing proposals chapter by chapter.
+6. **Sources** (`/sources`) — upload, browse, search, index and export the bibliography.
+7. **Knowledge** (`/knowledge`) — explore concepts, decisions and source relationships.
 
 The Companion can preserve a proposal for continuity, but it does not silently overwrite a
 chapter. Promote definitive text through Writing and Review.
@@ -47,6 +48,7 @@ cd tests/e2e && npx playwright test m7-product-flow.spec.ts
 ## Next steps
 
 - Research canvas: `/research/canvas`
-- Settings and project context: `/settings`
+- Settings (`/settings`) — project prefs, export options, **beta limitations** panel
+- Demo runbook (presenters): `docs/demo/DEMO-SCRIPT.md` and `docs/demo/DEMO-HANDOUT.md`
 - Companion-first governance draft: `docs/product/PRODUCT-CONSTITUTION-v1.1-DRAFT.md`
 - Architecture and governance: `docs/` and `AGENTS.md`

@@ -39,6 +39,7 @@ cat /tmp/thesisos-beta-public.env   # URL tunnel corrente
 
 ```bash
 make ops-check          # health + LLM + export 422 + audit
+make demo-gate          # ops-check + Wave 1/2 data polish gates
 bash bin/demo-cleanup.sh --dry-run   # stato dati pre-demo
 ```
 
