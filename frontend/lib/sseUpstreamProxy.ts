@@ -6,12 +6,11 @@
  * this Route Handler keeps `/api/writing/actions` and `/api/chat` usable on :3000.
  */
 
+import { resolveApiBase } from "@/lib/apiBase";
+
 function upstreamBase(): string {
-  return (
-    process.env.INTERNAL_API_BASE_URL ??
-    process.env.NEXT_PUBLIC_API_BASE_URL ??
-    "http://localhost:8000"
-  ).replace(/\/$/, "");
+  // Route Handlers are SSR — never use the browser `/api` base (AP-001).
+  return resolveApiBase(false).replace(/\/$/, "");
 }
 
 function sseHeaders(upstreamType: string | null): Headers {
