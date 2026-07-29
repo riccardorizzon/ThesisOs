@@ -10,6 +10,6 @@ describe("BetaLimitationsPanel", () => {
     expect(screen.getByText(/Single-user/)).toBeTruthy();
     expect(screen.getByText(/Corpus-bound/)).toBeTruthy();
     expect(screen.getByText(/Tunnel pubblico fragile/)).toBeTruthy();
-    expect(screen.getByText(/Originali file/)).toBeTruthy();
+    expect(screen.getByText(/Citazioni/)).toBeTruthy();
   });
 });

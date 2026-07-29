@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     document_storage_backend: str = "local"
     document_storage_local_dir: str = "/tmp/thesisos-documents"
     documents_bucket: str = ""
+    # ADR-0048: optional shared beta gate (empty = disabled; local DX unchanged)
+    beta_access_token: str = ""
 
 
 settings = Settings()

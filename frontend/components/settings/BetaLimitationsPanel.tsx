@@ -1,9 +1,9 @@
 /** Human-readable beta limitations — demo handout copy in product UI. */
 export const BETA_LIMITATIONS = [
-  "Single-user — nessun multi-tenant; adatto a demo e uso personale.",
+  "Single-user — un solo operatore; niente login multi-account (ADR-0048 / M8).",
   "Corpus-bound — le risposte AI usano solo documenti indicizzati; niente ricerca web live.",
   "Tunnel pubblico fragile — l'URL Cloudflare può cambiare; per demo stabile usare localhost.",
-  "Originali file — molti PDF storici non sono su disco; RAG funziona da chunk Postgres.",
+  "Citazioni — preferenza author-date (Autore, anno); non garantite al 100% (W-06).",
 ] as const;
 
 export function BetaLimitationsPanel() {

@@ -6,6 +6,7 @@ import {
   resolveProjectContextForSurface,
   type ProjectContext,
 } from "@/lib/projectContext";
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 
 export {
@@ -98,7 +99,10 @@ function queryString(projectId: string, params?: ContextQuery): string {
 }
 
 async function request<T>(path: string): Promise<T> {
-  const r = await fetch(`${apiBaseUrl()}${path}`, { cache: "no-store" });
+  const r = await fetch(`${apiBaseUrl()}${path}`, {
+    cache: "no-store",
+    headers: apiAuthHeaders(),
+  });
   if (!r.ok) {
     const body = (await r.json().catch(() => null)) as {
       code?: string;

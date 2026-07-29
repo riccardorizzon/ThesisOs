@@ -5,6 +5,7 @@ import {
 } from "@/lib/libraryTypes";
 import { listSources } from "@/lib/sourcesClient";
 import type { SourceListItem } from "@/lib/sourcesTypes";
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 import {
   activeProjectScope,
@@ -190,7 +191,7 @@ export const corpusClient = {
     try {
       const r = await fetch(`${apiBaseUrl()}/search`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: apiAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ query: q, limit, project_id: activeProjectScope() }),
         cache: "no-store",
       });

@@ -18,6 +18,8 @@ services:
       DATABASE_URL: postgresql+psycopg://thesisos:thesisos@db:5432/thesisos
       APP_ENV: local
       DOCUMENT_STORAGE_LOCAL_DIR: /data/documents
+      # ADR-0048 — empty default (local DX); set for public cohort tunnel
+      BETA_ACCESS_TOKEN: ${BETA_ACCESS_TOKEN:-}
     volumes:
       - ./.asep:/.asep:ro
       - document_data:/data/documents
@@ -35,6 +37,8 @@ services:
     environment:
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
       INTERNAL_API_BASE_URL: http://backend:8000
+      BETA_ACCESS_TOKEN: ${BETA_ACCESS_TOKEN:-}
+      NEXT_PUBLIC_BETA_ACCESS_TOKEN: ${BETA_ACCESS_TOKEN:-}
     depends_on: [backend]
     ports: ["3000:3000"]
 volumes:

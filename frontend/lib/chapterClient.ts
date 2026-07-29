@@ -1,3 +1,4 @@
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 import { getActiveProjectId } from "@/lib/projectPrefs";
@@ -74,7 +75,11 @@ export class ChapterApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(`${apiBaseUrl()}${path}`, { ...init, cache: "no-store" });
+  const r = await fetch(`${apiBaseUrl()}${path}`, {
+    ...init,
+    cache: "no-store",
+    headers: apiAuthHeaders(init?.headers),
+  });
   if (!r.ok) {
     const body = (await r.json().catch(() => null)) as { code?: string; message?: string } | null;
     throw new ChapterApiError(r.status, body?.code ?? "unknown", body?.message ?? r.statusText);
@@ -125,6 +130,7 @@ export const chapterClient = {
   async exportMarkdown(id: string): Promise<Blob> {
     const r = await fetch(`${apiBaseUrl()}${withProject(`/export/chapters/${id}.md`)}`, {
       cache: "no-store",
+      headers: apiAuthHeaders(),
     });
     if (!r.ok) {
       const body = (await r.json().catch(() => null)) as { code?: string; message?: string } | null;

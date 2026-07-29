@@ -30,18 +30,21 @@ cat /tmp/thesisos-beta-public.env   # URL tunnel corrente
 
 ## Limitazioni (beta onesta)
 
-1. **Single-user** — nessun multi-tenant; adatto a demo e uso personale.  
+1. **Single-user** — un operatore, N tesi; niente login multi-account (ADR-0048 / M8). Gate opzionale `BETA_ACCESS_TOKEN` + `X-Beta-Token` per tunnel pubblici.  
 2. **Corpus-bound** — le risposte AI usano solo documenti indicizzati; niente web live.  
 3. **Tunnel pubblico fragile** — URL Cloudflare può cambiare; per demo stabile usare localhost o VM dedicata.  
-4. **Originali file** — molti PDF storici non sono su disco; RAG funziona da chunk Postgres. Re-upload solo se serve download/re-parse.
+4. **Citazioni (W-06)** — preferenza author-date `(Autore, anno)` con retry; non garantite al 100%.
 
 ## Gate tecnico (operatori)
 
 ```bash
-make ops-check          # health + LLM + export 422 + audit
-make demo-gate          # ops-check + Wave 1/2/3 (backup, runbook, smoke)
-make demo-backup        # snapshot DB prima della demo
-bash bin/demo-cleanup.sh --dry-run   # stato dati pre-demo
+make ops-check               # health + LLM + export 422 + audit
+make demo-gate               # ops + Wave 1–4 + auth/cohort/citations
+make cohort-check            # materiali invito + tracker
+make demo-auth-check         # ADR-0048
+make demo-citations-check    # preferenza cite + residual W-06
+make demo-backup             # snapshot DB prima della demo
+bash bin/demo-cleanup.sh --dry-run
 ```
 
 Runbook ops: [`DEMO-OPS-RUNBOOK.md`](./DEMO-OPS-RUNBOOK.md)  

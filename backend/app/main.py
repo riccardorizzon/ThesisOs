@@ -26,6 +26,7 @@ from app.api import (
 from app.core.logging import configure_logging
 from app.core.config import settings
 from app.graph.checkpointer import ensure_langgraph_schema
+from app.middleware.beta_access import BetaAccessMiddleware
 from app.services.telemetry.setup import init_telemetry
 
 configure_logging()
@@ -43,6 +44,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="ThesisOS API", version="0.0.0", lifespan=lifespan)
+# ADR-0048 — optional; no-op when BETA_ACCESS_TOKEN unset (must be outer-ish for 401)
+app.add_middleware(BetaAccessMiddleware)
 if settings.app_env == "local":
     app.add_middleware(
         CORSMiddleware,

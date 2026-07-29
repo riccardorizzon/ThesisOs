@@ -1,3 +1,4 @@
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 import {
   consumeSse,
@@ -43,7 +44,7 @@ export async function postChatStream(
   try {
     const response = await fetch(`${apiBaseUrl()}/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: apiAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(body),
       signal,
     });

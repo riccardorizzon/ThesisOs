@@ -1,4 +1,5 @@
 import type { ContextPacket } from "@/lib/contextClient";
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 import { activeProjectScope } from "@/lib/projectScope";
 import {
@@ -148,7 +149,7 @@ export async function streamWritingAction(
   try {
     const response = await fetch(`${apiBaseUrl()}/writing/actions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: apiAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         action: params.actionId,
         project_id: activeProjectScope(),

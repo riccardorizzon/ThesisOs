@@ -1,3 +1,4 @@
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 
 export type CompanionResume = {
@@ -32,7 +33,7 @@ export async function getCompanionResume(
 ): Promise<CompanionResumePacket> {
   const response = await fetch(
     `${apiBaseUrl()}/projects/${encodeURIComponent(projectId)}/companion/resume`,
-    { cache: "no-store" },
+    { cache: "no-store", headers: apiAuthHeaders() },
   );
   if (!response.ok) {
     throw new Error(`companion resume ${response.status}`);

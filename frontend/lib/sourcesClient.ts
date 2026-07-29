@@ -3,6 +3,7 @@ import type { SourceListItem, SourceListResponse } from "@/lib/sourcesTypes";
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 
 import { getActiveProjectId } from "@/lib/projectPrefs";
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 
 
@@ -31,7 +32,7 @@ export async function listSources(
   const qs = params.toString();
   const base = apiBaseUrl();
   const url = `${base}/projects/${projectId}/sources${qs ? `?${qs}` : ""}`;
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, { cache: "no-store", headers: apiAuthHeaders() });
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(
@@ -50,7 +51,7 @@ export async function getSource(
   const pid = resolveProjectId(projectId);
   const res = await fetch(
     `${apiBaseUrl()}/projects/${pid}/sources/${encodeURIComponent(slug)}`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
@@ -69,7 +70,7 @@ export async function exportBibliography(
   const pid = resolveProjectId(projectId);
   const res = await fetch(
     `${apiBaseUrl()}/projects/${pid}/sources/bibliography/export?format=bibtex`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (!res.ok) throw new Error(`Bibliography export failed: ${res.status}`);
   return res.blob();
@@ -82,7 +83,7 @@ export async function deleteSource(
   const pid = resolveProjectId(projectId);
   const res = await fetch(
     `${apiBaseUrl()}/projects/${pid}/sources/${encodeURIComponent(slug)}`,
-    { method: "DELETE" }
+    { method: "DELETE", headers: apiAuthHeaders() }
   );
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
@@ -101,7 +102,7 @@ export async function addSourceToBibliography(
   const pid = resolveProjectId(projectId);
   const res = await fetch(
     `${apiBaseUrl()}/projects/${pid}/sources/${encodeURIComponent(slug)}/bibliography`,
-    { method: "POST" }
+    { method: "POST", headers: apiAuthHeaders() }
   );
   if (!res.ok) {
     throw new Error("Impossibile aggiungere la fonte alla bibliografia. Riprova.");

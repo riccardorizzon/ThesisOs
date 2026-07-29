@@ -1,3 +1,4 @@
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 import type { CitationIssue } from "@/lib/citationValidation";
 
@@ -12,7 +13,7 @@ export async function validateProjectCitations(
 ): Promise<CitationValidationResponse> {
   const response = await fetch(`${apiBaseUrl()}/citations/validate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: apiAuthHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ project_id: projectId, text }),
   });
   const contentType = response.headers.get("content-type") ?? "";

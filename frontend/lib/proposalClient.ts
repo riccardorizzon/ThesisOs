@@ -2,6 +2,7 @@ import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
 import { getActiveProjectId } from "@/lib/projectPrefs";
 import { withProject } from "@/lib/projectScope";
 import type { Chapter } from "@/lib/chapterClient";
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 
 export type ProposalApiStatus = "pending" | "accepted" | "rejected";
@@ -47,7 +48,11 @@ export class ProposalApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(`${apiBaseUrl()}${path}`, { ...init, cache: "no-store" });
+  const r = await fetch(`${apiBaseUrl()}${path}`, {
+    ...init,
+    cache: "no-store",
+    headers: apiAuthHeaders(init?.headers),
+  });
   if (!r.ok) {
     const body = (await r.json().catch(() => null)) as { code?: string; message?: string } | null;
     throw new ProposalApiError(r.status, body?.code ?? "unknown", body?.message ?? r.statusText);

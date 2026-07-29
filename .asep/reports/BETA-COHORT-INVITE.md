@@ -43,8 +43,22 @@ Vedi tabella **Cohort** in `THESISOS-v2.0.0-rc.2-BETA-VALIDATION.md`:
 
 - `#1` … `#10` — nome, Invited ☑, Onboarded ☑, note sessione
 
+## Checklist operatore (prima di inviare URL)
+
+1. [ ] `make demo-gate` verde sullo stack della cohort
+2. [ ] `make cohort-check` PASS
+3. [ ] Se URL pubblico (tunnel/GCP): impostare `BETA_ACCESS_TOKEN` su backend **e** FE
+   (`X-Beta-Token` via `frontend/middleware.ts` / `NEXT_PUBLIC_BETA_ACCESS_TOKEN`) — ADR-0048
+4. [ ] Verificare: senza token → API 401; con token → superfici 200 (`make demo-auth-check` con token esportato)
+5. [ ] Handout + Settings «Accesso (beta)» / limitazioni letti almeno una volta
+6. [ ] Annotare riga tracker (`#1`…`#10`) con nome + data invito
+7. [ ] Dopo sessione: onboarded ☑ + note (blocker / major / minor)
+
+> Non inventare tester umani. Slot vuoti = cohort non ancora attiva — ok per demo operator-only.
+
 ## Exit cohort → GA
 
 - [ ] 5–10 righe compilate nel tracker
 - [ ] Feedback triage senza blocker aperti
 - [ ] `make demo-gate` verde sullo stack usato dalla cohort
+- [ ] Decisione M8 solo se serve isolamento account (non prima)

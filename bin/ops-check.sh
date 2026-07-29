@@ -9,6 +9,12 @@ fail=0
 ok() { echo "  OK  $*"; }
 bad() { echo "  FAIL $*"; fail=1; }
 
+# ADR-0048 — forward shared beta token when operator has it in the environment
+AUTH_H=()
+if [[ -n "${BETA_ACCESS_TOKEN:-}" ]]; then
+  AUTH_H=(-H "X-Beta-Token: ${BETA_ACCESS_TOKEN}")
+fi
+
 echo "=== ThesisOS ops-check ==="
 
 # Stack
@@ -40,7 +46,7 @@ else
 fi
 
 code="$(curl -s -o /tmp/ops_chat.json -w '%{http_code}' -X POST http://localhost:8000/chat \
-  -H 'Content-Type: application/json' -d '{"message":"ops ping"}' || echo 000)"
+  -H 'Content-Type: application/json' "${AUTH_H[@]}" -d '{"message":"ops ping"}' || echo 000)"
 if [[ "$code" == "200" ]]; then
   ok "POST /chat → 200"
 else
@@ -48,7 +54,7 @@ else
 fi
 
 # Wave C export contract
-ex="$(curl -s -o /dev/null -w '%{http_code}' \
+ex="$(curl -s -o /dev/null -w '%{http_code}' "${AUTH_H[@]}" \
   "http://localhost:8000/export/chapters/00000000-0000-0000-0000-000000000000.md")"
 if [[ "$ex" == "422" ]]; then
   ok "export without project_id → 422"

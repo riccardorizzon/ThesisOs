@@ -188,15 +188,27 @@ demo-wave3-check: ## Gate: Wave 3 ops resilience (backup, runbook, mid-demo smok
 demo-wave4-check: ## Gate: Wave 4 growth (research, cohort, GCP deploy doc)
 	@bash bin/demo-wave4-check.sh
 
+cohort-check: ## Gate: beta cohort invite pack + tracker + honest limits
+	@bash bin/cohort-check.sh
+
+demo-auth-check: ## Gate: ADR-0048 shared beta token wiring + live smoke
+	@bash bin/demo-auth-check.sh
+
+demo-citations-check: ## Gate: citation preference wiring + live soft smoke + W-06 docs
+	@bash bin/demo-citations-check.sh
+
 demo-simulate: ## Realistic demo walkthrough (fonti→chat→writing→export)
 	@bash bin/demo-simulate.sh
 
 demo-restore-originals: ## Restore missing document originals from knowledge/ into volume
 	@bash bin/demo-restore-originals.sh
 
-demo-gate: ## Full demo readiness gate (ops + Wave 1–4)
+demo-gate: ## Full demo readiness gate (ops + Wave 1–4 + auth/cohort/citations)
 	@bash bin/ops-check.sh
 	@bash bin/demo-cleanup.sh --dry-run
 	@bash bin/demo-wave2-check.sh
 	@bash bin/demo-wave3-check.sh
 	@bash bin/demo-wave4-check.sh
+	@bash bin/cohort-check.sh
+	@bash bin/demo-auth-check.sh
+	@bash bin/demo-citations-check.sh

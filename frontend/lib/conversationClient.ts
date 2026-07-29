@@ -1,3 +1,4 @@
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 import { getActiveProjectId } from "@/lib/projectPrefs";
 import { DEFAULT_PROJECT_ID } from "@/lib/projectContext";
@@ -47,7 +48,7 @@ export async function listConversations(
   const pid = resolveProjectId(projectId);
   const res = await fetch(
     `${apiBaseUrl()}/conversations?${new URLSearchParams({ project_id: pid })}`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (!res.ok) await parseError(res, "Conversation list failed");
   const body = (await res.json()) as ConversationListResponse;
@@ -60,7 +61,7 @@ export async function createConversation(
   const pid = resolveProjectId(options.projectId);
   const res = await fetch(`${apiBaseUrl()}/conversations`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: apiAuthHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ project_id: pid, title: options.title ?? null }),
   });
   if (!res.ok) await parseError(res, "Create conversation failed");
@@ -72,6 +73,7 @@ export async function getConversationMessages(
 ): Promise<ConversationMessage[]> {
   const res = await fetch(`${apiBaseUrl()}/conversations/${conversationId}/messages`, {
     cache: "no-store",
+    headers: apiAuthHeaders(),
   });
   if (!res.ok) await parseError(res, "Load messages failed");
   const body = (await res.json()) as ConversationMessagesResponse;
@@ -89,7 +91,7 @@ export async function renameConversation(
     `${apiBaseUrl()}/conversations/${encodeURIComponent(conversationId)}?${query}`,
     {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: apiAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ title }),
     }
   );
@@ -105,7 +107,7 @@ export async function deleteConversation(
   const query = new URLSearchParams({ project_id: pid });
   const res = await fetch(
     `${apiBaseUrl()}/conversations/${encodeURIComponent(conversationId)}?${query}`,
-    { method: "DELETE" }
+    { method: "DELETE", headers: apiAuthHeaders() }
   );
   if (!res.ok) await parseError(res, "Delete conversation failed");
 }

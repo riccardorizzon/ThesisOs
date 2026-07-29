@@ -10,6 +10,7 @@ import type {
   KnowledgeObjectType,
   ProgramGraphObservation,
 } from "@/lib/knowledgeTypes";
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 import { activeProjectScope } from "@/lib/projectScope";
 
@@ -27,7 +28,7 @@ export async function listKnowledgeObjects(
 
   const qs = params.toString();
   const url = `${apiBaseUrl()}/projects/${projectId}/knowledge/objects${qs ? `?${qs}` : ""}`;
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, { cache: "no-store", headers: apiAuthHeaders() });
   if (!res.ok) {
     throw new Error(`Knowledge list failed: ${res.status}`);
   }
@@ -40,7 +41,7 @@ export async function getKnowledgeObject(
 ): Promise<KnowledgeObjectEnvelope> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/knowledge/objects/${encodeURIComponent(slug)}`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (!res.ok) {
     throw new Error(`Knowledge object not found: ${slug}`);
@@ -54,7 +55,7 @@ export async function getConceptHeader(
 ): Promise<ConceptHeaderEnvelope> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}/header`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (res.status === 404) {
     throw new Error("concept_not_found");
@@ -71,7 +72,7 @@ export async function getConceptDefinition(
 ): Promise<ConceptDefinitionEnvelope> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}/definition`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (res.status === 404) {
     throw new Error("concept_not_found");
@@ -88,7 +89,7 @@ export async function getConceptDetail(
 ): Promise<ConceptDetailEnvelope> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/knowledge/concepts/${encodeURIComponent(slug)}`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (res.status === 404) {
     throw new Error("concept_not_found");
@@ -108,7 +109,7 @@ export async function searchKnowledge(
   if (options.limit != null) params.set("limit", String(options.limit));
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/knowledge/search?${params}`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (!res.ok) {
     throw new Error(`Knowledge search failed: ${res.status}`);
@@ -125,7 +126,7 @@ export async function getConformanceProjection(
 ): Promise<ConformanceProjection> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/conformance/projection`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (!res.ok) {
     throw new Error(`Projection fetch failed: ${res.status}`);
@@ -138,7 +139,7 @@ export async function getProgramGraphObservation(
 ): Promise<ProgramGraphObservation> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/conformance/program-graph`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (!res.ok) {
     throw new Error(`Program graph fetch failed: ${res.status}`);
@@ -166,7 +167,7 @@ export async function getKnowledgeGraph(
 
   const qs = params.toString();
   const url = `${apiBaseUrl()}/projects/${projectId}/knowledge/graph${qs ? `?${qs}` : ""}`;
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, { cache: "no-store", headers: apiAuthHeaders() });
   if (!res.ok) {
     throw new Error(`Knowledge graph fetch failed: ${res.status}`);
   }
@@ -178,7 +179,7 @@ export async function getJobFsmObservation(
 ): Promise<JobFsmObservation> {
   const res = await fetch(
     `${apiBaseUrl()}/projects/${projectId}/conformance/job-fsm`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: apiAuthHeaders() }
   );
   if (!res.ok) {
     throw new Error(`Job FSM observation fetch failed: ${res.status}`);

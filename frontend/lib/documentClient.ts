@@ -1,3 +1,4 @@
+import { apiAuthHeaders } from "@/lib/apiAuth";
 import { apiBaseUrl } from "@/lib/apiBase";
 import { activeProjectScope, withProject } from "@/lib/projectScope";
 
@@ -96,7 +97,11 @@ export class DocumentApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(`${apiBaseUrl()}${path}`, { ...init, cache: "no-store" });
+  const r = await fetch(`${apiBaseUrl()}${path}`, {
+    ...init,
+    cache: "no-store",
+    headers: apiAuthHeaders(init?.headers),
+  });
   if (!r.ok) {
     const body = (await r.json().catch(() => null)) as { code?: string; message?: string } | null;
     throw new DocumentApiError(

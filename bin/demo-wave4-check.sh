@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Wave 4 demo gate — growth track: research canvas, cohort pack, GCP deploy doc, auth defer.
+# Wave 4 demo gate — growth: research canvas, cohort pack, GCP, ADR-0048, M8 defer.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -17,7 +17,8 @@ echo "--- Growth docs ---"
 for f in \
   docs/demo/DEMO-GROWTH-PLAN.md \
   docs/demo/DEMO-DEPLOY-GCP.md \
-  .asep/reports/BETA-COHORT-INVITE.md; do
+  .asep/reports/BETA-COHORT-INVITE.md \
+  decisions/ADR-0048-access-control-beta.md; do
   if [[ -f "$f" ]]; then
     ok "$f present"
   else
@@ -25,10 +26,11 @@ for f in \
   fi
 done
 
-if rg -q 'Defer M8|defer.*M8|single-user' docs/demo/DEMO-GROWTH-PLAN.md 2>/dev/null; then
-  ok "auth defer documented in DEMO-GROWTH-PLAN"
+if rg -q 'ADR-0048|BETA_ACCESS_TOKEN' docs/demo/DEMO-GROWTH-PLAN.md 2>/dev/null \
+  && rg -qi 'M8|multi-user' docs/demo/DEMO-GROWTH-PLAN.md 2>/dev/null; then
+  ok "ADR-0048 gate + M8 defer documented in DEMO-GROWTH-PLAN"
 else
-  bad "auth defer not documented"
+  bad "access-control story incomplete in DEMO-GROWTH-PLAN"
 fi
 
 echo "--- Cohort tracker ---"

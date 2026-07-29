@@ -127,6 +127,22 @@ export default function SettingsPage() {
         </label>
       </div>
 
+      <div
+        className="space-y-3 rounded-lg border border-border bg-surface p-4"
+        data-testid="access-model-panel"
+      >
+        <h2 className="text-sm font-semibold text-ink">Accesso (beta)</h2>
+        <p className="text-sm text-ink-muted">
+          Modello attuale: <strong className="text-ink">single-user</strong> — un
+          operatore, N tesi (project switcher). Nessun login multi-account.
+        </p>
+        <p className="text-xs text-ink-subtle">
+          Gate opzionale per tunnel pubblico: variabile{" "}
+          <code className="rounded bg-surface-muted px-1">BETA_ACCESS_TOKEN</code>{" "}
+          (ADR-0048). Auth multi-utente reale → M8.
+        </p>
+      </div>
+
       <BetaLimitationsPanel />
 
       <DeleteProjectPanel
