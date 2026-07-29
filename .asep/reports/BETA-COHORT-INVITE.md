@@ -1,7 +1,9 @@
 # Beta Cohort — Invito tester (Wave 4)
 
-> **Status:** **DEFERRED** 2026-07-29 — materials ready; cohort not run  
+> **Status:** **SKIPPED — REQUIRES HUMAN** (agent execution 2026-07-29)  
+> Materials ready; **zero testers invented**. Path A GA blocked until you invite.  
 > **Closure:** `.asep/reports/DEMO-PRESENTABILITY-CLOSURE-20260729.md`  
+> **Execution:** `.asep/reports/GA-PATH-EXECUTION-20260729.md`  
 > **Target:** 5–10 persone · **Tracker:** `.asep/reports/THESISOS-v2.0.0-rc.2-BETA-VALIDATION.md`  
 > **Onboarding:** `.asep/reports/RC-BETA-ONBOARDING.md` · **Handout:** `docs/demo/DEMO-HANDOUT.md`
 
