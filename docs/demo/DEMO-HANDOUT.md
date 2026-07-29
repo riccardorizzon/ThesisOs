@@ -39,9 +39,12 @@ cat /tmp/thesisos-beta-public.env   # URL tunnel corrente
 
 ```bash
 make ops-check          # health + LLM + export 422 + audit
-make demo-gate          # ops-check + Wave 1/2 data polish gates
+make demo-gate          # ops-check + Wave 1/2/3 (backup, runbook, smoke)
+make demo-backup        # snapshot DB prima della demo
 bash bin/demo-cleanup.sh --dry-run   # stato dati pre-demo
 ```
+
+Runbook ops: [`DEMO-OPS-RUNBOOK.md`](./DEMO-OPS-RUNBOOK.md)
 
 ## Contatto / repo
 

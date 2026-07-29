@@ -233,3 +233,22 @@ make demo-gate           # gate completo pre-demo
 | Limitazioni beta in UI | Settings → *Beta — limitazioni note* | 4 bullet umani |
 | Menu / docs allineati | README + getting-started + RC onboarding | `/manuscript` elencato |
 | Coach marks / empty state | Vitest `CoachMark`, `HomeView`, `EmptyStatePanel` | codice + test verdi |
+
+Wave 3 (completata): runbook ops, backup DB, gate mid-demo smoke — **Docling defer** (corpus markdown indexed).
+
+```bash
+make demo-backup           # snapshot Postgres
+make demo-wave3-check      # gate: backup + runbook + RAG smoke + surfaces
+make demo-gate             # gate completo Wave 1–3
+```
+
+## Checklist chiusura Wave 3
+
+| Item | Gate | Stato |
+|------|------|-------|
+| Runbook ops corto | `docs/demo/DEMO-OPS-RUNBOOK.md` | restart, deploy, tunnel, restore |
+| Backup DB | `make demo-backup` + `make demo-wave3-check` | pg_dump ≥ 1 MB |
+| 0 documenti failed | `make demo-wave3-check` | Docling defer OK |
+| RAG mid-demo smoke | `make demo-wave3-check` | POST /chat STIGMATA → 200 |
+| Superfici FE live | `make demo-wave3-check` | /, /writing, /sources, /settings → 200 |
+| Docling | defer | demo usa 15 doc markdown indexed |

@@ -126,12 +126,13 @@ Leggi o consegna [`DEMO-HANDOUT.md`](./DEMO-HANDOUT.md). Punti chiave:
 
 ## Checklist pre-demo (5 min prima)
 
-- [ ] `make demo-gate` PASS (ops-check + Wave 1/2 data polish)
+- [ ] `make demo-gate` PASS (ops-check + Wave 1/2/3)
+- [ ] `make demo-backup` eseguito (opzionale ma consigliato)
 - [ ] `bash bin/demo-cleanup.sh --dry-run` — verificare conteggi attesi (~15 doc, ~14 capitoli)
 - [ ] (Opzionale) `bash bin/demo-cleanup.sh --apply` eseguito e verificato
 - [ ] Nuova conversazione demo creata; thread `ping`/`test` non mostrati
 - [ ] Cap. 3 apre senza errori
-- [ ] Backup DB se si applica cleanup su produzione: `docker compose exec db pg_dump -U thesisos thesisos > /tmp/thesisos-pre-demo.sql`
+- [ ] Runbook a portata: [`DEMO-OPS-RUNBOOK.md`](./DEMO-OPS-RUNBOOK.md) (tunnel, reboot, restore)
 
 ## Checklist post-demo
 
@@ -141,5 +142,6 @@ Leggi o consegna [`DEMO-HANDOUT.md`](./DEMO-HANDOUT.md). Punti chiave:
 ## Riferimenti
 
 - Piano pulizia dati: [`DATA-CLEANUP-PLAN.md`](./DATA-CLEANUP-PLAN.md)
-- Ops runbook: [`docs/superpowers/plans/2026-07-29-ops-perfection-priorities.md`](../superpowers/plans/2026-07-29-ops-perfection-priorities.md)
+- Runbook ops Wave 3: [`DEMO-OPS-RUNBOOK.md`](./DEMO-OPS-RUNBOOK.md)
+- Ops dettagliato: [`docs/superpowers/plans/2026-07-29-ops-perfection-priorities.md`](../superpowers/plans/2026-07-29-ops-perfection-priorities.md)
 - Seed corpus: `make seed-curated-sources`

@@ -84,7 +84,10 @@ Triage tracker: `.asep/reports/THESISOS-v2.0.0-rc.2-BETA-VALIDATION.md`
 Re-run automated checks:
 
 ```bash
-make demo-gate          # ops-check + Wave 1/2 data polish gates
+make demo-gate          # ops-check + Wave 1/2/3 gates
+make demo-backup        # snapshot DB pre-demo
 make beta-validator-rc  # RC bundle validator
 # or: bash bin/beta-validator-rc.sh
 ```
+
+Ops runbook: `docs/demo/DEMO-OPS-RUNBOOK.md`

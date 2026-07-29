@@ -179,7 +179,14 @@ demo-wave2: ## Apply Wave 2 demo polish (chapter titles + dogfood cleanup)
 demo-wave2-check: ## Gate: Wave 2 polish applied (titles, export, sources)
 	@bash bin/demo-wave2-check.sh
 
-demo-gate: ## Full demo readiness gate (ops + Wave 1 + Wave 2)
+demo-backup: ## Snapshot Postgres before demo (writes /tmp/thesisos-pre-demo-*.sql)
+	@bash bin/demo-backup.sh
+
+demo-wave3-check: ## Gate: Wave 3 ops resilience (backup, runbook, mid-demo smoke)
+	@bash bin/demo-wave3-check.sh
+
+demo-gate: ## Full demo readiness gate (ops + Wave 1 + Wave 2 + Wave 3)
 	@bash bin/ops-check.sh
 	@bash bin/demo-cleanup.sh --dry-run
 	@bash bin/demo-wave2-check.sh
+	@bash bin/demo-wave3-check.sh
