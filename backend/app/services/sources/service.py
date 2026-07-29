@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import re
+import uuid
+
 from app.db.session_async import AsyncSessionLocal
 from app.schemas.knowledge import (
     ConfidenceLevel,
@@ -17,7 +20,66 @@ from app.services.sources.repository import (
     SourceRepository,
 )
 
-__all__ = ["SourceNotDeletableError", "SourceNotFoundError", "SourcesService"]
+__all__ = [
+    "SourceNotDeletableError",
+    "SourceNotFoundError",
+    "SourcesService",
+    "dedupe_sources_by_document",
+]
+
+_STATE_RANK: dict[str, int] = {
+    "linked": 40,
+    "validated": 30,
+    "candidate": 20,
+    "deprecated": 0,
+}
+_CORPUS_RANK: dict[str, int] = {
+    "approvata": 40,
+    "candidata": 20,
+    "esclusa": 0,
+    "archiviata": 10,
+}
+_UUID_RE = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    re.IGNORECASE,
+)
+
+
+def _is_uuid_slug(slug: str) -> bool:
+    if not _UUID_RE.match(slug):
+        return False
+    try:
+        uuid.UUID(slug)
+        return True
+    except ValueError:
+        return False
+
+
+def _source_rank(item: SourceListItem) -> tuple[int, int, int, str]:
+    """Higher is better — prefer catalog/linked over upload/candidate duplicates."""
+    return (
+        _STATE_RANK.get(item.knowledge_state, 10),
+        _CORPUS_RANK.get(item.corpus_status or "", 10),
+        0 if _is_uuid_slug(item.slug) else 1,
+        item.slug,
+    )
+
+
+def dedupe_sources_by_document(items: list[SourceListItem]) -> list[SourceListItem]:
+    """Keep one row per ``document_id`` (null document_ids are never collapsed)."""
+    best: dict[str, SourceListItem] = {}
+    passthrough: list[SourceListItem] = []
+    for item in items:
+        doc_id = item.document_id
+        if not doc_id:
+            passthrough.append(item)
+            continue
+        prev = best.get(doc_id)
+        if prev is None or _source_rank(item) > _source_rank(prev):
+            best[doc_id] = item
+    merged = passthrough + list(best.values())
+    merged.sort(key=lambda s: (s.title or "").lower())
+    return merged
 
 
 class SourcesService:
@@ -108,6 +170,7 @@ class SourcesService:
                     continue
                 items.append(item)
 
+        items = dedupe_sources_by_document(items)
         return SourceListResponse(sources=items, total=len(items))
 
     async def approved_citation_refs(self, project_id: str) -> list[dict]:

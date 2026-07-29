@@ -31,9 +31,11 @@ test.describe("M7 product flow @m7", () => {
     await expect(page.getByRole("heading", { name: "Sources", level: 1 })).toBeVisible();
     await expect(page.getByTestId("bibliography-export-bar")).toBeVisible();
     await expect(page.getByTestId("sources-search-input")).toBeVisible();
-    await expect(page.getByRole("link", { name: /Benjamin/i })).toBeVisible();
+    const benjamin = page.getByRole("link", { name: /Benjamin/i });
+    await expect(benjamin).toHaveCount(1);
+    await expect(benjamin).toBeVisible();
     await page.getByTestId("sources-search-input").fill("Benjamin");
-    await expect(page.getByRole("link", { name: /Benjamin/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Benjamin/i })).toHaveCount(1);
   });
 
   test("Knowledge explorer loads from API", async ({ page }) => {
@@ -94,7 +96,9 @@ test.describe("M7 product flow @m7", () => {
     );
     expect(chapter).toBeTruthy();
 
-    const md = await request.get(`${API_BASE}/export/chapters/${chapter!.id}.md`);
+    const md = await request.get(
+      `${API_BASE}/export/chapters/${chapter!.id}.md?project_id=${PROJECT_ID}`,
+    );
     expect(md.ok()).toBeTruthy();
     expect(md.headers()["content-type"] ?? "").toContain("text/markdown");
     expect(await md.text()).toContain("3.6.1");

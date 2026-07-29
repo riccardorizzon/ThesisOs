@@ -52,15 +52,26 @@ async def register_uploaded_document(
     source_type: str,
     project_id: str = DEFAULT_PROJECT_ID,
 ) -> None:
-    """Expose an uploaded document in the Sources corpus (slug = document id)."""
+    """Expose an uploaded document in the Sources corpus (slug = document id).
+
+    Skip when this document is already represented — either by upload slug
+    (= document id) or by a catalog/source row that already points at the same
+    ``document_id`` (avoids Benjamin-style doubles next to seeded catalog rows).
+    """
     existing = await session.execute(
         text(
             """
             SELECT 1 FROM sources
-            WHERE project_id = :project_id AND slug = :slug
+            WHERE project_id = :project_id
+              AND (slug = :slug OR document_id = CAST(:document_id AS uuid))
+            LIMIT 1
             """
         ),
-        {"project_id": project_id, "slug": document_id},
+        {
+            "project_id": project_id,
+            "slug": document_id,
+            "document_id": document_id,
+        },
     )
     if existing.one_or_none() is not None:
         return
