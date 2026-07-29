@@ -4,6 +4,7 @@ export type WritingOutlineChapter = {
   id: string;
   title: string;
   status: ChapterStatus;
+  version: number;
 };
 
 export const CHAPTER_STATUS_LABELS: Record<ChapterStatus, string> = {

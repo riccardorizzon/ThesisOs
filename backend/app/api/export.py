@@ -5,7 +5,9 @@ from __future__ import annotations
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse, PlainTextResponse
 
+from app.schemas.chapter import ChapterListFilters
 from app.services.chapter import ChapterNotFoundError, ChapterService
+from app.services.chapter.manuscript_order import render_manuscript_markdown
 
 router = APIRouter(tags=["export"])
 _service = ChapterService()
@@ -34,4 +36,19 @@ async def export_chapter_markdown(
         content,
         media_type="text/markdown; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/export/projects/{project_id}/manuscript.md")
+async def export_project_manuscript(project_id: str):
+    chapters = await _service.list(
+        ChapterListFilters(project_id=project_id, limit=500)
+    )
+    content = render_manuscript_markdown(chapters)
+    return PlainTextResponse(
+        content,
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": 'attachment; filename="manuscript.md"',
+        },
     )

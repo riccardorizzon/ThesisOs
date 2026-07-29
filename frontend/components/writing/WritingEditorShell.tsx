@@ -10,13 +10,22 @@ import {
   type MarkdownEditorHandle,
   type SaveState,
 } from "@/components/writing/MarkdownEditor";
-import { ChapterApiError, chapterClient, type Chapter } from "@/lib/chapterClient";
+import {
+  ChapterApiError,
+  chapterClient,
+  type Chapter,
+  type ChapterStatus,
+} from "@/lib/chapterClient";
 import { SourcePicker } from "@/components/sources/SourcePicker";
 import { corpusClient } from "@/lib/corpusClient";
 import { dispatchOpenFontePeek } from "@/components/writing/rightRailIntegration";
 import { ExportMenu } from "@/components/writing/ExportMenu";
 import { ChapterDeleteButton } from "@/components/writing/ChapterDeleteButton";
+import { ChapterVersionsPanel } from "@/components/writing/ChapterVersionsPanel";
+import { ManuscriptMarkdown } from "@/components/manuscript/ManuscriptMarkdown";
 import { useWritingEditorChrome } from "@/lib/writingChromeIntegration";
+import { persistChapterMetadata } from "@/lib/chapterMetadata";
+import { CHAPTER_STATUS_LABELS } from "@/components/writing/writingTypes";
 
 function sectionWordCount(content: string, sectionId: string): number {
   const sections = parseMarkdownSections(content);
@@ -149,6 +158,12 @@ export function WritingEditorShell({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [findOpen, setFindOpen] = useState(false);
   const [findQuery, setFindQuery] = useState("");
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [metadataBusy, setMetadataBusy] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  const skipTitleBlurRef = useRef(false);
   const versionRef = useRef(1);
 
   useEffect(() => {
@@ -279,6 +294,89 @@ export function WritingEditorShell({
     setFindOpen(true);
   }, []);
 
+  const startTitleEdit = useCallback(() => {
+    if (readOnly || !chapter) return;
+    setTitleDraft(chapter.title);
+    setEditingTitle(true);
+  }, [chapter, readOnly]);
+
+  const cancelTitleEdit = useCallback(() => {
+    skipTitleBlurRef.current = true;
+    setEditingTitle(false);
+    setTitleDraft("");
+  }, []);
+
+  const saveTitle = useCallback(async () => {
+    if (!chapter || readOnly || metadataBusy) return;
+    const trimmed = titleDraft.trim();
+    if (!trimmed || trimmed === chapter.title) {
+      cancelTitleEdit();
+      return;
+    }
+    setMetadataBusy(true);
+    try {
+      const updated = await persistChapterMetadata(
+        { id: chapter.id, version: versionRef.current },
+        { title: trimmed }
+      );
+      versionRef.current = updated.version;
+      setChapter(updated);
+      onChapterUpdated?.(updated);
+      setEditingTitle(false);
+      setTitleDraft("");
+      setSaveState("saved");
+    } catch (err) {
+      if (err instanceof ChapterApiError && err.status === 409) {
+        setConflictOpen(true);
+      } else {
+        setSaveState("error");
+      }
+    } finally {
+      setMetadataBusy(false);
+    }
+  }, [cancelTitleEdit, chapter, metadataBusy, onChapterUpdated, readOnly, titleDraft]);
+
+  const handleTitleBlur = useCallback(() => {
+    if (skipTitleBlurRef.current) {
+      skipTitleBlurRef.current = false;
+      return;
+    }
+    void saveTitle();
+  }, [saveTitle]);
+
+  const togglePreview = useCallback(() => {
+    if (!previewMode) {
+      void editorRef.current?.flushSave();
+    }
+    setPreviewMode((value) => !value);
+  }, [previewMode]);
+
+  const saveStatus = useCallback(
+    async (status: ChapterStatus) => {
+      if (!chapter || readOnly || metadataBusy || status === chapter.status) return;
+      setMetadataBusy(true);
+      try {
+        const updated = await persistChapterMetadata(
+          { id: chapter.id, version: versionRef.current },
+          { status }
+        );
+        versionRef.current = updated.version;
+        setChapter(updated);
+        onChapterUpdated?.(updated);
+        setSaveState("saved");
+      } catch (err) {
+        if (err instanceof ChapterApiError && err.status === 409) {
+          setConflictOpen(true);
+        } else {
+          setSaveState("error");
+        }
+      } finally {
+        setMetadataBusy(false);
+      }
+    },
+    [chapter, metadataBusy, onChapterUpdated, readOnly]
+  );
+
   useWritingEditorChrome({
     onForceSave: handleForceSave,
     onFindInChapter: handleFindInChapter,
@@ -307,17 +405,68 @@ export function WritingEditorShell({
     >
       <header className="flex h-10 shrink-0 items-center justify-between border-b border-border px-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-ink">{title}</p>
+          <div className="min-w-0 flex items-center gap-2">
+            {editingTitle ? (
+              <input
+                type="text"
+                value={titleDraft}
+                onChange={(event) => setTitleDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void saveTitle();
+                  }
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    cancelTitleEdit();
+                  }
+                }}
+                onBlur={handleTitleBlur}
+                disabled={metadataBusy}
+                autoFocus
+                className="min-w-0 max-w-xs truncate rounded border border-border bg-surface px-2 py-0.5 text-sm font-semibold text-ink"
+                data-testid="chapter-title-input"
+                aria-label="Titolo capitolo"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={startTitleEdit}
+                disabled={readOnly || !chapter}
+                className="min-w-0 truncate text-left text-sm font-semibold text-ink disabled:cursor-default disabled:opacity-70"
+                data-testid="chapter-title-display"
+                title={readOnly || !chapter ? undefined : "Rinomina capitolo"}
+              >
+                {title}
+              </button>
+            )}
+            {chapter ? (
+              <select
+                value={chapter.status}
+                onChange={(event) =>
+                  void saveStatus(event.target.value as ChapterStatus)
+                }
+                disabled={readOnly || metadataBusy}
+                className="shrink-0 rounded border border-border bg-surface px-1.5 py-0.5 text-xs text-ink-muted disabled:opacity-50"
+                data-testid="chapter-status-select"
+                aria-label="Stato capitolo"
+              >
+                {(Object.keys(CHAPTER_STATUS_LABELS) as ChapterStatus[]).map((status) => (
+                  <option key={status} value={status}>
+                    {CHAPTER_STATUS_LABELS[status]}
+                  </option>
+                ))}
+              </select>
+            ) : null}
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 sm:flex">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setPickerOpen(true)}
               disabled={readOnly || !chapter}
-              className="rounded px-2 py-1 text-xs text-ink-muted hover:text-ink disabled:opacity-50"
+              className="hidden rounded px-2 py-1 text-xs text-ink-muted hover:text-ink disabled:opacity-50 sm:inline"
               title="Cita fonte (⌘⇧C)"
             >
               Cita
@@ -326,22 +475,41 @@ export function WritingEditorShell({
               type="button"
               onClick={() => setFindOpen(true)}
               disabled={readOnly || !chapter}
-              className="rounded px-2 py-1 text-xs text-ink-muted hover:text-ink disabled:opacity-50"
+              className="hidden rounded px-2 py-1 text-xs text-ink-muted hover:text-ink disabled:opacity-50 sm:inline"
               data-testid="find-in-chapter-trigger"
             >
               Find
             </button>
             <button
               type="button"
-              disabled
-              className="rounded px-2 py-1 text-xs text-ink-muted"
+              onClick={togglePreview}
+              disabled={!chapter}
+              className={cn(
+                "rounded px-2 py-1 text-xs hover:text-ink disabled:opacity-50",
+                previewMode ? "font-medium text-accent" : "text-ink-muted"
+              )}
+              data-testid="writing-preview-toggle"
+              aria-pressed={previewMode}
             >
               Preview
+            </button>
+            <button
+              type="button"
+              onClick={() => setVersionsOpen((value) => !value)}
+              disabled={readOnly || !chapter}
+              className={cn(
+                "rounded px-2 py-1 text-xs hover:text-ink disabled:opacity-50",
+                versionsOpen ? "font-medium text-accent" : "text-ink-muted"
+              )}
+              data-testid="writing-versions-toggle"
+              aria-pressed={versionsOpen}
+            >
+              Cronologia
             </button>
           </div>
           <ExportMenu
             chapterId={chapter?.id}
-            disabled={readOnly}
+            chapterExportDisabled={readOnly}
             onError={() => setSaveState("error")}
           />
           {!readOnly && chapter?.deletable ? (
@@ -359,14 +527,31 @@ export function WritingEditorShell({
         {loading ? (
           <p className="p-4 text-sm text-ink-muted">Caricamento capitolo…</p>
         ) : chapterId && chapter ? (
-          <MarkdownEditor
-            ref={editorRef}
-            value={content}
-            onChange={setContent}
-            onSave={handleSave}
-            readOnly={readOnly}
-            activeSectionId={activeSectionId}
-          />
+          <>
+            <div
+              className={cn(
+                "min-h-0 flex-1 flex-col",
+                previewMode ? "hidden" : "flex"
+              )}
+            >
+              <MarkdownEditor
+                ref={editorRef}
+                value={content}
+                onChange={setContent}
+                onSave={handleSave}
+                readOnly={readOnly}
+                activeSectionId={activeSectionId}
+              />
+            </div>
+            {previewMode ? (
+              <div
+                className="min-h-0 flex-1 overflow-y-auto px-6 py-4"
+                data-testid="writing-preview"
+              >
+                <ManuscriptMarkdown content={content} />
+              </div>
+            ) : null}
+          </>
         ) : chapterId ? (
           <p className="p-4 text-sm text-ink-muted">Capitolo non trovato.</p>
         ) : (
@@ -375,6 +560,24 @@ export function WritingEditorShell({
           </p>
         )}
       </div>
+
+      {chapter && versionsOpen ? (
+        <ChapterVersionsPanel
+          open={versionsOpen}
+          chapterId={chapter.id}
+          expectedVersion={versionRef.current}
+          onClose={() => setVersionsOpen(false)}
+          onConflict={() => setConflictOpen(true)}
+          onRestored={(updated) => {
+            versionRef.current = updated.version;
+            setChapter(updated);
+            setContent(updated.content_md ?? "");
+            setSaveState("saved");
+            setPreviewMode(false);
+            onChapterUpdated?.(updated);
+          }}
+        />
+      ) : null}
 
       {chapter && (
         <footer className="flex shrink-0 items-center justify-between border-t border-border px-4 py-2 text-xs text-ink-subtle">

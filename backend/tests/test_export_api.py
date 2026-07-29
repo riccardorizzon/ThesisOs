@@ -54,3 +54,42 @@ async def test_export_rejects_foreign_project(db_session):
     )
     assert res.status_code == 404
     assert res.json()["code"] == "chapter_not_found"
+
+
+@pytest.mark.asyncio
+async def test_export_project_manuscript_markdown(db_session):
+    chapter_svc = ChapterService()
+    await chapter_svc.create(
+        ChapterCreate(
+            title="Cap. 1 — Introduzione",
+            content_md="Primo",
+            project_id="thesis-agent",
+            order_index=0,
+        ),
+        session=db_session,
+    )
+    await chapter_svc.create(
+        ChapterCreate(
+            title="§1.1 Contesto",
+            content_md="Secondo",
+            project_id="thesis-agent",
+            order_index=1,
+        ),
+        session=db_session,
+    )
+    await db_session.commit()
+
+    res = client.get("/export/projects/thesis-agent/manuscript.md")
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/markdown")
+    assert "manuscript.md" in res.headers.get("content-disposition", "")
+    assert "# Cap. 1 — Introduzione" in res.text
+    assert "Primo" in res.text
+    assert "# §1.1 Contesto" in res.text
+    assert "Secondo" in res.text
+
+
+def test_export_project_manuscript_empty_still_ok():
+    res = client.get("/export/projects/empty-project-xyz/manuscript.md")
+    assert res.status_code == 200
+    assert res.text == "# Manoscritto\n"

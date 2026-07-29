@@ -121,6 +121,19 @@ describe("chapterClient", () => {
     expect(url).toContain("project_id=");
   });
 
+  it("exportManuscriptMarkdown fetches project manuscript blob", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      blob: async () => new Blob(["# Manoscritto"], { type: "text/markdown" }),
+    } as Response);
+
+    const blob = await chapterClient.exportManuscriptMarkdown("proj-a");
+    expect(blob.type).toContain("markdown");
+    const url = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    expect(url).toContain("/export/projects/proj-a/manuscript.md");
+  });
+
   it("reorder PATCHes with project_id", async () => {
     const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue({
       ok: true,

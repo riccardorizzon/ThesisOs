@@ -1,46 +1,58 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ManuscriptToc } from "./ManuscriptToc";
-import type { ManuscriptOutlinePart } from "@/lib/manuscriptToc";
+import type { ManuscriptOutline } from "@/lib/manuscriptToc";
 
 afterEach(() => cleanup());
 
-const outline: ManuscriptOutlinePart[] = [
-  {
-    number: "1",
-    title: "Capitolo 1",
-    chapterId: null,
-    status: null,
-    word_count: 0,
-    sections: [
-      {
-        id: "s11",
-        number: "1.1",
-        label: "Intro",
-        status: "review",
-        word_count: 10,
-        order_index: 0,
-      },
-    ],
-  },
-  {
-    number: "3",
-    title: "Progettazione metodologica",
-    chapterId: "c3",
-    status: "review",
-    word_count: 100,
-    sections: [
-      {
-        id: "s36",
-        number: "3.6",
-        label: "Sintesi: il capo come costruzione di senso",
-        status: "draft",
-        word_count: 177,
-        order_index: 36,
-      },
-    ],
-  },
-];
+const outline: ManuscriptOutline = {
+  parts: [
+    {
+      number: "1",
+      title: "Capitolo 1",
+      chapterId: null,
+      status: null,
+      word_count: 0,
+      sections: [
+        {
+          id: "s11",
+          number: "1.1",
+          label: "Intro",
+          status: "review",
+          word_count: 10,
+          order_index: 0,
+        },
+      ],
+    },
+    {
+      number: "3",
+      title: "Progettazione metodologica",
+      chapterId: "c3",
+      status: "review",
+      word_count: 100,
+      sections: [
+        {
+          id: "s36",
+          number: "3.6",
+          label: "Sintesi: il capo come costruzione di senso",
+          status: "draft",
+          word_count: 177,
+          order_index: 36,
+        },
+      ],
+    },
+  ],
+  others: [
+    {
+      id: "free",
+      number: "",
+      label: "Introduzione",
+      status: "draft",
+      word_count: 5,
+      order_index: 40,
+    },
+  ],
+};
 
 describe("ManuscriptToc", () => {
   it("shows hierarchical index with section numbers and labels", () => {
@@ -74,5 +86,19 @@ describe("ManuscriptToc", () => {
       screen.getByRole("button", { name: /3\.6 Sintesi: il capo come costruzione di senso/i })
     );
     expect(onSelectChapter).toHaveBeenCalledWith("s36");
+  });
+
+  it("renders Altri group for free titles", () => {
+    const onSelectChapter = vi.fn();
+    render(
+      <ManuscriptToc
+        outline={outline}
+        activeChapterId={null}
+        onSelectChapter={onSelectChapter}
+      />
+    );
+    expect(screen.getByTestId("manuscript-toc-others")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Introduzione/i }));
+    expect(onSelectChapter).toHaveBeenCalledWith("free");
   });
 });

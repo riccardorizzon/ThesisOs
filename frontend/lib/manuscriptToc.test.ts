@@ -93,23 +93,37 @@ describe("buildManuscriptOutline", () => {
       ch({ id: "s36", title: "§3.6 Sintesi", order_index: 36, status: "draft", word_count: 7 }),
     ]);
 
-    expect(outline.map((p) => p.number)).toEqual(["1", "3"]);
-    expect(outline[0]!.sections.map((s) => s.number)).toEqual(["1.1", "1.2"]);
-    expect(outline[1]!.title).toBe("Progettazione");
-    expect(outline[1]!.chapterId).toBe("c3");
-    expect(outline[1]!.sections.map((s) => s.number)).toEqual(["3.1", "3.6"]);
-    expect(outline[1]!.sections[1]!.label).toBe("Sintesi");
+    expect(outline.parts.map((p) => p.number)).toEqual(["1", "3"]);
+    expect(outline.parts[0]!.sections.map((s) => s.number)).toEqual(["1.1", "1.2"]);
+    expect(outline.parts[1]!.title).toBe("Progettazione");
+    expect(outline.parts[1]!.chapterId).toBe("c3");
+    expect(outline.parts[1]!.sections.map((s) => s.number)).toEqual(["3.1", "3.6"]);
+    expect(outline.parts[1]!.sections[1]!.label).toBe("Sintesi");
+    expect(outline.others).toEqual([]);
+  });
+
+  it("collects free titles under others", () => {
+    const outline = buildManuscriptOutline([
+      ch({ id: "c1", title: "Cap. 1 — Introduzione", order_index: 0 }),
+      ch({ id: "free", title: "Introduzione", order_index: 2, word_count: 5 }),
+      ch({ id: "notes", title: "Appunti", order_index: 1, word_count: 3 }),
+    ]);
+
+    expect(outline.parts.map((p) => p.chapterId)).toEqual(["c1"]);
+    expect(outline.others.map((o) => o.id)).toEqual(["notes", "free"]);
+    expect(outline.others.map((o) => o.label)).toEqual(["Appunti", "Introduzione"]);
   });
 });
 
 describe("flattenManuscriptOutline", () => {
-  it("walks chapter header then sections in order", () => {
+  it("walks chapter header then sections then others", () => {
     const outline = buildManuscriptOutline([
       ch({ id: "c3", title: "Cap. 3 — Progettazione", order_index: 7 }),
       ch({ id: "s31", title: "§3.1 Palette", order_index: 31 }),
       ch({ id: "s36", title: "§3.6 Sintesi", order_index: 36 }),
+      ch({ id: "free", title: "Introduzione", order_index: 40 }),
     ]);
-    expect(flattenManuscriptOutline(outline)).toEqual(["c3", "s31", "s36"]);
+    expect(flattenManuscriptOutline(outline)).toEqual(["c3", "s31", "s36", "free"]);
   });
 });
 

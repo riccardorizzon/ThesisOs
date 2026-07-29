@@ -48,7 +48,7 @@ function useMobileReadOnly(breakpoint = 768): boolean {
 }
 
 function chapterToOutline(ch: Chapter): WritingOutlineChapter {
-  return { id: ch.id, title: ch.title, status: ch.status };
+  return { id: ch.id, title: ch.title, status: ch.status, version: ch.version };
 }
 
 function panelFromParam(value: string | null): RailTabId | undefined {
@@ -251,7 +251,10 @@ export function WritingWorkspace({
             Crea il tuo primo capitolo per iniziare a scrivere.
           </p>
           <div className="mt-6 flex justify-center">
-            <CreateChapterButton onCreated={handleChapterCreated} />
+            <CreateChapterButton
+              chapters={chapters}
+              onCreated={handleChapterCreated}
+            />
           </div>
         </div>
       ) : null}
@@ -316,6 +319,7 @@ export function WritingWorkspace({
             activeSectionId={activeSectionId}
             sections={sections}
             onChapterCreated={readOnly ? undefined : handleChapterCreated}
+            onChapterUpdated={readOnly ? undefined : handleChapterUpdated}
           />
         </div>
 

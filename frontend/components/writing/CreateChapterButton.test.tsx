@@ -38,12 +38,14 @@ describe("CreateChapterButton", () => {
     });
   });
 
-  it("opens title form from primary CTA", () => {
+  it("opens title form from primary CTA with Cap. suggestion", () => {
     render(<CreateChapterButton />);
 
     fireEvent.click(screen.getByTestId("writing-create-chapter-cta"));
     expect(screen.getByTestId("writing-create-chapter-form")).toBeTruthy();
-    expect(screen.getByTestId("writing-create-chapter-title")).toHaveValue("Introduzione");
+    expect(screen.getByTestId("writing-create-chapter-title")).toHaveValue(
+      "Cap. 1 — Nuovo capitolo"
+    );
   });
 
   it("creates chapter and navigates to editor", async () => {
@@ -56,11 +58,38 @@ describe("CreateChapterButton", () => {
     await waitFor(() => {
       expect(chapterClient.create).toHaveBeenCalledWith({
         project_id: "thesis-agent",
-        title: "Introduzione",
+        title: "Cap. 1 — Nuovo capitolo",
       });
     });
     expect(onCreated).toHaveBeenCalledWith(expect.objectContaining({ id: "new-ch" }));
     expect(push).toHaveBeenCalledWith("/writing/new-ch");
+  });
+
+  it("prefills section title when Sezione kind is selected", () => {
+    render(
+      <CreateChapterButton
+        chapters={[
+          { title: "Cap. 1 — Introduzione" },
+          { title: "§1.1 Contesto" },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId("writing-create-chapter-cta"));
+    fireEvent.click(screen.getByTestId("writing-create-kind-section"));
+    expect(screen.getByTestId("writing-create-chapter-title")).toHaveValue(
+      "§1.2 Titolo sezione"
+    );
+  });
+
+  it("uses free title Introduzione for Libero kind", () => {
+    render(<CreateChapterButton />);
+
+    fireEvent.click(screen.getByTestId("writing-create-chapter-cta"));
+    fireEvent.click(screen.getByTestId("writing-create-kind-free"));
+    expect(screen.getByTestId("writing-create-chapter-title")).toHaveValue(
+      "Introduzione"
+    );
   });
 
   it("renders icon variant for outline header", () => {
@@ -72,17 +101,25 @@ describe("CreateChapterButton", () => {
     );
   });
 
-  it("enforces the 200 character title contract before submitting", async () => {
+  it("enforces the 200 character title contract on the input", () => {
     render(<CreateChapterButton />);
     fireEvent.click(screen.getByTestId("writing-create-chapter-cta"));
-    const input = screen.getByTestId("writing-create-chapter-title");
+    expect(screen.getByTestId("writing-create-chapter-title")).toHaveAttribute(
+      "maxLength",
+      "200"
+    );
+  });
 
-    expect(input).toHaveAttribute("maxLength", "200");
-    fireEvent.change(input, { target: { value: "A".repeat(201) } });
+  it("rejects empty title before submitting", async () => {
+    render(<CreateChapterButton />);
+    fireEvent.click(screen.getByTestId("writing-create-chapter-cta"));
+    fireEvent.change(screen.getByTestId("writing-create-chapter-title"), {
+      target: { value: "   " },
+    });
     fireEvent.click(screen.getByTestId("writing-create-chapter-submit"));
 
     expect(
-      await screen.findByText("Il titolo può contenere al massimo 200 caratteri.")
+      await screen.findByText("Inserisci un titolo per il capitolo.")
     ).toBeInTheDocument();
     expect(chapterClient.create).not.toHaveBeenCalled();
   });

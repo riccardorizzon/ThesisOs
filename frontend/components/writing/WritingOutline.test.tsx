@@ -1,7 +1,8 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { render, screen, cleanup, fireEvent } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/react";
 import { WritingOutline } from "./WritingOutline";
 import { FIXTURE_WRITING_OUTLINE } from "@/lib/fixtures/writingFixture";
+import { chapterClient } from "@/lib/chapterClient";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
@@ -32,8 +33,30 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/lib/chapterClient", () => {
+  class ChapterApiError extends Error {
+    status: number;
+    code: string;
+    constructor(status: number, code: string, message: string) {
+      super(message);
+      this.status = status;
+      this.code = code;
+    }
+  }
+  return {
+    chapterClient: {
+      update: vi.fn(),
+      reorder: vi.fn(),
+      list: vi.fn(),
+      get: vi.fn(),
+    },
+    ChapterApiError,
+  };
+});
+
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });
 
 describe("WritingOutline", () => {
@@ -101,5 +124,79 @@ describe("WritingOutline", () => {
     );
 
     expect(screen.getByTestId("writing-outline-add-chapter")).toBeTruthy();
+  });
+
+  it("shows reorder error and rolls back on API failure", async () => {
+    vi.mocked(chapterClient.reorder).mockRejectedValue(new Error("Reorder failed"));
+
+    render(<WritingOutline chapters={FIXTURE_WRITING_OUTLINE} />);
+
+    const items = screen.getAllByRole("listitem");
+    const first = items[0]!;
+    const second = items[1]!;
+    fireEvent.dragStart(first);
+    fireEvent.dragOver(second);
+    fireEvent.drop(second);
+
+    expect(await screen.findByTestId("outline-reorder-error")).toHaveTextContent(
+      "Reorder failed"
+    );
+  });
+
+  it("cancels outline rename on Escape", () => {
+    render(
+      <WritingOutline
+        chapters={FIXTURE_WRITING_OUTLINE}
+        onChapterUpdated={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId("outline-chapter-menu-1"));
+    fireEvent.click(screen.getByRole("button", { name: "Rinomina" }));
+    const input = screen.getByTestId("outline-rename-input-1");
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(screen.queryByTestId("outline-rename-input-1")).toBeNull();
+  });
+
+  it("renames chapter from outline action menu", async () => {
+    const onChapterUpdated = vi.fn();
+    vi.mocked(chapterClient.update).mockResolvedValue({
+      id: "1",
+      parent_id: null,
+      order_index: 0,
+      title: "Cap. 1 — Rinominato",
+      status: "approved",
+      content_md: "",
+      summary: null,
+      word_count: 0,
+      version: 2,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    });
+
+    render(
+      <WritingOutline
+        chapters={FIXTURE_WRITING_OUTLINE}
+        onChapterUpdated={onChapterUpdated}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId("outline-chapter-menu-1"));
+    fireEvent.click(screen.getByRole("button", { name: "Rinomina" }));
+    const input = screen.getByTestId("outline-rename-input-1");
+    fireEvent.change(input, { target: { value: "Cap. 1 — Rinominato" } });
+    fireEvent.submit(input.closest("form")!);
+
+    await waitFor(() =>
+      expect(chapterClient.update).toHaveBeenCalledWith("1", {
+        title: "Cap. 1 — Rinominato",
+        expected_version: 1,
+      })
+    );
+    await waitFor(() =>
+      expect(onChapterUpdated).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "Cap. 1 — Rinominato", version: 2 })
+      )
+    );
   });
 });

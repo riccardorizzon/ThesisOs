@@ -18,6 +18,11 @@ export type ManuscriptOutlinePart = {
   sections: ManuscriptOutlineSection[];
 };
 
+export type ManuscriptOutline = {
+  parts: ManuscriptOutlinePart[];
+  others: ManuscriptOutlineSection[];
+};
+
 const TAG_PREFIX_RE = /^\[[^\]]+\]\s*/;
 const SECTION_TITLE_RE = /^§\s*(\d+)\.(\d+)\s*(.+)$/;
 const CHAPTER_TITLE_RE = /^Cap\.?\s*(\d+)\s*[—–-]\s*(.+)$/i;
@@ -94,9 +99,10 @@ export function sortManuscriptChapters(chapters: Chapter[]): Chapter[] {
   });
 }
 
-export function buildManuscriptOutline(chapters: Chapter[]): ManuscriptOutlinePart[] {
+export function buildManuscriptOutline(chapters: Chapter[]): ManuscriptOutline {
   const entries = sortManuscriptChapters(dedupeManuscriptChapters(chapters));
   const parts = new Map<number, ManuscriptOutlinePart>();
+  const others: ManuscriptOutlineSection[] = [];
 
   const ensurePart = (major: number): ManuscriptOutlinePart => {
     const existing = parts.get(major);
@@ -133,22 +139,37 @@ export function buildManuscriptOutline(chapters: Chapter[]): ManuscriptOutlinePa
         word_count: chapter.word_count,
         order_index: chapter.order_index,
       });
+      continue;
     }
+    others.push({
+      id: chapter.id,
+      number: "",
+      label: parsed.label,
+      status: chapter.status,
+      word_count: chapter.word_count,
+      order_index: chapter.order_index,
+    });
   }
 
-  return [...parts.values()].sort(
-    (a, b) => Number(a.number) - Number(b.number)
-  );
+  others.sort((a, b) => a.order_index - b.order_index);
+
+  return {
+    parts: [...parts.values()].sort((a, b) => Number(a.number) - Number(b.number)),
+    others,
+  };
 }
 
-/** Flat navigable chapter ids in reading order (Cap. N then §N.x). */
-export function flattenManuscriptOutline(outline: ManuscriptOutlinePart[]): string[] {
+/** Flat navigable chapter ids in reading order (Cap. N then §N.x, then Altri). */
+export function flattenManuscriptOutline(outline: ManuscriptOutline): string[] {
   const ids: string[] = [];
-  for (const part of outline) {
+  for (const part of outline.parts) {
     if (part.chapterId) ids.push(part.chapterId);
     for (const section of part.sections) {
       ids.push(section.id);
     }
+  }
+  for (const other of outline.others) {
+    ids.push(other.id);
   }
   return ids;
 }

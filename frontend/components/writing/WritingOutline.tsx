@@ -9,8 +9,9 @@ import type { MarkdownSection } from "@/components/writing/MarkdownEditor";
 import {
   type WritingOutlineChapter,
 } from "@/components/writing/writingTypes";
-import { chapterClient, type Chapter } from "@/lib/chapterClient";
+import { ChapterApiError, chapterClient, type Chapter } from "@/lib/chapterClient";
 import { CreateChapterButton } from "@/components/writing/CreateChapterButton";
+import { persistChapterMetadata } from "@/lib/chapterMetadata";
 
 export type OutlineFilter = "all" | "in_progress" | "needs_review";
 
@@ -20,6 +21,7 @@ export type WritingOutlineProps = {
   activeSectionId?: string;
   sections?: MarkdownSection[];
   onChapterCreated?: (chapter: Chapter) => void;
+  onChapterUpdated?: (chapter: Chapter) => void;
   className?: string;
 };
 
@@ -75,38 +77,100 @@ export function WritingOutline({
   activeSectionId,
   sections = [],
   onChapterCreated,
+  onChapterUpdated,
   className,
 }: WritingOutlineProps) {
   const [filter, setFilter] = useState<OutlineFilter>("all");
   const [ordered, setOrdered] = useState(chapters);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [actionId, setActionId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameTitle, setRenameTitle] = useState("");
+  const [renameBusy, setRenameBusy] = useState(false);
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [reorderError, setReorderError] = useState<string | null>(null);
 
   useEffect(() => {
     setOrdered(applyStoredOrder(chapters));
   }, [chapters]);
 
-  const persistOrder = useCallback(async (next: WritingOutlineChapter[]) => {
-    const ids = next.map((c) => c.id);
-    setProjectStorageItem(ORDER_KEY, JSON.stringify(ids));
-    setOrdered(next);
-    try {
-      await chapterClient.reorder(ids);
-    } catch {
-      // Stub chapters may not exist in API — local order still persisted
-    }
-  }, []);
+  const persistOrder = useCallback(
+    async (next: WritingOutlineChapter[], previous: WritingOutlineChapter[]) => {
+      const ids = next.map((c) => c.id);
+      setProjectStorageItem(ORDER_KEY, JSON.stringify(ids));
+      setOrdered(next);
+      setReorderError(null);
+      try {
+        await chapterClient.reorder(ids);
+      } catch (err) {
+        setOrdered(previous);
+        setProjectStorageItem(
+          ORDER_KEY,
+          JSON.stringify(previous.map((c) => c.id))
+        );
+        setReorderError(
+          err instanceof Error ? err.message : "Riordino non riuscito. Riprova."
+        );
+      }
+    },
+    []
+  );
 
   const handleDrop = (targetId: string) => {
     if (!dragId || dragId === targetId) return;
     const from = ordered.findIndex((c) => c.id === dragId);
     const to = ordered.findIndex((c) => c.id === targetId);
     if (from < 0 || to < 0) return;
+    const previous = ordered;
     const next = [...ordered];
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
-    void persistOrder(next);
+    void persistOrder(next, previous);
     setDragId(null);
   };
+
+  const cancelRename = useCallback(() => {
+    setRenamingId(null);
+    setRenameTitle("");
+    setRenameError(null);
+  }, []);
+
+  const handleRename = useCallback(
+    async (chapter: WritingOutlineChapter) => {
+      const title = renameTitle.trim();
+      if (!title || renameBusy) return;
+      setRenameBusy(true);
+      setRenameError(null);
+      try {
+        const updated = await persistChapterMetadata(
+          { id: chapter.id, version: chapter.version },
+          { title }
+        );
+        onChapterUpdated?.(updated);
+        setRenamingId(null);
+        setRenameTitle("");
+        setActionId(null);
+      } catch (err) {
+        if (err instanceof ChapterApiError && err.status === 409) {
+          try {
+            const fresh = await chapterClient.get(chapter.id);
+            onChapterUpdated?.(fresh);
+            setRenameTitle(fresh.title);
+            setRenameError(
+              "Capitolo modificato altrove. Titolo aggiornato — riprova."
+            );
+          } catch {
+            setRenameError("Conflitto di versione. Ricarica e riprova.");
+          }
+        } else {
+          setRenameError(err instanceof Error ? err.message : "Rinomina non riuscita.");
+        }
+      } finally {
+        setRenameBusy(false);
+      }
+    },
+    [onChapterUpdated, renameBusy, renameTitle]
+  );
 
   const visible = useMemo(
     () => filterChapters(ordered, filter),
@@ -128,6 +192,7 @@ export function WritingOutline({
           {onChapterCreated ? (
             <CreateChapterButton
               variant="icon"
+              chapters={ordered}
               onCreated={onChapterCreated}
               testId="writing-outline-add-chapter"
             />
@@ -157,40 +222,135 @@ export function WritingOutline({
         </div>
       </header>
 
+      {renameError ? (
+        <p className="px-3 py-1 text-xs text-danger" data-testid="outline-rename-error">
+          {renameError}
+        </p>
+      ) : null}
+      {reorderError ? (
+        <p className="px-3 py-1 text-xs text-danger" data-testid="outline-reorder-error" role="alert">
+          {reorderError}
+        </p>
+      ) : null}
+
       <ol className="flex-1 overflow-y-auto p-1">
         {visible.map((chapter) => {
           const selected = chapter.id === activeChapterId;
           return (
             <li
               key={chapter.id}
-              draggable
+              draggable={renamingId !== chapter.id}
               onDragStart={() => setDragId(chapter.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => handleDrop(chapter.id)}
+              className="relative"
             >
-              <Link
-                href={chapterHref(chapter.id)}
-                prefetch={false}
-                aria-current={selected ? "page" : undefined}
+              <div
                 className={cn(
-                  "flex h-row-dense items-center gap-2 rounded-md px-3 transition-colors duration-200",
-                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
-                  "focus-visible:outline-accent cursor-pointer",
+                  "flex h-row-dense items-center gap-1 rounded-md px-1 transition-colors duration-200",
                   selected
                     ? "bg-accent-subtle font-medium text-accent"
                     : "text-ink hover:bg-surface-muted"
                 )}
               >
-                <span
-                  className="cursor-grab text-ink-subtle"
-                  aria-hidden
-                  title="Trascina per riordinare"
+                <Link
+                  href={chapterHref(chapter.id)}
+                  prefetch={false}
+                  aria-current={selected ? "page" : undefined}
+                  className={cn(
+                    "flex min-w-0 flex-1 items-center gap-2 rounded-md px-2",
+                    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+                    "focus-visible:outline-accent cursor-pointer"
+                  )}
                 >
-                  ⠿
-                </span>
-                <span className="min-w-0 flex-1 truncate text-sm">{chapter.title}</span>
-                <StatusBadge status={chapter.status} />
-              </Link>
+                  <span
+                    className="cursor-grab text-ink-subtle"
+                    aria-hidden
+                    title="Trascina per riordinare"
+                  >
+                    ⠿
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm">{chapter.title}</span>
+                  <StatusBadge status={chapter.status} />
+                </Link>
+                {onChapterUpdated ? (
+                  <button
+                    type="button"
+                    aria-label={`Azioni ${chapter.title}`}
+                    data-testid={`outline-chapter-menu-${chapter.id}`}
+                    onClick={() =>
+                      setActionId((current) =>
+                        current === chapter.id ? null : chapter.id
+                      )
+                    }
+                    className="shrink-0 rounded px-1.5 py-1 text-xs text-ink-subtle hover:bg-surface"
+                  >
+                    <span aria-hidden="true">•••</span>
+                  </button>
+                ) : null}
+              </div>
+
+              {actionId === chapter.id && onChapterUpdated ? (
+                <div className="absolute right-1 z-20 mt-1 w-28 rounded-md border border-border bg-surface p-1 shadow-md">
+                  <button
+                    type="button"
+                    className="w-full rounded px-2 py-1 text-left text-xs hover:bg-surface-muted"
+                    onClick={() => {
+                      setRenamingId(chapter.id);
+                      setRenameTitle(chapter.title);
+                      setActionId(null);
+                      setRenameError(null);
+                    }}
+                  >
+                    Rinomina
+                  </button>
+                </div>
+              ) : null}
+
+              {renamingId === chapter.id ? (
+                <form
+                  className="mt-1 space-y-1 rounded-md border border-border bg-surface p-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void handleRename(chapter);
+                  }}
+                >
+                  <label className="block text-xs text-ink-muted">
+                    Nuovo titolo
+                    <input
+                      value={renameTitle}
+                      maxLength={200}
+                      disabled={renameBusy}
+                      onChange={(event) => setRenameTitle(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") {
+                          event.preventDefault();
+                          cancelRename();
+                        }
+                      }}
+                      className="mt-1 w-full rounded border border-border px-2 py-1 text-xs text-ink"
+                      autoFocus
+                      data-testid={`outline-rename-input-${chapter.id}`}
+                    />
+                  </label>
+                  <div className="flex justify-end gap-1">
+                    <button
+                      type="button"
+                      className="rounded px-2 py-1 text-xs text-ink-muted"
+                      onClick={cancelRename}
+                    >
+                      Annulla
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!renameTitle.trim() || renameBusy}
+                      className="rounded bg-accent px-2 py-1 text-xs text-ink-inverse disabled:opacity-50"
+                    >
+                      Salva
+                    </button>
+                  </div>
+                </form>
+              ) : null}
 
               {selected && sections.length > 0 && (
                 <ul className="mb-1 ml-3 border-l border-border pl-3">

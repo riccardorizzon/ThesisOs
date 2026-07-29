@@ -6,13 +6,26 @@ import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { getActiveProjectId } from "@/lib/projectPrefs";
 import { chapterClient, type Chapter } from "@/lib/chapterClient";
+import {
+  suggestChapterTitle,
+  type ChapterTitleKind,
+} from "@/lib/chapterTitleSuggest";
 
 export const DEFAULT_CHAPTER_TITLE = "Introduzione";
 export const MAX_CHAPTER_TITLE_LENGTH = 200;
 
+const EMPTY_CHAPTERS: { title: string }[] = [];
+
+const KIND_OPTIONS: { id: ChapterTitleKind; label: string }[] = [
+  { id: "chapter", label: "Capitolo" },
+  { id: "section", label: "Sezione" },
+  { id: "free", label: "Libero" },
+];
+
 export type CreateChapterButtonProps = {
   variant?: "primary" | "icon";
   defaultTitle?: string;
+  chapters?: { title: string }[];
   onCreated?: (chapter: Chapter) => void;
   className?: string;
   testId?: string;
@@ -22,6 +35,7 @@ export type CreateChapterButtonProps = {
 export function CreateChapterButton({
   variant = "primary",
   defaultTitle = DEFAULT_CHAPTER_TITLE,
+  chapters = EMPTY_CHAPTERS,
   onCreated,
   className,
   testId = "writing-create-chapter-cta",
@@ -29,22 +43,43 @@ export function CreateChapterButton({
 }: CreateChapterButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [kind, setKind] = useState<ChapterTitleKind>("chapter");
   const [title, setTitle] = useState(defaultTitle);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chaptersRef = useRef(chapters);
+  chaptersRef.current = chapters;
+
+  const titleForKind = useCallback(
+    (nextKind: ChapterTitleKind) => {
+      if (nextKind === "free") {
+        return defaultTitle || suggestChapterTitle(chaptersRef.current, "free");
+      }
+      return suggestChapterTitle(chaptersRef.current, nextKind);
+    },
+    [defaultTitle]
+  );
 
   const resetForm = useCallback(() => {
+    setKind("chapter");
     setTitle(defaultTitle);
     setError(null);
     setOpen(false);
   }, [defaultTitle]);
 
   const handleOpen = () => {
-    setTitle(defaultTitle);
+    setKind("chapter");
+    setTitle(titleForKind("chapter"));
     setError(null);
     setOpen(true);
     requestAnimationFrame(() => inputRef.current?.focus());
+  };
+
+  const handleKindChange = (nextKind: ChapterTitleKind) => {
+    setKind(nextKind);
+    setTitle(titleForKind(nextKind));
+    setError(null);
   };
 
   async function handleSubmit(event: React.FormEvent) {
@@ -61,7 +96,10 @@ export function CreateChapterButton({
     setBusy(true);
     setError(null);
     try {
-      const chapter = await chapterClient.create({ project_id: getActiveProjectId(), title: trimmed });
+      const chapter = await chapterClient.create({
+        project_id: getActiveProjectId(),
+        title: trimmed,
+      });
       onCreated?.(chapter);
       resetForm();
       router.push(`/writing/${chapter.id}`);
@@ -77,11 +115,42 @@ export function CreateChapterButton({
       <form
         onSubmit={(event) => void handleSubmit(event)}
         className={cn(
-          variant === "icon" ? "border-b border-border px-3 py-2" : "rounded-lg border border-border bg-surface-muted p-4",
+          variant === "icon"
+            ? "border-b border-border px-3 py-2"
+            : "rounded-lg border border-border bg-surface-muted p-4",
           className
         )}
         data-testid="writing-create-chapter-form"
       >
+        <fieldset className="mb-3">
+          <legend className="text-sm font-medium text-ink">Tipo</legend>
+          <div
+            className="mt-1 flex flex-wrap gap-1"
+            role="radiogroup"
+            aria-label="Tipo capitolo"
+            data-testid="writing-create-chapter-kind"
+          >
+            {KIND_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                role="radio"
+                aria-checked={kind === opt.id}
+                disabled={busy}
+                onClick={() => handleKindChange(opt.id)}
+                className={cn(
+                  "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                  kind === opt.id
+                    ? "border-accent bg-accent-subtle text-accent"
+                    : "border-border bg-surface text-ink-muted hover:text-ink"
+                )}
+                data-testid={`writing-create-kind-${opt.id}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
         <label htmlFor="chapter-title" className="block text-sm font-medium text-ink">
           Titolo capitolo
         </label>

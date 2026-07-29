@@ -138,6 +138,21 @@ export const chapterClient = {
     }
     return r.blob();
   },
+  async exportManuscriptMarkdown(projectId?: string): Promise<Blob> {
+    const pid = activeProjectScope(projectId);
+    const r = await fetch(
+      `${apiBaseUrl()}/export/projects/${encodeURIComponent(pid)}/manuscript.md`,
+      {
+        cache: "no-store",
+        headers: apiAuthHeaders(),
+      }
+    );
+    if (!r.ok) {
+      const body = (await r.json().catch(() => null)) as { code?: string; message?: string } | null;
+      throw new ChapterApiError(r.status, body?.code ?? "unknown", body?.message ?? r.statusText);
+    }
+    return r.blob();
+  },
   reorder(orderedIds: string[], projectId?: string) {
     return request<Chapter[]>("/chapters/reorder", {
       method: "PATCH",
