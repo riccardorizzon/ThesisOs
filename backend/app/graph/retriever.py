@@ -6,6 +6,7 @@ from app.graph.corpus_query import (
     CORPUS_LIST_BOOST_QUERY,
     CORPUS_RETRIEVAL_LIMIT,
     EXCLUSION_BOOST_QUERY,
+    author_document_boosts,
     is_corpus_list_query,
 )
 from langchain_core.runnables import RunnableConfig
@@ -57,6 +58,7 @@ def make_retriever_node(retrieval_service: RetrievalService | None = None):
         try:
             limit = CORPUS_RETRIEVAL_LIMIT if is_corpus_list_query(query) else 10
             results, _model = await service.search(query, filters=scope, limit=limit)
+            extras: list[list[SearchResultItem]] = []
             if is_corpus_list_query(query):
                 exclusion_extra, _ = await service.search(
                     EXCLUSION_BOOST_QUERY, filters=scope, limit=4
@@ -64,12 +66,23 @@ def make_retriever_node(retrieval_service: RetrievalService | None = None):
                 corpus_extra, _ = await service.search(
                     CORPUS_LIST_BOOST_QUERY, filters=scope, limit=6
                 )
-                results = _merge_results(
-                    results,
-                    exclusion_extra,
-                    corpus_extra,
-                    limit=limit,
+                extras.extend([exclusion_extra, corpus_extra])
+            for boost_query, title_sub in author_document_boosts(query):
+                author_extra, _ = await service.search(
+                    boost_query, filters=scope, limit=12
                 )
+                # Keep only the primary book — secondary mentions drown English
+                # corpus docs when the user query is Italian.
+                needle = title_sub.lower()
+                author_extra = [
+                    item
+                    for item in author_extra
+                    if needle in (item.document_title or "").lower()
+                ][:4]
+                if author_extra:
+                    extras.append(author_extra)
+            if extras:
+                results = _merge_results(results, *extras, limit=limit)
         except EmbedFailedError:
             return {
                 "retrieved_context": [],

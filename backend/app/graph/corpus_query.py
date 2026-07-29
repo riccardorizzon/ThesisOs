@@ -20,6 +20,60 @@ CORPUS_LIST_BOOST_QUERY = (
 
 CORPUS_RETRIEVAL_LIMIT = 12
 
+# When the user names an author/work, boost the primary document over
+# secondary mentions in Outline / Core-Theory-Map (demo RAG quality).
+# Tuple: (query pattern, English-leaning boost query, title substring to keep).
+_AUTHOR_DOC_BOOSTS: tuple[tuple[re.Pattern[str], str, str], ...] = (
+    (
+        re.compile(
+            r"\bsennett\b|craftsman|craftsmanship|artigian",
+            re.IGNORECASE,
+        ),
+        "The Craftsman workmanship material consciousness hand practice",
+        "Sennett_The-Craftsman",
+    ),
+    (
+        re.compile(r"\bbenjamin\b|\baura\b|riproducibilit", re.IGNORECASE),
+        "aura mechanical reproduction work of art Benjamin",
+        "Benjamin_Opera-Arte-Riproducibilita",
+    ),
+    (
+        re.compile(r"\bbarthes\b|mytholog", re.IGNORECASE),
+        "Mythologies Barthes myth",
+        "Barthes Mythologies",
+    ),
+    (
+        re.compile(r"\balbers\b|interaction of color", re.IGNORECASE),
+        "Interaction of Color Albers relational color",
+        "Albers Interaction-of-Color",
+    ),
+    (
+        re.compile(r"\bhollander\b|sex and suits", re.IGNORECASE),
+        "Sex and Suits Hollander fashion",
+        "Hollander Sex-and-Suits",
+    ),
+    (
+        re.compile(r"csikszentmihalyi|\bflow\b", re.IGNORECASE),
+        "Flow Csikszentmihalyi optimal experience",
+        "Csikszentmihalyi Flow",
+    ),
+)
+
+
+def author_document_boosts(query: str) -> list[tuple[str, str]]:
+    """Return (boost_query, title_substring) pairs for named authors in the user query."""
+    return [
+        (boost_query, title_sub)
+        for pattern, boost_query, title_sub in _AUTHOR_DOC_BOOSTS
+        if pattern.search(query)
+    ]
+
+
+def author_document_boost_queries(query: str) -> list[str]:
+    """Extra retrieval queries that prefer the named author's primary document."""
+    return [boost_query for boost_query, _title in author_document_boosts(query)]
+
+
 # Legacy read-only catalog for corpus-query boost and graph picker (PX2-EWO-004).
 # Sources API list/get reads DB only (M7 P-SOURCES-DB); do not use here for happy path.
 CORPUS_PICKER_SOURCES: tuple[dict[str, str], ...] = (

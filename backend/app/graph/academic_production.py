@@ -42,7 +42,9 @@ _CORPUS_AUTHOR_YEARS: dict[str, int] = {
 }
 
 NUMERIC_CITATION_INSTRUCTION = (
-    "them inline with bracketed numbers like [1], [2]."
+    "them preferably as author-date (Author surname, year) — e.g. (Sennett, 2008) — "
+    "when author and year are known from the source headers. "
+    "Use bracketed numbers like [1], [2] only when author-date is unavailable."
 )
 
 ACADEMIC_GROUNDING_PREAMBLE = (

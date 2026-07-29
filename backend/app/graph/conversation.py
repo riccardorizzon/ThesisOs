@@ -102,6 +102,9 @@ def make_conversation_node(
         wire = [{"role": m.role, "content": m.content} for m in wire_messages]
         user_query = last_user_content(state.messages) or ""
         academic = is_academic_writing_query(user_query)
+        # Enforce author-date retry whenever we answered from retrieved corpus
+        # (demo Q&A), not only on explicit academic-writing turns.
+        enforce_citations = academic or bool(state.retrieved_context)
         errors = list(state.errors)
 
         def _emit(ev: dict) -> None:
@@ -122,12 +125,12 @@ def make_conversation_node(
                     await generate_with_citation_enforcement(
                         llm,
                         candidate_wire,
-                        academic=academic,
+                        academic=enforce_citations,
                     )
                 )
                 return cited_text, cited_usage
 
-            generate = generate_cited if academic else None
+            generate = generate_cited if enforce_citations else None
             text, usage, _retried = (
                 await generate_with_companion_enforcement(
                     llm,
@@ -171,7 +174,7 @@ def make_conversation_node(
             text, usage, _retried = await generate_with_citation_enforcement(
                 llm,
                 wire,
-                academic=academic,
+                academic=enforce_citations,
                 emit=_emit,
             )
         assistant = Message(role="assistant", content=text)

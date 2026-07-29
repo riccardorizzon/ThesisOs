@@ -56,9 +56,10 @@ def test_render_grounding_prompt_academic_mode():
 
 def test_render_grounding_prompt_default_numeric_mode():
     out = render_grounding_prompt([_chunk()], academic_writing=False)
+    # Q&A prefers author-date; [n] remains as fallback when year unknown.
+    assert "author-date" in out
     assert "bracketed numbers like [1], [2]" in out
     assert "[1] Albers Interaction of Color" in out
-    assert "author-date" not in out
 
 
 def test_compose_prompt_wire_academic_turn():
@@ -79,12 +80,13 @@ def test_compose_prompt_wire_academic_turn():
     assert "Albers (1963)" in system
 
 
-def test_compose_prompt_wire_corpus_list_stays_numeric():
+def test_compose_prompt_wire_corpus_list_prefers_author_date():
     state = GraphState(
         messages=[Message(role="user", content="Elenca gli autori del corpus attivo.")],
         retrieved_context=[_chunk()],
     )
     wire = compose_prompt_wire(state)
+    assert "author-date" in wire[0].content
     assert "bracketed numbers like [1], [2]" in wire[0].content
 
 

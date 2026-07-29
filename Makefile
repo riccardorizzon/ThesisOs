@@ -191,6 +191,9 @@ demo-wave4-check: ## Gate: Wave 4 growth (research, cohort, GCP deploy doc)
 demo-simulate: ## Realistic demo walkthrough (fonti→chat→writing→export)
 	@bash bin/demo-simulate.sh
 
+demo-restore-originals: ## Restore missing document originals from knowledge/ into volume
+	@bash bin/demo-restore-originals.sh
+
 demo-gate: ## Full demo readiness gate (ops + Wave 1–4)
 	@bash bin/ops-check.sh
 	@bash bin/demo-cleanup.sh --dry-run
