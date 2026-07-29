@@ -173,34 +173,42 @@ Tasks T017–T025, T027 largely ✅. See IMMEDIATE section above.
 
 ---
 
-## H. M7 — Citations (P3)
+## H. M7 — Grounding Engine Wave 1 / Citations (P3) — **NEXT OPEN**
 
-- **T069** [P3] 🔴 Architect: freeze the M7 spec (CSL-JSON → APA7/MLA/Chicago) + ADRs. dep: T068
-- **T070** [P3] 🟢 Implement CSL-JSON source ingestion into `sources`; resolve `CitationRef`→source. dep: T069
-- **T071** [P3] 🟢 Implement the `citation` node (reads `draft,citations`; writes resolved `citations`). dep: T070,T064
+Proposed package ready (2026-07-29). ≠ Product Hardening ADR-0044.
+Spec: `docs/superpowers/specs/2026-07-29-thesisos-m7-grounding-engine-design.md`
+ADRs: 0053 (topology), 0054 (styles). Gate: `docs/m7-grounding-promotion.md`.
+
+- **T069** [P3] 🔴 Architect: Accept/freeze M7 Grounding Wave 1 spec + ADR-0053/0054. dep: T068
+- **T070** [P3] 🟢 Resolve `CitationRef`→`sources`; `CitationService` sole writer for `citations`. dep: T069
+- **T071** [P3] 🟢 Implement `citation` node + activate reserved route (not writer-chained). dep: T070,T064
 - **T072** [P3] 🟢 Style renderers (APA7/MLA/Chicago) from CSL-JSON with locators. dep: T070
-- **T073** [P3] 🟢 Realize `POST /citations`, `GET /bibliography?style=apa7`. dep: T072
-- **T074** [P3] 🟢 Tests: per-style rendering, `unresolved_source`, locator handling. dep: T072
-- **T075** [P3] 🔴 M7 promotion gate + merge + tag `m7-complete`. dep: T071,T073,T074
+- **T073** [P3] 🟢 Realize `POST /citations`, `GET /bibliography?style=` (un-deprecate stubs). dep: T072
+- **T074** [P3] 🟢 Tests: per-style rendering, `unresolved_source`, locator handling; ADR-0044 validate/BibTeX green. dep: T072
+- **T075** [P3] 🔴 M7 grounding promotion gate + merge + tag `m7-grounding-complete`. dep: T071,T073,T074
 
 ---
 
-## I. M8 — Outline (P3)
+## I. M8 — Outline (P3) — Proposed (queued after M7.0 or parallel post-freeze)
 
-- **T076** [P3] 🔴 Architect: freeze the M8 spec (outline/chapter tree mgmt) + ADRs. dep: T068
-- **T077** [P3] 🟢 Realize `GET/PUT /outline` over the self-referencing `chapters` tree. dep: T076
-- **T078** [P3] 🟢 Emit `ChapterCreated` events; chapter status workflow (planned→…→final). dep: T077
-- **T079** [P3] 🟢 Frontend: implement the `outline` route (tree edit, reorder, status). dep: T077
+Spec: `docs/superpowers/specs/2026-07-29-thesisos-m8-outline-design.md` · ADR-0055 · `docs/m8-outline-promotion.md`
+
+- **T076** [P3] 🔴 Architect: Accept/freeze M8 Outline spec + ADR-0055. dep: T068
+- **T077** [P3] 🟢 Realize `GET/PUT /outline` (ops-batch) over `chapters` tree. dep: T076
+- **T078** [P3] 🟢 Emit `ChapterCreated`; wire explicit `published` (ADR-0032). dep: T077
+- **T079** [P3] 🟢 Frontend: `/outline` tree edit, reorder, status. dep: T077
 - **T080** [P3] 🔴 M8 promotion gate + merge + tag `m8-complete`. dep: T077,T078,T079
 
 ---
 
-## J. M9 — Critic (P3)
+## J. M9 — Critic (P3) — Proposed (queued after M8 or after M7+writer stabilize)
 
-- **T081** [P3] 🔴 Architect: freeze the M9 spec (hallucination/redundancy review, revise loop) + ADRs. dep: T068
-- **T082** [P3] 🟢 Implement the `critic` node (reads `draft,retrieved_context`; writes `critique`); emit `CritiqueCompleted`. dep: T081,T064
-- **T083** [P3] 🟢 Wire the writer→critic→(revise) loop with a pass/fail gate. dep: T082
-- **T084** [P3] 🟢 Tests: detects unsupported claims/redundancy, `critique.passed` gating. dep: T082
+Spec: `docs/superpowers/specs/2026-07-29-thesisos-m9-critic-design.md` · ADR-0056 · `docs/m9-critic-promotion.md`
+
+- **T081** [P3] 🔴 Architect: Accept/freeze M9 Critic spec + ADR-0056. dep: T068
+- **T082** [P3] 🟢 Implement `critic` node; emit `CritiqueCompleted`. dep: T081,T064
+- **T083** [P3] 🟢 Wire writer→critic→revise loop (`MAX_AUTO_REVISE=1`). dep: T082
+- **T084** [P3] 🟢 Tests: hallucination/redundancy fixtures; `critique.passed` gating; approval receipt in `chapter_versions.metadata`. dep: T082
 - **T085** [P3] 🔴 M9 promotion gate + merge + tag `m9-complete`. dep: T082,T083,T084
 
 ---

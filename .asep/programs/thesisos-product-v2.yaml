@@ -1123,7 +1123,9 @@ post_px2:
   px6_promotion_certificate: .asep/certificates/PX6-PROMOTION-20260707.yaml
   demo_presentability: closed
   demo_presentability_closure: .asep/reports/DEMO-PRESENTABILITY-CLOSURE-20260729.md
-  next_milestone: none (GA package + M8 deferred — require Architect authorization)
+  next_milestone: M7 Grounding Engine Wave 1 (Proposed — Architect Accept required; implementation not authorized)
   note: >-
-    PX-1…PX-6 promoted; M7/rc.2 shipped; demo Waves 1–4 + ADR-0048 CLOSED 2026-07-29.
-    Human cohort / GA / M8 deferred.
+    PX-1…PX-6 promoted; Product Hardening M7/rc.2 shipped; demo Waves 1–4 + ADR-0048 CLOSED 2026-07-29.
+    Human cohort / GA remain deferred. Product Track M7–M9 design package Proposed 2026-07-29
+    (specs + ADR-0053…0056 + promotion templates). Next open work: Architect freeze M7 Grounding
+    Wave 1, then implementation. M8/M9 Proposed queued. milestone_authorized stays none until authorize act.

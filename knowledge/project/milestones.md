@@ -2,8 +2,9 @@
 
 > Sources: M0 spec (`docs/superpowers/specs/2026-06-23-thesisos-m0-foundations-design.md`), M1 spec (`docs/superpowers/specs/2026-06-24-thesisos-m1-conversation-system-design.md`), plans under `docs/superpowers/plans/`, gates `docs/m0-promotion.md` / `docs/m1-promotion.md`, `plans/builder/STATE.yaml`.
 
-Only **M0**, **M1**, and **M2** have frozen, detailed specs in the repository. M3+
-are defined by contracts and roadmap; specs required before implementation.
+**M0–M6** are promoted with frozen specs. **M7–M9** have **Proposed** design
+specs + ADRs + promotion templates (2026-07-29) — Architect freeze required before
+implementation. **M10–M18** remain roadmap-only.
 
 ---
 
@@ -68,6 +69,43 @@ Promoted 2026-06-25. See `docs/m4-promotion.md`, `context/completed-work.md`.
 
 ---
 
-## M4–M18
+## M5 — Tool Router / Orchestration ✅
 
-M4+ require Architect-frozen specs before implementation (ADR-0001). M3 spec is the template for scope discipline.
+Promoted — see `docs/m5-promotion.md`, tag `m5-complete`.
+
+## M6 — Writing Workspace ✅
+
+Promoted — see `docs/m6-promotion.md`, tags `m6-complete` / `m6-main`.
+
+## M7 — Grounding Engine 🟡 (Proposed)
+
+**Not frozen.** Distinct from ADR-0044 Product Hardening.
+
+| Artifact | Path |
+|----------|------|
+| Design spec | `docs/superpowers/specs/2026-07-29-thesisos-m7-grounding-engine-design.md` |
+| ADR-0053 | `decisions/ADR-0053-citation-capability-topology.md` |
+| ADR-0054 | `decisions/ADR-0054-bibliography-styles.md` |
+| Promotion gate | `docs/m7-grounding-promotion.md` |
+
+Wave 1 = Citations (resolve + styles + `citation` route). Evidence/confidence = M7.x. Requires Architect Accept before implementation.
+
+## M8 — Outline 🟡 (Proposed)
+
+| Artifact | Path |
+|----------|------|
+| Design spec | `docs/superpowers/specs/2026-07-29-thesisos-m8-outline-design.md` |
+| ADR-0055 | `decisions/ADR-0055-outline-tree-and-publish.md` |
+| Promotion gate | `docs/m8-outline-promotion.md` |
+
+## M9 — Critic 🟡 (Proposed)
+
+| Artifact | Path |
+|----------|------|
+| Design spec | `docs/superpowers/specs/2026-07-29-thesisos-m9-critic-design.md` |
+| ADR-0056 | `decisions/ADR-0056-critic-loop-and-approval-gate.md` |
+| Promotion gate | `docs/m9-critic-promotion.md` |
+
+## M10–M18
+
+Still roadmap-only — require Architect-frozen specs before implementation (ADR-0001). M6/M7 Proposed specs are the template for scope discipline.

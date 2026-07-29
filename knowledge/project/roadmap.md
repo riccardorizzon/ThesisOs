@@ -20,9 +20,9 @@ usable capability end-to-end against frozen contracts and passes a promotion gat
 | **M4** | Retrieval | ✅ | Embed + hybrid search + retriever; promoted tag `m4-complete` | `/search`, `retriever`, ADR-0024 |
 | **M5** | Tool Router / Orchestration | ✅ | Orchestrated runtime: supervisor/planner/router + conditional routing + TaskService + Runtime Event Bus/observability. Promoted — `m5-complete` @ `bf12c13`, live dogfood B_lat=9.89s/B_ground=6.54s | ADR-0027/0030, `contracts/agents/*`, `docs/runtime-contract.md` (Frozen v1) |
 | **M6** | Writing Workspace | ✅ | Writer capability drafts grounded chapters/sections; versioned chapter store + `/chapters` + Workspace UI. Promoted — `m6-complete` / `m6-main` @ `79fb52a`, live dogfood B_write=63.6s | ADR-0031/0032/0033, `writer` route, `/chapters`, `docs/m6-promotion.md` |
-| **M7** | Grounding Engine | 🟡 | Provenance, evidence, confidence, validation hooks, bibliography — citations as one output of a general traceability system (design phase) | `/citations`, `/bibliography`, `citation` agent, Grounding Engine port |
-| **M8** | Outline | ⬜ | Outline/chapter tree management | `/outline`, `ChapterCreated` event |
-| **M9** | Critic | ⬜ | Critic agent reviews drafts (hallucination/redundancy) | `critic` agent, `CritiqueCompleted` event |
+| **M7** | Grounding Engine | 🟡 | Provenance, evidence, confidence, validation hooks, bibliography — Wave 1 = Citations (Proposed spec 2026-07-29; ≠ Product Hardening ADR-0044) | `/citations`, `/bibliography`, `citation` agent; ADR-0053/0054 Proposed |
+| **M8** | Outline | 🟡 | Outline/chapter tree management (Proposed spec 2026-07-29) | `/outline`, `ChapterCreated`; ADR-0055 Proposed |
+| **M9** | Critic | 🟡 | Critic agent reviews drafts (hallucination/redundancy) (Proposed spec 2026-07-29) | `critic` agent, `CritiqueCompleted`; ADR-0056 Proposed |
 | **M10** | QA | ⬜ | Quality-assurance phase/agent over the loop | `qa` phase (see `agent_steps.phase`) |
 | **M11** | GCP Hardening | ⬜ | Full tracing/exporters, cold-start, durable jobs, instance sizing | telemetry, jobs durability |
 | **M12** | Multi-Agent | ⬜ | Full Supervisor-led multi-agent execution | full agent graph + RunContext per-agent accounting |
