@@ -90,4 +90,5 @@ make beta-validator-rc  # RC bundle validator
 # or: bash bin/beta-validator-rc.sh
 ```
 
-Ops runbook: `docs/demo/DEMO-OPS-RUNBOOK.md`
+Ops runbook: `docs/demo/DEMO-OPS-RUNBOOK.md`  
+Cohort invite: `.asep/reports/BETA-COHORT-INVITE.md`

@@ -252,3 +252,19 @@ make demo-gate             # gate completo Wave 1–3
 | RAG mid-demo smoke | `make demo-wave3-check` | POST /chat STIGMATA → 200 |
 | Superfici FE live | `make demo-wave3-check` | /, /writing, /sources, /settings → 200 |
 | Docling | defer | demo usa 15 doc markdown indexed |
+
+Wave 4 (completata): research canvas, cohort invite pack, deploy GCP doc — **auth defer M8**.
+
+```bash
+make demo-wave4-check    # gate: growth docs + /research/canvas
+make demo-gate             # gate completo Wave 1–4
+```
+
+## Checklist chiusura Wave 4
+
+| Item | Gate | Stato |
+|------|------|-------|
+| Research canvas live | `make demo-wave4-check` | `/research`, `/research/canvas` → 200 |
+| Cohort 5–10 documentata | `BETA-COHORT-INVITE.md` + tracker 10 slot | invito + tabella |
+| Deploy GCP (oltre tunnel) | `DEMO-DEPLOY-GCP.md` + `infra/terraform/` | runbook |
+| Auth multi-user | defer M8 | documentato in `DEMO-GROWTH-PLAN.md` |

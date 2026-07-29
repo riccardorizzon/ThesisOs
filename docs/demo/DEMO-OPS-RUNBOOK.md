@@ -112,4 +112,5 @@ Verifica: `SELECT COUNT(*) FROM documents WHERE status='failed';` → deve esser
 | Handout limitazioni | `docs/demo/DEMO-HANDOUT.md` |
 | Piano dati Wave 1–2 | `docs/demo/DATA-CLEANUP-PLAN.md` |
 | Ops dettagliato | `docs/superpowers/plans/2026-07-29-ops-perfection-priorities.md` |
-| Gate automatizzati | `make demo-gate`, `make demo-wave3-check` |
+| Gate automatizzati | `make demo-gate`, `make demo-wave3-check`, `make demo-wave4-check` |
+| Crescita Wave 4 | `docs/demo/DEMO-GROWTH-PLAN.md`, `docs/demo/DEMO-DEPLOY-GCP.md` |

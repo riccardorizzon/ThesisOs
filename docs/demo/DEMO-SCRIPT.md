@@ -113,6 +113,13 @@ Quali autori del corpus NON hai usato in questa risposta e perché?
 
 ---
 
+## 4b. Opzionale — Research canvas (Wave 4, 2 min)
+
+**Route:** `/research/canvas`  
+Mostra il panorama concettuale STIGMATA / corpus — effetto «wow» dopo il core loop.
+
+---
+
 ## 5. Limitazioni oneste (1 min)
 
 Leggi o consegna [`DEMO-HANDOUT.md`](./DEMO-HANDOUT.md). Punti chiave:
@@ -126,7 +133,7 @@ Leggi o consegna [`DEMO-HANDOUT.md`](./DEMO-HANDOUT.md). Punti chiave:
 
 ## Checklist pre-demo (5 min prima)
 
-- [ ] `make demo-gate` PASS (ops-check + Wave 1/2/3)
+- [ ] `make demo-gate` PASS (ops-check + Wave 1–4)
 - [ ] `make demo-backup` eseguito (opzionale ma consigliato)
 - [ ] `bash bin/demo-cleanup.sh --dry-run` — verificare conteggi attesi (~15 doc, ~14 capitoli)
 - [ ] (Opzionale) `bash bin/demo-cleanup.sh --apply` eseguito e verificato
@@ -143,5 +150,6 @@ Leggi o consegna [`DEMO-HANDOUT.md`](./DEMO-HANDOUT.md). Punti chiave:
 
 - Piano pulizia dati: [`DATA-CLEANUP-PLAN.md`](./DATA-CLEANUP-PLAN.md)
 - Runbook ops Wave 3: [`DEMO-OPS-RUNBOOK.md`](./DEMO-OPS-RUNBOOK.md)
+- Crescita Wave 4: [`DEMO-GROWTH-PLAN.md`](./DEMO-GROWTH-PLAN.md)
 - Ops dettagliato: [`docs/superpowers/plans/2026-07-29-ops-perfection-priorities.md`](../superpowers/plans/2026-07-29-ops-perfection-priorities.md)
 - Seed corpus: `make seed-curated-sources`

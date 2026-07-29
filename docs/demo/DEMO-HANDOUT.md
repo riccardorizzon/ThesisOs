@@ -44,7 +44,8 @@ make demo-backup        # snapshot DB prima della demo
 bash bin/demo-cleanup.sh --dry-run   # stato dati pre-demo
 ```
 
-Runbook ops: [`DEMO-OPS-RUNBOOK.md`](./DEMO-OPS-RUNBOOK.md)
+Runbook ops: [`DEMO-OPS-RUNBOOK.md`](./DEMO-OPS-RUNBOOK.md)  
+Crescita Wave 4: [`DEMO-GROWTH-PLAN.md`](./DEMO-GROWTH-PLAN.md)
 
 ## Contatto / repo
 

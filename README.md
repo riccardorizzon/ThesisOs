@@ -75,7 +75,7 @@ cd tests/e2e && npx playwright test m7-product-flow.spec.ts
 |---------|---------|
 | `make check` | Fast pre-push gate |
 | `make ops-check` | Live stack health + LLM + export contract |
-| `make demo-gate` | Full demo readiness (Wave 1–3) |
+| `make demo-gate` | Full demo readiness (Wave 1–4) |
 | `make demo-backup` | Postgres snapshot before demo |
 | `make status` | Product / infra snapshot |
 | `make down` | Stop Docker stack |

@@ -39,8 +39,13 @@ Collect **only**:
 | 3 | | ☐ | ☐ | |
 | 4 | | ☐ | ☐ | |
 | 5 | | ☐ | ☐ | |
+| 6 | | ☐ | ☐ | |
+| 7 | | ☐ | ☐ | |
+| 8 | | ☐ | ☐ | |
+| 9 | | ☐ | ☐ | |
+| 10 | | ☐ | ☐ | |
 
-**Target:** 5–10 beta users (Product Lead)
+**Target:** 5–10 beta users (Product Lead) · Invito: `.asep/reports/BETA-COHORT-INVITE.md`
 
 ## Feedback triage
 

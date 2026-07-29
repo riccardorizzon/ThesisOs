@@ -185,8 +185,12 @@ demo-backup: ## Snapshot Postgres before demo (writes /tmp/thesisos-pre-demo-*.s
 demo-wave3-check: ## Gate: Wave 3 ops resilience (backup, runbook, mid-demo smoke)
 	@bash bin/demo-wave3-check.sh
 
-demo-gate: ## Full demo readiness gate (ops + Wave 1 + Wave 2 + Wave 3)
+demo-wave4-check: ## Gate: Wave 4 growth (research, cohort, GCP deploy doc)
+	@bash bin/demo-wave4-check.sh
+
+demo-gate: ## Full demo readiness gate (ops + Wave 1–4)
 	@bash bin/ops-check.sh
 	@bash bin/demo-cleanup.sh --dry-run
 	@bash bin/demo-wave2-check.sh
 	@bash bin/demo-wave3-check.sh
+	@bash bin/demo-wave4-check.sh
