@@ -237,4 +237,55 @@ describe("WritingAiPanel", () => {
     expect(screen.getByTestId("applica-button")).toBeDisabled();
     expect(screen.getByTestId("applica-override-button")).toBeInTheDocument();
   });
+
+  it("renders loop step events for verify and find-sources", async () => {
+    vi.spyOn(aiActions, "streamWritingAction").mockImplementation(async (_params, onEvent) => {
+      onEvent({
+        event: "step",
+        data: { phase: "retrieval", label: "Ricerca nel corpus", detail: "artigianato" },
+      });
+      onEvent({ event: "token", data: { text: "Risposta." } });
+      onEvent({ event: "done", data: { draft: "Risposta.", meta: { search_count: 1, chunk_count: 2 } } });
+    });
+
+    render(
+      <WritingAiPanel
+        contextPacket={FIXTURE_CONTEXT_PACKET}
+        chapterContent="Capitolo"
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Verifica/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("ai-loop-steps")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("ai-loop-steps")).toHaveTextContent("Ricerca nel corpus");
+    expect(screen.getByTestId("ai-loop-steps")).toHaveTextContent("artigianato");
+  });
+
+  it("does not render loop steps for rewrite actions", async () => {
+    vi.spyOn(aiActions, "streamWritingAction").mockImplementation(async (_params, onEvent) => {
+      onEvent({
+        event: "step",
+        data: { phase: "retrieval", label: "Ricerca nel corpus", detail: "artigianato" },
+      });
+      onEvent({ event: "done", data: { draft: "Riscritto." } });
+    });
+
+    render(
+      <WritingAiPanel
+        contextPacket={FIXTURE_CONTEXT_PACKET}
+        selectionText="Passaggio"
+        chapterContent="Capitolo"
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Riscrivi/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("ai-stream-output")).toHaveTextContent("Riscritto.");
+    });
+    expect(screen.queryByTestId("ai-loop-steps")).toBeNull();
+  });
 });

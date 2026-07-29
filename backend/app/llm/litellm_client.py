@@ -1,9 +1,12 @@
+import json
 from collections.abc import AsyncIterator
+from typing import Any
 
 import litellm
 
 from app.core.config import settings
 from app.llm.base import TokenChunk
+from app.runtime.action_loop.types import AssistantTurn, ToolCall
 
 
 class LiteLLMClient:
@@ -61,3 +64,50 @@ class LiteLLMClient:
 
     async def vision(self, messages: list[dict], *, model: str | None = None) -> str:
         raise NotImplementedError("vision wired in a later milestone")
+
+    def _parse_tool_calls(self, raw_tool_calls: Any) -> list[ToolCall]:
+        if not raw_tool_calls:
+            return []
+        parsed: list[ToolCall] = []
+        for tc in raw_tool_calls:
+            if isinstance(tc, dict):
+                fn = tc.get("function") or {}
+                args_raw = fn.get("arguments", "{}")
+                tc_id = tc.get("id", "")
+                name = fn.get("name", "")
+            else:
+                fn = tc.function
+                args_raw = getattr(fn, "arguments", "{}")
+                tc_id = getattr(tc, "id", "")
+                name = getattr(fn, "name", "")
+            if isinstance(args_raw, str):
+                arguments = json.loads(args_raw or "{}")
+            else:
+                arguments = dict(args_raw or {})
+            parsed.append(ToolCall(id=tc_id, name=name, arguments=arguments))
+        return parsed
+
+    async def acompletion_with_tools(
+        self,
+        messages: list[dict],
+        *,
+        tools: list[dict],
+        model: str | None = None,
+        params: dict | None = None,
+    ) -> AssistantTurn:
+        kwargs = {
+            **self._kwargs(messages, model, params),
+            "tools": tools,
+            "tool_choice": "auto",
+        }
+        resp = await litellm.acompletion(stream=False, **kwargs)
+        choice = resp.choices[0]
+        message = choice.message
+        content = getattr(message, "content", None)
+        raw_tool_calls = getattr(message, "tool_calls", None)
+        finish_reason = getattr(choice, "finish_reason", None)
+        return AssistantTurn(
+            content=content,
+            tool_calls=self._parse_tool_calls(raw_tool_calls),
+            finish_reason=finish_reason,
+        )

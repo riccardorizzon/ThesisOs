@@ -96,7 +96,8 @@ async def test_writer_route_retrieves_then_drafts():
 
     assert final is not None
     assert final.get("route") == WRITER_ROUTE
-    assert spy.search_calls == 1          # writer route is grounded (shares retriever)
+    # Primary query search + Sennett author-doc boost ("craftsmanship" in corpus_query).
+    assert spy.search_calls == 2
     assert final.get("draft") == "Drafted prose."
     # citations derived from (⊆) retrieved sources
     assert [c.source_id for c in final.get("citations", [])] == ["d1"]
@@ -118,5 +119,6 @@ async def test_grounded_route_still_reaches_conversation():
     final = await _run(llm, spy, "What do my documents say about craftsmanship")
 
     assert final.get("route") == GROUNDED_ROUTE
-    assert spy.search_calls == 1
+    # Primary query search + Sennett author-doc boost ("craftsmanship" in corpus_query).
+    assert spy.search_calls == 2
     assert final.get("draft") == "grounded answer"

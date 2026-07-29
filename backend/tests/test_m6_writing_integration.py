@@ -101,7 +101,8 @@ async def test_writer_route_drafts_grounded_with_citations():
         retrieval=spy, emitter=emitter,
     )
     assert _route(emitter) == WRITER_ROUTE
-    assert spy.search_calls == 1                      # writer route is grounded
+    # Primary query search + Sennett author-doc boost ("craftsmanship" in corpus_query).
+    assert spy.search_calls == 2
     assert "writer" in _completed(emitter)
     assert "conversation" not in _completed(emitter)  # writer terminates the turn
     assert final.get("draft") == "Craftsmanship matters."

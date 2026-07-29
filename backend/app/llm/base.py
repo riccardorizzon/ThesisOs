@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 from collections.abc import AsyncIterator
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from app.runtime.action_loop.types import AssistantTurn
 
 
 class TokenChunk(BaseModel):
@@ -16,6 +21,14 @@ class LLMClient(Protocol):
     async def astream(self, messages: list[dict], *, model: str | None = None, params: dict | None = None) -> AsyncIterator[TokenChunk]: ...
     async def embed(self, texts: list[str], *, model: str | None = None) -> list[list[float]]: ...
     async def vision(self, messages: list[dict], *, model: str | None = None) -> str: ...
+    async def acompletion_with_tools(
+        self,
+        messages: list[dict],
+        *,
+        tools: list[dict],
+        model: str | None = None,
+        params: dict | None = None,
+    ) -> AssistantTurn: ...
 
 
 class NotConfiguredLLM:
@@ -32,4 +45,7 @@ class NotConfiguredLLM:
         raise NotImplementedError("LLM wired in M1")
 
     async def vision(self, *a, **k):
+        raise NotImplementedError("LLM wired in M1")
+
+    async def acompletion_with_tools(self, *a, **k):
         raise NotImplementedError("LLM wired in M1")

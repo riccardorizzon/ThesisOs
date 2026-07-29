@@ -6,6 +6,7 @@ import type { ContextPacket } from "@/lib/contextClient";
 import { formatScopeChipLabel } from "@/lib/contextClient";
 import {
   getAvailableActions,
+  LOOP_ACTIONS,
   streamWritingAction,
   type WritingActionId,
 } from "@/lib/aiActions";
@@ -29,6 +30,11 @@ export type WritingAiPanelProps = {
 
 type StreamPhase = "idle" | "streaming" | "complete" | "preview";
 
+type LoopStep = {
+  label: string;
+  detail?: string;
+};
+
 /**
  * AI action panel — streaming actions + proposal queue (Spec §5.4, §15.3).
  * Applica never silent-writes; proposals go to queue (IR-2).
@@ -45,6 +51,7 @@ export function WritingAiPanel({
 }: WritingAiPanelProps) {
   const [phase, setPhase] = useState<StreamPhase>("idle");
   const [streamText, setStreamText] = useState("");
+  const [steps, setSteps] = useState<LoopStep[]>([]);
   const [activeActionId, setActiveActionId] = useState<WritingActionId | null>(null);
   const [activeActionLabel, setActiveActionLabel] = useState("");
   const [appliedNotice, setAppliedNotice] = useState<string | null>(null);
@@ -85,6 +92,7 @@ export function WritingAiPanel({
     citationValidationRevisionRef.current += 1;
     setPhase("idle");
     setStreamText("");
+    setSteps([]);
     setActiveActionId(null);
     setActiveActionLabel("");
     setCitationOverride(false);
@@ -133,6 +141,7 @@ export function WritingAiPanel({
       if (!contextPacket) return;
       resetStream();
       setAppliedNotice(null);
+      setSteps([]);
       setActiveActionId(actionId);
       setActiveActionLabel(label);
       setPhase("streaming");
@@ -151,7 +160,15 @@ export function WritingAiPanel({
         },
         (event) => {
           if (controller.signal.aborted) return;
-          if (event.event === "token") {
+          if (event.event === "step") {
+            setSteps((prev) => [
+              ...prev,
+              {
+                label: event.data.label,
+                detail: event.data.detail,
+              },
+            ]);
+          } else if (event.event === "token") {
             accumulated += event.data.text;
             setStreamText(accumulated);
           } else if (event.event === "done") {
@@ -237,6 +254,8 @@ export function WritingAiPanel({
   };
 
   const showStreamArea = phase !== "idle";
+  const showLoopSteps =
+    activeActionId !== null && LOOP_ACTIONS.has(activeActionId) && steps.length > 0;
   const canApplica =
     phase === "complete" &&
     Boolean(activeActionId) &&
@@ -314,6 +333,23 @@ export function WritingAiPanel({
             error={citationValidationError}
             className="border-b border-warning/20 bg-warning/5 px-3 py-2"
           />
+          {showLoopSteps && (
+            <ul
+              className="border-b border-border px-3 py-2 text-xs text-ink-muted"
+              role="status"
+              aria-live="polite"
+              data-testid="ai-loop-steps"
+            >
+              {steps.map((step, index) => (
+                <li key={`${step.label}-${index}`}>
+                  <span>{step.label}</span>
+                  {step.detail ? (
+                    <span className="ml-1 text-ink-muted/80">— {step.detail}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
           {phase === "streaming" ? (
             <p
               className="border-b border-border px-3 py-2 text-xs text-ink-muted"

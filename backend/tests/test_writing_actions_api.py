@@ -134,7 +134,7 @@ def test_writing_actions_passes_retrieved_context(client, monkeypatch):
         "POST",
         "/writing/actions",
         json={
-            "action": "find-sources",
+            "action": "rewrite",
             "selection_text": "Passaggio selezionato",
             "chapter_content": "Capitolo intero",
         },

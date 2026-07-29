@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { streamWritingAction } from "@/lib/aiActions";
+import { streamWritingAction, type WritingActionStreamEvent } from "@/lib/aiActions";
 import { FIXTURE_CONTEXT_PACKET } from "@/lib/fixtures/contextFixture";
 
 afterEach(() => {
@@ -106,5 +106,50 @@ describe("Writing aiActions", () => {
     );
 
     expect(events).toEqual(["stream_interrupted"]);
+  });
+
+  it("parses step events from the SSE stream", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(
+        [
+          'event: step\ndata: {"phase":"retrieval","label":"Ricerca nel corpus","detail":"artigianato"}\n\n',
+          'event: token\ndata: {"text":"Ok"}\n\n',
+          'event: done\ndata: {"draft":"Ok","meta":{"search_count":1,"chunk_count":3}}\n\n',
+        ].join(""),
+        {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        }
+      )
+    );
+
+    const events: WritingActionStreamEvent[] = [];
+    await streamWritingAction(
+      {
+        actionId: "verify",
+        chapterId: "1",
+        chapterContent: "Capitolo",
+        contextPacket: FIXTURE_CONTEXT_PACKET,
+      },
+      (event) => {
+        events.push(event);
+      }
+    );
+
+    expect(events).toEqual([
+      {
+        event: "step",
+        data: {
+          phase: "retrieval",
+          label: "Ricerca nel corpus",
+          detail: "artigianato",
+        },
+      },
+      { event: "token", data: { text: "Ok" } },
+      {
+        event: "done",
+        data: { draft: "Ok", meta: { search_count: 1, chunk_count: 3 } },
+      },
+    ]);
   });
 });

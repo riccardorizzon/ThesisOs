@@ -614,6 +614,18 @@ paths:
             text/markdown:
               schema: { type: string }
         "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /export/projects/{project_id}/manuscript.md:
+    get:
+      summary: Download full project manuscript as Markdown attachment
+      x-milestone: M7
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string }, description: "Thesis workspace scope (ADR-0047)" }
+      responses:
+        "200":
+          description: Markdown file
+          content:
+            text/markdown:
+              schema: { type: string }
   /projects:
     get:
       summary: List thesis workspaces (project registry — ADR-0047)

@@ -98,8 +98,20 @@ export function getAvailableActions(
 
 export type WritingActionStreamEvent =
   | { event: "token"; data: { text: string } }
-  | { event: "done"; data: { draft: string } }
+  | { event: "step"; data: { phase: "retrieval"; label: string; detail?: string } }
+  | {
+      event: "done";
+      data: {
+        draft: string;
+        meta?: { search_count?: number; chunk_count?: number };
+      };
+    }
   | { event: "error"; data: { code: string; message: string } };
+
+export const LOOP_ACTIONS: ReadonlySet<WritingActionId> = new Set([
+  "verify",
+  "find-sources",
+]);
 
 const WRITING_STATUS_MESSAGES: Readonly<Record<number, string>> = {
   400: "Azione di scrittura non valida.",
