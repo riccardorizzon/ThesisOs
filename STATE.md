@@ -14,7 +14,12 @@
 
 ## Last run
 
+- **2026-07-30** — 360° health pass (pytest/vitest/M7/ops-check green); follow-ups below
 - **2026-06-28** — MB2 loop complete (D3–D10); 65 engine tests green
+
+## Watch
+
+- **WritingEditorShell / versions-panel** — intermittent vitest flake under load (non-blocking in 360° run). Revisit if it reappears under concurrent CI or local parallel vitest; not a product blocker today.
 
 ## Escalation
 
