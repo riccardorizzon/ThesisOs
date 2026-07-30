@@ -4,6 +4,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+# shellcheck source=require-rg.sh
+. "$ROOT/bin/require-rg.sh"
 
 fail=0
 ok() { echo "  OK  $*"; }

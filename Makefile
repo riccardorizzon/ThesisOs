@@ -58,11 +58,13 @@ openapi-drift: ## OpenAPI contract vs live watched routes
 	@bash bin/check-openapi-drift.sh
 
 scope: ## scope-creep guard (informational: stubs must be milestone-tagged)
+	@bash bin/require-rg.sh
 	@echo "Scope-creep scan (review any matches — must be intentional milestone stubs):"
 	@rg -n "NotImplementedError|wired post-M|wired in M[0-9]" $(BACKEND)/app \
 		--glob '!**/__pycache__/**' || echo "  (none)"
 
 isolation: ## build-time sidecars must not import the runtime (ADR-0019/0023)
+	@bash bin/require-rg.sh
 	@for dir in builder_memory builder_engine; do \
 		! rg -n "^[[:space:]]*(from|import)[[:space:]]+backend([[:space:].]|$$)" $$dir 2>/dev/null \
 			|| { echo "isolation FAIL: $$dir imports backend.app"; exit 1; }; \
