@@ -11,6 +11,14 @@ make unit-builder-engine   # ASEP Engineering Runtime tests
 make up               # docker compose (db, backend, frontend)
 ```
 
+Backend tests take a session-wide Postgres advisory lock on `thesisos_test`
+(`backend/tests/conftest.py`); a concurrent pytest run exits fast with
+"another pytest run is using thesisos_test" instead of corrupting each other's
+data. Re-run serially.
+
+Shell scripts in `bin/` and the `scope` target assume `rg` (ripgrep) on PATH —
+without it, guards pass vacuously and `ops-check` false-fails.
+
 ## Builder orchestration (ASEP)
 
 | Task | Command / skill |

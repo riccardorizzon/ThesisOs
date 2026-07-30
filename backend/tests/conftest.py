@@ -25,6 +25,33 @@ def _run_ensure_test_db() -> None:
     subprocess.run([str(script)], check=False, cwd=_ROOT)
 
 
+# Session-scoped advisory lock: two pytest processes sharing thesisos_test would
+# truncate each other's rows mid-test (silent cross-process corruption). Fail fast
+# instead of producing flaky, misleading failures.
+_TEST_DB_LOCK_KEY = 72720529
+
+
+def _try_acquire_test_db_lock():
+    """Hold a Postgres advisory lock for the whole pytest session; None if DB down."""
+    try:
+        import psycopg
+
+        dsn = os.environ["DATABASE_URL"].replace("+psycopg", "")
+        conn = psycopg.connect(dsn, autocommit=True)
+    except Exception:
+        return None  # DB unreachable — db_session will skip
+    with conn.cursor() as cur:
+        cur.execute("SELECT pg_try_advisory_lock(%s)", (_TEST_DB_LOCK_KEY,))
+        acquired = cur.fetchone()[0]
+    if not acquired:
+        conn.close()
+        pytest.exit(
+            "another pytest run is using thesisos_test — re-run when it finishes",
+            returncode=3,
+        )
+    return conn
+
+
 async def _truncate_public_tables(session) -> None:
     await session.execute(text("SET session_replication_role = 'replica'"))
     result = await session.execute(
@@ -43,7 +70,15 @@ async def _truncate_public_tables(session) -> None:
 @pytest.fixture(scope="session")
 def _test_db_ready():
     _run_ensure_test_db()
+    lock_conn = _try_acquire_test_db_lock()
     yield
+    if lock_conn is not None:
+        try:
+            with lock_conn.cursor() as cur:
+                cur.execute("SELECT pg_advisory_unlock(%s)", (_TEST_DB_LOCK_KEY,))
+            lock_conn.close()
+        except Exception:
+            pass
 
 
 @pytest.fixture
