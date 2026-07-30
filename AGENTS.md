@@ -16,8 +16,9 @@ Backend tests take a session-wide Postgres advisory lock on `thesisos_test`
 "another pytest run is using thesisos_test" instead of corrupting each other's
 data. Re-run serially.
 
-Shell scripts in `bin/` and the `scope` target assume `rg` (ripgrep) on PATH —
-without it, guards pass vacuously and `ops-check` false-fails.
+Shell scripts in `bin/` and the `scope`/`isolation` targets require `rg`
+(ripgrep) on PATH — `bin/require-rg.sh` fails closed so missing `rg` cannot
+produce a vacuous green gate.
 
 ## Builder orchestration (ASEP)
 

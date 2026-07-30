@@ -3,6 +3,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=require-rg.sh
+. "$ROOT/bin/require-rg.sh"
+
 APP_DIR="${ROOT}/frontend/app"
 FAIL=0
 
